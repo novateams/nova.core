@@ -1,0 +1,48 @@
+- name: "Templating {{ item.dest }} file..."
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: /tmp/{{ inventory_hostname }}-{{ item.name }}
+    lstrip_blocks: yes
+
+- name: "Getting  {{ item.dest }} file info..."
+  ansible.builtin.stat:
+    path: /tmp/{{ inventory_hostname }}-{{ item.name }}
+  register: "file_size"
+
+- name: "Preparing file upload..."
+  ansible.builtin.uri:
+    url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+    method: POST
+    headers:
+      vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+    body:
+      credentials: "{{ rest_api_credentials }}"
+      spec:
+        attributes:
+          overwrite: true
+          size: "{{ file_size.stat.size }}"
+        path: "{{ item.dest }}"
+    status_code: 201
+    body_format: json
+    validate_certs: no
+  register: file_upload_prep
+  # Because Windows is still coming up from initial sysprep
+  until: file_upload_prep.status == 201
+  retries: "{{ retries_vmware_api }}"
+  delay: "{{ delay_vmware_api }}"
+
+- name: "Uploading file..."
+  ansible.builtin.uri:
+    url: "{{ file_upload_prep.json }}"
+    method: PUT
+    headers:
+      vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+    src: "/tmp/{{ inventory_hostname }}-{{ item.name }}"
+    status_code: 200
+    body_format: json
+    validate_certs: no
+  register: file_upload
+  # Because Windows is still coming up from initial sysprep
+  until: file_upload.status == 200
+  retries: "{{ retries_vmware_api }}"
+  delay: "{{ delay_vmware_api }}"

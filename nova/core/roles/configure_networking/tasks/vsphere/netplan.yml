@@ -1,77 +1,37 @@
 ---
-- block:
-    - name: Templating network configuration script...
-      ansible.builtin.template:
-        src: netplan.yml
-        dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_netplan.yml
-        lstrip_blocks: true
-
-    - name: Getting file info...
-      ansible.builtin.stat:
-        path: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_netplan.yml
-      register: file_size
-
-    - name: Preparing file upload...
-      ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            attributes:
-              overwrite: true
-              size: "{{ file_size.stat.size }}"
-            path: /etc/netplan/01-netcfg.yaml
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: file_upload_prep
-
-    - name: Removing existing netplan configuration file(s)...
-      ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "rm /etc/netplan/*"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-
-    - name: Uploading file...
-      ansible.builtin.uri:
-        url: "{{ file_upload_prep.json }}"
-        method: PUT
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_netplan.yml
-        status_code: 200
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-
-    - name: Configuring network...
-      ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "netplan apply ; netplan apply" # Needs 2x for Ubuntu 22.04 Desktop for some reason
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-
-  become: false
+- become: false
   delegate_to: localhost
+  block:
+    - name: Removing existing netplan configuration file(s)...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: /bin/bash
+        args_to_execute: -c "rm /etc/netplan/*"
+
+    - name: Upload files...
+      ansible.builtin.include_tasks: util/upload_file.yml
+      loop:
+        # netplan.yml
+        - name: netplan.yml
+          src: netplan.yml
+          dest: /etc/netplan/01-netcfg.yaml
+        # resolved.conf
+        - name: resolved.conf
+          src: resolved.conf.j2
+          dest: /etc/systemd/resolved.conf
+
+    # The double netplan apply is required for Ubuntu Desktop for the configuration to take effect
+    - name: Configuring network...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: /bin/bash
+        args_to_execute: -c "netplan apply ; netplan apply"
+
+    - name: Ensure systemd-resolved is restarted and enabled...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: /bin/bash
+        args_to_execute: -c "systemctl enable systemd-resolved && /usr/bin/systemctl restart systemd-resolved"
 
 - name: Rebooting to apply interface changes...
   ansible.builtin.reboot:

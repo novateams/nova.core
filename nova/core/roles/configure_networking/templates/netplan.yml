@@ -37,14 +37,14 @@ network:
         - "{{ mgmt_ip }}":
             lifetime: 0
         {% elif (mgmt_ip != {}) and (interface.connection) %}
-		- "{{ mgmt_ip }}"
+		        - "{{ mgmt_ip }}"
         {% endif %}
         {% if extra_ips[ interface.network_id ] is defined %}
         {% for extra_ip in extra_ips[ interface.network_id ] %}
         - {{ extra_ip }}
         {% endfor %}
         {% endif %}
-      {% if interface.addresses | selectattr("gateway", "defined") and interface.addresses | selectattr("gateway", "!=", none) or extra_routes[ interface.network_id ] is defined %}
+      {% if (interface.egress and interface.addresses | selectattr("gateway", "defined") and interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes[ interface.network_id ] != {}) %}
       routes:
       {% endif %}
       {% for ip_address in interface.addresses %}

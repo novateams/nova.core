@@ -1,0 +1,9 @@
+# Ansible managed
+
+[Resolve]
+{% for address in dns_servers %}
+DNS={{ address }}
+{% endfor %}
+{% for address in dns_servers6 %}
+DNS={{ address }}
+{% endfor %}

@@ -1,5 +1,0 @@
-[Match]
-MACAddress={{ vmware_tools_information.instance[ 'hw_eth' + ( interface_index ) | string ]['macaddress'] }}
-
-[Link]
-Name={{ item.network_id }}
