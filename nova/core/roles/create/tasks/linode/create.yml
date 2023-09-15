@@ -1,0 +1,24 @@
+---
+- name: Creating {{ custom_vm_name | default(vm_name) }} in Linode...
+  linode.cloud.instance:
+    api_token: "{{ linode_api_token }}"
+    label: "{{ custom_vm_name | default(vm_name) }}"
+    type: "{{ linode_vm_type | default('g6-dedicated-2') }}"
+    region: "{{ linode_vm_region | default('eu-central') }}"
+    image: "{{ linode_image }}"
+    root_pass: "{{ linode_vm_password }}"
+    tags:
+      - "{{ project_fullname | default(omit) }}"
+    state: present
+  register: linode_vm
+  delegate_to: localhost
+
+- name: Setting fresh_deploy as fact...
+  ansible.builtin.set_fact:
+    fresh_deploy: true
+  when: linode_vm.changed
+
+- name: Setting primary IPs as fact...
+  ansible.builtin.set_fact:
+    primary_ipv4: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
+    primary_ipv6: "{{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}"

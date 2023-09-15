@@ -1,0 +1,4 @@
+---
+- name: Info...
+  ansible.builtin.debug:
+    msg: Bypassing create_vm role for external machines.

@@ -1,0 +1,27 @@
+---
+- block:
+    - name: Including vSphere environment tasks...
+      ansible.builtin.include_tasks: vsphere/main.yml
+      when: infra_env == 'vsphere'
+
+    - name: Including VMware Workstation environment tasks...
+      ansible.builtin.include_tasks: vmware_workstation/main.yml
+      when: infra_env == 'vmware_workstation'
+
+    - name: Including AWS EC2 environment tasks...
+      ansible.builtin.include_tasks: aws/main.yml
+      when: infra_env == 'aws'
+
+    - name: Including Linode environment tasks...
+      ansible.builtin.include_tasks: linode/main.yml
+      when: infra_env == 'linode'
+
+    - name: Including external environment tasks...
+      ansible.builtin.include_tasks: external/main.yml
+      when: infra_env == 'external'
+
+  when: customization_context == "host" # Alternative is container and then it's not creating it with this role
+
+- name: Stopping play...
+  ansible.builtin.meta: end_host
+  when: (just_create) or (deploy_mode == "undeploy")

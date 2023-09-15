@@ -1,0 +1,172 @@
+---
+- name: Including VMware Workstation tasks...
+  become: false
+  block:
+    - name: Making sure that {{ template_export_folder }} exists...
+      ansible.builtin.file:
+        path: "{{ template_export_folder }}"
+        state: directory
+        recurse: true
+
+    - name: Checking if the VM Template is already present, if not then Downloading...
+      ansible.builtin.stat:
+        path: "{{ local_vmx_template_path }}"
+      register: vm_template_presence
+
+    - name: Downloading {{ vm_template }} if it does not exist or is older than 30 days...
+      when:
+        - not vm_template_presence.stat.exists or ((ansible_date_time.epoch | int) - (vm_template_presence.stat.ctime | round) >= 2592000) # 30 days
+        - not role_only
+        - not role_only_wp
+      block:
+        - name: Removing existing {{ vm_template }} template...
+          ansible.builtin.file:
+            path: "{{ template_export_folder }}/{{ vm_template }}"
+            state: absent
+
+        - name: Downloading {{ vm_template }}...
+          ansible.builtin.shell: ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} 'vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode() }}@{{ templates_path }}/{{ vm_template }}' {{ template_export_folder }}
+
+    - name: Checking if the {{ custom_vm_name | default(vm_name) }} already exists...
+      ansible.builtin.stat:
+        path: "{{ local_vmx_path }}"
+      register: vm_presence
+
+    - name: Checking for correct deploy method with non-existing VM...
+      when:
+        - not vm_presence.stat.exists
+        - role_only or role_only_wp
+      block:
+        - ansible.builtin.debug:
+            msg: "{{ custom_vm_name | default(vm_name) }} doesn't exist, run ctp-deploy or ctp-redeploy first!"
+          failed_when:
+            - not vm_presence.stat.exists
+            - role_only or role_only_wp
+
+    - name: Creating and configuring {{ custom_vm_name | default(vm_name) }}...
+      when: not vm_presence.stat.exists
+      block:
+        - name: Setting fresh_deploy fact...
+          ansible.builtin.set_fact:
+            fresh_deploy: true
+
+        - name: Creating {{ custom_vm_name | default(vm_name) }} from {{ vm_template }}...
+          ansible.builtin.shell: ovftool -tt=vmx -n={{ custom_vm_name | default(vm_name) }} {{ local_vmx_template_path }} {{ local_vm_folder }}
+
+        - name: Configuring {{ custom_vm_name | default(vm_name) }} virtual machine...
+          ansible.builtin.lineinfile:
+            path: "{{ local_vmx_path }}"
+            regex: "{{ item.regex }}"
+            line: "{{ item.line }}"
+            state: present
+          loop_control:
+            label: "{{ item.line }}"
+          loop:
+            # Sets the network adapter to NAT
+            - regex: ethernet0.connectionType.*
+              line: ethernet0.connectionType = "nat"
+
+            # Otherwise Windows deploy will fail sometimes because of running sysprep
+            - regex: tools.upgrade.policy.*
+              line: tools.upgrade.policy = "manual"
+
+            # This fixes Windows BSOD when importing from vSphere
+            - regex: hpet0.present.*
+              line: hpet0.present = "TRUE"
+
+            # This fixes the issue where link keeps flapping https://github.com/mkubecek/vmware-host-modules/issues/54
+            - regex: vmnat.linkStatePropagation.disable.*
+              line: vmnat.linkStatePropagation.disable = "TRUE"
+
+            # Enabling nested virtualization
+            - regex: vhv.enable.*
+              line: vhv.enable = "TRUE"
+
+    - name: Including shared folder tasks...
+      when:
+        - enable_shared_folder
+        - supported_shared_folder_os | intersect(group_names) | length > 0
+        - not role_only
+      block:
+        - name: Sharing VM folder with host...
+          lineinfile:
+            path: "{{ local_vmx_path }}"
+            regex: "{{ item.regex }}"
+            line: "{{ item.line }}"
+            state: present
+          loop_control:
+            label: "{{ item.line }}"
+          loop:
+            - regex: isolation.tools.hgfs.disable.*
+              line: isolation.tools.hgfs.disable = "FALSE"
+            - regex: sharedFolder0.present.*
+              line: sharedFolder0.present = "TRUE"
+            - regex: sharedFolder0.enabled.*
+              line: sharedFolder0.enabled = "TRUE"
+            - regex: sharedFolder0.readAccess.*
+              line: sharedFolder0.readAccess = "TRUE"
+            - regex: sharedFolder0.writeAccess.*
+              line: sharedFolder0.writeAccess = "TRUE"
+            - regex: sharedFolder0.hostPath.*
+              line: sharedFolder0.hostPath = "{{ host_shared_folder_path }}"
+            - regex: sharedFolder0.guestName.*
+              line: sharedFolder0.guestName = "{{ custom_vm_name | default(vm_name) }}"
+            - regex: sharedFolder0.expiration.*
+              line: sharedFolder0.expiration = "never"
+            - regex: sharedFolder.maxNum.*
+              line: sharedFolder.maxNum = "1"
+
+        - name: Creating a shared folder on the host...
+          ansible.builtin.file:
+            path: "{{ host_shared_folder_path }}"
+            state: directory
+            recurse: true
+
+    - name: Fixing Darwin compatibility...
+      ansible.builtin.lineinfile:
+        path: "{{ local_vmx_path }}"
+        regex: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        state: present
+      loop_control:
+        label: "{{ item.line }}"
+      loop:
+        - regex: guestos.*
+          line: guestos = "darwin20-64"
+      when: "'os_macos' in group_names"
+
+    - name: Waiting for user to manually start VMware Workstation... # For some reason it doesn't start automatically
+      ansible.builtin.shell: |
+        if [ -z "$(ps -fC vmware --no-headers)" ]; then
+            echo "Waiting for VMware..."
+        else
+            echo "Moving on..."
+        fi
+      register: vmware_workstation_running
+      retries: 90
+      delay: 10
+      until: vmware_workstation_running.stdout == "Moving on..."
+
+    - name: Starting {{ inventory_hostname }} and waiting for IP address...
+      ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}
+
+    - name: Waiting for {{ inventory_hostname }} IP address...
+      ansible.builtin.shell: vmrun getGuestIPAddress {{ local_vmx_path }}
+      register: vmip
+      retries: 60
+      delay: 3
+      until:
+        - vmip.rc == 0
+        - vmip.stdout != "unknown"
+        - vmip.stdout | ansible.utils.ipv4() != false
+
+    - name: Enabling shared folders... # Needs to be enabled here again because otherwise VMWare Workstation disables shared folders for new machines on first run
+      ansible.builtin.shell: vmrun enableSharedFolders {{ local_vmx_path }}
+      when:
+        - enable_shared_folder
+        - supported_shared_folder_os | intersect(group_names) | length > 0
+
+    - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
+      ansible.builtin.set_fact:
+        ansible_host: "{{ vmip.stdout }}"
+        primary_ipv4: "{{ vmip.stdout }}"
