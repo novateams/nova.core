@@ -26,8 +26,8 @@
     - role_only or role_only_wp
 
 - block:
-    - name: Checking that nothing is responding on {{ connection_ip }}...
-      local_action: shell ping -q -c 2 -W 2 {{ connection_ip }}
+    - name: Checking that nothing is responding on {{ connection_address }}...
+      local_action: shell ping -q -c 2 -W 2 {{ connection_address }}
       register: res
       failed_when: not (('0 received' in res.stdout) or ('0 packets received' in res.stdout))
       changed_when: false
@@ -111,14 +111,9 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         template: "{{ base_vm_template if template else vm_template }}"
         folder: "{{ folder }}"
-        state: poweredon
+        state: "{{ 'poweredoff' if (extra_interfaces or primary_network.ipv4 is not defined or video_increase_memory) else 'poweredon' }}"
         cluster: "{{ cluster }}"
         datastore: "{{ datastore }}"
-        disk:
-          - size_mb: "{{ os_disk_size }}"
-            controller_type: "{{ vmware_scsi_controller_type }}"
-            controller_number: 0
-            unit_number: 0
         resource_pool: "{{ resource_pool | default(omit) }}"
         hardware:
           num_cpus: "{{ cpus if not hardware_cpu else hardware_cpu }}"
@@ -133,6 +128,11 @@
           - controller_number: 0 # Removing extra cdrom left from packer
             unit_number: 1
             state: absent
+        disk:
+          - size_mb: "{{ os_disk_size }}"
+            controller_type: "{{ vmware_scsi_controller_type }}"
+            controller_number: 0
+            unit_number: 0
         advanced_settings:
           - key: isolation.tools.copy.disable
             value: "FALSE"
@@ -142,7 +142,7 @@
             value: "TRUE"
         linked_clone: "{{ linked_clone_status }}"
         snapshot_src: "{{ linked_clone_snapshot_name if linked_clone_status else omit }}"
-        annotation: "{{ template_description if template else vm_description }}"
+        annotation: "Deployed at {{ ansible_date_time.iso8601 }} by {{ deployer_username }}. Description: {{ template_description if template else vm_description }}"
         vapp_properties: "{{ vapp_options }}"
       register: vmware_guest
 
@@ -158,7 +158,7 @@
         use_auto_detect: false
       when: video_increase_memory
 
-    - name: Looking up the created VM...
+    - name: Looking up the cloned VM...
       vmware.vmware_rest.vcenter_vm_info:
         filter_names: "{{ custom_vm_name | default(vm_name) }}"
       register: created_vm_info
@@ -191,10 +191,27 @@
           type: "{{ default_network.value[0].type }}"
           network: "{{ default_network.value[0].network }}"
         start_connected: true
+        state: present
       register: add_default_nic
       until: not add_default_nic.failed
       retries: 5
       delay: 2
+
+      # The task above does not "connect" the interface of a started VM!
+      # If the VM template had the default NIC connected to a network that the destination
+      # cluster does not have AND the VM is started right after cloning then the default interface remains
+      # disconnected even after changing the backing network.
+      # It seems the two tasks cannot be combined, because the backing has to be changed before connecting.
+    - name: Make sure the default interface is actually connected...
+      vmware.vmware_rest.vcenter_vm_hardware_ethernet:
+        vm: "{{ created_vm_info.value[0].vm }}"
+        nic: "{{ existing_nic.value[0].nic }}"
+        state: connect
+      register: connect_default_nic
+      until: not connect_default_nic.failed
+      retries: 5
+      delay: 2
+      when: created_vm_info.value[0].power_state == "POWERED_ON"
 
     - name: Looping over extra_nics task... # Using loop because then the NIC order stays intact
       ansible.builtin.include_tasks: extra_nics.yml

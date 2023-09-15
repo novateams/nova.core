@@ -1,6 +1,7 @@
 ---
-dns_server_combined: "{{ dns_servers + dns_servers6 }}"
+dns_servers: []
 dns_servers6: []
+dns_server_combined: "{{ dns_servers + dns_servers6 }}"
 ansible_network_os: {}
 reconfigure_network: false # Can be used as as CLI var to re-run the network configuration part. Does not when sudo password is required because of vmware_tools plugin limitations
 mgmt_ip: {}
@@ -16,6 +17,8 @@ rest_api_credentials:
   type: USERNAME_PASSWORD
   user_name: "{{ template_username if fresh_deploy and not manual_fresh_deploy else admin_account }}"
   password: "{{ template_password if fresh_deploy and not manual_fresh_deploy else admin_account_password }}"
+retries_vmware_api: 60
+delay_vmware_api: 3
 
 # Connection mode
 primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}"

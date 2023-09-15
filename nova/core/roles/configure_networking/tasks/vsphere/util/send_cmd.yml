@@ -1,0 +1,43 @@
+- name: Execute command...
+  ansible.builtin.uri:
+    url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+    method: POST
+    headers:
+      vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+    body:
+      credentials: "{{ rest_api_credentials }}"
+      spec:
+        # Network interfaces renamed very early during boot https://superuser.com/questions/914646/renaming-network-interface-with-systemd
+        arguments: "{{ args_to_execute }}"
+        path: "{{ bin_to_execute }}"
+    status_code: 201
+    body_format: json
+    validate_certs: no
+  register: apply_cmd
+  # Because Windows is still coming up from initial sysprep
+  until: apply_cmd.status == 201
+  retries: "{{ retries_vmware_api }}"
+  delay: "{{ delay_vmware_api }}"
+
+- name: Wait for completion...
+  ansible.builtin.uri:
+    url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes/{{ apply_cmd.json }}?action=get
+    method: POST
+    headers:
+      vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+    body:
+      credentials: "{{ rest_api_credentials }}"
+    status_code: 200
+    body_format: json
+    validate_certs: no
+  register: apply_cmd_status
+  until: apply_cmd_status.json.exit_code is defined
+  retries: "{{ retries_vmware_api }}"
+  delay: "{{ delay_vmware_api }}"
+
+- name: Check command status...
+  block:
+    - ansible.builtin.fail: # Uncomment for debugging vars
+        msg: "Command failed! Exit code: {{ apply_cmd_status.json.exit_code }}"
+    - ansible.builtin.meta: end_play
+  when: apply_cmd_status.json.exit_code != 0
