@@ -1,0 +1,19 @@
+---
+- name: Including enable RDP task...
+  include_tasks: enable.yml
+  when: configuration == 'enable'
+
+- name: Including disable RDP task...
+  include_tasks: disable.yml
+  when: configuration == 'disable'
+
+- name: Enabling Windows Firewall rules for RDP...
+  community.windows.win_firewall_rule:
+    name: "{{ item }}"
+    enabled: yes
+  loop:
+    - Remote Desktop - Shadow (TCP-In)
+    - Remote Desktop - User Mode (TCP-In)
+    - Remote Desktop - User Mode (UDP-In)
+    - Remote Desktop - (TCP-WS-In)
+    - Remote Desktop - (TCP-WSS-In)

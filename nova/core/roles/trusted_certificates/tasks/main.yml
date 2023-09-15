@@ -1,0 +1,19 @@
+---
+- name: Creating {{ post_scripts_folder_on_target }} folder...
+  ansible.windows.win_file:
+    path: "{{ post_scripts_folder_on_target }}"
+    state: directory
+  when: "'os_windows' in group_names"
+
+# Installing trusted certificates from file upload or uri
+- name: Including Windows trusted certificates tasks...
+  ansible.builtin.include_tasks: windows.yml
+  when: "'os_windows' in group_names"
+
+- name: Including Linux trusted certificates tasks...
+  ansible.builtin.include_tasks: linux.yml
+  when: "'os_linux' in group_names"
+
+- name: Including VyOS trusted certificates tasks...
+  ansible.builtin.include_tasks: vyos.yml
+  when: "'os_vyos' in group_names"

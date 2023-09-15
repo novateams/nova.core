@@ -1,0 +1,85 @@
+---
+- name: Authenticating and getting checking vault path...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Getting Authentication token...
+      ansible.builtin.uri:
+        url: "{{ secrets_vault_address }}/v1/auth/ldap/login/{{ vault_username }}"
+        method: POST
+        body:
+          password: "{{ vault_password }}"
+        status_code: 200
+        validate_certs: "{{ validate_vault_certs }}"
+        body_format: json
+      register: auth
+
+    - name: Checking if secrets path already exists...
+      ansible.builtin.uri:
+        url: "{{ secrets_vault_data_fullpath }}"
+        method: GET
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+        body_format: json
+        status_code:
+          - 200
+          - 404
+        validate_certs: "{{ validate_vault_certs }}"
+      register: secrets_path
+
+- name: Creating secrets path...
+  when: secrets_path.status == 404
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Creating {{ secrets_vault_secrets_path }} path...
+      ansible.builtin.uri:
+        url: "{{ secrets_vault_data_fullpath }}"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+        body:
+          data: {}
+        validate_certs: "{{ validate_vault_certs }}"
+        body_format: json
+
+    - name: Waiting until secrets path is created...
+      ansible.builtin.uri:
+        url: "{{ secrets_vault_data_fullpath }}"
+        method: GET
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+        body_format: json
+        validate_certs: "{{ validate_vault_certs }}"
+      register: secrets_path_present
+      until: secrets_path_present.status == 200
+      retries: 60
+      delay: 5
+
+    - name: Updating {{ secrets_vault_metadata_fullpath }} metadata...
+      ansible.builtin.uri:
+        url: "{{ secrets_vault_metadata_fullpath }}"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+        body:
+          max_versions: 100 # This sets the vault KV store secrets history to 100. Since using loops increments history quickly.
+        body_format: json
+        status_code: 204
+        validate_certs: "{{ validate_vault_certs }}"
+
+- name: Listing all secrets in {{ secrets_vault_secrets_path }}...
+  ansible.builtin.uri:
+    url: "{{ secrets_vault_data_fullpath }}"
+    method: GET
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ auth.json.auth.client_token }}"
+    body_format: json
+    validate_certs: "{{ validate_vault_certs }}"
+  register: existing_secrets
+  delegate_to: localhost

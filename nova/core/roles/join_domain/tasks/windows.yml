@@ -1,0 +1,56 @@
+---
+- name: Checking if the machine is already domain joined...
+  ansible.windows.win_shell: "{{ lookup('file', 'Domain-Check.ps1') }}"
+  register: secure_channel
+
+- name: Including Windows tasks to fix broken trust...
+  delegate_to: "{{ primary_domain_controller }}"
+  when: secure_channel.stdout_lines[0] == "False" # This means that the domain trust is broken
+  block:
+    - name: Setting required facts for delegation...
+      ansible.builtin.set_fact:
+        ansible_user: "{{ domain_admin_username | default(ansible_deployer_username) }}@{{ ad_domain_name }}"
+        ansible_password: "{{ domain_admin_password | default(ansible_deployer_password) }}"
+        ansible_shell_type: "{{ default_ansible_shell_type }}"
+      delegate_facts: true
+
+    - name: Cleaning any existing computer account...
+      microsoft.ad.computer:
+        name: "{{ hostname | upper }}"
+        state: absent
+
+    - name: Creating a new computer account...
+      microsoft.ad.computer:
+        name: "{{ hostname | upper }}"
+        sam_account_name: "{{ hostname | upper }}"
+        dns_hostname: "{{ hostname | upper }}.{{ ad_domain_name }}"
+        path: "{{ computer_ou | default(omit) }}"
+
+- name: Including Windows tasks for broken trust and domain remove...
+  when: state == "workgroup" or secure_channel.stdout_lines[0] == "False"
+  block:
+    - name: Adding machine to workgroup...
+      microsoft.ad.membership:
+        workgroup_name: WORKGROUP
+        domain_admin_user: "{{ domain_join_user }}@{{ ad_domain_name }}"
+        domain_admin_password: "{{ domain_join_password }}"
+        state: workgroup
+        reboot: true
+
+- name: Including Windows tasks for domain join...
+  when: state == "domain"
+  block:
+    - name: Adding machine to domain...
+      microsoft.ad.membership:
+        dns_domain_name: "{{ ad_domain_name }}"
+        hostname: "{{ hostname }}"
+        domain_admin_user: "{{ domain_join_user | default(domain_admin_username) }}@{{ ad_domain_name }}"
+        domain_admin_password: "{{ domain_join_password | default(domain_admin_password) }}"
+        domain_ou_path: "{{ computer_ou | default(omit) }}"
+        state: domain
+        reboot: true
+
+    - name: Running Group Policy Update...
+      ansible.windows.win_command: gpupdate /force
+      async: 10 # It's a nice to have feature so we don't have to wait for it to finish
+      poll: 0

@@ -1,0 +1,14 @@
+---
+- name: Restoring hosts file... # For Ubuntu autoinstall with Packer it get's removed
+  ansible.builtin.template:
+    src: ubuntu_hosts
+    dest: /etc/hosts
+    mode: "0644"
+    lstrip_blocks: true
+
+- name: Removing unneeded packages...
+  ansible.builtin.package:
+    name:
+      - gnome-initial-setup
+      - cloud-init # This keeps trying wo write it's own config like hostname
+    state: absent

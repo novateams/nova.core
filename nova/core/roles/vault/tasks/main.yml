@@ -1,0 +1,23 @@
+---
+- name: Installing Vault...
+  ansible.builtin.include_tasks: install.yml
+
+- name: Configuring Vault...
+  ansible.builtin.include_tasks: configure.yml
+  when: vault_configure
+
+- name: Including {{ vault_root_ca_pki_engine_name }} creation tasks...
+  ansible.builtin.include_tasks: ca_root.yml
+  when: vault_create_root_ca
+
+- name: Including {{ vault_intermediate_ca_pki_engine_name }} creation tasks...
+  ansible.builtin.include_tasks: ca_intermediate.yml
+  when: vault_create_intermediate_ca
+
+- name: Including {{ vault_mitm_ca_pki_engine_name }} creation tasks...
+  ansible.builtin.include_tasks: ca_mitm.yml
+  when: vault_create_mitm_ca
+
+- name: Including ldap configuration task...
+  ansible.builtin.include_tasks: configure_ldap.yml
+  when: vault_configure_ldap

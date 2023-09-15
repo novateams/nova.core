@@ -1,0 +1,67 @@
+---
+- name: Cleaning up Linux machine...
+  ansible.builtin.shell: |
+    export HISTFILE=/dev/null
+    rm -rf /home/gt/.bash_history
+    rm -f /home/*/.ssh/known_hosts
+    rm -rf /home/*/.cache/*
+    rm -f /home/*/.sudo_as_admin_successful
+    rm -f /root/.bconsole_history
+    rm -f /root/.mysql_history
+    rm -f /root/.nano_history
+    rm -f /root/.ssh/known_hosts
+    rm -f /root/.vim/*
+    rm -f /root/.viminfo
+    rm -f /root/.vnc/*.log
+    rm -f /root/.vnc/passwd
+    rm -f /root/selfconf
+    rm -f /var/log/*.gz
+    rm -f /var/log/ConsoleKit/*
+    rm -f /var/log/alternatives*
+    rm -f /var/log/apache2/*
+    rm -f /var/log/apt/*
+    rm -f /var/log/auth*
+    rm -f /var/log/boot
+    rm -f /var/log/clamd.log
+    rm -f /var/log/cups/*
+    rm -f /var/log/debug*
+    rm -f /var/log/dmesg*
+    rm -f /var/log/dpkg*
+    rm -f /var/log/ejabberd/*
+    rm -f /var/log/fsck/*
+    rm -rf /var/log/installer/*
+    rm -f /var/log/kern*
+    rm -f /var/log/landscape/*
+    rm -f /var/log/lightdm/*
+    rm -f /var/log/mail*
+    rm -f /var/log/messages*
+    rm -f /var/log/mysql*
+    rm -f /var/log/mysql/*
+    rm -f /var/log/nginx/*
+    rm -f /var/log/ntpd.log
+    rm -f /var/log/ntpstats/*
+    rm -f /var/log/samba/*
+    rm -f /var/log/syslog*
+    rm -f /var/log/tomcat5/*
+    rm -f /var/log/tomcat6/*
+    rm -f /var/log/tomcat7/*
+    rm -f /var/log/udev*
+    rm -f /var/log/upstart/*
+    rm -f /var/log/xferlog*
+    service apache2 restart || true
+    if [ -d "/run/log/journal" ]; then find /run/log/journal -name "*.journal" | xargs rm -f; fi
+  args:
+    executable: /bin/bash
+
+- name: Clearing journalctl logs...
+  ansible.builtin.shell: journalctl --vacuum-time=1seconds || true
+
+- name: Removing Linux bash history...
+  ansible.builtin.shell: |
+    export HISTFILE=/dev/null
+    rm -f /home/*/.bash_history
+    rm -f /root/.bash_history
+    history -c && history -w && cat /dev/null > /root/.bash_history
+  args:
+    executable: /bin/bash
+  when: remove_bash_history

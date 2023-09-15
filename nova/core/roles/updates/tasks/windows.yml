@@ -1,0 +1,29 @@
+---
+- name: Enabling & starting Windows Update service...
+  ansible.windows.win_service:
+    name: wuauserv
+    start_mode: auto
+    state: started
+  register: wuauserv_service
+  until: not wuauserv_service.failed
+  retries: 3
+  delay: 10
+
+- name: Enabling & starting Update Orchestrator Service...
+  ansible.windows.win_service:
+    name: UsoSvc
+    start_mode: auto
+    state: started
+  register: usosvc_service
+  until: not usosvc_service.failed
+  retries: 3
+  delay: 10
+  when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
+
+- name: Installing Windows updates...
+  ansible.windows.win_updates:
+    reboot: true
+  register: win_updates
+  until: win_updates.failed == false
+  retries: 3
+  delay: 10

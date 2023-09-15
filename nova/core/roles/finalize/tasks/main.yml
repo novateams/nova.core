@@ -1,0 +1,33 @@
+---
+- name: Flushing handlers...
+  ansible.builtin.meta: flush_handlers
+
+- name: Including finalize block for non-containers...
+  when: customization_context == "host"
+  block:
+    - name: Including finalization block for VMs...
+      when: infra_env != 'local-machine'
+      block:
+        - name: Including updates role...
+          ansible.builtin.include_role:
+            name: nova.core.updates
+          when: update_system
+
+        - name: Windows deploy finalization...
+          ansible.builtin.include_tasks: windows.yml
+          when: "'os_windows' in group_names"
+
+        - name: Linux deploy finalization...
+          ansible.builtin.include_tasks: linux.yml
+          when: "'os_linux' in group_names"
+
+        - name: Vyos deploy finalization...
+          ansible.builtin.include_tasks: vyos.yml
+          when: "'os_vyos' in group_names"
+
+    - name: Removing AWS temp ssh key for {{ hostname }}...
+      ansible.builtin.file:
+        path: "{{ temp_ssh_key_path }}"
+        state: absent
+      delegate_to: localhost
+      when: infra_env == "aws"

@@ -1,0 +1,34 @@
+---
+- name: Setting connection to ssh...
+  ansible.builtin.set_fact:
+    ansible_connection: ssh
+
+- name: Cleaning up Vyos logs...
+  ansible.builtin.shell: "{{ logs }}"
+  loop_control:
+    loop_var: logs
+  loop:
+    - rm -rf /config/archive/*
+    - rm -rf /var/log/*
+    - mkdir /var/log/nginx
+    - rm -rf /tmp/*
+    - journalctl --vacuum-time=1seconds
+  become: true
+
+- name: Cleaning user history...
+  ansible.builtin.file:
+    path:
+      - "{{ user_logs }}/.*history"
+      - "{{ user_logs }}/.ansible"
+      - "{{ user_logs }}/.lesshst"
+    state: absent
+  loop_control:
+    loop_var: user_logs
+  loop:
+    - /root
+    - /home/gt
+    - /home/vyos
+
+- name: Setting connection back to paramiko...
+  ansible.builtin.set_fact:
+    ansible_connection: ansible.netcommon.network_cli

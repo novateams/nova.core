@@ -1,0 +1,48 @@
+---
+- name: Including Windows activation tasks...
+  when: activate_windows
+  block:
+    - name: Configuring KMS & activating Windows... # KMS needs to be accessible or the task will fail
+      ansible.windows.win_shell: "{{ lookup('template', 'Activate-Windows.ps1') }}"
+      async: 120
+      poll: 0
+      register: windows_activation
+      when: kms_server != {}
+
+    - name: INFO
+      ansible.builtin.debug:
+        msg: kms_server variable undefined. Windows & Microsoft Office will not be activated.
+      when: kms_server == {}
+
+# Highly recommended because public Chocolatey repo has a rate limit
+- name: Configuring chocolatey source(s)...
+  chocolatey.chocolatey.win_chocolatey_source:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+    source: "{{ item.source | default(omit) }}" # Using omit for state absent
+    source_username: "{{ chocolatey_username | default(omit) }}"
+    source_password: "{{ chocolatey_password | default(omit) }}"
+    priority: "{{ item.priority | default(omit) }}" # Using omit for state absent
+  loop: "{{ chocolatey_sources }}"
+  loop_control:
+    label: "{{ item.source }}"
+  when: configure_chocolatey_sources
+
+- name: Changing Windows hostname...
+  ansible.windows.win_hostname:
+    name: "{{ hostname }}"
+  register: win_hostname
+
+- name: Waiting until Windows is activated...
+  ansible.builtin.async_status:
+    jid: "{{ windows_activation.ansible_job_id }}"
+  register: windows_activation_status
+  until: windows_activation_status.finished
+  retries: 20
+  when:
+    - kms_server != {}
+    - activate_windows
+
+- name: Rebooting...
+  ansible.windows.win_reboot:
+  when: win_hostname.reboot_required

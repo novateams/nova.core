@@ -1,0 +1,2 @@
+---
+role: "{{ inventory_hostname }}"

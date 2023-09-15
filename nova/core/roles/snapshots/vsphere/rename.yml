@@ -1,0 +1,11 @@
+---
+- name: Renaming {{ snapshot_name }} snapshot to {{ new_snapshot_name }}...
+  community.vmware.vmware_guest_snapshot:
+    datacenter: "{{ datacenter }}"
+    folder: "{{ folder }}"
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    state: present
+    snapshot_name: "{{ snapshot_name }}"
+    new_snapshot_name: "{{ new_snapshot_name }}"
+  delegate_to: localhost
+  become: false

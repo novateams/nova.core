@@ -1,0 +1,46 @@
+---
+- name: Including Windows 11 sysprep fix tasks...
+  when: ansible_facts.os_name is search("Microsoft Windows 11")
+  block:
+    - name: Removing buggy OneDrive from Windows 11 # This packages is blocking sysprep
+      ansible.windows.win_shell: Get-AppxPackage Microsoft.OneDriveSync* | Remove-AppPackage
+
+    - name: Rebooting...
+      ansible.windows.win_reboot:
+
+- name: Recompiling DLLs after .NET updates # https://docs.ansible.com/ansible/latest/os_guide/windows_performance.html#fix-high-cpu-on-boot-for-vms-cloud-instances
+  community.windows.win_dotnet_ngen:
+
+- name: Encoding Administrator's password...
+  ansible.windows.win_shell: "{{ lookup('template', 'Encode-UnattendPassword.ps1') }}"
+  register: win_shell
+
+- name: Templating Unattend.xml to machine...
+  ansible.windows.win_template:
+    src: Unattend.xml
+    dest: C:/Windows/System32/Sysprep/Unattend.xml
+
+- name: Running sysprep...
+  ansible.windows.win_shell: "{{ lookup('template', 'Windows-Sysprep.ps1') }}"
+  async: 60
+  poll: 0
+
+- name: Including the shutdown wait tasks block...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Looking up the VM...
+      vmware.vmware_rest.vcenter_vm_info:
+        filter_names: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+      until: not vcenter_vm_info.failed
+      retries: 5
+      delay: 2
+
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
+      vmware.vmware_rest.vcenter_vm_guest_power_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: poweroff_status
+      until: poweroff_status.value.state == "NOT_RUNNING"
+      retries: 60
+      delay: 10

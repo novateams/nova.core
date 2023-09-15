@@ -1,0 +1,45 @@
+---
+- name: Enabling windows update for features installation...
+  ansible.windows.win_service:
+    name: wuauserv
+    start_mode: auto
+    state: started
+
+- name: Instaling Hyper-V & Containers with sub features and management tools...
+  ansible.windows.win_feature:
+    name:
+      - Containers
+      - Hyper-V
+    state: present
+    include_sub_features: true
+    include_management_tools: true
+  register: win_feature
+
+- name: Rebooting, if required...
+  ansible.windows.win_reboot:
+  when: win_feature.changed
+
+- name: Installing docker powershell module...
+  community.windows.win_psmodule:
+    name: DockerMsftProvider
+    state: present
+
+- name: Installing docker powershell packages...
+  ansible.windows.win_shell: |
+    Install-Package -Name Docker -Provider DockerMsftProvider -Force
+    Install-Package -Name DockerCompletion, DockerComposeCompletion, DockerMachine -Force
+- name: Installing Docker Compose...
+  chocolatey.chocolatey.win_chocolatey:
+    name: docker-compose
+    state: present
+  register: win_chocolatey
+
+- name: Enabling docker service...
+  ansible.windows.win_service:
+    name: docker
+    start_mode: auto
+    state: started
+
+- name: Rebooting, if required...
+  ansible.windows.win_reboot:
+  when: win_chocolatey.changed

@@ -1,0 +1,78 @@
+---
+- block:
+    - name: Templating network configuration script...
+      ansible.builtin.template:
+        src: netplan.yml
+        dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_netplan.yml
+        lstrip_blocks: true
+
+    - name: Getting file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_netplan.yml
+      register: file_size
+
+    - name: Preparing file upload...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ file_size.stat.size }}"
+            path: /etc/netplan/01-netcfg.yaml
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      register: file_upload_prep
+
+    - name: Removing existing netplan configuration file(s)...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c "rm /etc/netplan/*"
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Uploading file...
+      ansible.builtin.uri:
+        url: "{{ file_upload_prep.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_netplan.yml
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Configuring network...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c "netplan apply ; netplan apply" # Needs 2x for Ubuntu 22.04 Desktop for some reason
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+  become: false
+  delegate_to: localhost
+
+- name: Rebooting to apply interface changes...
+  ansible.builtin.reboot:
+  when: "'os_ubuntu_18_04' in group_names"

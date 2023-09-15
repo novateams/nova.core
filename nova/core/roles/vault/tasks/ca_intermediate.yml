@@ -1,0 +1,206 @@
+---
+# Intermediate CA
+- name: Checking if the Intermediate CA PKI engine already exists...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_intermediate_ca_pki_engine_name }}/tune"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_root_token }}"
+    status_code:
+      - 200
+      - 400 # This means that the engine doesn't exist
+  register: intermediate_ca_pki_engine_status
+
+- name: Enabling Intermediate CA PKI engine...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_intermediate_ca_pki_engine_name }}{{ '/tune' if intermediate_ca_pki_engine_status.status == 200 else '' }}"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      type: pki
+      description: ""
+      config:
+        options: null
+        default_lease_ttl: 87600h # 10 years
+        max_lease_ttl: 87600h # 10 years
+        force_no_cache: false
+      local: false
+      seal_wrap: false
+      external_entropy_access: false
+      options: null
+    status_code: 204
+    body_format: json
+
+- name: Including Intermediate CA configuration block...
+  when: intermediate_ca_pki_engine_status.status != 200
+  block:
+    - name: Generating Intermediate CSR...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/intermediate/generate/internal"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          ttl: "{{ intermediate_ca_ttl_hours | default('87600') }}h" # Default is 10 years
+          common_name: "{{ vault_intermediate_ca_name }}"
+          ou: "{{ vault_intermediate_ca_ou | default('') }}"
+          organization: "{{ vault_intermediate_ca_org | default('') }}"
+          country: "{{ vault_intermediate_ca_country | default('') }}"
+          key_type: "{{ vault_intermediate_ca_key_type | default('ec') }}"
+          key_bits: "{{ vault_intermediate_ca_key_bits | default('384') }}"
+        body_format: json
+      register: intermediate_csr
+
+    - name: Signing Intermediate CA...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca_pki_engine_name }}/root/sign-intermediate"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          csr: "{{ intermediate_csr.json.data.csr }}"
+          common_name: "{{ vault_intermediate_ca_name }}"
+          use_csr_values: true
+        body_format: json
+      register: signed_intermediate_ca
+
+    - name: Setting signed Intermediate CA...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/intermediate/set-signed"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          certificate: "{{ signed_intermediate_ca.json.data.certificate }}"
+        body_format: json
+        status_code:
+          - 200
+          - 204
+
+- name: Creating RSA, EC server certificate roles...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/roles/{{ item.path }}"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      allow_any_name: true
+      allow_bare_domains: true
+      allow_glob_domains: true
+      allow_wildcard_certificates: true
+      allow_ip_sans: true
+      allow_localhost: true
+      allow_subdomains: true
+      cn_validations: disabled
+      client_flag: true
+      code_signing_flag: false
+      enforce_hostnames: true
+      key_bits: "{{ item.key_bits }}"
+      key_type: "{{ item.key_type }}"
+      key_usage: DigitalSignature, KeyAgreement, KeyEncipherment
+      max_ttl: 43800h
+      require_cn: true
+      server_flag: true
+      ttl: 9528h # 397 days
+      use_csr_common_name: true
+      use_csr_sans: true
+      ou: "{{ item.ou | default('') }}"
+      organization: "{{ item.organization | default('') }}"
+      country: "{{ item.country | default('') }}"
+    status_code:
+      - 200
+      - 204
+    body_format: json
+  loop:
+    # RSA Client/Server certificate
+    - path: server_rsa
+      key_bits: 4096
+      key_type: rsa
+      ou: "{{ vault_server_rsa_ou }}"
+      organization: "{{ vault_server_rsa_organization }}"
+      country: "{{ vault_server_rsa_country }}"
+    # EC Client/Server certificate
+    - path: server_ec
+      key_bits: 256
+      key_type: ec
+      ou: "{{ vault_server_ec_ou }}"
+      organization: "{{ vault_server_ec_organization }}"
+      country: "{{ vault_server_ec_country }}"
+
+- name: Creating Code Signing certificate role...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/roles/{{ item.path }}"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      allow_any_name: true
+      allow_bare_domains: true
+      allow_glob_domains: true
+      allow_wildcard_certificates: true
+      allow_ip_sans: true
+      allow_localhost: true
+      allow_subdomains: true
+      cn_validations: disabled
+      client_flag: false
+      code_signing_flag: true
+      enforce_hostnames: true
+      key_bits: "{{ vault_code_signing_key_bits}}"
+      key_type: "{{ vault_code_signing_key_type }}"
+      key_usage: DigitalSignature, KeyAgreement, KeyEncipherment
+      max_ttl: 43800h
+      require_cn: true
+      server_flag: false
+      ttl: 9528h # 397 days
+      use_csr_common_name: true
+      use_csr_sans: true
+      ou: "{{ vault_code_signing_ou | default('') }}"
+      organization: "{{ vault_code_signing_organization | default('') }}"
+      country: "{{ vault_code_signing_country | default('') }}"
+    status_code:
+      - 200
+      - 204
+    body_format: json
+  when: vault_code_signing_enabled
+
+# CRLs
+- name: Configuring {{ vault_intermediate_ca_pki_engine_name }} CRL...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/config/crl"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      ocsp_disable: true
+      auto_rebuild: true
+      auto_rebuild_grace_period: 4320h # 180 days
+      enable_delta: false
+      expiry: 8760h # 1 year
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+# URIs
+- name: Configuring URIs...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/config/urls"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      crl_distribution_points: "{{ vault_intermediate_ca_crl_distribution_points }}"
+      issuing_certificates: "{{ vault_intermediate_ca_issuing_certificates }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204

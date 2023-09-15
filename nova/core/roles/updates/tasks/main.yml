@@ -1,0 +1,12 @@
+---
+- name: Updating Windows machine...
+  ansible.builtin.include_tasks: windows.yml
+  when: "'os_windows' in group_names"
+
+- name: Updating Linux machine...
+  ansible.builtin.include_tasks: linux.yml
+  when: "'os_linux' in group_names"
+
+- name: Updating Arch Linux machine...
+  ansible.builtin.include_tasks: arch.yml
+  when: "'os_arch' in group_names"

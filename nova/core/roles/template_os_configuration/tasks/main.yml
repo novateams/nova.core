@@ -1,0 +1,53 @@
+---
+- name: Including VMTools role...
+  ansible.builtin.include_role:
+    name: nova.core.vcenter_vmtools_policy
+
+- name: Including updates role...
+  ansible.builtin.include_role:
+    name: nova.core.updates
+  when: update_system
+
+- name: Configure Windows machine
+  ansible.builtin.include_tasks: windows.yml
+  when: "'os_windows' in group_names"
+
+- name: Configure Linux machine
+  ansible.builtin.include_tasks: linux.yml
+  when: "'os_linux' in group_names"
+
+- name: Configure RouterOS machine
+  ansible.builtin.include_tasks: routeros.yml
+  when: ansible_network_os == "routeros"
+
+- name: Including required roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop:
+    - nova.core.customization # Customize should be after updates in case updates revert some configs
+    - nova.core.customization_post_vm_role
+    - nova.core.finalize
+    - nova.core.cleanup
+
+- name: Including required roles...
+  ansible.builtin.include_role:
+    name: nova.core.win_sysprep
+  when: sysprep
+
+- name: Including powerstate role...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    shutdown: true
+  when: not sysprep # Because sysprep will shut down the machine when it's done
+
+- name: Including snapshots role...
+  ansible.builtin.include_role:
+    name: nova.core.snapshots
+  vars:
+    snapshot_mode: resnap
+    snapshot_name: LinkedCloneSource
+    start_vm_after_snapshot: false
+
+- name: Ending play for templates...
+  ansible.builtin.meta: end_host

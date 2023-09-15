@@ -1,0 +1,47 @@
+---
+- name: Including DHCP detection tasks block...
+  when: connection_mode_dhcp
+  block:
+    - name: Detecting DHCP address for {{ hostname }}...
+      community.vmware.vmware_guest_info:
+        datacenter: "{{ datacenter }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        folder: "{{ folder }}"
+        properties:
+          - guest.ipAddress
+        schema: vsphere
+      delegate_to: localhost
+      register: detect_dhcp
+      until:
+        - detect_dhcp.instance.guest.ipAddress
+        - detect_dhcp.instance.guest.ipAddress != "0.0.0.0"
+        - not (detect_dhcp.instance.guest.ipAddress | ansible.utils.ipv6) # Protection against IPv6 link-local address
+      retries: 60
+      delay: 5
+
+    - name: Setting {{ (detect_dhcp.instance | default(vmware_guest_info.instance)).guest.ipAddress }} from DHCP for connection...
+      ansible.builtin.set_fact:
+        ansible_host: "{{ (detect_dhcp.instance | default(vmware_guest_info.instance)).guest.ipAddress }}"
+
+- name: Setting {{ connection_ip }} IP for connection from local inventory... # Calculated connection address when using local inventory
+  ansible.builtin.set_fact:
+    ansible_host: "{{ connection_ip }}"
+  when:
+    - not connection_mode_dhcp
+    - connection_address is not defined
+
+- name: Setting {{ connection_address }} for connection from Providentia... # This address comes from Providentia API
+  ansible.builtin.set_fact:
+    ansible_host: "{{ connection_address }}"
+  when: connection_address is defined
+
+- name: Setting custom {{ custom_connection_ip }} IP for connection... # This is for edge cases when connection IP must be overridden manually
+  ansible.builtin.set_fact:
+    ansible_host: "{{ custom_connection_ip }}"
+  when: custom_connection_ip is defined
+
+- name: Setting correct connection plugin and credentials for {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_connection: "{{ default_connection_plugin }}"
+    ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
+    ansible_password: "{{ template_password if fresh_deploy else ansible_deployer_password }}"

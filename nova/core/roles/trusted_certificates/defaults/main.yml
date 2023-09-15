@@ -1,0 +1,4 @@
+---
+trusted_certificates_list: [] # List of trusted certificates with name and src to download or copy to target
+trusted_certificates_to_jks: false # Set to true if you want to install trusted certificates to JKS
+jks_truststore_name: "{{ fqdn }}" # Name of the JKS truststore file that will be created on Linux hosts

@@ -1,0 +1,30 @@
+---
+activate_windows: true
+kms_server: {}
+extra_activation_command: {} # Extra PowerShell command to be ran before Windows/Office activation, usually not needed
+infra_env: {}
+ansible_network_os: {}
+post_scripts_folder_on_target: c:\tmp
+routeros_license_account: {} # MikroTik account to be used for license activation
+routeros_license_password: {} # MikroTik account password to be used for license activation
+hosts_file_values: [] # Custom hosts file entries to be added.
+resolv_conf_dns_servers: []
+wait_for_host: false # Set true to wait for external connection before moving on with Linux hosts
+wait_for_address: 1.1.1.1 # Host to check in Waiting for internet... task
+wait_for_port: 53 # Port to check in Waiting for internet... task
+wait_for_timeout: 300 # How many seconds to wait for wait_for_host
+os_configuration_wait_for_site: false # Set true to wait for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
+os_configuration_wait_for_site_url: https://google.com # URL to wait for
+os_configuration_wait_for_site_retries: 30 # How many times to retry waiting for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
+os_configuration_expand_os_disk_role_name: {} # Define your OS disk expansion role name in your host or group vars to included it with this role
+
+configure_chocolatey_sources: false # Set to true and follow the configuration example below to set Chocolatey sources
+chocolatey_sources:
+  - name: chocolatey-proxy
+    state: present
+    source: "{{ chocolatey_proxy_uri }}"
+    priority: 1
+
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org

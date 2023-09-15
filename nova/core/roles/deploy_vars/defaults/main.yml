@@ -1,0 +1,69 @@
+---
+###################
+# Global defaults #
+###################
+
+# These are defined here because it's the first role loaded and these defaults will then be used for subsequent roles
+# It's better to define different lookups (vault, keepass etc.) in this role because then they'll be loaded only once
+
+template: false # Set to yes to include the template role in start.yml
+customization_context: host # Default value, Providentia also can give out type: container
+manual_fresh_deploy: false # For when running ctp-fresh-deploy alias from CLI
+just_create: false # Stops play after vm clone
+fresh_deploy: false # Set to true to run the deploy like the first time
+role_only: false # Includes customization role and then stops, great for developing roles
+role_only_wp: false # Run the deploy starting from customization_pre_vm_role
+just_clone: false # Runs the deploy until the end of os_configuration, creates a snapshot and the stops
+datacenter_location: {} # Required when deploying to vSphere
+main_id: "{{ inventory_hostname }}" # For when using local inventory, main_id is a Providentia specific variable
+save_secrets_to_vault: false # Set to true to save accounts to vault, required a running HashiCorp Vault server with LDAP auth enabled
+gt_username: gt # Default non-root/Administrator username for deployment
+
+#########
+# Vault #
+#########
+
+validate_vault_certs: true
+vault_credentials: auth_method=ldap mount_point=ldap username={{ deployer_username }} password={{ deployer_password }}
+vault_lookup_fragment: "url={{ vault_address }} validate_certs={{ validate_vault_certs | default(true) }} ca_cert=/etc/ssl/certs/ca-certificates.crt {{ vault_credentials }} " # The space before the ending quote is required
+
+##########
+# VMware #
+##########
+
+validate_vmware_certs: true
+
+vmware_defaults:
+  hostname: "{{ vcenter_hostname | default(omit) }}"
+  username: "{{ deployer_username | default(omit) }}"
+  password: "{{ deployer_password | default(omit) }}"
+  validate_certs: "{{ validate_vmware_certs }}"
+
+vmware_rest_defaults:
+  vcenter_hostname: "{{ vcenter_hostname | default(omit) }}"
+  vcenter_username: "{{ deployer_username | default(omit) }}"
+  vcenter_password: "{{ deployer_password | default(omit) }}"
+  vcenter_validate_certs: "{{ validate_vmware_certs }}"
+
+nsx_deployer_username: "{{ deployer_username }}@{{ ldap_auth_domain }}"
+nsx_deployer_password: "{{ deployer_password }}"
+
+#######
+# AWS #
+#######
+
+aws_defaults:
+  region: "{{ aws_reqion | default('eu-north-1') }}" # Default is Stockholm
+  aws_access_key: "{{ aws_access_key_id | default(omit) }}"
+  aws_secret_key: "{{ aws_access_key | default(omit) }}"
+
+#########
+# Azure #
+#########
+
+azure_location: westeurope
+azure_defaults:
+  subscription_id: "{{ azure_subscription_id | default(omit) }}" # Current subscription ID from https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade
+  client_id: "{{ azure_client_id | default(omit) }}" # The Service Principal Name's (Service Account used for deployment) ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
+  tenant: "{{ azure_tenant_id | default(omit) }}" # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
+  secret: "{{ azure_service_principal | default(omit) }}"

@@ -1,0 +1,16 @@
+---
+- name: Getting IP for VM in vSphere environment...
+  ansible.builtin.include_tasks: vsphere/main.yml
+  when: infra_env == 'vsphere'
+
+- name: Getting IP for VM in VMware Workstation environment...
+  ansible.builtin.include_tasks: vmware_workstation/main.yml
+  when: infra_env == 'vmware_workstation'
+
+- name: Getting IP for VM in AWS EC2 environment...
+  ansible.builtin.include_tasks: aws/main.yml
+  when: infra_env == 'aws'
+
+- name: Getting IP for VM in Linode environment...
+  ansible.builtin.include_tasks: linode/main.yml
+  when: infra_env == 'linode'

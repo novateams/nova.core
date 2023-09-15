@@ -1,0 +1,63 @@
+---
+- name: Configuring VM connection in vSphere environment...
+  ansible.builtin.include_tasks: vsphere.yml
+  when: infra_env == 'vsphere'
+
+- name: Configuring VM connection in VMware Workstation environment...
+  ansible.builtin.include_tasks: vmware_workstation.yml
+  when: infra_env == 'vmware_workstation'
+
+- name: Configuring connection your for local laptop...
+  ansible.builtin.include_tasks: laptop.yml
+  when: "'zone_local' in group_names"
+
+- name: Configuring connection in AWS environment...
+  ansible.builtin.include_tasks: aws.yml
+  when: infra_env == 'aws'
+
+- name: Configuring connection in Linode environment...
+  ansible.builtin.include_tasks: linode.yml
+  when: infra_env == 'linode'
+
+- name: Configuring connection for external or pre-existing machine...
+  ansible.builtin.include_tasks: external.yml
+  when: infra_env == 'external'
+
+# Setting it here, because in group_vars or host_vars the play gets really slow
+# Must be done after the connection tasks when ansible_password is defined
+# Needs to be ansible_deployer_password because accounts role changes connection credentials after changing passwords
+- name: Setting become password...
+  ansible.builtin.set_fact:
+    ansible_become_password: "{{ defined_become_password | default(ansible_deployer_password) }}"
+  when:
+    - "'zone_local' not in group_names"
+    - sudo_requires_password
+
+- name: Waiting for system to become reachable...
+  ansible.builtin.wait_for_connection:
+    timeout: 300
+  when:
+    - not role_only
+    - not role_only_wp
+    - "'os_macos' not in group_names"
+
+- name: Waiting for macOS system to become reachable...
+  ansible.builtin.raw: echo " "
+  changed_when: true
+  retries: 30
+  delay: 5
+  until: true
+  when:
+    - not role_only
+    - not role_only_wp
+    - "'os_macos' in group_names"
+
+- name: Gathering facts...
+  ansible.builtin.setup:
+  when:
+    - "'os_routeros' not in group_names"
+    - "'os_macos' not in group_names"
+
+- name: Gathering RouterOS facts...
+  community.routeros.facts:
+  when: "'os_routeros' in group_names"

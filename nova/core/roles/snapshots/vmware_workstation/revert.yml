@@ -1,0 +1,6 @@
+---
+- name: Reverting to {{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }} snapshot...
+  ansible.builtin.shell: vmrun revertToSnapshot {{ local_vmx_path }} "{{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }}" # Default is the latest snapshot
+
+- name: Starting {{ inventory_hostname }}...
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}

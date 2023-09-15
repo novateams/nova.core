@@ -1,0 +1,15 @@
+---
+- block:
+    - name: Checking if the post_vm_role role folder exists...
+      stat:
+        path: "{{ inventory_dir }}/roles/{{ post_vm_role_name }}"
+      register: project_role_existence
+      become: false
+      delegate_to: localhost
+
+    - name: Starting post-vm role customization...
+      include_role:
+        name: "{{ inventory_dir }}/roles/{{ post_vm_role_name }}"
+      when: project_role_existence.stat.exists
+
+  when: customization_context == "host" # Alternative is container that most likely doesn't need this role

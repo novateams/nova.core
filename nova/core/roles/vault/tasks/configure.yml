@@ -1,0 +1,144 @@
+---
+- name: Waiting until Vault is up...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/init"
+    method: GET
+    status_code: 200
+  register: vault_status
+  until: vault_status.status == 200
+  retries: 60
+  delay: 5
+
+- name: Including seal configuration block...
+  when: not vault_status.json.initialized
+  block:
+    - name: Creating seal...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/sys/init"
+        method: POST
+        headers:
+          X-Vault-Request: true
+        body:
+          secret_shares: "{{ vault_unseal_shares }}"
+          secret_threshold: "{{ vault_unseal_threshold }}"
+          stored_shares: 0
+          pgp_keys:
+          recovery_pgp_keys:
+          root_token_pgp_key: ""
+        body_format: json
+      register: vault_init
+
+    - name: Saving Vault root token credentials...
+      ansible.builtin.lineinfile:
+        path: "{{ vault_config_folder }}/creds/root_token"
+        line: "{{ vault_init.json.root_token }}"
+        create: yes
+        mode: "0600"
+
+    - name: Saving Vault unseal key(s)...
+      ansible.builtin.lineinfile:
+        path: "{{ vault_config_folder }}/creds/unseal_key"
+        line: "{{ item }}"
+        create: yes
+        mode: "0600"
+      no_log: true
+      loop:
+        - line: "- {{ vault_init.json.keys_base64 }}"
+
+    - name: Unsealing...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/sys/unseal"
+        method: PUT
+        headers:
+          X-Vault-Request: true
+        body:
+          key: "{{ item }}"
+          reset: false
+          migrate: false
+        body_format: json
+      loop: "{{ vault_init.json.keys_base64 }}"
+      loop_control:
+        index_var: vault_unseal_key_index
+      when: vault_unseal_key_index != vault_unseal_threshold
+
+- name: Waiting until Vault is unsealed...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
+    method: GET
+    status_code: 200
+  register: vault_status
+  until: not vault_status.json.sealed
+  retries: 60
+  delay: 5
+
+- name: Chcking if local root token exists...
+  ansible.builtin.stat:
+    path: "{{ vault_config_folder }}/creds/root_token"
+  register: root_token
+
+- name: Getting and setting root token fact...
+  when: root_token.stat.exists
+  block:
+    - name: Getting Vault root token...
+      ansible.builtin.command: cat {{ vault_config_folder }}/creds/root_token
+      register: vault_root_token_lookup
+
+    - name: Setting root token as fact...
+      ansible.builtin.set_fact:
+        vault_root_token: "{{ vault_root_token_lookup.stdout }}"
+
+- name: Missing root token...
+  ansible.builtin.fail:
+    msg: |
+      Vault root token not found!
+      Make sure you have a root token in {{ vault_config_folder }}/creds/root_token for testing environments.
+      OR
+      You have set the vault_root_token variable for production environments.
+  when:
+    - not root_token.stat.exists
+    - vault_root_token == {}
+
+- name: Including Vault auto-unseal tasks...
+  when:
+    - vault_auto_unseal
+    - vault_unseal_shares == 1 # Only one unseal key is supported for auto-unseal with this role
+  block:
+    - name: Chcking if local unseal key exists...
+      ansible.builtin.stat:
+        path: "{{ vault_config_folder }}/creds/unseal_key"
+      register: unseal_key
+
+    - name: Getting and setting unseal_key as fact...
+      when: unseal_key.stat.exists
+      block:
+        - name: Getting Vault unseal key...
+          ansible.builtin.command: cat {{ vault_config_folder }}/creds/unseal_key
+          register: vault_unseal_key_lookup
+
+        - name: Setting unseal key as fact...
+          ansible.builtin.set_fact:
+            vault_unseal_key: "{{ vault_unseal_key_lookup.stdout }}"
+
+    - name: Missing unseal key...
+      ansible.builtin.fail:
+        msg: |
+          Vault unseal key not found!
+          vault_auto_unseal is set to true but you don't have an unseal key in {{ vault_config_folder }}/creds/unseal_key.
+          OR
+          vault_auto_unseal variable defined.
+      when:
+        - not unseal_key.stat.exists
+        - vault_unseal_key == {}
+
+    - name: Templating auto-unseal script to machine...
+      ansible.builtin.template:
+        src: unseal-vault.sh
+        dest: "{{ vault_config_folder }}/config/unseal-vault.sh"
+        mode: "0700"
+
+    - name: Creating auto-unseal cron job...
+      ansible.builtin.cron:
+        name: Vault auto-unseal
+        special_time: reboot
+        job: "{{ vault_config_folder }}/config/unseal-vault.sh"
+        user: root

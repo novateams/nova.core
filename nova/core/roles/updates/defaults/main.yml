@@ -1,0 +1,4 @@
+---
+debian_family_updates_allow_reboot: true
+debian_family_unattended_upgrades: true
+debian_family_unattended_upgrades_allow_reboot: false

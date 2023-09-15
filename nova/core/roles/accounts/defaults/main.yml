@@ -1,0 +1,35 @@
+---
+admin_accounts: []
+user_accounts: []
+domain_user_accounts: []
+domain_groups: []
+sudo_requires_password: true
+use_ssh_agent_for_sudo: false
+
+# The default lookup paths are Vault's KVv2 secret engine and a secrets name under that.
+pregenerated_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret={{ environment_name }}/data/{{ project_fullname }}:{{ inventory_hostname }}_{{ item.username }}') }}"
+random_generated_password: "{{ lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits') }}"
+
+windows_domain_admin_groups:
+  - Domain Admins
+  - Schema Admins
+  - Enterprise Admins
+
+windows_domain_user_groups:
+  - Domain Users
+
+windows_admin_groups:
+  - Administrators
+
+windows_user_groups:
+  - Users
+
+distro_root_group_map:
+  Debian: sudo
+  CentOS: wheel
+  RedHat: wheel
+  Ubuntu: sudo
+  Kali: sudo
+  FreeBSD: wheel
+  OpenWrt: wheel
+  Archlinux: wheel

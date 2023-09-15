@@ -1,0 +1,51 @@
+---
+- name: Getting all mounts...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/auth"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_root_token }}"
+    body_format: json
+  register: all_auth_methods
+
+# vault_ldap_engine_name + '/' is required to match the strange output that comes from all_auth_methods.json.data
+- name: Configuring LDAP auth engine...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/auth/ldap{{ '/tune' if vault_ldap_engine_name + '/' in all_auth_methods.json.data else '' }}"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      config:
+        token_type: default-service
+      path: ldap
+      type: ldap
+    body_format: json
+    status_code:
+      - 204
+
+- name: Getting trusted certificate for LDAPS...
+  when: vault_ldaps_certificate_source != {}
+  block:
+    - name: Getting LDAPs certificate...
+      ansible.builtin.get_url:
+        url: "{{ vault_ldaps_certificate_source if vault_ldaps_certificate_source.startswith('http') else 'file://' + vault_ldaps_certificate_source }}"
+        dest: /tmp/ldaps.crt
+        mode: "0644"
+      register: vault_ldaps_certificate_file
+
+    - name: Getting LDAPs certificate contents...
+      ansible.builtin.slurp:
+        path: /tmp/ldaps.crt
+      register: vault_ldaps_certificate_file
+
+- name: Configuring LDAP...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/auth/ldap/config"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_root_token }}"
+    body: "{{ vault_ldap_configuration }}"
+    body_format: json
+    status_code:
+      - 204

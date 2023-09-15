@@ -1,0 +1,60 @@
+---
+- name: Delegating all powerstate tasks to localhost...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Looking up the VM...
+      vmware.vmware_rest.vcenter_vm_info:
+        filter_names: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+      until: not vcenter_vm_info.failed
+      retries: 5
+      delay: 2
+
+    - name: Stopping play if the VM doesn't exist...
+      when: vcenter_vm_info.value == []
+      block:
+        - name: INFO
+          ansible.builtin.debug:
+            msg: "{{ custom_vm_name | default(vm_name) }} VM doesn't exist!"
+
+        - name: Stopping play...
+          ansible.builtin.meta: end_host
+
+    - name: Waiting until VMTools are running...
+      vmware.vmware_rest.vcenter_vm_tools_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: vm_tools
+      until:
+        - vm_tools.value.run_state is defined
+        - vm_tools.value.run_state == "RUNNING"
+      retries: 18
+      delay: 10
+      when:
+        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+        - vcenter_vm_info.value[0].power_state != "SUSPENDED"
+        - not reset and not poweroff
+
+    - name: Starting VM...
+      ansible.builtin.include_tasks: poweron.yml
+      when: poweron
+
+    - name: Reseting VM...
+      ansible.builtin.include_tasks: reset.yml
+      when: reset
+
+    - name: Restarting VM...
+      ansible.builtin.include_tasks: restart.yml
+      when: restart
+
+    - name: Shutting down VM...
+      ansible.builtin.include_tasks: shutdown.yml
+      when:
+        - shutdown
+        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+
+    - name: Powering off VM...
+      ansible.builtin.include_tasks: poweroff.yml
+      when:
+        - poweroff
+        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"

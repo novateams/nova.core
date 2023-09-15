@@ -1,0 +1,23 @@
+---
+- name: Installed packages for Debian based OS...
+  ansible.builtin.apt:
+    name:
+      - acpi-support
+      - acpid
+      - dbus
+      - dnsutils
+      - libpam-ssh-agent-auth # Required when using ssh-agent for sudo
+      - libuser # Required for Domain Join & local accounts
+      - network-manager
+      - python3-apt
+      - python3-pip
+      - python3-setuptools
+    state: present
+    update-cache: true
+
+- name: Running apt cleanup...
+  ansible.builtin.apt:
+    autoremove: true
+    autoclean: true
+    force_apt_get: true
+    force: true

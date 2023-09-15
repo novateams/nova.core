@@ -1,0 +1,7 @@
+---
+- name: INFO
+  ansible.builtin.debug:
+    msg: "Snapshots not implemented for {{ infra_env }}"
+
+- name: Stopping play...
+  ansible.builtin.meta: end_host

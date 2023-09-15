@@ -1,0 +1,13 @@
+---
+- name: Getting {{ fqdn }} IP...
+  amazon.aws.ec2_instance_info:
+    filters:
+      "tag:Name": "{{ custom_vm_name | default(vm_name) }}"
+  register: ec2_instance_info
+  delegate_to: localhost
+  become: false
+
+- name: Printing {{ inventory_hostname }} IPs...
+  debug:
+    msg: |
+      IPv4 - {{ ec2_instance_info.instances | selectattr('state.name', 'equalto', 'running') | map(attribute='public_ip_address') | first }}

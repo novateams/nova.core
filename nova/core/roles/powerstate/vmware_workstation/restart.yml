@@ -1,0 +1,11 @@
+---
+- name: Listing running VMs...
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws list
+  register: running_vms
+
+- name: Stopping {{ inventory_hostname }}...
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ local_vmx_path }} soft
+  when: local_vmx_path in running_vms.stdout_lines
+
+- name: Starting {{ inventory_hostname }}...
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}

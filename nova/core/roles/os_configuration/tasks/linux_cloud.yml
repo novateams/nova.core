@@ -1,0 +1,31 @@
+---
+- name: Installing Gnome for Ubuntu Desktop...
+  ansible.builtin.apt:
+    name: ubuntu-gnome-desktop
+    state: present
+    update_cache: true
+  when: "'os_ubuntu_desktop_20_04' in group_names or 'os_ubuntu_desktop_22_04' in group_names"
+
+- name: Installing Xfce for Kali...
+  ansible.builtin.apt:
+    name: kali-desktop-xfce
+    state: present
+    update_cache: true
+  when: "'os_kali' in group_names"
+
+- name: Incluing XRDP roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop:
+    - nova.core.linux_xrdp_server
+    - nova.core.linux_xrdp_keyboard
+  when: "'os_ubuntu_desktop_20_04' in group_names or 'os_ubuntu_desktop_22_04' in group_names or 'os_kali' in group_names"
+
+- name: Installing required auth packages...
+  ansible.builtin.apt:
+    name: libpam-ssh-agent-auth
+    state: present
+    update_cache: true
+  when:
+    - use_ssh_agent_for_sudo
+    - ansible_facts.os_family == "Debian"

@@ -1,0 +1,25 @@
+---
+- name: Setting correct connection parameters for VMware Workstation...
+  ansible.builtin.set_fact:
+    ansible_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
+    ansible_connection: ssh
+    ansible_shell_type: sh
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_become: false
+    ansible_host: host.docker.internal # The default is the docker host (your laptop)
+
+- name: Starting VM...
+  ansible.builtin.include_tasks: poweron.yml
+  when: poweron
+
+- name: Restarting VM...
+  ansible.builtin.include_tasks: restart.yml
+  when: restart
+
+- name: Shutting down VM...
+  ansible.builtin.include_tasks: shutdown.yml
+  when: shutdown
+
+- name: Powering off VM...
+  ansible.builtin.include_tasks: poweroff.yml
+  when: poweroff

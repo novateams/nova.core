@@ -1,0 +1,111 @@
+---
+- name: Installing apt_key dependencies...
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - gpg
+      - gpg-agent
+  register: docker_dependencies_install
+  until: not docker_dependencies_install.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+  retries: 10
+  delay: 6
+
+- name: Including Docker for Kali APT configuration block...
+  when: ansible_facts.lsb.id == "Kali"
+  block:
+    - name: Adding Docker GPG apt key...
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        keyring: /etc/apt/trusted.gpg.d/docker.gpg
+        state: present
+      register: docker_apt_key
+      until: not docker_apt_key.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+      retries: 10
+      delay: 6
+
+    - name: Adding Docker repository...
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable
+        state: present
+        update_cache: true
+
+- name: Including Docker for not Kali APT configuration block...
+  when: ansible_facts.lsb.id != "Kali"
+  block:
+    - name: Adding Docker GPG apt key...
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+        keyring: /etc/apt/trusted.gpg.d/docker.gpg
+        state: present
+      register: docker_apt_key
+      until: not docker_apt_key.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+      retries: 10
+      delay: 6
+
+    - name: Adding Docker repository...
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+        state: present
+        update_cache: true
+
+- name: Installing Docker and requirements...
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - python3-setuptools
+      - python3-wheel
+      - python3-pip
+      - python3-jsondiff
+      - docker-compose-plugin
+    state: present
+    update-cache: true
+  register: docker_install
+  until: not docker_install.failed # Because sometimes the primary DNS is not up yet
+  retries: 6
+  delay: 5
+
+- name: Getting python3-pip version...
+  ansible.builtin.shell: pip3 -V | cut -d " " -f 2
+  register: pip_version
+
+# https://peps.python.org/pep-0668/
+# Using this until a good cross-user venv is available
+- name: Installing Docker Python modules...
+  ansible.builtin.pip:
+    name: docker
+    extra_args: "{{ '--break-system-packages' if pip_version.stdout is version('23.0.0', 'gt', version_type='loose') else none }}"
+
+- name: Adding Docker daemon config...
+  ansible.builtin.template:
+    src: "{{ docker_daemon_template }}"
+    dest: /etc/docker/daemon.json
+    lstrip_blocks: true
+    mode: "0644"
+  register: daemon_config
+
+- name: Restarting docker service...
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: true
+    daemon_reload: true
+    state: restarted
+  when: daemon_config.changed
+
+- name: Including default network creation tasks...
+  when: docker_create_network
+  block:
+    - name: Checking if {{ docker_network.name }} exists...
+      community.docker.docker_network_info:
+        name: "{{ docker_network }}"
+      register: docker_network_check
+
+    - name: Creating {{ docker_network.name }}...
+      community.docker.docker_network:
+        name: "{{ docker_network.name }}"
+        enable_ipv6: "{{ docker_network.enable_ipv6 }}"
+        ipam_config:
+          - subnet: "{{ docker_network.ipv4_subnet }}"
+          - subnet: "{{ docker_network.ipv6_subnet }}"
+      when: not docker_network_check.exists

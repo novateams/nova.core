@@ -1,0 +1,6 @@
+---
+shutdown: false
+poweron: false
+poweroff: false
+restart: false
+reset: false
