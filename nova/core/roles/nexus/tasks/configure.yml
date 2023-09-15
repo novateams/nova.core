@@ -1,0 +1,178 @@
+---
+- name: Waiting until Nexus is up...
+  ansible.builtin.uri:
+    url: https://{{ fqdn }}
+    method: GET
+    status_code: 200
+  register: uri
+  until: uri.status == 200
+  retries: 20
+  delay: 5
+
+- name: Checking for first run password file...
+  ansible.builtin.stat:
+    path: /srv/nexus/data/admin.password
+  register: stat
+
+- name: Default password change block...
+  when: stat.stat.exists
+  block:
+    - name: Getting default password...
+      ansible.builtin.slurp:
+        src: /srv/nexus/data/admin.password
+      register: password
+
+    - name: Changing Nexus default password...
+      ansible.builtin.uri:
+        url: https://{{ fqdn }}/service/rest/v1/security/users/admin/change-password
+        user: "{{ nexus_admin_username }}"
+        password: "{{ password.content | b64decode }}"
+        method: PUT
+        headers:
+          accept: application/json
+          Content-Type: text/plain
+        body: "{{ nexus_admin_password }}"
+        force_basic_auth: true
+        status_code: 204
+
+- name: Setting anonymous access to - {{ 'ENABLED' if nexus_allow_anonymous_access else 'DISABLED' }}...
+  ansible.builtin.uri:
+    url: https://{{ fqdn }}/service/rest/v1/security/anonymous
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: PUT
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body:
+      enabled: "{{ true if nexus_allow_anonymous_access else false }}"
+      userId: anonymous
+      realmName: NexusAuthorizingRealm
+    body_format: json
+    force_basic_auth: true
+    status_code: 200
+
+- name: Getting all roles...
+  ansible.builtin.uri:
+    url: https://{{ fqdn }}/service/rest/v1/security/roles
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: GET
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body_format: json
+    force_basic_auth: true
+    status_code: 200
+  register: all_roles
+
+# The nx-nothing role is used to make sure that anonymous user doesn't see everything
+# It is needed when anonymous access is disabled but Nexus is used as Docker registry proxy
+- name: Creating nx-nothing role...
+  ansible.builtin.uri:
+    url: https://{{ fqdn }}/service/rest/v1/security/roles/{{ '' if 'nx-nothing' not in all_roles.json | map(attribute='id') else 'nx-nothing' }}
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: "{{ 'POST' if 'nx-nothing' not in all_roles.json | map(attribute='id') else 'PUT' }}"
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body:
+      id: nx-nothing
+      name: nx-nothing
+      description: Empty role for anonymous user
+      privileges: []
+      roles: []
+    body_format: json
+    force_basic_auth: true
+    status_code:
+      - 200
+      - 204
+
+# This makes sure that anonymous user doesn't see everything
+- name: Setting nx-nothing for anonymous user...
+  ansible.builtin.uri:
+    url: https://{{ fqdn }}/service/rest/v1/security/users/anonymous
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: PUT
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body:
+      userId: anonymous
+      firstName: Anonymous
+      lastName: User
+      emailAddress: anonymous@example.org
+      source: default
+      status: active
+      readOnly: false
+      roles:
+        - nx-nothing
+      externalRoles: []
+    body_format: json
+    force_basic_auth: true
+    status_code:
+      - 200
+      - 204
+  when: not nexus_allow_anonymous_access
+
+- name: Activating required realms...
+  ansible.builtin.uri:
+    url: https://{{ fqdn }}/service/rest/v1/security/realms/active
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: PUT
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body: "{{ realms_to_activate }}"
+    body_format: json
+    force_basic_auth: true
+    status_code: 204
+
+- name: Trusted certificates to JKS tasks...
+  when: nexus_trusted_ca_to_java
+  block:
+    - name: Checking if /usr/local/share/ca-certificates exists...
+      ansible.builtin.stat:
+        path: /usr/local/share/ca-certificates # This is where CA certificates are stored on Debian based systems
+      register: ca_certificates_folder
+
+    - name: Inlcuding add trusted CA to Nexus JKS store tasks...
+      when: ca_certificates_folder.stat.exists
+      block:
+        - name: Getting all trusted CAs...
+          ansible.builtin.find:
+            paths: /usr/local/share/ca-certificates
+          register: trusted_cas
+
+        - name: Nexus CA trust tasks...
+          when: trusted_cas.files != []
+          block:
+            - name: Getting CA file(s) content...
+              ansible.builtin.command: cat "{{ item.path }}"
+              changed_when: true
+              loop: "{{ trusted_cas.files }}"
+              loop_control:
+                label: "{{ item.path }}"
+              register: nexus_certificates
+
+            - name: Adding certificate(s) to Nexus trust store...
+              ansible.builtin.uri:
+                url: https://{{ fqdn }}/service/rest/v1/security/ssl/truststore
+                user: "{{ nexus_admin_username }}"
+                password: "{{ nexus_admin_password }}"
+                method: POST
+                headers:
+                  accept: application/json
+                  Content-Type: application/json
+                body: "{{ item.stdout }}"
+                body_format: json
+                force_basic_auth: true
+                status_code:
+                  - 201 # Added
+                  - 409 # Already exists
+              loop: "{{ nexus_certificates.results }}"
+              loop_control:
+                label: "{{ item.item.path }}"

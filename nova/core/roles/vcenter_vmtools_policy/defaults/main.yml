@@ -1,0 +1,2 @@
+---
+vmtools_upgrade_policy: MANUAL # Can also be UPGRADE_AT_POWER_CYCLE

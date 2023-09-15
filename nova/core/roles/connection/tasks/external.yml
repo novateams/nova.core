@@ -1,0 +1,22 @@
+---
+- name: Including variables validation task...
+  when: external_host_ip | default(connection_address) is not defined or not ansible_deployer_username or not ansible_deployer_password
+  block:
+    - name: INFO
+      ansible.builtin.debug:
+        msg: |
+          Cannot proceed with the connection to {{ inventory_hostname }}
+          Check that the following variables have values set:
+            * external_host_ip or connection_address
+            * ansible_deployer_username
+            * ansible_deployer_password
+
+    - name: Stopping play...
+      ansible.builtin.meta: end_host
+
+- name: Setting correct connection parameters and {{ external_host_ip | default(connection_address) }} for {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_host: "{{ external_host_ip | default(connection_address) }}"
+    ansible_connection: "{{ default_connection_plugin }}"
+    ansible_user: "{{ ansible_deployer_username }}"
+    ansible_password: "{{ ansible_deployer_password }}"

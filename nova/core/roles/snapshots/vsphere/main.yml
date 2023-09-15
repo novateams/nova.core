@@ -1,0 +1,54 @@
+---
+- block:
+    - name: Getting VM info...
+      vmware.vmware_rest.vcenter_vm_info:
+        filter_names: "{{ custom_vm_name | default(vm_name) }}"
+      register: vmware_guest_info
+      until: not vmware_guest_info.failed
+      retries: 5
+      delay: 2
+
+    - name: Getting info about {{ custom_vm_name | default(vm_name) }} snapshots...
+      community.vmware.vmware_guest_snapshot_info:
+        datacenter: "{{ datacenter }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        folder: "{{ folder }}"
+      register: snapshot_info
+
+    - name: Waiting until VMTools are running...
+      vmware.vmware_rest.vcenter_vm_tools_info:
+        vm: "{{ vmware_guest_info.value[0].vm }}"
+
+      register: vm_tools
+      until: vm_tools.value.run_state == "RUNNING"
+      retries: 18
+      delay: 10
+      when: vmware_guest_info.value[0].power_state != "POWERED_OFF"
+
+  delegate_to: localhost
+  become: false
+
+- name: Including powerstate role...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    shutdown: true
+  when:
+    - snapshot_mode == 'snap' or snapshot_mode == 'resnap'
+    - vmware_guest_info.value[0].power_state != "POWERED_OFF"
+
+- name: Including snapshot task...
+  ansible.builtin.include_tasks: snapshot.yml
+  when: snapshot_mode == 'snap' or snapshot_mode == 'resnap' or snapshot_mode == 'live-snap'
+
+- name: Including revert task...
+  ansible.builtin.include_tasks: revert.yml
+  when: snapshot_mode == 'revert'
+
+- name: Including snapshot rename task...
+  ansible.builtin.include_tasks: rename.yml
+  when: snapshot_mode == 'rename'
+
+- name: Including snapshot remove task...
+  ansible.builtin.include_tasks: remove.yml
+  when: snapshot_mode == 'remove'

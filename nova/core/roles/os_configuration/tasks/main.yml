@@ -1,0 +1,71 @@
+---
+- name: Including non-containers account tasks block...
+  when: customization_context == "host" # Alternative is container and then it doesn't need os_configuration
+  block:
+    - name: Configure Windows machine
+      ansible.builtin.include_tasks: windows.yml
+      when: "'os_windows' in group_names"
+
+    - name: Configure Azure Windows machine
+      ansible.builtin.include_tasks: windows_azure.yml
+      when:
+        - "'os_windows' in group_names"
+        - infra_env == 'azure'
+
+    - name: Configure VMware Windows machine
+      ansible.builtin.include_tasks: windows_vsphere.yml
+      when:
+        - "'os_windows' in group_names"
+        - infra_env == 'vsphere' or infra_env == 'vmware_workstation'
+
+    - name: Configure Linux machine
+      ansible.builtin.include_tasks: linux.yml
+      when: "'os_linux' in group_names"
+
+    - name: Configure cloud Linux machine
+      ansible.builtin.include_tasks: linux_cloud.yml
+      when:
+        - "'os_linux' in group_names"
+        - infra_env == 'aws' or infra_env == 'linode'
+
+    - name: Configure macOS machine
+      ansible.builtin.include_tasks: macos.yml
+      when: "'os_macos' in group_names"
+
+    - name: Configure VyOS machine
+      ansible.builtin.include_tasks: vyos.yml
+      when: "'os_vyos' in group_names"
+
+    # Since there can be so many different partitioning methods and file systems we'll leave to the user to create a role that matches their templates
+    # When `os_configuration_expand_os_disk_role_name` variable is defined the the role will be included here
+    - name: Including OS disk expansion role...
+      ansible.builtin.include_role:
+        name: "{{ os_configuration_expand_os_disk_role_name }}"
+      when:
+        - infra_env == 'vsphere'
+        - os_configuration_expand_os_disk_role_name != {}
+
+    - name: Including nova.core.trusted_certificates role...
+      ansible.builtin.include_role:
+        name: nova.core.trusted_certificates
+
+    - name: Flushing handlers...
+      ansible.builtin.meta: flush_handlers
+
+    # This needs to be last because the play stops after that
+    - name: Including ctp-redeploy-until-configuration alias tasks...
+      when: just_clone
+      block:
+        - name: Including snapshots role...
+          ansible.builtin.include_role:
+            name: nova.core.snapshots
+          vars:
+            snapshot_mode: live-snap
+            snapshot_name: Pre-customization
+
+        - name: Including get_ip role...
+          ansible.builtin.include_role:
+            name: nova.core.get_ip
+
+        - name: Stopping play...
+          ansible.builtin.meta: end_host

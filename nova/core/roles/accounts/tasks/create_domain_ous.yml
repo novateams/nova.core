@@ -1,0 +1,13 @@
+---
+- name: Making sure that {{ post_scripts_folder_on_target }} folder exists...
+  ansible.windows.win_file:
+    path: "{{ post_scripts_folder_on_target }}"
+    state: directory
+
+- name: Templating OU creation script to {{ inventory_hostname }}...
+  ansible.windows.win_template:
+    src: Create-UserOUs.ps1
+    dest: "{{ post_scripts_folder_on_target }}\\Create-UserOUs.ps1"
+
+- name: Creating OUs for {{ ad_domain_name }}...
+  ansible.windows.win_shell: "{{ post_scripts_folder_on_target }}\\Create-UserOUs.ps1"

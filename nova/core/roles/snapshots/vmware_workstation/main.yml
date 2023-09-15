@@ -1,0 +1,21 @@
+---
+- name: Setting correct connection parameters for VMware Workstation...
+  ansible.builtin.set_fact:
+    ansible_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
+    ansible_connection: ssh
+    ansible_shell_type: sh
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_become: false
+    ansible_host: host.docker.internal # The default is the docker host (your laptop)
+
+- name: Listing all snapshots...
+  ansible.builtin.shell: vmrun listSnapshots {{ local_vmx_path }} listSnapshots
+  register: all_snapshots
+
+- name: Including snapshot task...
+  ansible.builtin.include_tasks: snapshot.yml
+  when: snapshot_mode == 'snap' or snapshot_mode == 'resnap' or snapshot_mode == 'live-snap'
+
+- name: Including revert task...
+  ansible.builtin.include_tasks: revert.yml
+  when: snapshot_mode == 'revert'

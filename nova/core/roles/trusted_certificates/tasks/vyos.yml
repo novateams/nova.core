@@ -1,0 +1,27 @@
+---
+- name: Setting connection to SSH...
+  ansible.builtin.set_fact:
+    ansible_connection: ssh
+
+- name: Copying trusted certificates(s) to {{ inventory_hostname }}...
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
+    mode: "0644"
+  loop: "{{ trusted_certificates_list }}"
+  when: not item.src.startswith('http')
+
+# Using sudo because VyOS doesn't support privilege escalation in Ansible https://docs.ansible.com/ansible/5/network/user_guide/platform_vyos.html
+- name: Getting trusted certificates...
+  ansible.builtin.command: sudo wget {{ item.src }} -O /usr/local/share/ca-certificates/{{ item.name }}.crt
+  changed_when: true
+  loop: "{{ trusted_certificates_list }}"
+  when: item.src.startswith('http')
+
+- name: Updating CA certificates...
+  ansible.builtin.command: sudo update-ca-certificates --fresh
+  changed_when: true
+
+- name: Setting connection back to {{ default_connection_plugin }}...
+  ansible.builtin.set_fact:
+    ansible_connection: "{{ default_connection_plugin }}"

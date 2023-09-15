@@ -1,0 +1,19 @@
+---
+- name: Including snapshot/revert tasks for VMs...
+  when: customization_context == "host" # Alternative is container
+  block:
+    - name: Including vSphere snapshot/revert tasks...
+      ansible.builtin.include_tasks: vsphere/main.yml
+      when: infra_env == 'vsphere'
+
+    - name: Including VMware Workstation snapshot/revert tasks...
+      ansible.builtin.include_tasks: vmware_workstation/main.yml
+      when: infra_env == 'vmware_workstation'
+
+    - name: Including AWS EC2 snapshot/revert tasks...
+      ansible.builtin.include_tasks: aws/main.yml
+      when: infra_env == 'aws'
+
+    - name: Including Linode snapshot/revert tasks...
+      ansible.builtin.include_tasks: linode/main.yml
+      when: infra_env == 'linode'

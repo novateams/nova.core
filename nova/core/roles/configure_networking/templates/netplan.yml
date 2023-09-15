@@ -1,0 +1,80 @@
+network:
+  version: 2
+  {% if netplan_renderer != {} %}
+  renderer: {{ netplan_renderer }}
+  {% endif %}
+  ethernets:
+  {% for interface in interfaces %}
+    {{ interface.network_id | replace(" ", "-") }}:
+      set-name: {{ interface.network_id | replace(" ", "-") }}
+      match:
+        macaddress: {{ vmware_tools_information.instance[ "hw_eth" + ( loop.index - 1) | string ]["macaddress"] }}
+      {% if interface.addresses[0].mode == "ipv4_dhcp" %}
+      dhcp4: true
+      {% elif interface.addresses[0].mode == "ipv6_dhcp" %}
+      dhcp6: true
+      {% else %}
+      dhcp4: false
+      dhcp6: false
+      accept-ra: false
+      addresses:
+      {% endif %}
+        {% for ip_address in interface.addresses %}
+        {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("mgmt.*")) and (netplan_renderer != "NetworkManager") %}
+        - {{ ip_address.address }}:
+            lifetime: 0
+        {% elif (ip_address.mode == "ipv4_static") %}
+        - {{ ip_address.address }}
+        {% endif %}
+        {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("mgmt.*")) and (netplan_renderer != "NetworkManager") %}
+        - "{{ ip_address.address }}":
+            lifetime: 0
+        {% elif (ip_address.mode == "ipv6_static") %}
+        - "{{ ip_address.address }}"
+        {% endif %}
+        {% endfor %}
+        {% if (mgmt_ip != {}) and (interface.connection) and (netplan_renderer != "NetworkManager") %}
+        - "{{ mgmt_ip }}":
+            lifetime: 0
+        {% elif (mgmt_ip != {}) and (interface.connection) %}
+		- "{{ mgmt_ip }}"
+        {% endif %}
+        {% if extra_ips[ interface.network_id ] is defined %}
+        {% for extra_ip in extra_ips[ interface.network_id ] %}
+        - {{ extra_ip }}
+        {% endfor %}
+        {% endif %}
+      {% if interface.addresses | selectattr("gateway", "defined") and interface.addresses | selectattr("gateway", "!=", none) or extra_routes[ interface.network_id ] is defined %}
+      routes:
+      {% endif %}
+      {% for ip_address in interface.addresses %}
+      {% if (ip_address.mode == "ipv4_static") and (ip_address.gateway is defined) and (ip_address.gateway != none) %}
+        - to: default
+          via: {{ ip_address.gateway }}
+      {% endif %}
+      {% endfor %}
+      {% for ip_address in interface.addresses %}
+      {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway is defined) and (ip_address.gateway != none) %}
+        - to: default
+          via: "{{ ip_address.gateway }}"
+      {% endif %}
+      {% endfor %}
+      {% if extra_routes[ interface.network_id ] is defined %}
+      {% for route in extra_routes[ interface.network_id ] %}
+        - to: "{{ route.to }}"
+          via: "{{ route.via }}"
+      {% endfor %}
+      {% endif %}
+      nameservers:
+        addresses:
+          {% for address in dns_servers %}
+          - {{ address }}
+          {% endfor %}
+          {% if (dns_servers6 != []) and (interface.addresses | map(attribute='pool_id') | regex_search(".*ipv6.*")) %}
+          {% for address in dns_servers6 %}
+          - "{{ address }}"
+          {% endfor %}
+          {% endif %}
+        search:
+          - {{ domain }}
+  {% endfor %}

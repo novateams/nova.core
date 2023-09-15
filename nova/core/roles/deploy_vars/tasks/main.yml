@@ -1,0 +1,50 @@
+---
+- name: Including validate variables task...
+  ansible.builtin.include_tasks: validate_vars.yml
+
+# Using set_fact so the credentials will be looked up only once
+- name: Setting credentials...
+  ansible.builtin.set_fact:
+    deployer_username: "{{ lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'username') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars' }}"
+    deployer_password: "{{ lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'password') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars' }}"
+    gitlab_api_token: "{{ lookup('keepass', (lookup('env', 'KEEPASS_GITLAB_TOKEN')), 'password') if (lookup('env', 'KEEPASS_GITLAB_TOKEN') | length != 0) else 'KEEPASS_GITLAB_TOKEN not defined in .makerc-vars' }}"
+    aws_access_key_id: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'username') if (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') | length != 0) else 'KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars' }}"
+    aws_access_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'password') if (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') | length != 0) else 'KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars' }}"
+    linode_api_token: "{{ lookup('keepass', (lookup('env', 'KEEPASS_LINODE_API_TOKEN')), 'password') if (lookup('env', 'KEEPASS_LINODE_API_TOKEN') | length != 0) else 'KEEPASS_LINODE_API_TOKEN not defined in .makerc-vars' }}"
+    azure_service_principal: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AZURE_SERVICE_PRINCIPAL')), 'password') if (lookup('env', 'KEEPASS_AZURE_SERVICE_PRINCIPAL') | length != 0) else 'KEEPASS_AZURE_SERVICE_PRINCIPAL not defined in .makerc-vars' }}"
+    my_ssh_public_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_SSH_KEYPAIR')), 'password') if (lookup('env', 'KEEPASS_SSH_KEYPAIR') | length != 0) else 'KEEPASS_SSH_KEYPAIR not defined in .makerc-vars' }}"
+    my_ssh_private_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_SSH_KEYPAIR')), 'username') if (lookup('env', 'KEEPASS_SSH_KEYPAIR') | length != 0) else 'KEEPASS_SSH_KEYPAIR not defined in .makerc-vars' }}"
+
+- name: Setting correct admin_account for AWS template...
+  ansible.builtin.set_fact:
+    admin_account: "{{ aws_template_username }}"
+  when: infra_env == "aws"
+
+# Checking if a host_var matching the main_id is present
+# If so then including the host vars
+- name: Checking if host_var is present for {{ main_id }}...
+  ansible.builtin.stat:
+    path: "{{ inventory_dir }}/host_vars/{{ main_id }}.yml"
+  delegate_to: localhost
+  register: host_var_present
+
+- name: Warning but loading host_var...
+  when: host_var_present.stat.exists
+  block:
+    - name: WARNING
+      ansible.builtin.debug:
+        msg: |
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          Loading instance parent host variables will be deprecated on 18.12.2023.
+          Move the file host_vars/{{ main_id }}.yml to group_vars/{{ main_id }}.yml to avoid this warning.
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      when: main_id in group_names
+
+    - name: Loading host_vars...
+      ansible.builtin.include_vars:
+        file: "{{ inventory_dir }}/host_vars/{{ main_id }}.yml"
+# # Uncommend to debug variables
+# - ansible.builtin.debug: msg="{{  }}"
+# - meta: end_play

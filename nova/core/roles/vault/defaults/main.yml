@@ -1,0 +1,112 @@
+---
+environment_name: # Name of the environment (e.g. dev, test, prod)
+project_fullname: # Full name of the project (e.g. My Project)
+fqdn: # FQDN of the server vault.example.org
+docker_network: local-network # The network where the container will be attached to. Comes from nova.core.docker role.
+vault_proxy_container_name: {} # Name of the proxy container to restart after composing Vault.
+
+vault_configure: false # Run the initial default configuration for Vault
+vault_configure_ldap: false # Configuring LDAP authentication for Vault
+vault_configuration_uri: "https://{{ fqdn }}" # Defined separately for when configuring multiple Vaults
+vault_config_folder: /srv/vault
+vault_version: 1.14.1 # Default Vault Docker image version
+vault_container_name: vault
+vault_server_log_level: debug # Debug gives better info about LDAP login failures and their reasons
+
+# Testing environment variables
+vault_auto_unseal: true # Disable for production environments and manually enter the unseal key(s) after container restart
+vault_root_token: {} # Used for testing purposes only, save it in a safe place and use ansible lookup modules to retrieve it
+vault_unseal_key: {} # Used for testing purposes only, save it in a safe place and use it to unseal the Vault after container restart
+
+vault_unseal_shares: 1 # Number of shares to split the unseal key into
+vault_unseal_threshold: 1 # Number of shares required to unseal the Vault
+
+# Certificate Authority variables
+vault_crl_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API
+vault_aia_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API
+
+vault_create_root_ca: false # Create a self-signed root CA
+vault_create_intermediate_ca: false # Create an intermediate CA (signed by the root CA)
+vault_create_mitm_ca: false # Create a Man-in-the-Middle (TLS termination) CA
+
+vault_root_ca_pki_engine_name: RootCA
+vault_root_ca_name: "{{ environment_name }} {{ project_fullname }} RootCA"
+vault_root_ca_ou: "{{ project_fullname }}"
+vault_root_ca_org: "{{ environment_name }}"
+vault_root_ca_country: US
+vault_root_ca_key_type: ec
+vault_root_ca_key_bits: 384
+vault_root_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/crl/pem
+vault_root_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/ca/pem
+
+vault_intermediate_ca_pki_engine_name: IntermediateCA
+vault_intermediate_ca_name: "{{ environment_name }} {{ project_fullname }} IntermediateCA"
+vault_intermediate_ca_ou: "{{ project_fullname }}"
+vault_intermediate_ca_org: "{{ environment_name }}"
+vault_intermediate_ca_country: US
+vault_intermediate_ca_key_type: ec
+vault_intermediate_ca_key_bits: 384
+vault_intermediate_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/crl/pem
+vault_intermediate_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/ca/pem
+
+vault_mitm_ca_pki_engine_name: MiTMCA
+vault_mitm_ca_name: "{{ environment_name }} {{ project_fullname }} MiTMCA"
+vault_mitm_ca_ou: "{{ project_fullname }}"
+vault_mitm_ca_org: "{{ environment_name }}"
+vault_mitm_ca_country: US
+vault_mitm_ca_key_type: ec
+vault_mitm_ca_key_bits: 384
+vault_mitm_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/{{ vault_mitm_ca_pki_engine_name }}/crl/pem
+vault_mitm_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/{{ vault_mitm_ca_pki_engine_name }}/ca/pem
+
+# Roles under IntermediateCA
+vault_server_rsa_ou: "{{ project_fullname }}"
+vault_server_rsa_organization: "{{ environment_name }}"
+vault_server_rsa_country: US
+
+vault_server_ec_ou: "{{ project_fullname }}"
+vault_server_ec_organization: "{{ environment_name }}"
+vault_server_ec_country: US
+
+vault_code_signing_enabled: false
+vault_code_signing_ou: "{{ project_fullname }}"
+vault_code_signing_organization: "{{ environment_name }}"
+vault_code_signing_country: US
+vault_code_signing_key_type: ec
+vault_code_signing_key_bits: 384
+
+# LDAPs configuration
+vault_ldap_engine_name: ldap
+vault_ldaps_certificate_source: {} # Trusted certificate for LDAPs connections. Can be file in the Vault host or remote url
+
+vault_ldaps_certificate_file: # This is just an empty placeholder, it will be populated by the role if vault_ldaps_certificate_source is defined
+  content: {}
+
+vault_ldap_configuration:
+  anonymous_group_search: false
+  binddn: "{{ vault_binddn }}"
+  bindpass: "{{ vault_bindpass }}"
+  case_sensitive_names: false
+  certificate: "{{ omit if vault_ldaps_certificate_source == {} else vault_ldaps_certificate_file.content | b64decode }}"
+  deny_null_bind: true
+  discoverdn: false
+  groupattr: sAMAccountName
+  groupdn: "{{ vault_groupdn }}"
+  groupfilter: (&(objectClass=group)(member:1.2.840.113556.1.4.1941:={{ '{{.UserDN}}' }}))
+  insecure_tls: false
+  request_timeout: 120
+  starttls: false
+  tls_max_version: tls12
+  tls_min_version: tls12
+  upndomain: "{{ vault_upndomain | default(domain) }}"
+  url: "{{ vault_ldaps_url }}" # Can use multiple URLs separated by comma
+  use_pre111_group_cn_behavior: false
+  use_token_groups: false
+  userattr: samaccountname
+  userdn: "{{ vault_userdn }}"
+  username_as_alias: false
+
+# On 2038-01-19 UNIX epoch will not fit into 32-bit signed integer. This may
+# cause issues on some software. Taking into account timezones, 2038-01-17
+# is the last Y2038 safe day.
+vault_y2038_hours_left: "{{ (2147292000 - (ansible_date_time.epoch | int)) / 3600 | round | int }}"

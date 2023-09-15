@@ -1,0 +1,42 @@
+---
+- name: Copying trusted certificates(s) to {{ inventory_hostname }}...
+  ansible.windows.win_copy:
+    src: "{{ item.src }}"
+    dest: "{{ post_scripts_folder_on_target }}/{{ item.name }}.cer"
+  loop: "{{ trusted_certificates_list }}"
+  when: not item.src.startswith('http')
+
+- name: Importing project certificates(s) to trusted root store...
+  ansible.windows.win_certificate_store:
+    path: "{{ post_scripts_folder_on_target }}/{{ item.name }}.cer"
+    key_storage: machine
+    state: present
+    store_name: Root
+  loop: "{{ trusted_certificates_list }}"
+  when: not item.src.startswith('http')
+
+- name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
+  ansible.windows.win_get_url:
+    url: "{{ item.src }}"
+    dest: "{{ post_scripts_folder_on_target }}/{{ item.name }}.cer"
+    timeout: 60
+  loop: "{{ trusted_certificates_list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.src.startswith('http')
+
+- name: Importing trusted certificates(s) to {{ inventory_hostname }} trusted root store...
+  ansible.windows.win_certificate_store:
+    path: "{{ post_scripts_folder_on_target }}/{{ item.name }}.cer"
+    key_storage: machine
+    state: present
+    store_name: Root
+  loop: "{{ trusted_certificates_list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.src.startswith('http')
+
+- name: Importing certificate(s) to Java keystore(s)... # Must have Java installed
+  ansible.windows.win_shell: "{{ lookup('template', 'AddCertificateTo-JKS.ps1') }}"
+  loop: "{{ trusted_certificates_list }}"
+  when: trusted_certificates_to_jks

@@ -1,0 +1,36 @@
+---
+- name: Including VMTools upgrade policy tasks block...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Looking up the VM...
+      vmware.vmware_rest.vcenter_vm_info:
+        filter_names:
+          - "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_filter
+
+    - name: Collecting info about VM...
+      vmware.vmware_rest.vcenter_vm_info:
+        vm: "{{ vm_filter.value[0].vm }}"
+      register: vm_info
+
+    - name: Configuring VM Tools upgrade policy to {{ vmtools_upgrade_policy }}...
+      vmware.vmware_rest.vcenter_vm_tools:
+        vm: "{{ vm_info.id }}"
+        upgrade_policy: "{{ vmtools_upgrade_policy }}"
+
+    - name: Waiting until VMTools are running...
+      vmware.vmware_rest.vcenter_vm_tools_info:
+        vm: "{{ vm_info.id }}"
+      register: vm_tools
+      until:
+        - vm_tools.value.run_state is defined
+        - vm_tools.value.run_state == "RUNNING"
+      retries: 18
+      delay: 10
+
+    - name: Upgrading VMware Tools...
+      community.vmware.vmware_guest_tools_upgrade:
+        datacenter: "{{ datacenter }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      when: vmtools_upgrade_policy == "MANUAL"

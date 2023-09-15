@@ -1,0 +1,9 @@
+---
+# File names that will be looked for in the templates directory of the role that includes this role
+ipv4_template_file: rules.v4
+ipv6_template_file: rules.v6
+nftables_template_file: nftables.conf
+firewall_config_file: fw.conf # Firewall config file to update sysctl values
+
+allow_routing: yes # Allow routing between interfaces
+mode: nftables # Can also be iptables

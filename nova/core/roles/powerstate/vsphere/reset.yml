@@ -1,0 +1,24 @@
+---
+- name: Delegating reset tasks to localhost...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Resetting {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware_rest.vcenter_vm_power:
+        state: reset
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: vcenter_vm_reset
+      until: not vcenter_vm_reset.failed
+      retries: 5
+      delay: 2
+      when: vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+
+    - name: Waiting for {{ custom_vm_name | default(vm_name) }} reset...
+      vmware.vmware_rest.vcenter_vm_guest_power_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: reset_status
+      until:
+        - reset_status.value.state is defined
+        - reset_status.value.state == "RUNNING"
+      retries: 18
+      delay: 10

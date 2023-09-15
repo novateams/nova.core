@@ -1,0 +1,3 @@
+---
+- name: Stopping {{ inventory_hostname }}...
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ local_vmx_path }} soft

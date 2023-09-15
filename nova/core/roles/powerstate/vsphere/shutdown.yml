@@ -1,0 +1,24 @@
+---
+- name: Delegating shutdown tasks to localhost...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Shutting {{ custom_vm_name | default(vm_name) }} down...
+      vmware.vmware_rest.vcenter_vm_guest_power:
+        state: shutdown
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: vcenter_vm_stop
+      until: not vcenter_vm_stop.failed
+      retries: 5
+      delay: 2
+      when: vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+
+    - name: Waiting for {{ custom_vm_name | default(vm_name) }} shutdown...
+      vmware.vmware_rest.vcenter_vm_guest_power_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: shutdown_status
+      until:
+        - shutdown_status.value.state is defined
+        - shutdown_status.value.state == "NOT_RUNNING"
+      retries: 18
+      delay: 10

@@ -1,0 +1,11 @@
+---
+- name: Including Nexus installation tasks...
+  ansible.builtin.include_tasks: install.yml
+
+- name: Including Nexus configuration tasks...
+  ansible.builtin.include_tasks: configure.yml
+  when: nexus_configure
+
+- name: Including Nexus LDAP configuration tasks...
+  ansible.builtin.include_tasks: configure_ldap.yml
+  when: nexus_configure_ldap

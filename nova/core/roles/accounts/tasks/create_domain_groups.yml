@@ -1,0 +1,10 @@
+---
+- name: Creating Domain groups...
+  microsoft.ad.group:
+    name: "{{ item.name }}"
+    scope: "{{ item.scope | default(domainlocal) }}"
+    path: "{{ item.ou }}"
+    description: "{{ item.description | default(omit) }}"
+  loop: "{{ domain_groups }}"
+  loop_control:
+    label: "{{ item.name }}"

@@ -1,0 +1,57 @@
+---
+- name: Creating folders for configuration...
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: 100
+    group: 1000
+    recurse: true
+  loop:
+    - "{{ vault_config_folder }}/config"
+    - "{{ vault_config_folder }}/file"
+
+- name: Templating configuration to machine...
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ vault_config_folder }}/{{ item.dest }}"
+    owner: 100
+    group: 1000
+    lstrip_blocks: true
+  loop:
+    - src: vault.json # Changing the config file name breaks vault, unless you remove the old config file from container
+      dest: config/vault.json
+    - src: vault.yml
+      dest: docker-compose.yml
+  register: template
+
+- name: Composing {{ inventory_hostname }}...
+  ansible.builtin.command: docker compose -f {{ vault_config_folder }}/docker-compose.yml up -d
+  changed_when: true
+
+- name: Finding and restarting proxy container...
+  when:
+    - vault_proxy_container_name != {}
+    - template.changed
+  block:
+    - name: Checking if {{ vault_proxy_container_name }} exists...
+      community.docker.docker_container_info:
+        name: "{{ vault_proxy_container_name }}"
+      register: proxy_container_check
+
+    - name: Restarting {{ vault_proxy_container_name }}...
+      community.docker.docker_container:
+        name: "{{ vault_proxy_container_name }}"
+        state: started
+        restart: true
+        container_default_behavior: no_defaults
+      when: proxy_container_check.exists
+
+- name: Checking if the unseal script is present...
+  ansible.builtin.stat:
+    path: "{{ vault_config_folder }}/config/unseal-vault.sh"
+  register: unseal_script
+
+- name: Unsealing Vault...
+  ansible.builtin.shell: "{{ vault_config_folder }}/config/unseal-vault.sh"
+  changed_when: true
+  when: unseal_script.stat.exists

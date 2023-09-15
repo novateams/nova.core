@@ -1,0 +1,7 @@
+---
+- name: Restarting sssd service...
+  ansible.builtin.systemd:
+    name: sssd
+    enabled: true
+    state: restarted
+  when: ansible_system == "Linux"

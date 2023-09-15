@@ -1,0 +1,84 @@
+---
+- name: Removing cloud managed hostname...
+  ansible.builtin.replace:
+    dest: /etc/cloud/cloud.cfg
+    regexp: ^ - update_etc_hosts
+    replace: "# - update_etc_hosts"
+  when: infra_env == "aws"
+
+- name: Adding temp hostname... # This is so that sudo will not hang due to unknown hostname
+  ansible.builtin.lineinfile:
+    dest: /etc/hosts
+    regexp: ^127.0.1.2
+    line: 127.0.1.2       {{ fqdn }} {{ hostname }}
+
+- name: Setting hostname...
+  ansible.builtin.hostname:
+    name: "{{ hostname }}"
+
+- name: Adding hostname in hosts file...
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: ^127.0.1.1
+    line: 127.0.1.1       {{ fqdn }} {{ hostname }}
+
+- name: Making sure locale exists...
+  community.general.locale_gen:
+    name: en_US.UTF-8
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Setting the default locale...
+  ansible.builtin.command: localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
+  changed_when: true
+
+- name: Enabling SSH forwarding for sudo...
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers
+    insertafter: ^#?\s*Defaults\s+env_keep\b
+    line: Defaults    env_keep += "SSH_AUTH_SOCK"
+
+- name: Removing temp hostname...
+  ansible.builtin.lineinfile:
+    dest: /etc/hosts
+    regexp: ^127.0.1.2
+    state: absent
+
+- name: Adding custom values to hosts file...
+  ansible.builtin.lineinfile:
+    dest: /etc/hosts
+    regexp: .* {{ item.host }}.*
+    line: "{{ item.ip }}       {{ item.host }}"
+    state: present
+  loop: "{{ hosts_file_values }}"
+  when: hosts_file_values != []
+
+- name: Templating custom resolv.conf...
+  ansible.builtin.template:
+    src: resolv.conf
+    dest: /etc/resolv.conf
+    mode: "0644"
+    lstrip_blocks: true
+  when: resolv_conf_dns_servers != []
+
+- name: Waiting waiting until {{ wait_for_address }} is reachable...
+  ansible.builtin.wait_for:
+    host: "{{ wait_for_address }}"
+    port: "{{ wait_for_port }}"
+    timeout: "{{ wait_for_timeout }}"
+  when: wait_for_host
+
+- name: Waiting until {{ os_configuration_wait_for_site_url }} is responding...
+  ansible.builtin.uri:
+    url: "{{ os_configuration_wait_for_site_url }}"
+    method: GET
+  register: wait_for_site_result
+  until: wait_for_site_result.status == 200
+  retries: "{{ os_configuration_wait_for_site_retries }}"
+  delay: 10
+  when: os_configuration_wait_for_site
+
+- name: Regenerating machine-id & host ssh keys...
+  ansible.builtin.shell: "{{ lookup('template', 'regenerate-machine-id.sh') }}"
+  args:
+    executable: /bin/bash

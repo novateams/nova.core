@@ -1,0 +1,23 @@
+---
+- name: Reverting to {{ snapshot_name | default(snapshot_info.guest_snapshots.snapshots[-1].name) }} snapshot...
+  community.vmware.vmware_guest_snapshot:
+    datacenter: "{{ datacenter }}"
+    folder: "{{ folder }}"
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    state: revert
+    snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.snapshots[-1].name) }}" # Default is the latest snapshot
+  delegate_to: localhost
+  become: false
+  when: snapshot_info.guest_snapshots != {}
+
+- name: No snaphots!
+  ansible.builtin.debug:
+    msg: "{{ custom_vm_name | default(vm_name) }} doesn't have any snapshots!"
+  when: snapshot_info.guest_snapshots == {}
+
+- name: Including powerstate role...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true
+  when: start_vm_after_revert | bool # Because CLI detects extra var as string

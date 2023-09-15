@@ -1,0 +1,4 @@
+---
+start_vm_after_snapshot: true
+start_vm_after_revert: true
+remove_all_snapshots: false

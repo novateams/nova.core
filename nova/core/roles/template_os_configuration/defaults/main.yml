@@ -1,0 +1,4 @@
+---
+ansible_network_os: {}
+update_system: true
+sysprep: false

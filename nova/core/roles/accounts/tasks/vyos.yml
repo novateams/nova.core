@@ -1,0 +1,24 @@
+---
+- name: Configuring accounts for...
+  vyos.vyos.vyos_user:
+    name: "{{ item.username }}"
+    configured_password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
+    update_password: always
+    state: present
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+
+- name: Adding authorized keys... # vyos.vyos.vyos_user module still doesn't support this.
+  vyos.vyos.vyos_config:
+    lines:
+      - set system login user {{ item.username }} authentication public-keys {{ item.username }} key {{ item.ssh_key.split(' ')[1] }}
+      - set system login user {{ item.username }} authentication public-keys {{ item.username }} type {{ item.ssh_key.split(' ')[0] }}
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.ssh_key is defined
+
+- name: Saving configuration... # Don't know if vyos.vyos.vyos_user is buggy but config needs to be saved for new users to survive reboot
+  vyos.vyos.vyos_config:
+    save: true

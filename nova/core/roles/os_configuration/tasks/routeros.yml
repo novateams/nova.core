@@ -1,0 +1,16 @@
+---
+- name: Setting hostname...
+  community.routeros.command:
+    commands: /system identity set name="{{ hostname }}"
+
+- name: Setting NTP servers...
+  community.routeros.command:
+    commands: /system ntp client set enabled=yes primary-ntp={{ ntp_servers[0] }} secondary-ntp={{ ntp_servers[1] }}
+
+- name: Generatating new system ID for license...
+  community.routeros.command:
+    commands: :exec {/system license generate-new-id}
+
+- name: Configuring licence...
+  community.routeros.command:
+    commands: /system license renew once level=p-unlimited account={{ routeros_license_account }} password={{ routeros_license_password }}

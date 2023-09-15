@@ -1,0 +1,19 @@
+---
+- block:
+    - name: Renaming VM in vSphere environment...
+      include_tasks: vsphere/main.yml
+      when: infra_env == 'vsphere'
+
+    - name: Renaming VM in VMware Workstation environment...
+      include_tasks: vmware_workstation/main.yml
+      when: infra_env == 'vmware_workstation'
+
+    - name: Renaming VM in AWS EC2 environment...
+      include_tasks: aws/main.yml
+      when: infra_env == 'aws'
+
+    - name: Renaming VM in Linode environment...
+      include_tasks: linode/main.yml
+      when: infra_env == 'linode'
+
+  when: customization_context == "host" # Alternative is container

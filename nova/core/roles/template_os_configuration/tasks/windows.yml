@@ -1,0 +1,198 @@
+---
+- name: Optimizing PowerShell...
+  ansible.windows.win_shell: "{{ lookup('file', 'Optimize-PowerShell.ps1') }}"
+
+- name: Stopping Windows Update service... # To make sure nothing is updating during the configuration
+  ansible.windows.win_service:
+    name: wuauserv
+    state: stopped
+  register: wuauserv_stop
+  until: not wuauserv_stop.failed
+  retries: 18
+  delay: 10
+
+- name: Stopping Update Orchestrator Service... # To make sure nothing is updating during the configuration
+  ansible.windows.win_service:
+    name: UsoSvc
+    state: stopped
+  when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
+
+- name: Making sure that {{ post_scripts_folder_on_target }} folder exists...
+  ansible.windows.win_file:
+    path: "{{ post_scripts_folder_on_target }}"
+    state: directory
+
+# Not using community.windows.win_power_plan because it doesn't work on older Windows versions
+- name: Configuring Windows power settings...
+  ansible.windows.win_shell: |
+    powercfg -change -monitor-timeout-ac 0
+    powercfg -change -standby-timeout-ac 0
+    powercfg -change -disk-timeout-ac 0
+    powercfg -change -hibernate-timeout-ac 0
+    powercfg -change -monitor-timeout-dc 0
+    powercfg -change -standby-timeout-dc 0
+    powercfg -change -disk-timeout-dc 0
+    powercfg -change -hibernate-timeout-dc 0
+
+- name: Disabling reserved storage for Windows 10 2004 and later...
+  ansible.windows.win_shell: Set-WindowsReservedStorageState -State Disabled
+  register: reserved_storage
+  when: ansible_facts['distribution_version'] is version('10.0.19041.0', '>=')
+  until: reserved_storage.rc == 0
+  retries: 12
+  delay: 10
+
+- name: Enabling TLS 1.2 for Windows 8.1 & Server 2012...
+  when: ansible_facts['distribution_version'] is version('10.0.14393.0', '<=') # Windows Server 2016, 8,1 and lower
+  block:
+    - name: Enabling TLS 1.2 for Windows 8.1 x64...
+      ansible.windows.win_regedit:
+        path: "{{ item.path }}"
+        name: "{{ item.name }}"
+        data: "{{ item.data }}"
+        type: "{{ item.type }}"
+      loop:
+        - path: HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework\v4.0.30319
+          name: SchUseStrongCrypto
+          data: 1
+          type: dword
+      when: ansible_facts.env.PROCESSOR_ARCHITECTURE == 'AMD64'
+
+    - name: Enabling TLS 1.2 for Windows 8.1 x86...
+      ansible.windows.win_regedit:
+        path: "{{ item.path }}"
+        name: "{{ item.name }}"
+        data: "{{ item.data }}"
+        type: "{{ item.type }}"
+      loop:
+        - path: HKLM:\SOFTWARE\Microsoft\.NETFramework\v4.0.30319
+          name: SchUseStrongCrypto
+          data: 1
+          type: dword
+      when: ansible_facts.env.PROCESSOR_ARCHITECTURE == 'x86'
+
+    - name: Enabling TLS 1.2 for powershell and installing modules...
+      ansible.windows.win_shell: |
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Install-PackageProvider -Name NuGet -Force -Confirm:$false
+        Install-Module PowerShellGet -Force -Confirm:$false
+      register: ps_modules
+      until: ps_modules.rc == 0
+      retries: 12
+      delay: 5
+
+- name: Installing PowerShell package provider...
+  ansible.windows.win_shell: |
+    Install-PackageProvider -Name NuGet -Force -Confirm:$false
+    Install-Module PowerShellGet -Force -Confirm:$false
+  register: ps_modules
+  until: ps_modules.rc == 0
+  retries: 12
+  delay: 5
+
+- name: Setting the following Windows registry values for all Windows machines...
+  ansible.windows.win_regedit:
+    path: "{{ item.path }}"
+    name: "{{ item.name }}"
+    data: "{{ item.data }}"
+    type: "{{ item.type }}"
+  loop:
+    - path: HKLM:\SYSTEM\CurrentControlSet\Services\WinRM
+      name: DelayedAutoStart
+      data: 0
+      type: dword
+    - path: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+      name: ArpRetryCount
+      data: 0
+      type: dword
+    - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient
+      name: RegisterReverseLookup
+      data: 1
+      type: dword
+    - path: HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main
+      name: DisableFirstRunCustomize
+      data: 2
+      type: dword
+    - path: HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer # Enables Always show all icons and notifications on the taskbar
+      name: EnableAutoTray
+      data: 0
+      type: dword
+    - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet # Disabling Windows Defender sample submissions
+      name: SubmitSamplesConsent
+      data: 2
+      type: dword
+
+- name: Setting the following Windows Server registry values...
+  ansible.windows.win_regedit:
+    path: "{{ item.path }}"
+    name: "{{ item.name }}"
+    data: "{{ item.data }}"
+    type: "{{ item.type }}"
+  loop:
+    - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\Server\ServerManager # Disables Server Manager autostart
+      name: DoNotOpenAtLogon
+      data: 1
+      type: dword
+    - path: HKLM:\SOFTWARE\Policies\Microsoft\Edge # Disables Edge first run screen
+      name: HideFirstRunExperience
+      data: 1
+      type: dword
+  when:
+    - ansible_facts.os_product_type == 'server' or ansible_facts.os_product_type == 'domain_controller'
+    - ansible_facts.os_installation_type != 'Server Core'
+
+- name: Setting the following Windows Server Core registry values...
+  ansible.windows.win_regedit:
+    path: "{{ item.path }}"
+    name: "{{ item.name }}"
+    data: "{{ item.data }}"
+    type: "{{ item.type }}"
+  loop:
+    - path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon # Sets PowerShell as default shell for Server CORE
+      name: Shell
+      data: PowerShell.exe -NoExit
+      type: string
+  when: ansible_facts.os_installation_type == 'Server Core'
+
+- name: Setting the following Windows Workstation registry values...
+  ansible.windows.win_regedit:
+    path: "{{ item.path }}"
+    name: "{{ item.name }}"
+    data: "{{ item.data }}"
+    type: "{{ item.type }}"
+  loop:
+    - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization # Disables Windows updata dwonload from local network
+      name: DODownloadMode
+      data: 0
+      type: dword
+    - path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System # Disables first logon animations
+      name: EnableFirstLogonAnimation
+      data: 0
+      type: dword
+    - path: HKLM:\SOFTWARE\Policies\Microsoft\Edge # Disables Edge first run screen
+      name: HideFirstRunExperience
+      data: 1
+      type: dword
+  when: ansible_facts.os_product_type == "workstation"
+
+- name: Configuring Chocolatey features...
+  chocolatey.chocolatey.win_chocolatey_feature:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+  loop:
+    - name: checksumFiles
+      state: enabled
+    - name: allowGlobalConfirmation
+      state: enabled
+
+- name: Including RDP role... # Default is to enable RDP
+  ansible.builtin.include_role:
+    name: nova.core.win_configure_rdp
+
+- name: Enabling following firewall groups...
+  community.windows.win_firewall_rule:
+    group: "{{ item }}"
+    enabled: true
+  loop:
+    - "@FirewallAPI.dll,-28502" # File and Printer Sharing
+    - "@FirewallAPI.dll,-32752" # Network Discovery

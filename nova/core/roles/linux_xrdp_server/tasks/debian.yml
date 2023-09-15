@@ -1,0 +1,66 @@
+---
+- name: Installing xrdp...
+  ansible.builtin.package:
+    name:
+      - xrdp
+      - xorgxrdp # If this is missing RDP will login user to console
+    state: present
+    update_cache: true
+  register: xrdp_install
+  until: not xrdp_install.failed
+  retries: 5
+  delay: 3
+
+- name: Adding xrdp user to ssl-cert group...
+  ansible.builtin.user:
+    name: xrdp
+    groups: ssl-cert
+    append: true
+
+- name: Setting xrdp configuration v1...
+  ansible.builtin.lineinfile:
+    dest: "{{ xrdp_config.dest }}"
+    regexp: "{{ xrdp_config.regexp }}"
+    line: "{{ xrdp_config.line }}"
+  loop_control:
+    loop_var: xrdp_config
+  loop:
+    - dest: /etc/X11/Xwrapper.config
+      regexp: allowed_users=console
+      line: allowed_users=anybody
+
+    - dest: /etc/xrdp/xrdp.ini
+      regexp: ^max_bpp=
+      line: max_bpp=15
+
+    - dest: /etc/xrdp/xrdp.ini
+      regexp: ^ls_top_window_bg_color=
+      line: ls_top_window_bg_color=000000 # Sets the XRDP login screen background color to black
+
+    - dest: /etc/xrdp/xrdp.ini
+      regexp: ^#ls_background_image=
+      line: ls_background_image= # Enables setting login screen background
+
+  notify: Restarting xrdp service...
+
+- name: Creating folders for configuration...
+  ansible.builtin.file:
+    path: /etc/polkit-1/localauthority/50-local.d
+    state: directory
+    mode: "0755"
+
+- name: Configuring XRDP polkit...
+  ansible.builtin.copy:
+    src: "{{ polkit_config.src }}"
+    dest: "{{ polkit_config.dest }}"
+    mode: "0644"
+  loop_control:
+    loop_var: polkit_config
+  loop:
+    - src: custom-configuration.pkla
+      dest: /etc/polkit-1/localauthority/50-local.d/custom-configuration.pkla
+
+- name: Rebooting on finalize..
+  ansible.builtin.set_fact:
+    reboot_on_finalize: true
+  when: xrdp_install.changed

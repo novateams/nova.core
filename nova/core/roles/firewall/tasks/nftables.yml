@@ -1,0 +1,45 @@
+---
+- name: Removing persistent iptables...
+  ansible.builtin.apt:
+    name: iptables-persistent
+    state: absent
+
+- name: Installing nftables...
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    update_cache: yes
+  register: firewall_dependencies_install
+  until: not firewall_dependencies_install.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+  retries: 10
+  delay: 6
+
+- name: Templating rules...
+  ansible.builtin.template:
+    src: "{{ nftables_template_file }}"
+    dest: /etc/nftables.conf
+    lstrip_blocks: yes
+  register: nftables_rules
+
+- block:
+    - name: Starting & enabling nftables...
+      ansible.builtin.systemd:
+        name: nftables.service
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Checking if Docker service exists...
+      ansible.builtin.systemd:
+        name: docker.service
+      register: docker_service_exists
+
+    # This part is required to make sure automatic Docker IPTables rules get re-populated
+    - name: Restarting Docker service...
+      ansible.builtin.systemd:
+        name: docker.service
+        state: restarted
+        enabled: yes
+      when: docker_service_exists.status.LoadState != "not-found"
+
+  when: nftables_rules.changed

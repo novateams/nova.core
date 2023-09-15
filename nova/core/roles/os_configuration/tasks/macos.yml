@@ -1,0 +1,15 @@
+---
+- name: Set hostname
+  ansible.builtin.raw: scutil --set {{ item }}
+  changed_when: true
+  with_items:
+    - HostName {{ hostname }}
+    - LocalHostName {{ hostname }}
+    - ComputerName {{ hostname }}
+
+- name: Lineinfile_raw ( /etc/hosts )
+  ansible.builtin.raw: |
+    line="127.0.1.1 {{ hostname }}.{{ domain }} {{ hostname }}"
+    file=/etc/hosts
+    grep -qxF "$line" $file || echo "$line" >> $file
+  changed_when: true

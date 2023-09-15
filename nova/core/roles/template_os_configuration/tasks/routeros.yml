@@ -1,0 +1,45 @@
+---
+- name: Turning off unnecessary services...
+  community.routeros.command:
+    commands:
+      - /ip cloud set ddns-enabled=no update-time=no
+      - /ip firewall service-port set [find] disabled=yes
+      - /ip service set api,api-ssl,ftp,telnet,www disabled=yes
+      - /system clock set time-zone-autodetect=no time-zone-name=UTC
+      - /system watchdog set automatic-supout=no auto-send-supout=no
+      - /tool bandwidth-server set enabled=no
+      - /tool mac-server set allowed-interface-list=none
+      - /tool mac-server ping set enabled=no
+
+- name: Allowing ND, L2-winbox on ADMIN interfaces only...
+  community.routeros.command:
+    commands:
+      - /interface list add name=ADMIN
+      - /ip neighbor discovery-settings set discover-interface-list=ADMIN
+      - /tool mac-server mac-winbox set allowed-interface-list=ADMIN
+
+- name: Hardening services...
+  community.routeros.command:
+    commands:
+      - /ip settings set rp-filter=strict
+      - /ip ssh set always-allow-password-login=yes strong-crypto=yes
+
+- name: Removing unnecessary default group permissions...
+  community.routeros.command:
+    commands:
+      - /user group set full policy="local,telnet,ssh,ftp,reboot,read,write,policy,test,winbox,password,sniff,sensitive,!web,!api,!romon,!dude,!tikapp"
+      - /user group set read policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!password,!web,!sniff,!sensitive,!api,!romon,!dude,!tikapp"
+      - /user group set write policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!password,!web,!sniff,!sensitive,!api,!romon,!dude,!tikapp"
+
+- name: Disabling or uninstalling unnecessary packages...
+  community.routeros.command:
+    commands:
+      - /system package disable advanced-tools,hotspot,mpls,ppp,routing,ups,wireless
+      - /system package uninstall dude
+
+- name: Cleaning up RouterOS...
+  community.routeros.command:
+    commands:
+      - /system note set show-at-login=no
+      - /file remove [find]
+      - /console clear-history

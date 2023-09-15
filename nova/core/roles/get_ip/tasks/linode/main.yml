@@ -1,0 +1,13 @@
+---
+- name: Getting {{ fqdn }} IP...
+  linode.cloud.instance_info:
+    api_token: "{{ linode_api_token }}"
+    label: "{{ custom_vm_name | default(vm_name) }}"
+  register: linode_vm
+  delegate_to: localhost
+
+- name: Printing {{ inventory_hostname }} IPs...
+  ansible.builtin.debug:
+    msg: |
+      IPv4 - {{ linode_vm.instance.ipv4[0] }}
+      IPv6 - {{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}

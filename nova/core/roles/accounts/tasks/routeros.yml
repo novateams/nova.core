@@ -1,0 +1,29 @@
+---
+- name: Creating following users...
+  community.routeros.command:
+    commands: # Two lines because first adds missing accounts and the second sets the correct passwords
+      - /user add name={{ item.username }} group=full password={{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}
+      - /user set {{ item.username }} password={{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }} group=full comment=""
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+
+- name: Adding RSA ssh key for following users...
+  community.routeros.command:
+    commands:
+      - /file print file=ssh_user_key_{{ item.username }}.txt
+      - :delay 2s
+      - /file set ssh_user_key_{{ item.username }}.txt contents="{{ item.ssh_key }}"
+      - /user ssh-keys import user={{ item.username }} public-key-file=ssh_user_key_{{ item.username }}.txt
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.ssh_key is defined
+    - item.ssh_key is search("ssh-rsa") # Because EC is not supported
+
+# Required because of RouterOS SSH MaxAuthTries default is too small
+- name: Allowing password login...
+  community.routeros.command:
+    commands:
+      - /ip ssh set always-allow-password-login=yes

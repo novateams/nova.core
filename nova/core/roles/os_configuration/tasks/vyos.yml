@@ -1,0 +1,6 @@
+---
+- name: Setting FQDN as hostname...
+  vyos.vyos.vyos_config:
+    lines:
+      - set system host-name {{ fqdn }}
+    save: true

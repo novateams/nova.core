@@ -1,0 +1,79 @@
+---
+- name: Including Debian OS trusted certificates tasks...
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
+        mode: "0644"
+      loop: "{{ trusted_certificates_list }}"
+      when: not item.src.startswith('http')
+
+    - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
+      ansible.builtin.get_url:
+        url: "{{ item.src }}"
+        dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
+        mode: "0644"
+        timeout: 60
+      loop: "{{ trusted_certificates_list }}"
+      when: item.src.startswith('http')
+
+    - name: Updating CA certificates...
+      ansible.builtin.command: update-ca-certificates --fresh
+      changed_when: true
+
+- name: Adding trusted certificates for Archlinux based OS...
+  when: ansible_facts.os_family == "Archlinux"
+  block:
+    - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: /etc/ca-certificates/trust-source/anchors/{{ item.name }}.crt
+        mode: "0644"
+      loop: "{{ trusted_certificates_list }}"
+      when: not item.src.startswith('http')
+
+    - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
+      ansible.builtin.get_url:
+        url: "{{ item.uri }}"
+        dest: /etc/ca-certificates/trust-source/anchors/{{ item.name }}.crt
+        mode: "0644"
+        timeout: 60
+      loop: "{{ trusted_certificates_list }}"
+      when: item.src.startswith('http')
+
+    - name: Trusting installed certificates...
+      ansible.builtin.command: trust extract-compat
+      changed_when: true
+
+- name: Adding trusted certificate(s) to Java keystore(s)...
+  when: trusted_certificates_to_jks
+  block:
+    - name: Installing keytool...
+      ansible.builtin.package:
+        name: default-jdk
+        update_cache: true
+      register: keytool_install
+      until: not keytool_install.failed
+      retries: 10
+      delay: 3
+
+    - name: Creating /srv/certs folder...
+      ansible.builtin.file:
+        path: /srv/certs
+        state: directory
+        mode: "0755"
+
+    - name: Creating a JKS truststore(s)...
+      community.general.java_cert:
+        cert_path: /usr/local/share/ca-certificates/{{ item.name }}.crt
+        cert_alias: "{{ item.name }}"
+        keystore_path: /srv/certs/{{ jks_truststore_name }}.jks
+        keystore_pass: changeit # Since the truststore contains public keys I don't see much point in setting different password than JKS default
+        state: present
+        keystore_create: true
+        trust_cacert: true
+      loop: "{{ trusted_certificates_list }}"
+      loop_control:
+        label: "{{ item.name }}"

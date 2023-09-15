@@ -1,0 +1,19 @@
+---
+- name: Including Vault preparation tasks...
+  ansible.builtin.include_tasks: prepare_vault.yml
+
+- name: Including prepare & save secrets tasks...
+  ansible.builtin.include_tasks: save_secrets.yml
+  when: secrets != []
+
+- name: Merging all account types to one list...
+  ansible.builtin.set_fact:
+    accounts: "{{ user_accounts + admin_accounts + domain_user_accounts }}"
+  when: secrets == []
+
+- name: Including accounts save secrets tasks...
+  ansible.builtin.include_tasks: save_account_password.yml
+  loop: "{{ accounts }}"
+  loop_control:
+    loop_var: account
+  when: secrets == []

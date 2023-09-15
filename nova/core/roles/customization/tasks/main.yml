@@ -1,0 +1,43 @@
+---
+- name: Stopping play if immutable var is true...
+  when: immutable or 'immutable' in group_names
+  block:
+    - name: Warning...
+      ansible.builtin.debug:
+        msg: Stopping play since immutable flag or group is true!
+
+    - name: Stopping play...
+      ansible.builtin.meta: end_host
+
+- name: Checking if {{ inventory_dir }}/vm/{{ role }} role exists...
+  ansible.builtin.stat:
+    path: "{{ inventory_dir }}/vm/{{ role }}"
+  register: role_existence
+  become: false
+  delegate_to: localhost
+
+- name: Checking if {{ inventory_dir }}/vm/{{ role }} exists and including the role...
+  when: role_existence.stat.exists
+  block:
+    - name: Creating {{ post_scripts_folder_on_target }} folder...
+      ansible.windows.win_file:
+        path: "{{ post_scripts_folder_on_target }}"
+        state: directory
+      when: "'os_windows' in group_names"
+
+    - name: Including {{ inventory_dir }}/vm/{{ role }} role...
+      ansible.builtin.include_role:
+        name: "{{ inventory_dir }}/vm/{{ role }}"
+
+- name: Flushing handlers and including get_ip role if ctp-deploy-role is used...
+  when: role_only
+  block:
+    - name: Flushing handlers...
+      ansible.builtin.meta: flush_handlers
+
+    - name: Including get_ip role...
+      ansible.builtin.include_role:
+        name: nova.core.get_ip
+
+    - name: Ending play for role_only...
+      ansible.builtin.meta: end_host

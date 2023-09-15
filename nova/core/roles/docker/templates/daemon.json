@@ -1,0 +1,16 @@
+{
+  "experimental": {{ docker_enable_experimental_features | lower }},
+  "features": {
+    "buildkit": {{ docker_buildkit | lower }}
+  },
+  "ipv6": {{ docker_enable_ipv6 | lower }},
+  "ip6tables": {{ docker_enable_ip6tables | lower }},
+  "fixed-cidr-v6": "{{ docker_bridge_ipv6_range }}",
+  "userland-proxy": {{ docker_userland_proxy | lower }},
+  "registry-mirrors": [
+    {% for mirror in docker_registry_mirrors %}
+    "{{ mirror }}"{% if loop.last %}{% else %},{% endif %}
+
+    {% endfor %}
+  ]
+}

@@ -1,0 +1,12 @@
+---
+- name: Including start VM tasks...
+  ansible.builtin.include_tasks: poweron.yml
+  when: poweron
+
+- name: Including restart VM tasks...
+  ansible.builtin.include_tasks: restart.yml
+  when: restart or reset
+
+- name: Including shutdown VM tasks...
+  ansible.builtin.include_tasks: shutdown.yml
+  when: shutdown or poweroff

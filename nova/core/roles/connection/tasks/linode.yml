@@ -1,0 +1,20 @@
+---
+- name: Setting correct connection parameters and IP {{ primary_ipv4 }} for {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_host: "{{ primary_ipv4 }}"
+    ansible_connection: "{{ default_connection_plugin }}"
+    ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
+    ansible_password: "{{ linode_vm_password if fresh_deploy else ansible_deployer_password }}"
+
+- name: Configuring sshd_config for {{ inventory_hostname }}...
+  delegate_to: localhost
+  when: fresh_deploy
+  block:
+    - name: Waiting until ssh is up for {{ inventory_hostname }}...
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+
+    - name: Increasing ssh MaxAuthTries to 20...
+      ansible.builtin.command: sshpass -p {{ linode_vm_password }} ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o PreferredAuthentications=password {{ ansible_user }}@{{ ansible_host }} "sudo sed -i 's#.*MaxAuthTries.*#MaxAuthTries 20#g' /etc/ssh/sshd_config ; sudo systemctl restart sshd.service"
+      changed_when: true

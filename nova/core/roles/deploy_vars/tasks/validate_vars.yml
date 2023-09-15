@@ -1,0 +1,34 @@
+---
+- name: Including OS validation tasks block...
+  when:
+    - "'os_physical_device' not in group_names"
+    - vm_template is not defined
+  block:
+    - name: Checking for OS...
+      ansible.builtin.debug:
+        msg: vm_template variable is not defined, make sure you have operating system set
+
+    - name: Stopping play...
+      ansible.builtin.meta: end_host
+
+- name: Including Network validation tasks block...
+  when: group_names | select('search', '^zone_.*') == []
+  block:
+    - name: Checking for Network...
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} is not in any network, make sure to add a network before deploy"
+
+    - name: Stopping play...
+      ansible.builtin.meta: end_host
+
+- name: Including project vars validation tasks block...
+  when:
+    - project_name != "my-laptop"
+    - project_name == none or project_id == none or environment_name == none
+  block:
+    - name: Checking required variables...
+      ansible.builtin.debug:
+        msg: project_name, project_id or environment_name variable empty. Check project_vars.yml
+
+    - name: Stopping play...
+      ansible.builtin.meta: end_host

@@ -1,0 +1,97 @@
+---
+- name: Creating following local accounts...
+  ansible.windows.win_user:
+    name: "{{ item.username }}"
+    password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
+    password_never_expires: true
+    state: present
+    groups_action: add
+    groups: "{{ item.groups | default(windows_admin_groups if item.username in admins_list else omit) }}"
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - ansible_facts.windows_domain_role != "Primary domain controller"
+    - ansible_facts.windows_domain_role != "Backup domain controller"
+    - item.username not in domain_users_list
+
+- name: Checking and creating domain accounts...
+  when: ansible_facts.windows_domain_role == "Primary domain controller"
+  block:
+    - name: DC post-reboot availability check... # Sometimes DCs are not available right after initial deployment if they are not sysprepped
+      ansible.builtin.include_role:
+        name: nova.core.win_dc_post_reboot_check
+
+    - name: Creating following domain accounts...
+      microsoft.ad.user:
+        sam_account_name: "{{ item.username[:20] }}" # https://docs.microsoft.com/en-us/windows/win32/adschema/a-samaccountname
+        name: "{{ item.display_name | default(item.username) }}"
+        identity: "{{ item.username }}"
+        description: "{{ item.description | default(omit) }}"
+        display_name: "{{ item.display_name | default(omit) }}"
+        email: "{{ item.email | default(omit) }}"
+        upn: "{{ item.username }}@{{ ad_domain_name }}"
+        password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
+        password_never_expires: true
+        state: present
+        path: "{{ item.ou | default(omit) }}"
+        groups:
+          add: "{{ item.groups | default(windows_domain_admin_groups if item.username in admins_list else omit) }}"
+      register: win_domain_user
+      loop: "{{ accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+- name: Creating a profiles for...
+  community.windows.win_user_profile:
+    username: "{{ item.username }}"
+    name: "{{ item.username }}"
+    state: present
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username not in domain_users_list # This to avoid creating profiles for domain users on DCs
+
+- name: Including SSH keys tasks...
+  when: item.ssh_key is defined
+  block:
+    - name: Creating .ssh directories for...
+      ansible.windows.win_file:
+        path: C:\Users\{{ item.username }}\.ssh
+        state: directory
+      loop: "{{ accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+    - name: Adding profile ssh public keys for...
+      community.windows.win_lineinfile:
+        path: C:\Users\{{ item.username }}\.ssh\authorized_keys
+        line: "{{ item.ssh_key }}"
+        create: true
+      loop: "{{ accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+    - name: Adding administrators_authorized_keys public keys for admins...
+      community.windows.win_lineinfile:
+        path: C:\ProgramData\ssh\administrators_authorized_keys
+        line: "{{ item.ssh_key }}"
+        create: true
+      loop: "{{ admin_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+    - name: Setting correct administrators_authorized_keys permissions...
+      ansible.windows.win_shell: icacls.exe C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
+
+- name: Incuding DC accounts configuration tasks block...
+  when:
+    - win_domain_user.changed
+    - fresh_deploy
+  block:
+    - name: Rebooting DC to make sure all required permissions are applied...
+      ansible.windows.win_reboot:
+
+    - name: DC post-reboot availability check...
+      ansible.builtin.include_role:
+        name: nova.core.win_dc_post_reboot_check

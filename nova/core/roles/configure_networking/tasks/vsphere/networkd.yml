@@ -1,0 +1,249 @@
+---
+- name: Including networkd configuration tasks...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Disabling networking service...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c "systemctl stop networking; systemctl disable networking"
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Removing existing network configuration file(s)...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c "rm /etc/systemd/network/*"
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Templating interface(s) configuration...
+      ansible.builtin.template:
+        src: networkd.network.simple
+        dest: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
+        lstrip_blocks: yes
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.network_id }}"
+
+    - name: Getting interface(s) file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
+      register: network_file_size
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.network_id }}"
+
+    - name: Preparing interface(s) configuration upload...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ item.stat.size }}"
+            path: /etc/systemd/network/{{ 10 + interface_index }}-{{ item.item.network_id }}.network
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      register: network_file_upload_prep
+      loop: "{{ network_file_size.results }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.item.network_id }}"
+
+    - name: Uploading interface(s) file(s)...
+      ansible.builtin.uri:
+        url: "{{ item.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.item.item.network_id }}.network_networkd
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      loop: "{{ network_file_upload_prep.results }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.item.item.network_id }}"
+
+    - name: Templating link(s) configuration script(s)...
+      ansible.builtin.template:
+        src: networkd.link.simple
+        dest: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
+        lstrip_blocks: yes
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.network_id }}"
+
+    - name: Getting links(s) file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
+      register: "link_file_size"
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.network_id }}"
+
+    - name: Preparing links(s) configuration upload...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ item.stat.size }}"
+            path: "/etc/systemd/network/{{ 10 + interface_index }}-{{ item.item.network_id }}.link"
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      register: link_file_upload_prep
+      loop: "{{ link_file_size.results }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.item.network_id }}"
+
+    - name: Uploading links(s) file(s)...
+      ansible.builtin.uri:
+        url: "{{ item.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.item.item.network_id }}.link_networkd
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      loop: "{{ link_file_upload_prep.results }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ item.item.item.network_id }}"
+
+    - name: Starting networkd & udev services...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c " systemctl enable systemd-networkd; systemctl restart systemd-networkd; systemctl enable systemd-udev-trigger; systemctl restart systemd-udev-trigger"
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Templating resolv.conf configuration script...
+      ansible.builtin.template:
+        src: resolv.conf
+        dest: /tmp/{{ inventory_hostname }}_resolv.conf
+        lstrip_blocks: yes
+
+    - name: Getting resolv.conf file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ inventory_hostname }}_resolv.conf
+      register: resolv_file_size
+
+    - name: Preparing resolv.conf upload...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ resolv_file_size.stat.size }}"
+            path: /etc/resolv.conf
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      register: resolv_file_upload_prep
+
+    - name: Uploading resolv.conf...
+      ansible.builtin.uri:
+        url: "{{ resolv_file_upload_prep.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ inventory_hostname }}_resolv.conf
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Starting systemd-resolved service...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved"
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Configuring network interface(s) names...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c "update-initramfs -k all -u; shutdown now"
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+      # Since the URI module doesn't give any output, we need to wait for the VM to be powered off and then power it back on to avoid potential race condition
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
+      vmware.vmware_rest.vcenter_vm_guest_power_info:
+        vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"
+      register: poweroff_status
+      until: poweroff_status.value.state == "NOT_RUNNING"
+      retries: 60
+      delay: 5
+
+    - name: Powering on {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware_rest.vcenter_vm_power:
+        state: start
+        vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"
+      register: vcenter_vm_start
+      until: not vcenter_vm_start.failed
+      retries: 5
+      delay: 2

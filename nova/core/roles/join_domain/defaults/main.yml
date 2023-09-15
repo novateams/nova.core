@@ -1,0 +1,9 @@
+---
+ad_domain_name: "{{ domain }}"
+domain_dn: DC={{ ad_domain_name.split('.') | join(',DC=') | trim }} # AD domain's DistinguishedName
+state: domain # Can be domain or workgroup for Windows
+primary_domain_controller: "{{ dns_servers[0] }}"
+domain_join_user: "{{ domain_admin_username }}" # Can be different from domain_admin_username with only domain join rights
+domain_join_password: "{{ domain_admin_password }}"
+ad_sudo_group: Domain\ Admins
+broken_trust: false

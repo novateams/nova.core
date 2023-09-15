@@ -1,0 +1,29 @@
+---
+# If other languages are needed then corresponding km-#.ini file is needed and xrdp_keyboard.ini needs to be updated
+- name: Copying keymap(s) to kali...
+  ansible.builtin.copy:
+    src: "{{ xrdp_keymap.src }}"
+    dest: "{{ xrdp_keymap.dest }}"
+  loop_control:
+    loop_var: xrdp_keymap
+  loop:
+    - src: km-00000425.ini # EE
+      dest: /etc/xrdp/km-00000425.ini
+
+- name: Updating xrdp_keyboard.ini with languages...
+  ansible.builtin.lineinfile:
+    dest: /etc/xrdp/xrdp_keyboard.ini
+    line: "{{ xrdp_keymap_config.line }}"
+    insertafter: "{{ xrdp_keymap_config.insertafter }}"
+    firstmatch: true
+  loop_control:
+    loop_var: xrdp_keymap_config
+  loop: # Loop needs to be in reverse order to the locations in file for the same value lines
+    - insertafter: ^\[default_rdp_layouts\]
+      line: rdp_layout_ee=0x00000425
+
+    - insertafter: ^\[rdp_layouts_map_mac\]
+      line: rdp_layout_ee=ee
+
+    - insertafter: ^\[default_layouts_map\]
+      line: rdp_layout_ee=ee

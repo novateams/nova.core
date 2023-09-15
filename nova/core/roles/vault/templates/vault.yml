@@ -1,0 +1,31 @@
+---
+services:
+  vault:
+    image: hashicorp/vault:{{ vault_version }}
+    container_name: "{{ vault_container_name }}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    expose:
+      - 80
+    volumes:
+      - "{{ vault_config_folder }}/config:/vault/config"
+      - "{{ vault_config_folder }}/file:/vault/file"
+    environment:
+      - VAULT_ADDR=http://0.0.0.0:80
+      - VAULT_API_ADDR=http://0.0.0.0:80
+      - VAULT_ADDRESS=http://0.0.0.0:80
+    command: server
+    cap_add:
+      - IPC_LOCK
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+networks:
+  default:
+    name: "{{ docker_network }}"
+    external: true

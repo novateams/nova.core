@@ -1,0 +1,75 @@
+---
+- block:
+    - name: Templating network configuration script...
+      ansible.builtin.template:
+        src: macos.sh
+        dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh
+        mode: "0644"
+        lstrip_blocks: true
+
+    - name: Getting file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh
+      register: file_size
+
+    - name: Pre-Creating temp file...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c touch /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+
+    - name: Preparing file upload...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ file_size.stat.size }}"
+            path: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+      register: file_upload_prep
+
+    - name: Uploading file...
+      ansible.builtin.uri:
+        url: "{{ file_upload_prep.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+
+    - name: Configuring network...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+
+  become: false
+  delegate_to: localhost

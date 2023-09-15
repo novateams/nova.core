@@ -1,0 +1,10 @@
+---
+- name: Configuring Windows...
+  ansible.windows.win_shell: "{{ lookup('file', 'Configure-Windows.ps1') }}"
+
+- name: Waiting for internet...
+  ansible.windows.win_wait_for:
+    host: "{{ wait_for_address }}"
+    port: "{{ wait_for_port }}"
+    timeout: "{{ wait_for_timeout }}"
+  when: wait_for_host

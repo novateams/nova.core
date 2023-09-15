@@ -1,0 +1,5 @@
+---
+- name: Setting correct connection parameters for your laptop...
+  ansible.builtin.set_fact:
+    ansible_connection: "{{ default_connection_plugin }}"
+    ansible_user: "{{ ansible_deployer_username }}"
