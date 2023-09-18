@@ -82,32 +82,44 @@ class InventoryModule(BaseInventoryPlugin):
 
   async def store_access_token(self):
     keepass_creds = os.environ.get(self.get_option('credentials_lookup_env'),"").strip()
-    sso_creds = self.fetch_keepass_creds(keepass_creds)
+    sso_creds = self.fetch_creds(keepass_creds)
 
     self._access_token = self.fetch_access_token(sso_creds)
 
-  def fetch_keepass_creds(self, creds_path):
-    kp_soc = "/tmp/ansible-keepass.sock"
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.connect(kp_soc)
+  def fetch_creds(self, creds_path):
+    if 'KEEPASS_DEPLOYER_CREDENTIALS_PATH' in os.environ and os.environ['KEEPASS_DEPLOYER_CREDENTIALS_PATH'].strip() != "":
 
-    username = {'attr': "username", 'path': creds_path}
-    sock.send(json.dumps(username).encode())
-    username = json.loads(sock.recv(1024).decode())
+      kp_soc = "/tmp/ansible-keepass.sock"
+      sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+      sock.connect(kp_soc)
 
-    password = {'attr': "password", 'path': creds_path}
-    sock.send(json.dumps(password).encode())
-    password = json.loads(sock.recv(1024).decode())
+      username = {'attr': "username", 'path': creds_path}
+      sock.send(json.dumps(username).encode())
+      username = json.loads(sock.recv(1024).decode())
 
-    sock.close()
+      password = {'attr': "password", 'path': creds_path}
+      sock.send(json.dumps(password).encode())
+      password = json.loads(sock.recv(1024).decode())
 
-    if(username['status']=='error' or password['status']=='error'):
-      raise Exception('Error retrieving credentials from Keepass')
+      sock.close()
 
-    return {
-      'username': username['text'],
-      'password': password['text']
-    }
+      if(username['status']=='error' or password['status']=='error'):
+        raise Exception('Error retrieving credentials from Keepass')
+
+      return {
+        'username': username['text'],
+        'password': password['text']
+      }
+
+    else:
+
+      if(self.get_option('deployer_username') is None or self.get_option('deployer_password') is None):
+        raise Exception('Error - deployer_username or deployer_password not found in Ansible vault')
+
+      return {
+        'username': self.get_option('deployer_username'),
+        'password': self.get_option('deployer_password')
+      }
 
   async def fetch_environment(self):
     event = await self.fetch_from_providentia('')
