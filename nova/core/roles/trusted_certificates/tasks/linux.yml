@@ -36,7 +36,7 @@
 
     - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
       ansible.builtin.get_url:
-        url: "{{ item.uri }}"
+        url: "{{ item.src }}"
         dest: /etc/ca-certificates/trust-source/anchors/{{ item.name }}.crt
         mode: "0644"
         timeout: 60
