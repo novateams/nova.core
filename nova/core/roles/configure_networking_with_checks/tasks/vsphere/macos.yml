@@ -1,0 +1,17 @@
+---
+- become: false
+  delegate_to: localhost
+  block:
+    - name: Upload file...
+      ansible.builtin.include_tasks: util/upload_file.yml
+      loop:
+        # macos.sh
+        - name: macos.sh
+          src: macos.sh
+          dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh
+
+    - name: Configuring network...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: /bin/bash
+        args_to_execute: -c "chmod +x /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh && /tmp/{{ project_fullname }}_{{ inventory_hostname }}_macos.sh"
