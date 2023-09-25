@@ -1,0 +1,64 @@
+---
+- name: Including networkd configuration tasks...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Disable legacy on Debian...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: /bin/bash
+        args_to_execute: -c "systemctl stop networking && systemctl disable networking"
+      when: customization_method_distribution == "Debian"
+
+    - name: Disable legacy on Debian...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: /bin/bash
+        args_to_execute: -c "systemctl stop NetworkManager && systemctl disable NetworkManager && rm -r /etc/systemd/network/ && mkdir -p /etc/systemd/network/"
+      when: customization_method_distribution == 'AlmaLinux' or customization_method_distribution == 'Scientific'
+
+    - name: Set network files upload config...
+      ansible.builtin.set_fact:
+        network_config: "{{ network_config|default([]) + 
+          [ {
+              'name': item.network_id + '.network',
+              'src': 'networkd.network.simple.j2',
+              'dest': '/etc/systemd/network/10-' + item.network_id + '.network',
+              'other_vars': item
+            },
+            {
+              'name': item.network_id + '.link',
+              'src': 'networkd.link.simple.j2',
+              'dest': '/etc/systemd/network/10-' + item.network_id + '.link',
+              'other_vars': item,
+              'network_number': network_number
+            } ] 
+          }}"
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: network_number
+
+    - name: Upload files...
+      ansible.builtin.include_tasks: util/upload_file.yml
+      loop: "{{ network_config + [
+              {
+                'name': 'resolv.conf',
+                'src': 'resolv.conf',
+                'dest': '/etc/resolv.conf'
+              }
+            ] }}"
+
+    - name: Applying network configuration...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: /bin/bash
+        args_to_execute: > 
+            -c "systemctl enable systemd-networkd &&
+            systemctl restart systemd-networkd &&
+            update-initramfs -k all -u"
+
+    - name: Reboot VM...
+      community.vmware.vmware_guest_powerstate:
+        state: reboot-guest
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        folder: "{{ folder }}"

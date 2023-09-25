@@ -1,0 +1,17 @@
+---
+- name: Configuring networking on Windows VM...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Upload file...
+      ansible.builtin.include_tasks: util/upload_file.yml
+      loop: 
+        - name: Configure-Network.ps1
+          src: Configure-Network.ps1
+          dest: C:\Windows\Temp\Configure-Network.ps1
+
+    - name: Applying network configuration...
+      ansible.builtin.include_tasks: util/send_cmd.yml
+      vars:
+        bin_to_execute: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+        args_to_execute: -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File C:\Windows\Temp\Configure-Network.ps1
