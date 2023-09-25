@@ -1,0 +1,21 @@
+---
+- block:
+    - name: INFO
+      ansible.builtin.debug:
+        msg: KEEPASS_LINODE_API_TOKEN not defined in .makerc-vars.
+
+    - name: Stopping play...
+      ansible.builtin.meta: end_host
+  when: lookup('env', 'KEEPASS_LINODE_API_TOKEN') | length == 0
+
+- name: Starting the rebuild process...
+  ansible.builtin.include_tasks: rebuild.yml
+  when: rebuild
+
+- name: Starting the removal process...
+  ansible.builtin.include_tasks: remove.yml
+  when: deploy_mode == 'undeploy' or deploy_mode == 'redeploy'
+  # The play will end here if we are undeploying
+
+- name: Starting the cloning process...
+  ansible.builtin.include_tasks: create.yml

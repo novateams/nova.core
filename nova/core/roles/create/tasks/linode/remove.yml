@@ -1,0 +1,21 @@
+---
+- name: Deleting {{ fqdn }} from Linode...
+  linode.cloud.instance:
+    api_token: "{{ linode_api_token }}"
+    label: "{{ custom_vm_name | default(vm_name) }}"
+    state: absent
+  delegate_to: localhost
+  when:
+    - not no_undeploy
+    - "'no_undeploy' not in group_names"
+    - not immutable
+    - "'immutable' not in group_names"
+
+- name: Warning...
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} has no_undeploy or immutable set and won't be removed!"
+  when: immutable or no_undeploy or 'immutable' in group_names or 'no_undeploy' in group_names
+
+- name: Stop executing when we are undeploying
+  ansible.builtin.meta: end_host
+  when: deploy_mode == 'undeploy'
