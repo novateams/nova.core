@@ -41,9 +41,10 @@
         line: "{{ item }}"
         create: yes
         mode: "0600"
-      no_log: true
-      loop:
-        - line: "- {{ vault_init.json.keys_base64 }}"
+      loop: "{{ vault_init.json.keys_base64 }}"
+      loop_control:
+        label: Saving unseal key{{ vault_unseal_key_index + 1 }}
+        index_var: vault_unseal_key_index
 
     - name: Unsealing...
       ansible.builtin.uri:
@@ -58,6 +59,7 @@
         body_format: json
       loop: "{{ vault_init.json.keys_base64 }}"
       loop_control:
+        label: Unsealing with key{{ vault_unseal_key_index + 1 }}
         index_var: vault_unseal_key_index
       when: vault_unseal_key_index != vault_unseal_threshold
 
