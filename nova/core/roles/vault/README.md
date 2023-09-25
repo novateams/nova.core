@@ -62,6 +62,7 @@ Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/no
   ansible.builtin.include_role:
     name: nova.core.vault
     vars:
+      vault_configure: true
       vault_create_root_ca: true # Create a self-signed root CA
       vault_create_intermediate_ca: true # Create an intermediate CA (signed by the root CA)
 ```
