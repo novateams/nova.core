@@ -1,9 +1,8 @@
 DOCUMENTATION = """
-  name: providentia_v3
+  name: nova.core.providentia_v3
   plugin_type: inventory
   short_description: Providentia inventory source
   requirements:
-    - requests >= 2.18.4
     - requests_oauthlib
     - oauthlib
   description:
@@ -34,23 +33,15 @@ DOCUMENTATION = """
       required: False
 """
 
-from typing import DefaultDict
-import requests
-import os
-import json
-import socket
-import aiohttp
-import asyncio
+import os, json, socket, aiohttp, asyncio
 from oauthlib.oauth2 import LegacyApplicationClient
-from pykeepass import PyKeePass
 from requests_oauthlib import OAuth2Session
 from ansible.plugins.inventory import BaseInventoryPlugin
-from ansible.errors import AnsibleError, AnsibleParserError
+from ansible.errors import AnsibleParserError
 from ansible.utils.vars import combine_vars, load_extra_vars
-from pprint import pprint
 
 class InventoryModule(BaseInventoryPlugin):
-  NAME = 'providentia_v3'
+  NAME = 'nova.core.providentia_v3'
 
   def verify_file(self, path):
     if super(InventoryModule, self).verify_file(path):
@@ -104,7 +95,7 @@ class InventoryModule(BaseInventoryPlugin):
       sock.close()
 
       if(username['status']=='error' or password['status']=='error'):
-        raise Exception('Error retrieving credentials from Keepass')
+        raise AnsibleParserError('Error retrieving credentials from Keepass')
 
       return {
         'username': username['text'],
@@ -114,7 +105,7 @@ class InventoryModule(BaseInventoryPlugin):
     else:
 
       if(self.get_option('deployer_username') is None or self.get_option('deployer_password') is None):
-        raise Exception('Error - deployer_username or deployer_password not found in Ansible vault')
+        raise AnsibleParserError('Error - deployer_username or deployer_password not found in Ansible vault')
 
       return {
         'username': self.get_option('deployer_username'),
@@ -197,17 +188,20 @@ class InventoryModule(BaseInventoryPlugin):
       if response.status == 200:
         return await response.json()
 
-      if response.status == 401:
-        raise Exception('Providentia responded with 401: Unauthenticated')
+      elif response.status == 401:
+        raise AnsibleParserError('Providentia responded with 401: Unauthenticated')
 
-      if response.status == 403:
-        raise Exception('Requested token is not authorized to perform this action')
+      elif response.status == 403:
+        raise AnsibleParserError('Requested token is not authorized to perform this action')
 
-      if response.status == 404:
-        raise Exception('Providentia responded with 404: not found')
+      elif response.status == 404:
+        raise AnsibleParserError('Providentia responded with 404: not found')
 
-      if response.status == 500:
-        raise Exception('Providentia responded with 500: server error')
+      elif response.status == 500:
+        raise AnsibleParserError('Providentia responded with 500: server error')
+
+      else:
+        raise AnsibleParserError('Fetching Providentia responded with ' + str(response.status))
 
   def fetch_access_token(self, creds):
     client_id = self.get_option('sso_client_id')
