@@ -103,7 +103,7 @@
     - vault_auto_unseal
     - vault_unseal_shares == 1 # Only one unseal key is supported for auto-unseal with this role
   block:
-    - name: Chcking if local unseal key exists...
+    - name: Checking if local unseal key exists...
       ansible.builtin.stat:
         path: "{{ vault_config_folder }}/creds/unseal_key"
       register: unseal_key
