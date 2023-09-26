@@ -7,7 +7,6 @@ mgmt_ip: {}
 netplan_renderer: {}
 primary_ipv4: false # False means that DHCP is used or IP is not present
 primary_ipv6: false # False means that DHCP is used or IP is not present
-configure_network_with_rest_api: false
 
 # VMWare REST API defaults
 admin_account_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret={{ environment_name }}/data/{{ project_fullname }}:{{ inventory_hostname }}_{{ admin_account }}') }}"

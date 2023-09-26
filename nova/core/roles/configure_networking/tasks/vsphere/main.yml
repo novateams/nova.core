@@ -19,7 +19,6 @@
   register: vcenter_session_api_key
   become: false
   delegate_to: localhost
-  when: configure_network_with_rest_api is defined
 
 - name: Configuring network for supported connection modes...
   when: connection_mode in supported_connection_modes
@@ -42,7 +41,6 @@
       no_log: true
       become: false
       delegate_to: localhost
-      when: configure_network_with_rest_api is defined
 
 - name: Flushing handlers...
   ansible.builtin.meta: flush_handlers
