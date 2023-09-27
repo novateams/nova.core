@@ -10,11 +10,10 @@ default_interface:
   - name: "{{ interfaces[0].cloud_id }}"
     device_type: "{{ vmware_nic_type }}"
 extra_network_interfaces: []
+
 # Hardware
-cpus: 2
-ram_gb: 2
-hardware_cpu:
-hardware_ram:
+hardware_cpu: # Nr of CPUs to add to machine if left empty it will use the same as the template
+hardware_ram: # Nr of GB of RAM to add to machine if left empty it will use the same as the template
 vmware_nic_type: vmxnet3
 vmware_scsi_controller_type: paravirtual
 

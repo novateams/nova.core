@@ -123,9 +123,9 @@
         datastore: "{{ datastore }}"
         resource_pool: "{{ resource_pool | default(omit) }}"
         hardware:
-          num_cpus: "{{ cpus if not hardware_cpu else hardware_cpu }}"
-          num_cpu_cores_per_socket: "{{ cpus if not hardware_cpu else hardware_cpu }}"
-          memory_mb: "{{ ram | default((ram_gb | int * 1024) | round(0) | int) if not hardware_ram else (hardware_ram | int * 1024) | round(0) | int }}"
+          num_cpus: "{{ omit if not hardware_cpu else hardware_cpu }}"
+          num_cpu_cores_per_socket: "{{ omit if not hardware_cpu else hardware_cpu }}"
+          memory_mb: "{{ omit if not hardware_ram else (hardware_ram | int * 1024) | round(0) | int }}"
           memory_reservation_lock: false
           mem_reservation: 0
         cdrom:
