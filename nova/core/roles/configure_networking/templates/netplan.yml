@@ -37,7 +37,7 @@ network:
         - "{{ mgmt_ip }}":
             lifetime: 0
         {% elif (mgmt_ip != {}) and (interface.connection) %}
-		- "{{ mgmt_ip }}"
+		    - "{{ mgmt_ip }}"
         {% endif %}
         {% if extra_ips[ interface.network_id ] is defined %}
         {% for extra_ip in extra_ips[ interface.network_id ] %}
