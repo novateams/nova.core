@@ -1,3 +1,4 @@
 ---
-role: "{{ inventory_hostname }}"
-customization_role_path: "{{ lookup('pipe', 'pwd') }}/inventory/vm"
+customization_role_path: "{{ inventory_dir }}/vm" # Root path where too look for the role folder(s). Relative to where the inventory file is located.
+role: "{{ inventory_hostname }}" # Name of the role folder under the customization_role_path to look for and include
+

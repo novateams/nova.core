@@ -1,37 +1,25 @@
-# Role Name
+# customization
 
-COMING SOON
-A brief description of the role goes here.
+This is a universal role that can be included in [start.yml](https://github.com/ClarifiedSecurity/catapult/blob/main/defaults/start.yml). It is used to look for existance of a role in the `customization_role_path` and include it if it exists.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-`customization_role_path` - Full path to the folder where the role to execute is.
-`role` - Name of the role to execute
+Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/customization/defaults/main.yml) for the full list of variables.
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
-## Example Playbook
+## Example
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+Since this role already gets included in `start.yml` there is no need to include it in your playbook. However, if you want to run it separately, you can do so with:
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-## License
-
-AGPL-3.0-or-later
-
-## Author Information
-
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+- name: Including customization role
+  include_role:
+    name: nova.core.customization
+```
