@@ -16,15 +16,11 @@
   when: vcenter_vm_info.value == []
 
 - name: Checking for the correct deploy mode...
+  ansible.builtin.fail:
+    msg: Machine doesn't exist, use deploy or redeploy first!
   when:
     - fresh_deploy
     - role_only or role_only_wp
-  block:
-    - ansible.builtin.debug:
-        msg: Machine doesn't exist, use deploy or redeploy first!
-      failed_when:
-        - fresh_deploy
-        - role_only or role_only_wp
 
 - name: Running VM creation tasks...
   delegate_to: localhost
