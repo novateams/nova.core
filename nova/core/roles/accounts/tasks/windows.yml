@@ -52,37 +52,42 @@
     label: "{{ item.username }}"
   when: item.username not in domain_users_list # This to avoid creating profiles for domain users on DCs
 
-- name: Including SSH keys tasks...
+- name: Creating .ssh directories for...
+  ansible.windows.win_file:
+    path: C:\Users\{{ item.username }}\.ssh
+    state: directory
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
   when: item.ssh_key is defined
-  block:
-    - name: Creating .ssh directories for...
-      ansible.windows.win_file:
-        path: C:\Users\{{ item.username }}\.ssh
-        state: directory
-      loop: "{{ accounts }}"
-      loop_control:
-        label: "{{ item.username }}"
 
-    - name: Adding profile ssh public keys for...
-      community.windows.win_lineinfile:
-        path: C:\Users\{{ item.username }}\.ssh\authorized_keys
-        line: "{{ item.ssh_key }}"
-        create: true
-      loop: "{{ accounts }}"
-      loop_control:
-        label: "{{ item.username }}"
+- name: Adding ssh public keys for...
+  community.windows.win_lineinfile:
+    path: C:\Users\{{ item.username }}\.ssh\authorized_keys
+    line: "{{ item.ssh_key }}"
+    create: true
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.ssh_key is defined
 
-    - name: Adding administrators_authorized_keys public keys for admins...
-      community.windows.win_lineinfile:
-        path: C:\ProgramData\ssh\administrators_authorized_keys
-        line: "{{ item.ssh_key }}"
-        create: true
-      loop: "{{ admin_accounts }}"
-      loop_control:
-        label: "{{ item.username }}"
+- name: Creating administrators_authorized_keys file...
+  ansible.windows.win_file:
+    path: C:\ProgramData\ssh\administrators_authorized_keys
+    state: touch
 
-    - name: Setting correct administrators_authorized_keys permissions...
-      ansible.windows.win_shell: icacls.exe C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
+- name: Adding administrators_authorized_keys public keys for admins...
+  community.windows.win_lineinfile:
+    path: C:\ProgramData\ssh\administrators_authorized_keys
+    line: "{{ item.ssh_key }}"
+    create: true
+  loop: "{{ admin_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.ssh_key is defined
+
+- name: Setting correct administrators_authorized_keys permissions...
+  ansible.windows.win_shell: icacls.exe C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
 
 - name: Incuding DC accounts configuration tasks block...
   when:
