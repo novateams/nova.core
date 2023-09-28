@@ -9,14 +9,14 @@
     - name: Stopping play...
       ansible.builtin.meta: end_host
 
-- name: Checking if {{ inventory_dir }}/vm/{{ role }} role exists...
+- name: Checking if {{ customization_role_path }}/{{ role }} role exists...
   ansible.builtin.stat:
-    path: "{{ inventory_dir }}/vm/{{ role }}"
+    path: "{{ customization_role_path }}/{{ role }}"
   register: role_existence
   become: false
   delegate_to: localhost
 
-- name: Checking if {{ inventory_dir }}/vm/{{ role }} exists and including the role...
+- name: Checking if {{ customization_role_path }}/{{ role }} exists and including the role...
   when: role_existence.stat.exists
   block:
     - name: Creating {{ post_scripts_folder_on_target }} folder...
@@ -25,9 +25,9 @@
         state: directory
       when: "'os_windows' in group_names"
 
-    - name: Including {{ inventory_dir }}/vm/{{ role }} role...
+    - name: Including {{ customization_role_path }}/{{ role }} role...
       ansible.builtin.include_role:
-        name: "{{ inventory_dir }}/vm/{{ role }}"
+        name: "{{ customization_role_path }}/{{ role }}"
 
 - name: Flushing handlers and including get_ip role if ctp-deploy-role is used...
   when: role_only
