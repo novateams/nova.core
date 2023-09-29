@@ -23,22 +23,23 @@
       ansible.builtin.set_fact:
         ansible_host: "{{ (detect_dhcp.instance | default(vmware_guest_info.instance)).guest.ipAddress }}"
 
-- name: Setting {{ connection_ip }} IP for connection from local inventory... # Calculated connection address when using local inventory
-  ansible.builtin.set_fact:
-    ansible_host: "{{ connection_ip }}"
-  when:
-    - not connection_mode_dhcp
-    - connection_address is not defined
+- name: Setting address for connection...
+  when: not connection_mode_dhcp
+  block:
+    - name: Setting {{ connection_ip }} IP for connection from local inventory... # Calculated connection address when using local inventory
+      ansible.builtin.set_fact:
+        ansible_host: "{{ connection_ip }}"
+      when: connection_address is not defined
 
-- name: Setting {{ connection_address }} for connection from Providentia... # This address comes from Providentia API
-  ansible.builtin.set_fact:
-    ansible_host: "{{ connection_address }}"
-  when: connection_address is defined
+    - name: Setting {{ connection_address }} for connection from Providentia... # This address comes from Providentia API
+      ansible.builtin.set_fact:
+        ansible_host: "{{ connection_address }}"
+      when: connection_address is defined
 
-- name: Setting custom {{ custom_connection_ip }} IP for connection... # This is for edge cases when connection IP must be overridden manually
-  ansible.builtin.set_fact:
-    ansible_host: "{{ custom_connection_ip }}"
-  when: custom_connection_ip is defined
+    - name: Setting custom {{ custom_connection_ip }} IP for connection... # This is for edge cases when connection IP must be overridden manually
+      ansible.builtin.set_fact:
+        ansible_host: "{{ custom_connection_ip }}"
+      when: custom_connection_ip is defined
 
 - name: Setting correct connection plugin and credentials for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
