@@ -25,4 +25,6 @@
     name: nova.core.powerstate
   vars:
     poweron: true
-  when: start_vm_after_snapshot | bool # Because CLI detects extra var as string
+  when:
+    - start_vm_after_snapshot | bool # Because CLI detects extra var as string
+    - snapshot_mode != 'live-snap'
