@@ -63,6 +63,9 @@ supported_shared_folder_os: # Operating systems that support shared folders betw
   - os_ubuntu
   - os_kali
 
+# Custom parameters for VM in vmx file for VMware Workstation
+vmwarews_custom_params: []
+
 ################
 # AWS defaults #
 ################
