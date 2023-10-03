@@ -82,6 +82,17 @@
             - regex: vhv.enable.*
               line: vhv.enable = "TRUE"
 
+        - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
+          ansible.builtin.lineinfile:
+            path: "{{ local_vmx_path }}"
+            regex: "{{ item.regex }}"
+            line: "{{ item.line }}"
+            state: present
+          loop_control:
+            label: "{{ item.line }}"
+          loop: "{{ vmwarews_custom_params }}"
+          when: vmwarews_custom_params != []
+
     - name: Including shared folder tasks...
       when:
         - enable_shared_folder
