@@ -1,37 +1,49 @@
 # Role Name
 
-COMING SOON
-A brief description of the role goes here.
+This is a role for creating and managing snapshots of virtual machines. Currently supported environments are: `vSphere` & `VMware Workstation`.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/snapshots/defaults/main.yml) for the full list of variables, their default values and descriptions.
+
+One of the following variables must be set:
+
+- `snapshot_mode == 'snap'` # Adds a new snapshot to the VM
+- `snapshot_mode == 'resnap'` # Removes all existing snapshots from the VM and adds a new one
+- `snapshot_mode == 'live-snap'` # Adds a new snapshot to the VM while it is running
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
-## Example Playbook
+## Example
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yml
+- name: Removing all existing snapshots from a VM and creating a new one with a name LinkedCloneSource and not starting VM after snapshot...
+  ansible.builtin.include_role:
+    name: nova.core.snapshots
+  vars:
+    snapshot_mode: resnap
+    snapshot_name: LinkedCloneSource
+    start_vm_after_snapshot: false
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```yml
+- name: Adding a new snapshot to a VM while it is running...
+  ansible.builtin.include_role:
+    name: nova.core.snapshots
+  vars:
+    snapshot_mode: live-snap
+```
 
-## License
-
-AGPL-3.0-or-later
-
-## Author Information
-
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yml
+- name: Shutting down a VM, adding a new snapshot to it and starting it again...
+  ansible.builtin.include_role:
+    name: nova.core.snapshots
+  vars:
+    snapshot_mode: snap
+```
