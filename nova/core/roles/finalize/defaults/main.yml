@@ -1,5 +1,4 @@
 ---
-enable_disk_encryption: false
 disable_windows_update: false
 reboot_on_finalize: false
 update_system: false
