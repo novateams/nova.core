@@ -1,0 +1,46 @@
+---
+- name: Installing docker
+  ansible.builtin.include_role:
+    name: nova.core.docker
+  when: providentia_install_docker
+
+- name: Install host dependencies
+  ansible.builtin.package:
+    name:
+      - git
+      - make
+
+- name: Clone repo
+  ansible.builtin.git:
+    accept_hostkey: yes
+    repo: https://github.com/ClarifiedSecurity/Providentia.git
+    dest: "{{ providentia_install_dir }}"
+    version: "{{ providentia_deploy_branch }}"
+    force: yes
+    separate_git_dir: "{{ providentia_install_dir_git }}"
+
+- name: Template configuration
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ providentia_install_dir }}/{{ item.dest | default(item.src) }}"
+    lstrip_blocks: true
+  loop:
+    - src: .makerc-vars
+    - src: docker-compose.yml
+      dest: docker/prod/
+
+- name: Replace app URI-s in keycloak config
+  ansible.builtin.replace:
+    path: "{{ providentia_install_dir }}/docker/prod/providentia.yaml"
+    regexp: 'providentia\.localhost'
+    replace: "{{ providentia_app_fqdn }}"
+  when: providentia_builtin_keycloak
+
+- name: Build image, start containers, clear cache
+  ansible.builtin.make:
+    chdir: "{{ providentia_install_dir }}"
+    target: "{{ item }}"
+  loop:
+    - build
+    - start
+    - clear-redis
