@@ -15,8 +15,8 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: present
         memory_dump: "{{ true if snapshot_mode == 'live-snap' else false }}"
-        snapshot_name: "{{ snapshot_name }}"
-        description: "{{ snapshot_description }}"
+        snapshot_name: "{{ snapshot_name | default(ansible_date_time.iso8601) }}"
+        description: Created at {{ ansible_date_time.iso8601 }} by {{ deployer_username }}
   delegate_to: localhost
   become: false
 
