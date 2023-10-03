@@ -1,37 +1,25 @@
 # Role Name
 
-COMING SOON
-A brief description of the role goes here.
+This role is usually used as a last role in a playbook. It is used to clean up some of the artifacts that are created during the deployment process. It can also be used to updates the operating system and include some extra last-stop roles.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/finalize/defaults/main.yml) for the full list of variables, their default values and descriptions.
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
-## Example Playbook
+## Example
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-## License
-
-AGPL-3.0-or-later
-
-## Author Information
-
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+- name: Including finalize role to update Operating System...
+  ansible.builtin.include_role:
+    name: nova.core.finalize
+  vars:
+    update_system: true
+```
