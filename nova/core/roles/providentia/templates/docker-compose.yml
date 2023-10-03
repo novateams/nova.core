@@ -1,0 +1,136 @@
+version: "3.7"
+
+name: providentia
+services:
+  web:
+    depends_on:
+      {% if providentia_builtin_database %}
+      - "postgresql"
+      {% endif %}
+      {% if providentia_builtin_redis %}
+      - "redis"
+      {% endif %}
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+      target: production
+    entrypoint: ["/srv/app/docker-entrypoint.sh"]
+    command: ["puma", "-C", "config/puma.production.rb"]
+    restart: unless-stopped
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+    environment:
+      - DATABASE_URL={{ providentia_db_url }}
+      - REDIS_URL={{ providentia_redis_url }}
+      - OIDC_ISSUER={{ providentia_oidc_issuer }}
+      - OIDC_CLIENT_ID={{ providentia_oidc_client_id }}
+      - OIDC_CLIENT_SECRET={{ providentia_oidc_client_secret }}
+      - OIDC_RESOURCE_PREFIX={{ providentia_resource_prefix}}
+      - BASE_URI=https://{{ providentia_app_fqdn }}
+      - AUTH_MODE={{ providentia_auth_mode }}
+      {% if providentia_sentry_dsn %}
+      - SENTRY_DSN={{ providentia_sentry_dsn }}
+      - SENTRY_ENV={{ providentia_sentry_env }}
+      {% endif %}
+      {% if providentia_builtin_keycloak %}
+      - OIDC_ENABLE_HTTP=true
+      {% endif %}
+    {% if providentia_builtin_reverse_proxy %}
+    labels:
+      caddy: "{{ providentia_app_fqdn }}"
+      {% if providentia_builtin_reverse_proxy_tls_mode == 'selfsigned' %}
+      caddy.tls: internal
+      {% elif providentia_builtin_reverse_proxy_tls_mode == 'pregenerated' %}
+      caddy.tls: /certs/cert.crt /certs/cert.key
+      {% endif %}
+      caddy.reverse_proxy: "{% raw %}{{upstreams 3000}}{% endraw %}"
+    {% endif %}
+
+  {% if providentia_builtin_reverse_proxy %}
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+      {% if providentia_builtin_reverse_proxy_tls_mode == 'pregenerated' %}
+      - {{ providentia_builtin_reverse_proxy_tls_pregenerated_cert }}:/certs/cert.crt
+      - {{ providentia_builtin_reverse_proxy_tls_pregenerated_key }}:/certs/cert.key
+      {% endif %}
+    restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - caddy
+          {% if providentia_builtin_keycloak %}
+          - {{ providentia_builtin_keycloak_fqdn }}
+          {% endif %}
+  {% endif %}
+
+  {% if providentia_builtin_redis %}
+  redis:
+    image: "redis:alpine"
+    restart: unless-stopped
+    volumes:
+      - "redis:/data"
+  {% endif %}
+
+  {% if providentia_builtin_database or providentia_builtin_keycloak %}
+  postgresql:
+    image: "postgres:15-alpine"
+    restart: unless-stopped
+    volumes:
+      {% if providentia_builtin_keycloak %}
+      - ./initdb_keycloak.sql:/docker-entrypoint-initdb.d/001-initdb.sql # from repo
+      {% endif %}
+      - "database_storage:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_USER=providentia
+      - POSTGRES_PASSWORD={{ providentia_builtin_database_db_password }}
+      - POSTGRES_DB=providentia
+
+  {% endif %}
+
+  {% if providentia_builtin_keycloak %}
+  keycloak:
+    image: bitnami/keycloak:22.0.3
+    depends_on:
+      - postgresql
+    environment:
+      - KEYCLOAK_PROXY_ADDRESS_FORWARDING=true
+      - KEYCLOAK_ADMIN_USER=admin
+      - KEYCLOAK_ADMIN_PASSWORD={{ providentia_builtin_keycloak_admin_password }}
+      - KEYCLOAK_DATABASE_PASSWORD={{ providentia_builtin_database_db_password }}
+    labels:
+      caddy: "{{ providentia_builtin_keycloak_fqdn }}:80"
+      caddy.reverse_proxy: "{% raw %}{{upstreams 8080}}{% endraw %}"
+
+  keycloak_config:
+    image: adorsys/keycloak-config-cli:latest-22.0.0
+    depends_on:
+      - keycloak
+    volumes:
+      - ./providentia.yaml:/config/providentia.yaml
+    environment:
+      - KEYCLOAK_URL=http://keycloak:8080/
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD={{ providentia_builtin_keycloak_admin_password }}
+      - KEYCLOAK_AVAILABILITYCHECK_ENABLED=true
+      - KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=30s
+      - IMPORT_FILES='/config/*'
+  {% endif %}
+
+volumes:
+  {% if providentia_builtin_reverse_proxy %}
+  caddy_data: {}
+  {% endif %}
+  {% if providentia_builtin_redis %}
+  redis: {}
+  {% endif %}
+  {% if providentia_builtin_database or providentia_builtin_keycloak %}
+  database_storage: {}
+  {% endif %}

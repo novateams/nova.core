@@ -1,0 +1,34 @@
+---
+# host config
+providentia_install_docker: true # whether to install nova.core.docker on host
+providentia_install_dir: /srv/providentia # path where providentia will be installed
+providentia_install_dir_git: /srv/providentia.git # path where git configuration will be stored
+
+# dependencies
+providentia_builtin_keycloak: true # Should keycloak instance be deployed with Providentia
+providentia_builtin_redis: true # Should redis be deployed with Providentia
+providentia_builtin_database: true # Should postgres instance be deployed with Providentia
+providentia_builtin_reverse_proxy: true # Should a reverse proxy be deployed with Providentia
+
+# dependencies config
+providentia_builtin_keycloak_fqdn: "keycloak.{{ providentia_app_fqdn }}" # The FQDN for builtin keycloak instance
+providentia_builtin_keycloak_admin_password: secret # builtin keycloak admin user password
+providentia_builtin_database_db_password: secret # builtin keycloak db credentials (defined in providentia repo)
+providentia_builtin_reverse_proxy_tls_mode: selfsigned # one of `selfsigned` or `pregenerated`
+providentia_builtin_reverse_proxy_tls_pregenerated_cert: # path to TLS cert on host
+providentia_builtin_reverse_proxy_tls_pregenerated_key: # path to TLS key on host
+
+# app config
+providentia_app_fqdn: # fqdn for deployed instance
+providentia_deploy_branch: main # gitref used for deployment, can be overriden to deploy other tags or branches
+providentia_redis_url: redis://redis:6379/0 # URL for app redis, defaults to builtin
+providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_password }}@postgresql/providentia?pool=5 # full database URL used by the app, defaults to builtin postgres
+providentia_sentry_dsn: # Sentry exception tracking endpoint
+providentia_sentry_env: production # Sentry production value
+
+# app config (SSO)
+providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/Providentia" # The URL for OpenID Connect endpoint (.well-known should be under this)
+providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
+providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
+providentia_resource_prefix: Providentia_ # The prefix on authorization roles
+providentia_auth_mode: resource_access # One of `resource_access` or `scope`, specifying where in access token the authorization fields are located
