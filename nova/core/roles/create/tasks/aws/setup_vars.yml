@@ -1,4 +1,0 @@
----
-- name: Setting correct admin_account for AWS template...
-  ansible.builtin.set_fact:
-    admin_account: "{{ aws_template_username }}"
