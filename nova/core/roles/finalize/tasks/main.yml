@@ -31,3 +31,9 @@
         state: absent
       delegate_to: localhost
       when: infra_env == "aws"
+
+- name: Including following post-finalize roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop: "{{ finalize_post_roles }}"
+  when: finalize_post_roles != []
