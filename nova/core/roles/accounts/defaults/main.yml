@@ -33,3 +33,4 @@ distro_root_group_map:
   FreeBSD: wheel
   OpenWrt: wheel
   Archlinux: wheel
+  AlmaLinux: wheel
