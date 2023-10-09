@@ -1,8 +1,5 @@
 ---
-- name: Including networkd configuration tasks...
-  become: false
-  delegate_to: localhost
-  block:
+- block:
     - name: Disable legacy on Debian...
       ansible.builtin.include_tasks: util/send_cmd.yml
       vars:
@@ -14,12 +11,12 @@
       ansible.builtin.include_tasks: util/send_cmd.yml
       vars:
         bin_to_execute: /bin/bash
-        args_to_execute: -c "systemctl stop NetworkManager && systemctl disable NetworkManager && rm -r /etc/systemd/network/ && mkdir -p /etc/systemd/network/"
-      when: customization_method_distribution == 'AlmaLinux' or customization_method_distribution == 'Scientific'
+        args_to_execute: -c "systemctl stop NetworkManager && systemctl disable NetworkManager && mkdir -p /etc/systemd/network/"
+      when: customization_method_distribution == 'Scientific'
 
     - name: Set network files upload config...
       ansible.builtin.set_fact:
-        network_config: "{{ network_config|default([]) + 
+        network_config: "{{ network_config|default([]) +
           [ {
               'name': item.network_id + '.network',
               'src': 'networkd.network.simple.j2',
@@ -32,7 +29,7 @@
               'dest': '/etc/systemd/network/10-' + item.network_id + '.link',
               'other_vars': item,
               'network_number': network_number
-            } ] 
+            } ]
           }}"
       loop: "{{ interfaces }}"
       loop_control:
@@ -43,7 +40,7 @@
       loop: "{{ network_config + [
               {
                 'name': 'resolv.conf',
-                'src': 'resolv.conf',
+                'src': 'resolv.conf.j2',
                 'dest': '/etc/resolv.conf'
               }
             ] }}"
@@ -52,13 +49,20 @@
       ansible.builtin.include_tasks: util/send_cmd.yml
       vars:
         bin_to_execute: /bin/bash
-        args_to_execute: > 
-            -c "systemctl enable systemd-networkd &&
-            systemctl restart systemd-networkd &&
-            update-initramfs -k all -u"
+        args_to_execute: >
+          -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
+          {% if customization_method_distribution == 'Archlinux' %}
+          mkinitcpio -P
+          {% else %}
+          update-initramfs -u
+          {% endif %}
+          "
 
     - name: Reboot VM...
       community.vmware.vmware_guest_powerstate:
         state: reboot-guest
         name: "{{ custom_vm_name | default(vm_name) }}"
         folder: "{{ folder }}"
+
+  become: false
+  delegate_to: localhost
