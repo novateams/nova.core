@@ -19,6 +19,6 @@ if [[ -z $(grep -r {{ hostname }} /etc/ssh/) ]]; then
 
 else
 
-    echo "SSH host keys and machine-id already generated"
+    echo "done"
 
 fi
