@@ -10,9 +10,10 @@ if [[ -z $(grep -r {{ hostname }} /etc/ssh/) ]]; then
     # Reming existing SSH host keys
     rm /etc/ssh/ssh_host_* -v
 
-    # Regenerate SSH host keys and machine-id on first boot
+    # Regenerate SSH host keys and machine-id
     ssh-keygen -A
-    dbus-uuidgen --ensure=/etc/machine-id
+    rm /etc/machine-id
+    systemd-machine-id-setup
 
     # Restarting SSH service
     systemctl restart ssh* # * Is to match sshd and ssh
