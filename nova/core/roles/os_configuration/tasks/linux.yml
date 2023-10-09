@@ -82,3 +82,5 @@
   ansible.builtin.shell: "{{ lookup('template', 'regenerate-machine-id.sh') }}"
   args:
     executable: /bin/bash
+  register: regenerate_machine_id
+  changed_when: regenerate_machine_id.stdout != "done"
