@@ -11,6 +11,14 @@
   retries: 5
   delay: 3
 
+- name: Creating colord start cron job... # Temporary hack to avoid colord error on first login
+  ansible.builtin.cron:
+    name: Start colord.service
+    special_time: reboot
+    job: systemctl start colord.service
+    user: root
+  when: ansible_facts.lsb.id == "Kali"
+
 - name: Adding xrdp user to ssl-cert group...
   ansible.builtin.user:
     name: xrdp
