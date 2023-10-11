@@ -1,13 +1,8 @@
 ---
-- name: Including SSH enabled checks block...
+- name: ERROR
+  ansible.builtin.fail:
+    msg: ALLOW_HOST_SSH_ACCESS not true in .makerc-vars, cannot connect to VMware Workstation!
   when: lookup('env', 'ALLOW_HOST_SSH_ACCESS') != 'true'
-  block:
-    - name: INFO
-      debug:
-        msg: "ALLOW_HOST_SSH_ACCESS not true in .makerc-vars, skipping VMware Workstation tasks..."
-
-    - name: Stopping play...
-      ansible.builtin.meta: end_host
 
 - name: Setting correct connection parameters for VMware Workstation...
   ansible.builtin.set_fact:
