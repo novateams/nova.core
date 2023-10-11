@@ -1,0 +1,70 @@
+---
+## Where do we put the docker-compose.yml
+compose_config_folder: "{{ app_container_folder }}"
+
+app_container_name: "outline"
+redis_container_name: "outline_redis"
+db_container_name: "outline_postgres"
+storage_container_name: "outline-storage"
+minio_client_container_name: "outline-mc"
+
+app_container_image: "outlinewiki/outline"
+redis_container_image: "redis"
+db_container_image: "postgres"
+storage_container_image: "minio/minio"
+minio_client_container_image: "minio/mc"
+
+app_container_folder: "/srv/{{ app_container_name }}"
+redis_container_folder: "{{ app_container_folder }}/{{ redis_container_name }}"
+db_container_folder: "{{ app_container_folder }}/{{ db_container_name }}"
+storage_container_folder: "{{ app_container_folder }}/{{ storage_container_name }}"
+minio_client_container_folder: "/srv/{{ minio_client_container_name }}"
+
+## Do we want to use minio client to configure the s3 service
+minio_client_configuration: true
+
+#####
+## Override these in your vars.yml, as needed.
+###
+outline_url: "https://{{ fqdn }}"
+s3_fqdn: "s3-{{ fqdn }}"
+s3_console_fqdn: "s3-console-{{ fqdn }}"
+s3_url: "https://{{ s3_fqdn }}"
+
+## Minio env defaults
+minio_root_user: admin
+minio_root_password: changeme_or_do_lookup_from_vault
+minio_browser_redirect_url: "https://{{ s3_console_fqdn }}"
+
+## DB env defaults
+postgres_user: outline_app
+postgres_db: outline
+
+## Outline env defaults
+node_env: production
+node_extra_ca_certs: /etc/ssl/certs/ca-certificates.crt
+node_tls_reject_unauthorized: 1
+
+database_url: "postgres://{{ postgres_user }}:{{ postgres_password }}@{{ db_container_name }}:5432/{{ postgres_db }}"
+redis_url: redis://{{ redis_container_name }}:6379
+
+outline_s3_bucket_url: "https://{{ s3_fqdn }}"
+outline_s3_bucket_name: odata
+outline_file_storage_upload_max_size: 2621440000
+aws_s3_force_path_style: "true"
+
+## Import
+outline_maximum_import_size: 512000000
+
+## Rate limits
+outline_rate_limiter_enabled: "true"
+outline_rate_limiter_requests: 100000
+outline_rate_limiter_duration_window: 60
+
+## oidc defaults
+outline_oidc_username_claim: preferred_username
+outline_oidc_display_name: "OIDC provider"
+outline_oidc_scopes:
+  - openid
+  - email
+  - profile
