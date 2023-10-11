@@ -83,3 +83,4 @@
     validate_certs: "{{ validate_vault_certs }}"
   register: existing_secrets
   delegate_to: localhost
+  become: false
