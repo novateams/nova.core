@@ -44,15 +44,10 @@
       retries: 5
       delay: 2
 
-    - name: Stopping play if template does not exists...
+    - name: ERROR
+      ansible.builtin.fail:
+        msg: Cannot find template - {{ vm_template if not template else base_vm_template }}
       when: template_search_result.value == []
-      block:
-        - name: ERROR...
-          ansible.builtin.debug:
-            msg: Cannot find template - {{ vm_template if not template else base_vm_template }}
-
-        - name: Ending play...
-          ansible.builtin.meta: end_play
 
     - name: Getting information about the VM template...
       vmware.vmware_rest.vcenter_vm_info:
