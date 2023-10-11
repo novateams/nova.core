@@ -19,6 +19,8 @@ main_id: "{{ inventory_hostname }}" # For when using local inventory, main_id is
 save_secrets_to_vault: false # Set to true to save accounts to vault, required a running HashiCorp Vault server with LDAP auth enabled
 gt_username: gt # Default non-root/Administrator username for deployment
 
+legacy_host_var_path: "{{ inventory_dir }}/host_vars"
+
 #########
 # Vault #
 #########
