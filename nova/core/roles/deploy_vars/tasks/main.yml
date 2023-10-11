@@ -24,7 +24,7 @@
 # If so then including the host vars
 - name: Checking if host_var is present for {{ main_id }}...
   ansible.builtin.stat:
-    path: "{{ inventory_dir }}/host_vars/{{ main_id }}.yml"
+    path: "{{ legacy_host_var_path }}/{{ main_id }}.yml"
   delegate_to: localhost
   register: host_var_present
 
@@ -44,7 +44,7 @@
 
     - name: Loading host_vars...
       ansible.builtin.include_vars:
-        file: "{{ inventory_dir }}/host_vars/{{ main_id }}.yml"
+        file: "{{ legacy_host_var_path }}/{{ main_id }}.yml"
 # # Uncommend to debug variables
 # - ansible.builtin.debug: msg="{{  }}"
 # - meta: end_play
