@@ -1,0 +1,87 @@
+---
+services:
+  ## Minio for storage
+  {{ storage_container_name }}:
+    container_name: "{{ storage_container_name }}"
+    hostname: "{{ storage_container_name }}"
+    image: "{{ storage_container_image }}"
+    restart: unless-stopped
+    volumes:
+      - "{{ storage_container_folder }}/storage-data:/data"
+    environment:
+      - MINIO_ROOT_USER={{ minio_root_user }}
+      - MINIO_ROOT_PASSWORD={{ minio_root_password }}
+      - MINIO_BROWSER_REDIRECT_URL={{ minio_browser_redirect_url }}
+    command: "minio server /data --console-address ':9090'"
+
+  {{ db_container_name }}:
+    container_name: "{{ db_container_name }}"
+    hostname: "{{ db_container_name }}"
+    image: "{{ db_container_image }}"
+    restart: unless-stopped
+    volumes:
+      - "{{ db_container_folder }}/database-data:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+      - POSTGRES_DB={{ postgres_db }}
+
+  {{ redis_container_name }}:
+    container_name: "{{ redis_container_name }}"
+    hostname: "{{ redis_container_name }}"
+    image: "{{ redis_container_image }}"
+    restart: unless-stopped
+    volumes:
+      - "{{ redis_container_folder }}/redis.conf:/redis.conf"
+    command:
+      - "redis-server"
+      - "/redis.conf"
+
+  {{ app_container_name }}:
+    container_name: "{{ app_container_name }}"
+    hostname: "{{ app_container_name }}"
+    image: "{{ app_container_image }}"
+    restart: unless-stopped
+    volumes:
+      - "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt"
+    environment:
+      - NODE_ENV={{ node_env }}
+      - NODE_EXTRA_CA_CERTS={{ node_extra_ca_certs }}
+      - NODE_TLS_REJECT_UNAUTHORIZED={{ node_tls_reject_unauthorized }}
+      - SECRET_KEY={{ outline_secret_key }}
+      - UTILS_SECRET={{ outline_utils_secret_key }}
+      - DATABASE_URL={{ database_url }}
+      - PGSSLMODE=disable
+      - REDIS_URL={{ redis_url }}
+      - URL={{ outline_url }}
+      - AWS_ACCESS_KEY_ID={{ outline_s3_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ outline_s3_secret_access_key }}
+      - AWS_REGION=us-east-2
+      - AWS_S3_UPLOAD_BUCKET_URL={{ outline_s3_bucket_url }}
+      - AWS_S3_UPLOAD_BUCKET_NAME={{ outline_s3_bucket_name }}
+      - FILE_STORAGE_UPLOAD_MAX_SIZE={{ outline_file_storage_upload_max_size }}
+      - AWS_S3_FORCE_PATH_STYLE={{ aws_s3_force_path_style }}
+      - AWS_S3_ACL=private
+      - OIDC_CLIENT_ID={{ outline_oidc_client_id }}
+      - OIDC_CLIENT_SECRET={{ outline_oidc_client_secret }}
+      - OIDC_AUTH_URI={{ outline_oidc_auth_uri }}
+      - OIDC_TOKEN_URI={{ outline_oidc_token_uri }}
+      - OIDC_USERINFO_URI={{ outline_oidc_userinfo_uri }}
+      - OIDC_USERNAME_CLAIM={{ outline_oidc_username_claim }}
+      - OIDC_DISPLAY_NAME={{ outline_oidc_display_name }}
+      - OIDC_SCOPES={{ outline_oidc_scopes | join(' ') }}
+      - FORCE_HTTPS={{ outline_force_https | default("true") }}
+      - ENABLE_UPDATES=false
+      - WEB_CONCURRENCY=1
+      - MAXIMUM_IMPORT_SIZE={{ outline_maximum_import_size }}
+      - DEBUG=http
+      - DEFAULT_LANGUAGE=en_US
+      - RATE_LIMITER_ENABLED={{ outline_rate_limiter_enabled }}
+      - RATE_LIMITER_REQUESTS={{ outline_rate_limiter_requests }}
+      - RATE_LIMITER_DURATION_WINDOW={{ outline_rate_limiter_duration_window }}
+    command: sh -c "yarn sequelize db:migrate --env production-ssl-disabled && yarn start --env production-ssl-disabled"
+
+networks:
+  default:
+    name: local-network
+    external: true

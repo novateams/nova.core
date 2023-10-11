@@ -1,0 +1,26 @@
+services:
+  ## minio client
+  {{ minio_client_container_name }}:
+    image: "{{ minio_client_container_image }}"
+    container_name: "{{ minio_client_container_name }}"
+    hostname: "{{ minio_client_container_name }}"
+    entrypoint: >
+      /bin/sh -c "
+        until (/usr/bin/mc config host add myminio http://{{ storage_container_name }}:9000 admin {{ minio_root_password }}) do echo '...waiting...' &&
+      sleep 1;
+      done;
+      /usr/bin/mc alias set myminio http://{{ storage_container_name }}:9000 admin {{ minio_root_password }} ;
+      /usr/bin/mc admin policy create myminio/ outline_policy /tmp/bucket-policy.json ;
+      /usr/bin/mc admin user add myminio/ {{ outline_s3_access_key_id }} {{ outline_s3_secret_access_key }} ;
+      /usr/bin/mc admin policy attach myminio/ outline_policy --user {{ outline_s3_access_key_id }} ;
+      /usr/bin/mc mb myminio/{{ outline_s3_bucket_name }} --ignore-existing ;
+      /usr/bin/mc anonymous set download myminio/{{ outline_s3_bucket_name }}/public ;
+      /usr/bin/mc anonymous set download myminio/{{ outline_s3_bucket_name }}/avatars ;
+      "
+    volumes:
+      - "{{ minio_client_container_folder }}/bucket-policy.json:/tmp/bucket-policy.json"
+
+networks:
+  default:
+    name: local-network
+    external: true

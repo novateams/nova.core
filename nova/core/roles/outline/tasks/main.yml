@@ -1,0 +1,64 @@
+---
+- name: create directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    recurse: true
+    state: directory
+  with_items:
+    - "{{ app_container_folder }}"
+    - "{{ minio_client_container_folder }}"
+    - "{{ redis_container_folder }}"
+    - "{{ db_container_folder }}"
+    - "{{ storage_container_folder }}"
+    - "{{ db_container_folder }}/database-data"
+    - "{{ storage_container_folder }}/storage-data"
+
+- name: Change file ownership, group and permissions
+  ansible.builtin.file:
+    path: "{{ item }}"
+    recurse: true
+  with_items:
+    - "{{ app_container_folder }}"
+    - "{{ minio_client_container_folder }}"
+    - "{{ redis_container_folder }}"
+    - "{{ db_container_folder }}"
+    - "{{ storage_container_folder }}"
+    - "{{ db_container_folder }}/database-data"
+    - "{{ storage_container_folder }}/storage-data"
+
+## MINIO CLIENT for automating the minio configuration
+- name: Copy minio bucket policy from template
+  ansible.builtin.template:
+    src: bucket-policy.j2
+    dest: "{{ minio_client_container_folder }}/bucket-policy.json"
+    mode: 0600
+  when:
+    - minio_client_configuration | bool
+
+- name: Copy compose config from template
+  ansible.builtin.template:
+    src: docker-compose-mc.yml.j2
+    dest: "{{ minio_client_container_folder }}/docker-compose.yml"
+    mode: 0600
+  when:
+    - minio_client_configuration | bool
+
+- name: Composing {{ inventory_hostname }} minio client...
+  ansible.builtin.shell: |
+    cd {{ minio_client_container_folder }}
+    docker compose pull
+    docker compose up -d
+  when: minio_client_configuration | bool
+
+## Outline main compose
+- name: Copy compose config from template
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ compose_config_folder }}/docker-compose.yml"
+    mode: 0600
+
+- name: Composing {{ inventory_hostname }}...
+  ansible.builtin.shell: |
+    cd {{ compose_config_folder }}
+    docker compose pull
+    docker compose up -d
