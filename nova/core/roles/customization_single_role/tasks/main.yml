@@ -2,7 +2,14 @@
 - name: Checking if the local role exists...
   ansible.builtin.stat:
     path: "{{ inventory_dir }}/roles/{{ single_role }}"
-  register: role_existence
+  register: local_role_existence
+  become: false
+  delegate_to: localhost
+
+- name: Checking if the shared role exists...
+  ansible.builtin.stat:
+    path: "{{ single_role }}"
+  register: shared_role_existence
   become: false
   delegate_to: localhost
 
@@ -10,17 +17,19 @@
   ansible.windows.win_file:
     path: "{{ post_scripts_folder_on_target }}"
     state: directory
-  when: "'os_windows' in group_names"
+  when: 
+    - "'os_windows' in group_names"
+    - local_role_existence.stat.exists or shared_role_existence.stat.exists
 
 - name: Including local role {{ single_role }}...
   ansible.builtin.include_role:
     name: "{{ inventory_dir }}/roles/{{ single_role }}"
-  when: role_existence.stat.exists
+  when: local_role_existence.stat.exists
 
 - name: Including shared role {{ single_role }}...
   ansible.builtin.include_role:
     name: "{{ single_role }}"
-  when: not role_existence.stat.exists
+  when: shared_role_existence.stat.exists
 
 - name: Flushing handlers...
   ansible.builtin.meta: flush_handlers
