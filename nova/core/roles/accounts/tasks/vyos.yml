@@ -5,7 +5,7 @@
     configured_password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
     update_password: always
     state: present
-  loop: "{{ admins_list }}"
+  loop: "{{ admin_accounts }}"
   loop_control:
     label: "{{ item.username }}"
 
@@ -14,7 +14,7 @@
     lines:
       - set system login user {{ item.username }} authentication public-keys {{ item.username }} key {{ item.ssh_key.split(' ')[1] }}
       - set system login user {{ item.username }} authentication public-keys {{ item.username }} type {{ item.ssh_key.split(' ')[0] }}
-  loop: "{{ admins_list }}"
+  loop: "{{ admin_accounts }}"
   loop_control:
     label: "{{ item.username }}"
   when: item.ssh_key is defined
