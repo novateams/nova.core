@@ -14,18 +14,6 @@
         pregenerated_password: "{{ random_generated_password }}"
       when: not save_secrets_to_vault
 
-    - name: Configuring Domain Organizational Units...
-      ansible.builtin.include_tasks: create_domain_ous.yml
-      when:
-        - "'os_windows' in group_names"
-        - ansible_facts.windows_domain_role == "Primary domain controller"
-
-    - name: Configuring Domain groups...
-      ansible.builtin.include_tasks: create_domain_groups.yml
-      when:
-        - "'os_windows' in group_names"
-        - ansible_facts.windows_domain_role == "Primary domain controller"
-
     - name: Configuring Windows accounts...
       ansible.builtin.include_tasks: windows.yml
       when: "'os_windows' in group_names"
@@ -38,13 +26,13 @@
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"
 
-    - name: Configure RouterOS accounts...
-      ansible.builtin.include_tasks: routeros.yml
-      when: "'os_router_os' in group_names"
+    - name: Select the bsd OS...
+      ansible.builtin.include_tasks: bsd.yml
+      when: "'os_bsd' in group_names"
 
-    - name: Configure VyOS accounts...
-      ansible.builtin.include_tasks: vyos.yml
-      when: "'os_vyos' in group_names"
+    - name: Select the network OS...
+      ansible.builtin.include_tasks: network_devices.yml
+      when: "'os_network_devices' in group_names"
 
     - name: Setting correct credentials...
       ansible.builtin.set_fact:

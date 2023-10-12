@@ -1,4 +1,14 @@
 ---
+- name: Configuring Domain Organizational Units...
+  ansible.builtin.include_tasks: create_domain_ous.yml
+  when:
+    - ansible_facts.windows_domain_role == "Primary domain controller"
+
+- name: Configuring Domain groups...
+  ansible.builtin.include_tasks: create_domain_groups.yml
+  when:
+    - ansible_facts.windows_domain_role == "Primary domain controller"
+
 - name: Creating following local accounts...
   ansible.windows.win_user:
     name: "{{ item.username }}"

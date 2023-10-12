@@ -1,0 +1,51 @@
+---
+- name: Setting the correct sudo group for {{ ansible_distribution }}...
+  ansible.builtin.set_fact:
+    root_group: "{{ distro_root_group_map[ansible_distribution] }}"
+    
+- name: Making sure the sudo group exists...
+  ansible.builtin.group:
+    name: "{{ root_group }}"
+    state: present
+
+- name: Creating accounts for...
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) | password_hash('sha512') }}"
+    shell: "{{ item.shell | default('/bin/tcsh') }}"
+    groups: "{{ item.groups | default(root_group if item.username in admins_list else 'users') }}"
+    skeleton: /usr/share/skel
+    createhome: true
+    append: true
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+
+- name: Adding authorized keys for...
+  ansible.posix.authorized_key:
+    user: "{{ item.username }}"
+    state: present
+    key: "{{ item.ssh_key }}"
+    exclusive: "yes"
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.ssh_key is defined
+
+- name: Enabling password requirement for sudo...
+  ansible.builtin.lineinfile:
+    dest: /usr/local/etc/sudoers
+    state: present
+    regexp: ^%{{ root_group }}
+    line: "%{{ root_group }} ALL=(ALL:ALL) ALL"
+    validate: visudo -cf %s
+  when: sudo_requires_password
+
+- name: Disabling password requirement for sudo...
+  ansible.builtin.lineinfile:
+    dest: /usr/local/etc/sudoers
+    state: present
+    regexp: ^%{{ root_group }}
+    line: "%{{ root_group }} ALL=(ALL) NOPASSWD: ALL"
+    validate: visudo -cf %s
+  when: not sudo_requires_password
