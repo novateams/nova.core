@@ -3,7 +3,7 @@
   cisco.ios.ios_config:
     lines: "username {{ item.username }} privilege {{ item.cisco_privilege | default(15) }} algorithm-type scrypt secret {{ item.password | default(lookup('password', '/dev/null length=16 chars=hexdigits')) }}"
   no_log: true
-  loop: "{{ admins_list }}"
+  loop: "{{ admin_accounts }}"
   loop_control:
     label: "{{ item.username }}"
 
@@ -13,7 +13,7 @@
     sshkey: "{{ item.ssh_key.split(' ')[1] }}"
     state: present
   no_log: true
-  loop: "{{ admins_list }}"
+  loop: "{{ admin_accounts }}"
   loop_control:
     label: "{{ item.username }}"
   when: item.ssh_key is defined
