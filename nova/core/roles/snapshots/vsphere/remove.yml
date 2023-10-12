@@ -3,13 +3,13 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Removing {{ snapshot_name }} snapshot...
+    - name: Removing {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot...
       community.vmware.vmware_guest_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
-        snapshot_name: "{{ snapshot_name }}"
+        snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}" # Default is the current snapshot
       when: not remove_all_snapshots | bool
 
     - name: Removing all existing snapshots...
