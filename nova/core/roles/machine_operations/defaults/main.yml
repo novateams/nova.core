@@ -26,9 +26,6 @@ no_undeploy: false
 linked_clone_status: false
 linked_clone_snapshot_name: LinkedCloneSource # Case sensitive default value
 
-# Connection
-real_connection_plugin: smart
-
 # Connection mode
 primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}"
 connection_ip: "{{ connection_address | default(primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address')) }}" # LEGACY variable that will be removed soon
