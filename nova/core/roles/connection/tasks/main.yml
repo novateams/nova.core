@@ -40,7 +40,7 @@
     - not role_only
     - not role_only_wp
     - "'os_macos' not in group_names"
-    - "'os_forti' not in group_names)"
+    - "'os_forti' not in group_names"
 
 - name: Waiting for macOS system to become reachable...
   ansible.builtin.raw: echo " "
