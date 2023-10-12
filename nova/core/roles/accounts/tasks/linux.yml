@@ -3,7 +3,7 @@
   ansible.builtin.set_fact:
     root_group: "{{ distro_root_group_map[ansible_distribution] }}"
 
-- name: Makíng sure the sudo group exists...
+- name: Making sure the sudo group exists...
   ansible.builtin.group:
     name: "{{ root_group }}"
     state: present
@@ -33,7 +33,7 @@
   when: item.ssh_key is defined
 
 - name: Including sudo passwords tasks...
-  when: ansible_distribution != "Archlinux"
+  when: "'os_archlinux' not in group_names"
   block:
     - name: Enabling password requirement for sudo...
       ansible.builtin.lineinfile:
@@ -54,7 +54,7 @@
       when: not sudo_requires_password
 
 - name: Including sudo passwords tasks...
-  when: ansible_distribution == "Archlinux"
+  when: "'os_archlinux' in group_names"
   block:
     - name: Enabling password requirement for sudo...
       ansible.builtin.lineinfile:

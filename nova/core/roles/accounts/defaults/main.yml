@@ -34,3 +34,4 @@ distro_root_group_map:
   OpenWrt: wheel
   Archlinux: wheel
   AlmaLinux: wheel
+  Parrot: sudo
