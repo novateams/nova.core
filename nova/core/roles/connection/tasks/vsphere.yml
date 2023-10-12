@@ -19,9 +19,9 @@
       retries: 60
       delay: 5
 
-    - name: Setting {{ (detect_dhcp.instance | default(vmware_guest_info.instance)).guest.ipAddress }} from DHCP for connection...
+    - name: Setting {{ detect_dhcp.instance }} IP for connection from DHCP...
       ansible.builtin.set_fact:
-        ansible_host: "{{ (detect_dhcp.instance | default(vmware_guest_info.instance)).guest.ipAddress }}"
+        ansible_host: "{{ detect_dhcp.instance }}"
 
 - name: Setting address for connection...
   when: not connection_mode_dhcp
@@ -31,7 +31,7 @@
         ansible_host: "{{ connection_ip }}"
       when: connection_address is not defined
 
-    - name: Setting {{ connection_address }} for connection from Providentia... # This address comes from Providentia API
+    - name: Setting {{ connection_address }} IP for connection from Providentia... # This address comes from Providentia API
       ansible.builtin.set_fact:
         ansible_host: "{{ connection_address }}"
       when: connection_address is defined
