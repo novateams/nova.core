@@ -3,7 +3,7 @@
   ansible.builtin.meta: flush_handlers
 
 - name: Including finalize block for non-containers...
-  when: customization_context == "host"
+  when: customization_context == "host" # Alternative is container that most likely doesn't need this role
   block:
     - name: Including finalization block for VMs...
       when: infra_env != 'local-machine'
