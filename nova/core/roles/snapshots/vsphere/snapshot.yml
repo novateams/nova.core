@@ -8,6 +8,15 @@
         state: remove_all
       when: snapshot_mode == 'resnap'
 
+    - name: Removing specific existing {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot ...
+      community.vmware.vmware_guest_snapshot:
+        datacenter: "{{ datacenter }}"
+        folder: "{{ folder }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: absent
+        snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
+      when: snap_mode == 'del-snap'
+
     - name: Creating a snapshot...
       community.vmware.vmware_guest_snapshot:
         datacenter: "{{ datacenter }}"
@@ -17,6 +26,7 @@
         memory_dump: "{{ true if snapshot_mode == 'live-snap' else false }}"
         snapshot_name: "{{ snapshot_name | default(ansible_date_time.iso8601) }}"
         description: Created at {{ ansible_date_time.iso8601 }} by {{ deployer_username }}
+      when: snap_mode != 'del-snap'
   delegate_to: localhost
   become: false
 
