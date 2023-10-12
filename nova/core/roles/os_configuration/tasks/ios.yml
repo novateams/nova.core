@@ -1,0 +1,17 @@
+---
+- name: Configuring hostname...
+  cisco.ios.ios_system:
+    hostname: "{{ hostname }}"
+    domain_name: "{{ domain }}"
+    domain_search: "{{ dns_search }}"
+    lookup_enabled: True
+    name_servers: "{{ dns_servers }}"
+
+- name: Setting NTP time...
+  cisco.ios.ios_ntp:
+    server: "{{ ntp_servers[0] }}"
+    state: present
+
+- name: Save config
+  cisco.ios.ios_command:
+    commands: "write memory"

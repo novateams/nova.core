@@ -1,0 +1,2 @@
+deb https://{{ nexus_fqdn }}/repository/kali/ kali-rolling main contrib non-free
+deb-src https://{{ nexus_fqdn }}/repository/kali/ kali-rolling main contrib non-free
