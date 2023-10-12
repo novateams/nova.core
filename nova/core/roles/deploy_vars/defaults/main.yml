@@ -27,7 +27,8 @@ legacy_host_var_path: "{{ inventory_dir }}/host_vars"
 
 validate_vault_certs: true
 vault_credentials: auth_method=ldap mount_point=ldap username={{ deployer_username }} password={{ deployer_password }}
-vault_lookup_fragment: "url={{ vault_address }} validate_certs={{ validate_vault_certs | default(true) }} ca_cert=/etc/ssl/certs/ca-certificates.crt {{ vault_credentials }} " # The space before the ending quote is required
+vault_cert_check: validate_certs={{ validate_vault_certs | default(true) }} ca_cert=/etc/ssl/certs/ca-certificates.crt
+vault_lookup_fragment: "url={{ vault_address }} token={{ vault_token.auth.client_token }} " # The space before the ending quote is required
 
 ##########
 # VMware #
