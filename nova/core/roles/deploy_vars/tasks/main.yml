@@ -20,6 +20,12 @@
     admin_account: "{{ aws_template_username }}"
   when: infra_env == "aws"
 
+# Generating vault token only once to be used in all the requests
+- name: Generating Hashi Vault token...
+  ansible.builtin.set_fact:
+    vault_token: "{{ lookup('community.hashi_vault.vault_login', url=vault_address, vault_cert_check, vault_credentials) }}"
+  delegate_to: localhost
+
 # Checking if a host_var matching the main_id is present
 # If so then including the host vars
 - name: Checking if host_var is present for {{ main_id }}...
