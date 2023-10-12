@@ -23,7 +23,10 @@
 # Generating vault token only once to be used in all the requests
 - name: Generating Hashi Vault token...
   ansible.builtin.set_fact:
-    vault_token: "{{ lookup('community.hashi_vault.vault_login', url=vault_address, vault_cert_check, vault_credentials) }}"
+    vault_token: "{{ lookup('community.hashi_vault.vault_login', 
+      url=vault_address, 
+      validate_certs=validate_vault_certs, ca_cert='/etc/ssl/certs/ca-certificates.crt', 
+      auth_method='ldap', mount_point='ldap', username=deployer_username, password=deployer_password) }}"
   delegate_to: localhost
 
 # Checking if a host_var matching the main_id is present
