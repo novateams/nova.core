@@ -32,12 +32,16 @@
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"
 
-    - name: Configure VyOS machine
-      ansible.builtin.include_tasks: vyos.yml
-      when: "'os_vyos' in group_names"
+    - name: Select the bsd OS...
+      ansible.builtin.include_tasks: bsd.yml
+      when: "'os_bsd' in group_names"
+
+    - name: Select the network OS...
+      ansible.builtin.include_tasks: network_devices.yml
+      when: "'os_network_devices' in group_names"
 
     # Since there can be so many different partitioning methods and file systems we'll leave to the user to create a role that matches their templates
-    # When `os_configuration_expand_os_disk_role_name` variable is defined the the role will be included here
+    # When `os_configuration_expand_os_disk_role_name` variable is defined then the role will be included here
     - name: Including OS disk expansion role...
       ansible.builtin.include_role:
         name: "{{ os_configuration_expand_os_disk_role_name }}"
@@ -53,7 +57,7 @@
       ansible.builtin.meta: flush_handlers
 
     # This needs to be last because the play stops after that
-    - name: Including ctp-redeploy-until-configuration alias tasks...
+    - name: Including if just_clone is defined...
       when: just_clone
       block:
         - name: Including snapshots role...

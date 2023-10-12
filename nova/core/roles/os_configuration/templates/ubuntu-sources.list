@@ -1,0 +1,13 @@
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}/ {{ ansible_facts.lsb.codename }} main restricted
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}/ {{ ansible_facts.lsb.codename }} universe
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}/ {{ ansible_facts.lsb.codename }} multiverse
+
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}-updates/ {{ ansible_facts.lsb.codename }}-updates main restricted
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}-updates/ {{ ansible_facts.lsb.codename }}-updates universe
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}-updates/ {{ ansible_facts.lsb.codename }}-updates multiverse
+
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}-security/ {{ ansible_facts.lsb.codename }}-security main restricted
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}-security/ {{ ansible_facts.lsb.codename }}-security universe
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}-security/ {{ ansible_facts.lsb.codename }}-security multiverse
+
+deb https://{{ nexus_fqdn }}/repository/{{ ansible_facts.lsb.codename }}-backports/ {{ ansible_facts.lsb.codename }}-backports main restricted universe multiverse

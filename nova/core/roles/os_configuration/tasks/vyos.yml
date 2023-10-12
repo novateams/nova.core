@@ -5,6 +5,12 @@
       - set system host-name {{ fqdn }}
     save: true
 
+- name: Setting NTP...
+  vyos.vyos.vyos_config:
+    lines:
+      - set service ntp server {{ ntp_servers[0] }}
+    save: true
+
 - name: Setting connection to SSH for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
     ansible_connection: ssh

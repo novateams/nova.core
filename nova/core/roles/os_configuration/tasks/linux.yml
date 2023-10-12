@@ -22,11 +22,13 @@
     regexp: ^127.0.1.1
     line: 127.0.1.1       {{ fqdn }} {{ hostname }}
 
-- name: Making sure locale exists...
-  community.general.locale_gen:
-    name: en_US.UTF-8
-    state: present
+- name: Configure Debian family machine...
+  ansible.builtin.include_tasks: debian.yml
   when: ansible_os_family == 'Debian'
+
+- name: Configure ArchLinux machine...
+  ansible.builtin.include_tasks: macos.yml
+  when: "'os_arch' in group_names"
 
 - name: Setting the default locale...
   ansible.builtin.command: localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
@@ -61,7 +63,7 @@
     lstrip_blocks: true
   when: resolv_conf_dns_servers != []
 
-- name: Waiting waiting until {{ wait_for_address }} is reachable...
+- name: Waiting until {{ wait_for_address }} is reachable...
   ansible.builtin.wait_for:
     host: "{{ wait_for_address }}"
     port: "{{ wait_for_port }}"
