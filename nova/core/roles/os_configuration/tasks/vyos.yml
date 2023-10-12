@@ -4,3 +4,24 @@
     lines:
       - set system host-name {{ fqdn }}
     save: true
+
+- name: Setting connection to SSH for {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_connection: ssh
+
+- name: Regenerating machine-id & host ssh keys...
+  ansible.builtin.shell: "{{ lookup('template', 'regenerate-machine-id.sh') }}"
+  args:
+    executable: /bin/bash
+  register: regenerate_machine_id
+  changed_when: regenerate_machine_id.stdout != "done"
+  become: true
+
+- name: Rebooting {{ inventory_hostname }}... # This is to avoid ssh connection issues because of the new ssh keys
+  reboot:
+  when: regenerate_machine_id.changed
+  become: true
+
+- name: Setting connection back to {{ default_connection_plugin }} for {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_connection: "{{ default_connection_plugin }}"
