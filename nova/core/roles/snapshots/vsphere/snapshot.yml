@@ -1,34 +1,34 @@
 ---
-- block:
+- name: Including snapshot tasks...
+  delegate_to: localhost
+  become: false
+  block:
     - name: Removing all existing snapshots...
       community.vmware.vmware_guest_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: remove_all
-      when: snapshot_mode == 'resnap'
+      when: snapshot_mode == 'clean-snap'
 
-    - name: Removing specific existing {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot ...
+    - name: Removing current {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot ...
       community.vmware.vmware_guest_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
         snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
-      when: snap_mode == 'del-snap'
+      when: snapshot_mode == 're-snap'
 
-    - name: Creating a snapshot...
+    - name: Creating a snapshot - {{ snapshot_name | default(ansible_date_time.iso8601) }}...
       community.vmware.vmware_guest_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: present
-        memory_dump: "{{ true if snapshot_mode == 'live-snap' else false }}"
+        memory_dump: "{{ true if live_snap else false }}"
         snapshot_name: "{{ snapshot_name | default(ansible_date_time.iso8601) }}"
         description: Created at {{ ansible_date_time.iso8601 }} by {{ deployer_username }}
-      when: snap_mode != 'del-snap'
-  delegate_to: localhost
-  become: false
 
 - name: Including powerstate role...
   include_role:
@@ -37,4 +37,4 @@
     poweron: true
   when:
     - start_vm_after_snapshot | bool # Because CLI detects extra var as string
-    - snapshot_mode != 'live-snap'
+    - not live_snap

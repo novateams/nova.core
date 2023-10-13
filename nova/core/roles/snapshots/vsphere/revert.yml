@@ -10,8 +10,8 @@
   become: false
   when: snapshot_info.guest_snapshots != {}
 
-- name: No snaphots!
-  ansible.builtin.debug:
+- name: ERROR
+  ansible.builtin.fail:
     msg: "{{ custom_vm_name | default(vm_name) }} doesn't have any snapshots!"
   when: snapshot_info.guest_snapshots == {}
 

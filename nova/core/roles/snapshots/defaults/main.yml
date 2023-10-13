@@ -3,3 +3,4 @@ start_vm_after_snapshot: true
 start_vm_after_revert: true
 remove_all_snapshots: false
 snapshot_description: Created at {{ ansible_date_time.iso8601 }} by {{ deployer_username }}
+live_snap: false # Creates a snapshot while the VM is running
