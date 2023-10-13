@@ -1,7 +1,7 @@
 ---
 - name: Creating a live snapshot...
   ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws snapshot {{ local_vmx_path }} {{ snapshot_name | default(ansible_date_time.iso8601) }}
-  when: snapshot_mode == 'live-snap'
+  when: live_snap
 
 - block:
     - name: Listing running VMs...
@@ -14,7 +14,7 @@
 
     - name: Removing all existing snapshots...
       ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws deleteSnapshot {{ local_vmx_path }} {{ all_snapshots.stdout_lines[1] }} andDeleteChildren #[1] because the first item in the list is title
-      when: snapshot_mode == 'resnap'
+      when: snapshot_mode == 're-snap'
 
     - name: Creating a snapshot...
       ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws snapshot {{ local_vmx_path }} {{ snapshot_name | default(ansible_date_time.iso8601) }}
@@ -22,4 +22,4 @@
     - name: Starting {{ inventory_hostname }}...
       shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}
 
-  when: snapshot_mode != 'live-snap'
+  when: not live_snap
