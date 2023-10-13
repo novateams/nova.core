@@ -1,4 +1,4 @@
 ---
 ansible_network_os: {}
 update_system: true
-sysprep: false
+sysprep: "{{ true if 'os_windows' in group_names else false }}"
