@@ -19,6 +19,7 @@
   community.general.locale_gen:
     name: en_US.UTF-8
     state: present
+  when: ansible_os_family != 'RedHat'
 
 - name: Setting the default locale...
   ansible.builtin.command: localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
