@@ -2,7 +2,7 @@
 - name: Setting the correct sudo group for {{ ansible_distribution }}...
   ansible.builtin.set_fact:
     root_group: "{{ distro_root_group_map[ansible_distribution] }}"
-    
+
 - name: Making sure the sudo group exists...
   ansible.builtin.group:
     name: "{{ root_group }}"
@@ -12,15 +12,20 @@
   ansible.builtin.user:
     name: "{{ item.username }}"
     password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) | password_hash('sha512') }}"
-    shell: "{{ item.shell | default('/bin/tcsh') }}"
+    shell: "{{ item.shell | default('/bin/tcsh' if 'os_freebsd' in group_names else '/bin/bash') }}"
     groups: "{{ item.groups | default(root_group if item.username in admins_list else 'users') }}"
-    skeleton: /usr/share/skel
+    skeleton: >-
+      {% if 'os_freebsd' in group_names -%}
+      /usr/share/skel
+      {%- else -%}
+      /etc/skel
+      {%- endif %}
     createhome: true
     append: true
   loop: "{{ accounts }}"
   loop_control:
     label: "{{ item.username }}"
-
+  
 - name: Adding authorized keys for...
   ansible.posix.authorized_key:
     user: "{{ item.username }}"
@@ -34,7 +39,14 @@
 
 - name: Enabling password requirement for sudo...
   ansible.builtin.lineinfile:
-    dest: /usr/local/etc/sudoers
+    dest: >-
+      {% if 'os_arch' in group_names -%}
+      /etc/sudoers.d/10-installer
+      {%- elif 'os_freebsd' in group_names -%}
+      /usr/local/etc/sudoers
+      {%- else -%}
+      /etc/sudoers
+      {%- endif %}
     state: present
     regexp: ^%{{ root_group }}
     line: "%{{ root_group }} ALL=(ALL:ALL) ALL"
@@ -43,9 +55,25 @@
 
 - name: Disabling password requirement for sudo...
   ansible.builtin.lineinfile:
-    dest: /usr/local/etc/sudoers
+    dest: >-
+      {% if 'os_arch' in group_names -%}
+      /etc/sudoers.d/10-installer
+      {%- elif 'os_freebsd' in group_names -%}
+      /usr/local/etc/sudoers
+      {%- else -%}
+      /etc/sudoers
+      {%- endif %}
     state: present
     regexp: ^%{{ root_group }}
     line: "%{{ root_group }} ALL=(ALL) NOPASSWD: ALL"
     validate: visudo -cf %s
   when: not sudo_requires_password
+
+- name: Enabling ssh-agent for sudo... # https://ethulhu.co.uk/yubikey
+  ansible.builtin.lineinfile:
+    dest: /etc/pam.d/sudo
+    regexp: auth sufficient pam_ssh_agent_auth.so.*
+    line: auth sufficient pam_ssh_agent_auth.so file=~/.ssh/authorized_keys allow_user_owned_authorized_keys_file
+    insertafter: .*%PAM-.*
+    state: present
+  when: use_ssh_agent_for_sudo
