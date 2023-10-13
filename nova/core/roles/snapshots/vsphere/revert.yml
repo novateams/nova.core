@@ -5,7 +5,7 @@
     folder: "{{ folder }}"
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: revert
-    snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}" # Default is the current snapshot
+    snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
   delegate_to: localhost
   become: false
   when: snapshot_info.guest_snapshots != {}

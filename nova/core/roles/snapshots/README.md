@@ -108,5 +108,5 @@ none
     name: nova.core.snapshots
   vars:
     snapshot_mode: revert
-    snapshot_name: MySnapshotName # If no snapshot name is specified, the latest current will be used
+    snapshot_name: MySnapshotName
 ```
