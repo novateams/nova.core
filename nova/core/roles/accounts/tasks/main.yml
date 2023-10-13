@@ -26,9 +26,17 @@
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"
 
-    - name: Select the network OS...
-      ansible.builtin.include_tasks: network_devices.yml
-      when: "'os_network_devices' in group_names"
+    - name: Configure RouterOS accounts...
+      include_tasks: routeros.yml
+      when: "'os_routeros' in group_names"
+
+    - name: Configure VyOS accounts...
+      include_tasks: vyos.yml
+      when: "'os_vyos' in group_names"
+
+    - name: Configure Cisco-IOS accounts...
+      include_tasks: ios.yml
+      when: "'os_ciscoios' in group_names"
 
     - name: Setting correct credentials...
       ansible.builtin.set_fact:
