@@ -20,14 +20,18 @@
     admin_account: "{{ aws_template_username }}"
   when: infra_env == "aws"
 
-# Generating vault token only once to be used in all the requests
-- name: Generating Hashi Vault token...
-  ansible.builtin.set_fact:
-    vault_token: "{{ lookup('community.hashi_vault.vault_login', 
-      url=vault_address, 
-      validate_certs=validate_vault_certs, ca_cert='/etc/ssl/certs/ca-certificates.crt', 
-      auth_method='ldap', mount_point='ldap', username=deployer_username, password=deployer_password) }}"
+- name: Logging into {{ vault_address }}...
+  community.hashi_vault.vault_login:
+    url: "{{ vault_address }}"
+    auth_method: "{{ vault_auth_method }}"
+    username: "{{ vault_username }}"
+    password: "{{ vault_password }}"
+    validate_certs: "{{ validate_vault_certs }}"
+    ca_cert: "{{ vault_ca_cert }}"
+  register: vault_acces_token
   delegate_to: localhost
+  become: false
+  when: vault_address != {}
 
 # Checking if a host_var matching the main_id is present
 # If so then including the host vars
@@ -35,6 +39,7 @@
   ansible.builtin.stat:
     path: "{{ legacy_host_var_path }}/{{ main_id }}.yml"
   delegate_to: localhost
+  become: false
   register: host_var_present
 
 - name: Warning but loading host_var...

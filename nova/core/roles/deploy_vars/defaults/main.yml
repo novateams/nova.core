@@ -25,8 +25,13 @@ legacy_host_var_path: "{{ inventory_dir }}/host_vars"
 # Vault #
 #########
 
+vault_address: {} # Required when Vault is used to save or retrieve secrets - example https://vault.example.com
+vault_auth_method: ldap # Currenty in this role ldap or userpass are supported
+vault_username: "{{ deployer_username }}"
+vault_password: "{{ deployer_password }}"
 validate_vault_certs: true
-vault_lookup_fragment: "url={{ vault_address }} token={{ vault_token.auth.client_token }} " # The space before the ending quote is required
+vault_ca_cert: /etc/ssl/certs/ca-certificates.crt # The path to the CA certificate file which is used to validate the Vault server certificate
+vault_lookup_fragment: "url={{ vault_address }} token={{ vault_acces_token.login.auth.client_token }} " # The space before the ending quote is required
 
 ##########
 # VMware #
