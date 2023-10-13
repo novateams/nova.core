@@ -24,7 +24,7 @@ windows_admin_groups:
 windows_user_groups:
   - Users
 
-distro_root_group_map:
+unix_distro_root_group_map:
   Debian: sudo
   CentOS: wheel
   RedHat: wheel
@@ -35,3 +35,10 @@ distro_root_group_map:
   Archlinux: wheel
   AlmaLinux: wheel
   Parrot: sudo
+
+unix_distro_skel_map:
+  FreeBSD: /usr/share/skel
+
+unix_distro_sudoers_map:
+  Archlinux: /etc/sudoers.d/10-installer
+  FreeBSD: /usr/local/etc/sudoers
