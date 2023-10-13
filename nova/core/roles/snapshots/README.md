@@ -12,12 +12,33 @@ Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/no
 
 One of the following variables must be set:
 
-- `snapshot_mode == 'snap'` # Adds a new snapshot to the VM
-- `snapshot_mode == 'clean-snap'` # Removes all existing snapshots from the VM and adds a new one
-- `snapshot_mode == 're-snap'` # Deletes the current snapshot and creates a new one
-- `snapshot_mode == 'revert'` # Reverts the VM to the snapshot with the name specified in `snapshot_name` if no name is specified, the current snapshot will be used
-- `snapshot_mode == 'rename'` # Renames the snapshot with the name specified in `snapshot_name` variable with a name defined in the `new_snapshot_name` variable
-- `snapshot_mode == 'remove'` # Removes the snapshot with the name specified in `snapshot_name` variable. If `remove_all_snapshots=true` is defined all snapshots will be removed
+- `snapshot_mode == 'snap'`
+  - If `live-snap: true` - Adds a new snapshot to the VM with the live memory
+  - If `live-snap: false` - Shuts down VM, adds a new snapshot to the VM, starts the VM
+- `snapshot_mode == 'clean-snap'`
+  - If `live-snap: true` - Removes all existing snapshots from the VM, adds a new one
+  - If `live-snap: false` - Shuts down VM, removes all existing snapshots from the VM, starts the VM
+- `snapshot_mode == 're-snap'`
+  - If `live-snap: true` - Deletes the current snapshot from the VM and creates a new one
+  - If `live-snap: false` - Shuts down VM, removes the current snapshot from the VM, starts the VM
+- `snapshot_mode == 'revert'`
+  - Reverts the VM to the snapshot with the name specified in `snapshot_name`
+  - If no `snapshot_name` is specified, the current snapshot will be used
+- `snapshot_mode == 'rename'`
+  - Renames the snapshot with the name specified in `snapshot_name` variable with a name defined in the `new_snapshot_name` variable
+- `snapshot_mode == 'remove'`
+  - Removes the snapshot with the name specified in `snapshot_name` variable.
+  - If no `snapshot_name` is specified, the current snapshot will be used
+  - If `remove_all_snapshots: true` all snapshots will be removed
+
+Modifiers:
+
+- `live-snap` (true|false) - Affects `snap`, `clean-snap`, `re-snap`
+- `snapshot_name` (string) - Used to interact with the snapshos
+- `new_snapshot_name` (string) - Only used when `rename`
+- `start_vm_after_snapshot` (true|false)
+- `start_vm_after_revert` (true|false)
+- `remove_all_snapshots` (true|false)
 
 ## Dependencies
 
