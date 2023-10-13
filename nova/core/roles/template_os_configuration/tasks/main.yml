@@ -45,7 +45,7 @@
   ansible.builtin.include_role:
     name: nova.core.snapshots
   vars:
-    snapshot_mode: resnap
+    snapshot_mode: clean-snap
     snapshot_name: LinkedCloneSource
     start_vm_after_snapshot: false
 
