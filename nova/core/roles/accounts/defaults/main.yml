@@ -36,6 +36,9 @@ unix_distro_root_group_map:
   AlmaLinux: wheel
   Parrot: sudo
 
+unix_distro_shell_map:
+  FreeBSD: /bin/tcsh
+
 unix_distro_skel_map:
   FreeBSD: /usr/share/skel
 
