@@ -2,43 +2,55 @@
 - name: Including non-containers account tasks block...
   when: customization_context == "host" # Alternative is container and then it doesn't need os_configuration
   block:
-    - name: Configure Windows machine
+    - name: Including Windows configuration tasks...
       ansible.builtin.include_tasks: windows.yml
       when: "'os_windows' in group_names"
 
-    - name: Configure Azure Windows machine
+    - name: Including Windows in Azure configuration tasks...
       ansible.builtin.include_tasks: windows_azure.yml
       when:
         - "'os_windows' in group_names"
         - infra_env == 'azure'
 
-    - name: Configure VMware Windows machine
+    - name: Including Windows on vSphere configuration tasks...
       ansible.builtin.include_tasks: windows_vsphere.yml
       when:
         - "'os_windows' in group_names"
         - infra_env == 'vsphere' or infra_env == 'vmware_workstation'
 
-    - name: Configure Linux machine
+    - name: Including Linux configuration tasks...
       ansible.builtin.include_tasks: linux.yml
       when: "'os_linux' in group_names"
 
-    - name: Configure cloud Linux machine
+    - name: Including Linux in Cloud configuration tasks...
       ansible.builtin.include_tasks: linux_cloud.yml
       when:
         - "'os_linux' in group_names"
         - infra_env == 'aws' or infra_env == 'linode'
 
-    - name: Configure macOS machine
+    - name: Including MacOS configuration tasks...
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"
 
-    - name: Select the bsd OS...
-      ansible.builtin.include_tasks: bsd.yml
-      when: "'os_bsd' in group_names"
+    - name: Including FreeBSD configuration tasks...
+      ansible.builtin.include_tasks: freebsd.yml
+      when: "'os_freebsd' in group_names"
 
-    - name: Select the network OS...
-      ansible.builtin.include_tasks: network_devices.yml
-      when: "'os_network_devices' in group_names"
+    - name: Including RouterOS configuration tasks...
+      include_tasks: routeros.yml
+      when: "'os_routeros' in group_names"
+
+    - name: Including VyOS configuration tasks...
+      ansible.builtin.include_tasks: vyos.yml
+      when: "'os_vyos' in group_names"
+
+    - name: Including IOS configuration tasks...
+      include_tasks: ios.yml
+      when: "'os_ciscoios' in group_names"
+
+    - name: Including FortiOS configuration tasks...
+      include_tasks: fortios.yml
+      when: "'os_fortios' in group_names"
 
     # Since there can be so many different partitioning methods and file systems we'll leave to the user to create a role that matches their templates
     # When `os_configuration_expand_os_disk_role_name` variable is defined then the role will be included here

@@ -1,11 +1,4 @@
 ---
-- name: Removing cloud managed hostname...
-  ansible.builtin.replace:
-    dest: /etc/cloud/cloud.cfg
-    regexp: ^ - update_etc_hosts
-    replace: "# - update_etc_hosts"
-  when: infra_env == "aws"
-
 - name: Adding temp hostname... # This is so that sudo will not hang due to unknown hostname
   ansible.builtin.lineinfile:
     dest: /etc/hosts
@@ -22,13 +15,10 @@
     regexp: ^127.0.1.1
     line: 127.0.1.1       {{ fqdn }} {{ hostname }}
 
-- name: Configure Debian family machine...
-  ansible.builtin.include_tasks: debian.yml
-  when: ansible_os_family == 'Debian'
-
-- name: Configure ArchLinux machine...
-  ansible.builtin.include_tasks: macos.yml
-  when: "'os_arch' in group_names"
+- name: Making sure locale exists...
+  community.general.locale_gen:
+    name: en_US.UTF-8
+    state: present
 
 - name: Setting the default locale...
   ansible.builtin.command: localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8

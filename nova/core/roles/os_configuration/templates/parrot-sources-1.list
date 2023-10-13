@@ -1,1 +1,0 @@
-deb https://{{ nexus_fqdn }}/repository/parrot-lts/ lts main non-free contrib
