@@ -19,9 +19,9 @@
       retries: 60
       delay: 5
 
-    - name: Setting {{ detect_dhcp.instance }} IP for connection from DHCP...
+    - name: Setting {{ detect_dhcp.instance.guest.ipAddress }} IP for connection from DHCP...
       ansible.builtin.set_fact:
-        ansible_host: "{{ detect_dhcp.instance }}"
+        ansible_host: "{{ detect_dhcp.instance.guest.ipAddress }}"
 
 - name: Setting address for connection...
   when: not connection_mode_dhcp
