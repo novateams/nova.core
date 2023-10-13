@@ -20,7 +20,7 @@
     admin_account: "{{ aws_template_username }}"
   when: infra_env == "aws"
 
-- name: Logging into {{ vault_address }}...
+- name: Generating Hashi Vault (if in use) token logging into {{ vault_address }}...
   community.hashi_vault.vault_login:
     url: "{{ vault_address }}"
     auth_method: "{{ vault_auth_method }}"
