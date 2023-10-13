@@ -1,5 +1,5 @@
 ---
-- name: Deleting snapshots removal tasks to localhost...
+- name: Deleting snapshots...
   delegate_to: localhost
   become: false
   block:

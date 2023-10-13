@@ -13,9 +13,9 @@ Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/no
 One of the following variables must be set:
 
 - `snapshot_mode == 'snap'` # Adds a new snapshot to the VM
-- `snapshot_mode == 'resnap'` # Removes all existing snapshots from the VM and adds a new one
-- `snapshot_mode == 'live-snap'` # Adds a new snapshot to the VM while it is running
-- `snapshot_mode == 'revert'` # Reverts the VM to the snapshot with the name specified in `snapshot_name` if no name is specified, the latest snapshot will be used
+- `snapshot_mode == 'clean-snap'` # Removes all existing snapshots from the VM and adds a new one
+- `snapshot_mode == 're-snap'` # Deletes the current snapshot and creates a new one
+- `snapshot_mode == 'revert'` # Reverts the VM to the snapshot with the name specified in `snapshot_name` if no name is specified, the current snapshot will be used
 - `snapshot_mode == 'rename'` # Renames the snapshot with the name specified in `snapshot_name` variable with a name defined in the `new_snapshot_name` variable
 - `snapshot_mode == 'remove'` # Removes the snapshot with the name specified in `snapshot_name` variable. If `remove_all_snapshots=true` is defined all snapshots will be removed
 
@@ -30,7 +30,7 @@ none
   ansible.builtin.include_role:
     name: nova.core.snapshots
   vars:
-    snapshot_mode: resnap
+    snapshot_mode: clean-snap
     snapshot_name: LinkedCloneSource
     start_vm_after_snapshot: false
 ```
@@ -40,7 +40,8 @@ none
   ansible.builtin.include_role:
     name: nova.core.snapshots
   vars:
-    snapshot_mode: live-snap
+    snapshot_mode: snap
+    live_snap: true
 ```
 
 ```yml
@@ -52,7 +53,7 @@ none
 ```
 
 ```yml
-- name: Deleting a snapshot from a VM...
+- name: Deleting the current snapshot from a VM...
   ansible.builtin.include_role:
     name: nova.core.snapshots
   vars:
@@ -81,10 +82,10 @@ none
 ```
 
 ```yml
-- name: Reverting to a snapshot of a VM...
+- name: Reverting to a snapshot called MySnapshotName of a VM...
   ansible.builtin.include_role:
     name: nova.core.snapshots
   vars:
     snapshot_mode: revert
-    snapshot_name: MySnapshotName # If no snapshot name is specified, the latest snapshot will be used
+    snapshot_name: MySnapshotName # If no snapshot name is specified, the latest current will be used
 ```

@@ -1,5 +1,8 @@
 ---
-- block:
+- name: Checking VM status and info
+  delegate_to: localhost
+  become: false
+  block:
     - name: Getting VM info...
       vmware.vmware_rest.vcenter_vm_info:
         filter_names: "{{ custom_vm_name | default(vm_name) }}"
@@ -25,21 +28,19 @@
       delay: 10
       when: vmware_guest_info.value[0].power_state != "POWERED_OFF"
 
-  delegate_to: localhost
-  become: false
-
 - name: Including powerstate role...
   ansible.builtin.include_role:
     name: nova.core.powerstate
   vars:
     shutdown: true
   when:
-    - snapshot_mode == 'snap' or snapshot_mode == 'resnap'
+    - snapshot_mode == 'clean-snap' or snapshot_mode == 're-snap' or snapshot_mode == 'snap'
+    - not live_snap | bool
     - vmware_guest_info.value[0].power_state != "POWERED_OFF"
 
 - name: Including snapshot task...
   ansible.builtin.include_tasks: snapshot.yml
-  when: snapshot_mode == 'snap' or snapshot_mode == 'resnap' or snapshot_mode == 'live-snap'
+  when: snapshot_mode == 'clean-snap' or snapshot_mode == 're-snap' or snapshot_mode == 'snap'
 
 - name: Including revert task...
   ansible.builtin.include_tasks: revert.yml
