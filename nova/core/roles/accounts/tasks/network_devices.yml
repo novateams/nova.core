@@ -10,7 +10,3 @@
 - name: Configure Cisco-IOS accounts...
   include_tasks: ios.yml
   when: "'os_ciscoios' in group_names"
-
-# - name: Configure Fortinet accounts...
-#   include_tasks: fortios.yml # to do
-#   when: "'os_fortios' in group_names"
