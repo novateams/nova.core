@@ -1,4 +1,11 @@
 ---
+- name: Removing cloud managed hostname...
+  ansible.builtin.replace:
+    dest: /etc/cloud/cloud.cfg
+    regexp: ^ - update_etc_hosts
+    replace: "# - update_etc_hosts"
+  when: infra_env == "aws"
+
 - name: Installing Gnome for Ubuntu Desktop...
   ansible.builtin.apt:
     name: ubuntu-gnome-desktop

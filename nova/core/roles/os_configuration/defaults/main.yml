@@ -17,8 +17,7 @@ os_configuration_wait_for_site: false # Set true to wait for site defined in os_
 os_configuration_wait_for_site_url: https://google.com # URL to wait for
 os_configuration_wait_for_site_retries: 30 # How many times to retry waiting for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
 os_configuration_expand_os_disk_role_name: {} # Define your OS disk expansion role name in your host or group vars to included it with this role
-nexus_fqdn: {} # Set URL to configure OS to use custom mirror
-fortios_access_token: {} # Token to configure fortios
+fortios_access_token: {} # Required token to configure FortiOS
 
 configure_chocolatey_sources: false # Set to true and follow the configuration example below to set Chocolatey sources
 chocolatey_sources:

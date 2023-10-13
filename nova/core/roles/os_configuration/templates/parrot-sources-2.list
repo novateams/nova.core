@@ -1,3 +1,0 @@
-deb https://{{ nexus_fqdn }}/repository/parrot/ parrot main contrib non-free
-deb https://{{ nexus_fqdn }}/repository/parrot-security/ parrot-security main contrib non-free
-deb https://{{ nexus_fqdn }}/repository/parrot-backports/  parrot-backports main contrib non-free
