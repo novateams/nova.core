@@ -11,13 +11,13 @@
         state: remove_all
       when: snapshot_mode == 'clean-snap'
 
-    - name: Removing current {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot ...
+    - name: Removing current {{ default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot ...
       community.vmware.vmware_guest_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
-        snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
+        snapshot_name: "{{ default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
       when: snapshot_mode == 're-snap'
 
     - name: Creating a snapshot - {{ snapshot_name | default(ansible_date_time.iso8601) }}...
