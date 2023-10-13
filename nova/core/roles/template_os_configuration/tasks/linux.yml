@@ -27,6 +27,10 @@
   ansible.builtin.include_tasks: ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
 
+- name: Include Archlinux specific configuration...
+  ansible.builtin.include_tasks: arch.yml
+  when: "'os_arch' in group_names"
+
 - name: Include Debian based OS specific configuration...
   ansible.builtin.include_tasks: debian_based_os.yml
   when: ansible_facts.os_family == "Debian"
