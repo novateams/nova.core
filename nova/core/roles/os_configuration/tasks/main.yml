@@ -76,7 +76,8 @@
           ansible.builtin.include_role:
             name: nova.core.snapshots
           vars:
-            snapshot_mode: live-snap
+            snapshot_mode: snap
+            live_snap: true
             snapshot_name: Pre-customization
 
         - name: Including get_ip role...
