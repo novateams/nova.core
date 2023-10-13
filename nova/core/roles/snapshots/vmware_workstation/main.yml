@@ -14,7 +14,7 @@
 
 - name: Including snapshot task...
   ansible.builtin.include_tasks: snapshot.yml
-  when: snapshot_mode == 'snap' or snapshot_mode == 'resnap' or snapshot_mode == 'live-snap'
+  when: snapshot_mode == 'snap' or snapshot_mode == 're-snap'
 
 - name: Including revert task...
   ansible.builtin.include_tasks: revert.yml
