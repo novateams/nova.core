@@ -33,7 +33,7 @@
     - "'zone_local' not in group_names"
     - sudo_requires_password
 
-- name: Waiting for system to become reachable...
+- name: Waiting for {{ inventory_hostname }} to become reachable...
   ansible.builtin.wait_for_connection:
     timeout: 300
   when:
@@ -41,7 +41,7 @@
     - not role_only_wp
     - not macos_no_python
 
-- name: Waiting for macOS system to become reachable...
+- name: Waiting for {{ inventory_hostname }} to become reachable...
   ansible.builtin.raw: echo " "
   changed_when: true
   retries: 30
@@ -55,9 +55,28 @@
 - name: Gathering facts...
   ansible.builtin.setup:
   when:
-    - "'os_routeros' not in group_names"
+    - ansible_network_os is not defined
     - macos_no_python
 
-- name: Gathering RouterOS facts...
-  community.routeros.facts:
-  when: "'os_routeros' in group_names"
+- name: Gathering Network OS facts...
+  when: ansible_network_os is defined
+  block:
+    - name: Gathering RouterOS facts...
+      community.routeros.facts:
+      when: ansible_network_os == 'community.routeros.routeros'
+
+    - name: Gathering VyOS facts...
+      vyos.vyos.vyos_facts:
+      when: ansible_network_os == 'vyos.vyos.vyos'
+
+    - name: Gather Cisco IOS facts...
+      cisco.ios.ios_facts:
+      when: ansible_network_os == 'cisco.ios.ios'
+# # Useful when debugging facts gathered from different operating systems
+# - name: Saving ansible_facts to file...
+#   ansible.builtin.copy:
+#     content: "{{ ansible_facts | to_nice_yaml }}"
+#     dest: "{{ inventory_hostname }}.yaml"
+#   delegate_to: localhost
+#   become: false
+
