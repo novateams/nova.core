@@ -1,12 +1,12 @@
 ---
-- name: Creating folders for configuration...
+- name: Creating required Vault folders...
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: 100
     group: 1000
-    recurse: true
   loop:
+    - "{{ vault_config_folder }}"
     - "{{ vault_config_folder }}/config"
     - "{{ vault_config_folder }}/file"
 
