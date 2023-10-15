@@ -1,0 +1,10 @@
+---
+- name: Updating all packages...
+  ansible.builtin.yum:
+    name: "*"
+    update_cache: true
+    state: latest
+
+- name: Running update cleanup...
+  ansible.builtin.yum:
+    autoremove: true
