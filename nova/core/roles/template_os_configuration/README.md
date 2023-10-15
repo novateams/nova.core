@@ -1,37 +1,33 @@
-# Role Name
+# template_os_configuration
 
-COMING SOON
-A brief description of the role goes here.
+This is a role to pre-configure a VM template. It is reccomeneded that you have your VM templates in separate project or separately in your project's inventory so you use this role to configure them for use with the rest of the roles in this collection.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/template_os_configuration/defaults/main.yml) file for a list and description of the variables used in this role.
+
+Currently some of the when conditions expect you to have specificly named group vars defined for certain settings to applied.
+
+Examples:
+
+`os_bsd` - for BSD based distros
+`os_linux` - for Linux based distros
+`os_windows` - for Windows OS
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
-## Example Playbook
+## Example
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-## License
-
-AGPL-3.0-or-later
-
-## Author Information
-
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+- name: Including OS configuration role with updates...
+  ansible.builtin.include_role:
+    name: nova.core.template_os_configuration
+  vars:
+    update_system: true
+```
