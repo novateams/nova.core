@@ -39,8 +39,7 @@
   when:
     - not role_only
     - not role_only_wp
-    - "'os_macos' not in group_names"
-    - "'os_forti' not in group_names"
+    - not macos_no_python
 
 - name: Waiting for macOS system to become reachable...
   ansible.builtin.raw: echo " "
@@ -51,13 +50,13 @@
   when:
     - not role_only
     - not role_only_wp
-    - "'os_macos' in group_names"
+    - macos_no_python
 
 - name: Gathering facts...
   ansible.builtin.setup:
   when:
     - "'os_routeros' not in group_names"
-    - "'os_macos' not in group_names"
+    - macos_no_python
 
 - name: Gathering RouterOS facts...
   community.routeros.facts:

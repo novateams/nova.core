@@ -1,4 +1,5 @@
 ---
+macos_no_python: true # By default MacOS does not have Python installed so it cannot gather facts
 primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}"
 connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
 connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
