@@ -1,12 +1,19 @@
 ---
-- name: Updating Windows machine...
-  ansible.builtin.include_tasks: windows.yml
-  when: "'os_windows' in group_names"
+- name: Inlcuding non-network OS update tasks...
+  when: ansible_network_os is not defined
+  block:
+    - name: Including Windows update tasks...
+      ansible.builtin.include_tasks: windows.yml
+      when: ansible_os_family == "Windows"
 
-- name: Updating Linux machine...
-  ansible.builtin.include_tasks: linux.yml
-  when: "'os_linux' in group_names"
+    - name: Including Debian family update tasks...
+      ansible.builtin.include_tasks: debian_family.yml
+      when: ansible_os_family == 'Debian'
 
-- name: Updating Arch Linux machine...
-  ansible.builtin.include_tasks: arch.yml
-  when: "'os_arch' in group_names"
+    - name: Including Archlinux update tasks...
+      ansible.builtin.include_tasks: archlinux_family.yml
+      when: ansible_os_family == 'Archlinux'
+
+    - name: Including RedHat family update tasks...
+      ansible.builtin.include_tasks: redhat_family.yml
+      when: ansible_os_family == 'RedHat'
