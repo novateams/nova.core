@@ -12,13 +12,15 @@
   ansible.builtin.include_tasks: windows.yml
   when: "'os_windows' in group_names"
 
-- name: Configure Linux machine
-  ansible.builtin.include_tasks: linux.yml
-  when: "'os_linux' in group_names"
+- name: Including Unix configuration tasks...
+  ansible.builtin.include_tasks: unix.yml
+  when: ("os_linux" in group_names) or ("os_bsd" in group_names)
 
 - name: Configure RouterOS machine
   ansible.builtin.include_tasks: routeros.yml
-  when: ansible_network_os == "routeros"
+  when:
+    - ansible_network_os is defined
+    - ansible_network_os == "community.routeros.routeros"
 
 - name: Including following role...
   ansible.builtin.include_role:
