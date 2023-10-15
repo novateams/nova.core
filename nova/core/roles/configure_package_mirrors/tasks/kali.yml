@@ -1,0 +1,11 @@
+---
+- name: Templating custom kali.list to {{ inventory_hostname }}...
+  ansible.builtin.template:
+    src: kali.list
+    dest: /etc/apt/sources.list
+  register: apt_sources
+
+- name: Running apt update...
+  ansible.builtin.apt:
+    update_cache: yes
+  when: apt_sources.changed
