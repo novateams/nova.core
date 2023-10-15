@@ -18,9 +18,9 @@
       ansible.builtin.include_tasks: windows.yml
       when: "'os_windows' in group_names"
 
-    - name: Configure Linux and FreeBSD accounts...
+    - name: Including Linux & BSD accounts tasks...
       ansible.builtin.include_tasks: unix.yml
-      when: "'os_linux' in group_names or 'os_freebsd' in group_names"
+      when: ("os_linux" in group_names) or ("os_bsd" in group_names)
 
     - name: Configure macOS accounts...
       ansible.builtin.include_tasks: macos.yml
