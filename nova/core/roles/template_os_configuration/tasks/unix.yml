@@ -1,3 +1,71 @@
+---
+# Package Installation
+- name: Installing universal Unix packages...
+  ansible.builtin.package:
+    name:
+      - curl
+      - file
+      - jq
+      - mc
+      - nano
+      - python3
+      - sudo
+      - tcpdump
+      - vim
+      - wget
+    state: present
+
+- name: Include Ubuntu specific configuration...
+  ansible.builtin.include_tasks: ubuntu.yml
+  when: ansible_distribution == "Ubuntu"
+
+- name: Include Archlinux specific configuration...
+  ansible.builtin.include_tasks: arch.yml
+  when: ansible_os_family == "Archlinux"
+
+- name: Include Debian based OS specific configuration...
+  ansible.builtin.include_tasks: debian_family.yml
+  when: ansible_os_family == "Debian"
+
+- name: Include RedHat based OS specific configuration...
+  ansible.builtin.include_tasks: redhat.yml
+  when: ansible_os_family == "RedHat"
+
+# SSHD Configuration
+- name: Increasing SSHD MaxAuthTries to 20... # This to avoid erros when someone has more that 6 SSH keys in their agent
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: .*MaxAuthTries.*
+    line: MaxAuthTries 20
+
 - name: Including GRUB configuration tasks...
   ansible.builtin.include_tasks: grub.yml
   when: ("os_bsd" not in group_names)
+
+- name: Enabling DHCP for IPv6...
+  ansible.builtin.lineinfile:
+    dest: /etc/network/interfaces
+    line: iface ens192 inet6 dhcp
+  when: (ansible_distribution == "Debian") or (ansible_distribution == "Kali")
+
+# Cleaning up current machine ID
+- name: Removing machine-id files...
+  ansible.builtin.file:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/machine-id
+    - /var/lib/dbus/machine-id
+
+- name: Creating a new empty machine-id file...
+  ansible.builtin.file:
+    path: /etc/machine-id
+    mode: "0644"
+    state: touch
+
+- name: Creating a symlink for machine-id in /var/lib/dbus/machine-id...
+  ansible.builtin.file:
+    src: /etc/machine-id
+    dest: /var/lib/dbus/machine-id
+    mode: "0644"
+    state: link

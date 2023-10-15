@@ -2,4 +2,26 @@
 - name: Installing required and basic packages...
   community.general.pacman:
     update_cache: true
+    name:
+      - acl
+      - acpid
+      - bash-completion
+      - ca-certificates
+      - cloud-guest-utils # Required for expanding disks
+      - ethtool
+      - freerdp
+      - htop
+      - inetutils
+      - kitty-terminfo # To pass your terminal settings over ssh
+      - man
+      - nano
+      - net-tools
+      - nftables
+      - nmap
+      - perl
+      - python-pip
+      - python-setuptools
+      - texinfo
+      - traceroute
+      - vi
     state: present
