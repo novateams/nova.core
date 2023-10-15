@@ -3,7 +3,6 @@ activate_windows: true
 kms_server: {}
 extra_activation_command: {} # Extra PowerShell command to be ran before Windows/Office activation, usually not needed
 infra_env: {}
-ansible_network_os: {}
 post_scripts_folder_on_target: c:\tmp
 routeros_license_account: {} # MikroTik account to be used for license activation
 routeros_license_password: {} # MikroTik account password to be used for license activation

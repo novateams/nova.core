@@ -1,7 +1,6 @@
 ---
 dns_server_combined: "{{ dns_servers + dns_servers6 }}"
 dns_servers6: []
-ansible_network_os: {}
 reconfigure_network: false # Can be used as as CLI var to re-run the network configuration part. Does not when sudo password is required because of vmware_tools plugin limitations
 mgmt_ip: {}
 netplan_renderer: {}
