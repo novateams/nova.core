@@ -65,6 +65,12 @@
       ansible.builtin.include_role:
         name: nova.core.trusted_certificates
 
+    - name: Including following post-os_configuration roles...
+      ansible.builtin.include_role:
+        name: "{{ item }}"
+      loop: "{{ os_configuration_post_roles }}"
+      when: os_configuration_post_roles != []
+
     - name: Flushing handlers...
       ansible.builtin.meta: flush_handlers
 
