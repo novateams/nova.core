@@ -1,0 +1,18 @@
+---
+- name: Setting GRUB timeout to 3 seconds...
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: ^GRUB_TIMEOUT=
+    line: GRUB_TIMEOUT=3
+
+- name: Applying GRUB configuration...
+  ansible.builtin.shell: update-grub
+  when: ansible_os_family == "Debian"
+
+- name: Applying GRUB configuration...
+  ansible.builtin.shell: grub2-mkconfig -o /boot/grub2/grub.cfg
+  when: ansible_os_family == "RedHat"
+
+- name: Applying GRUB configuration...
+  ansible.builtin.shell: grub-mkconfig -o /boot/grub/grub.cfg
+  when: ansible_os_family == 'Archlinux'
