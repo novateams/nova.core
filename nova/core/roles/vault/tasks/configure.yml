@@ -27,6 +27,7 @@
           root_token_pgp_key: ""
         body_format: json
       register: vault_init
+      until: not vault_init.failed
 
     - name: Saving Vault root token credentials...
       ansible.builtin.lineinfile:
