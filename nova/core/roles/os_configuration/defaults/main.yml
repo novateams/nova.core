@@ -17,6 +17,7 @@ os_configuration_wait_for_site_retries: 30 # How many times to retry waiting for
 os_configuration_expand_os_disk_role_name: {} # Define your OS disk expansion role name in your host or group vars to included it with this role
 fortios_access_token: {} # Required token to configure FortiOS
 os_configuration_post_roles: [] # List of extra roles to be included as one of the last steps of this role
+install_trusted_certificates: true # Set to false to skip trusted certificates installation with nova.core.trusted_certificates role
 
 ntp_servers:
   - 0.pool.ntp.org
