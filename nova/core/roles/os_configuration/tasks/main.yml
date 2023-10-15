@@ -64,6 +64,7 @@
     - name: Including nova.core.trusted_certificates role...
       ansible.builtin.include_role:
         name: nova.core.trusted_certificates
+      when: install_trusted_certificates
 
     - name: Including following post-os_configuration roles...
       ansible.builtin.include_role:
