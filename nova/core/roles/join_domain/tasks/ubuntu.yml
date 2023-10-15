@@ -1,27 +1,23 @@
 ---
-- name: Installing required packages...
+- name: Installing required packages for domain join...
   ansible.builtin.package:
     name:
-      - realmd
-      - packagekit
-      - sssd-tools
+      - adcli
       - libnss-sss
-      - libpam-sss
-      - policykit-1
-      - realmd
-      - sssd
+      - ntp
+      - ntpdate
       - oddjob
       - oddjob-mkhomedir
-      - adcli
+      - packagekit
+      - policykit-1
+      - realmd
       - samba-common
-      - samba-common
-      - ntpdate
-      - ntp
-      - python3-pip
-      - sudo
-      - adcli
+      - sssd
+      - sssd-tools
     state: present
     update_cache: true
+  register: domain_join_packages
+  until: not domain_join_packages.failed
 
 - name: Install pexpect...
   ansible.builtin.pip:
