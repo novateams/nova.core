@@ -17,13 +17,6 @@ os_configuration_wait_for_site_retries: 30 # How many times to retry waiting for
 os_configuration_expand_os_disk_role_name: {} # Define your OS disk expansion role name in your host or group vars to included it with this role
 fortios_access_token: {} # Required token to configure FortiOS
 
-configure_chocolatey_sources: false # Set to true and follow the configuration example below to set Chocolatey sources
-chocolatey_sources:
-  - name: chocolatey-proxy
-    state: present
-    source: "{{ chocolatey_proxy_uri }}"
-    priority: 1
-
 ntp_servers:
   - 0.pool.ntp.org
   - 1.pool.ntp.org
