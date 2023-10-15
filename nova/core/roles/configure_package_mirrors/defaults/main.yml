@@ -1,0 +1,8 @@
+---
+# APT
+package_mirror_focal_uri: {} # URI of the Ubuntu Focal mirror to use
+package_mirror_jammy_uri: {} # URI of the Ubuntu Jammy mirror to use
+package_mirror_kali_uri: {} # URI of the Kali mirror to use
+
+# Chocolatey
+package_mirror_choco_sources_list: [] # List of Chocolatey mirrors to configure

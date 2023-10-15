@@ -1,0 +1,11 @@
+# The original sources.list is backed up as /etc/apt/sources.list_backup
+deb {{ package_mirror_focal_uri }} focal-backports main restricted universe multiverse
+deb {{ package_mirror_focal_uri }} focal-security main restricted
+deb {{ package_mirror_focal_uri }} focal-security multiverse
+deb {{ package_mirror_focal_uri }} focal-security universe
+deb {{ package_mirror_focal_uri }} focal-updates main restricted
+deb {{ package_mirror_focal_uri }} focal-updates multiverse
+deb {{ package_mirror_focal_uri }} focal-updates universe
+deb {{ package_mirror_focal_uri }} focal main restricted
+deb {{ package_mirror_focal_uri }} focal multiverse
+deb {{ package_mirror_focal_uri }} focal universe

@@ -1,0 +1,14 @@
+---
+- name: Configuring following chocolatey sources...
+  chocolatey.chocolatey.win_chocolatey_source:
+    name: "{{ choco_proxy.package_mirror_chocolatey_source_name }}"
+    state: "{{ choco_proxy.package_mirror_chocolatey_source_state }}"
+    source: "{{ choco_proxy.package_mirror_chocolatey_source | default(omit) }}" # Using omit for state absent
+    source_username: "{{ choco_proxy.package_mirror_chocolatey_username | default(omit) }}"
+    source_password: "{{ choco_proxy.package_mirror_chocolatey_password | default(omit) }}"
+    priority: "{{ choco_proxy.package_mirror_chocolatey_source_priority | default(1) }}"
+  loop: "{{ package_mirror_chocolatey_sources_list }}"
+  loop_control:
+    loop_var: choco_proxy
+    label: "{{ choco_proxy.package_mirror_chocolatey_source }}"
+  when: package_mirror_chocolatey_sources_list != []
