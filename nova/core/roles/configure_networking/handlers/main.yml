@@ -1,3 +1,0 @@
----
-- name: Reloading nmcli...
-  ansible.builtin.shell: nmcli networking off && nmcli networking on
