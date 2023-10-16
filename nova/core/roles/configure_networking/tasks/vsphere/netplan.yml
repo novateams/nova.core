@@ -64,7 +64,8 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "netplan apply ; netplan apply" # Needs 2x for Ubuntu 22.04 Desktop for some reason
+            # Ubuntu 22.04 Desktop needs 2x netplan apply for some reason
+            arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml ; netplan apply ; netplan apply ; systemctl restart NetworkManager"
             path: /bin/bash
         status_code: 201
         body_format: json

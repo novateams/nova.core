@@ -25,7 +25,7 @@
       ansible.builtin.include_tasks: util/send_cmd.yml
       vars:
         bin_to_execute: /bin/bash
-        args_to_execute: -c "netplan apply ; netplan apply"
+        args_to_execute: -c "chmod 600 /etc/netplan/01-netcfg.yaml ; netplan apply ; netplan apply"
 
     - name: Ensure systemd-resolved is restarted and enabled...
       ansible.builtin.include_tasks: util/send_cmd.yml
