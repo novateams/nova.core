@@ -172,13 +172,20 @@
       retries: 5
       delay: 2
 
-    - name: Getting the default network name...
+    - name: Getting the default network...
       vmware.vmware_rest.vcenter_network_info:
         filter_names: "{{ default_interface[0].name }}"
       register: default_network
       until: not default_network.failed
       retries: 5
       delay: 2
+
+    - name: ERROR...
+      ansible.builtin.fail:
+        msg: |
+          Cannot find network - {{ default_interface[0].name }}
+          The network does not exist or you do not have permissions to access it.
+      when: default_network.value == []
 
     - name: Connecting the default interface...
       vmware.vmware_rest.vcenter_vm_hardware_ethernet:
