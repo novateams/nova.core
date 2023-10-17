@@ -10,6 +10,7 @@
       - oddjob-mkhomedir
       - packagekit
       - policykit-1
+      - python3-pip
       - realmd
       - samba-common
       - sssd
