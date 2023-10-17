@@ -2,14 +2,14 @@
 - name: Checking if the pre_vm_role folder exists and including the role...
   when: customization_context == "host" # Alternative is container that most likely doesn't need this role
   block:
-    - name: Checking if the post_vm_role role folder exists...
+    - name: Checking if {{ customization_post_vm_role_path }}/{{ post_vm_role_name }} role exists...
       ansible.builtin.stat:
-        path: "{{ inventory_dir }}/roles/{{ post_vm_role_name }}"
+        path: "{{ customization_post_vm_role_path }}/{{ post_vm_role_name }}"
       register: post_vm_role_existence
       become: false
       delegate_to: localhost
 
-    - name: Starting post-vm role customization...
+    - name: Including {{ customization_post_vm_role_path }}/{{ post_vm_role_name }} role...
       ansible.builtin.include_role:
-        name: "{{ inventory_dir }}/roles/{{ post_vm_role_name }}"
+        name: "{{ customization_post_vm_role_path }}/{{ post_vm_role_name }}"
       when: post_vm_role_existence.stat.exists
