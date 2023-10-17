@@ -1,20 +1,7 @@
 ---
-- name: Checking if the local role exists...
-  ansible.builtin.stat:
-    path: "{{ inventory_dir }}/roles/{{ pre_role }}"
-  register: role_existence
-  become: false
-  delegate_to: localhost
-
-- name: Including local role {{ pre_role }}...
-  ansible.builtin.include_role:
-    name: "{{ inventory_dir }}/roles/{{ pre_role | default(omit) }}"
-  when: role_existence.stat.exists
-
-- name: Including shared role {{ pre_role }}...
+- name: Including {{ pre_role }} role...
   ansible.builtin.include_role:
     name: "{{ pre_role }}"
-  when: not role_existence.stat.exists
 
 - name: Ending play...
   ansible.builtin.meta: end_host
