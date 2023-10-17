@@ -10,8 +10,8 @@
   loop:
     - rm -rf /config/archive/*
     - rm -rf /var/log/*
-    - mkdir /var/log/nginx
     - rm -rf /tmp/*
+    - mkdir /var/log/nginx
     - journalctl --vacuum-time=1seconds
   become: true
 
@@ -28,6 +28,10 @@
     - /root
     - /home/gt
     - /home/vyos
+
+- name: Rebooting...
+  ansible.builtin.reboot:
+  become: true
 
 - name: Setting connection back to paramiko...
   ansible.builtin.set_fact:
