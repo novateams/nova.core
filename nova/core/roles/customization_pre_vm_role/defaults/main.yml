@@ -1,2 +1,3 @@
 ---
-pre_vm_role_name: pre_vm_role
+customization_pre_vm_role_path: "{{ inventory_dir }}/roles" # Root path where too look for the role folder(s). Relative to where the inventory file is located.
+pre_vm_role_name: pre_vm_role # Name of the role folder under the customization_pre_vm_role_path to look for and include
