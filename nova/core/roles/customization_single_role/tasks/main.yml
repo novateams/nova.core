@@ -1,35 +1,7 @@
 ---
-- name: Checking if the local role exists...
-  ansible.builtin.stat:
-    path: "{{ inventory_dir }}/roles/{{ single_role }}"
-  register: local_role_existence
-  become: false
-  delegate_to: localhost
-
-- name: Checking if the shared role exists...
-  ansible.builtin.stat:
-    path: "{{ single_role }}"
-  register: shared_role_existence
-  become: false
-  delegate_to: localhost
-
-- name: Making sure that {{ post_scripts_folder_on_target }} folder exists for Windows...
-  ansible.windows.win_file:
-    path: "{{ post_scripts_folder_on_target }}"
-    state: directory
-  when: 
-    - "'os_windows' in group_names"
-    - local_role_existence.stat.exists or shared_role_existence.stat.exists
-
-- name: Including local role {{ single_role }}...
-  ansible.builtin.include_role:
-    name: "{{ inventory_dir }}/roles/{{ single_role }}"
-  when: local_role_existence.stat.exists
-
-- name: Including shared role {{ single_role }}...
+- name: Including {{ single_role }} role...
   ansible.builtin.include_role:
     name: "{{ single_role }}"
-  when: shared_role_existence.stat.exists
 
 - name: Flushing handlers...
   ansible.builtin.meta: flush_handlers
@@ -38,13 +10,13 @@
   ansible.builtin.reboot:
   when:
     - reboot_on_finalize
-    - "'os_linux' in group_names"
+    - ansible_system == "Linux"
 
 - name: Rebooting...
   ansible.windows.win_reboot:
   when:
     - reboot_on_finalize
-    - "'os_windows' in group_names"
+    - ansible_system == "Win32NT"
 
 - name: Including get_ip role...
   ansible.builtin.include_role:
