@@ -15,11 +15,11 @@ DOCUMENTATION = """
     providentia_host:
       description: Root URL to Providentia.
       type: string
-      required: True
+      required: False
     exercise:
       description: Exercise abbreviation which defines configuration to populate inventory with.
       type: string
-      required: True
+      required: False
     sso_token_url:
       description: The endpoint where token may be obtained for Providentia
     sso_client_id:
@@ -33,7 +33,7 @@ DOCUMENTATION = """
       required: False
 """
 
-import os, json, socket, aiohttp, asyncio
+import os, json, socket, aiohttp, asyncio, yaml
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 from ansible.plugins.inventory import BaseInventoryPlugin
@@ -70,6 +70,13 @@ class InventoryModule(BaseInventoryPlugin):
     self.inventory.add_group("all")
 
     self.inventory.set_variable("all", "providentia_api_version", 3)
+
+    # set plugin options
+    with open('group_vars/all.yml') as data:
+      json_data = yaml.load(data, Loader=yaml.SafeLoader)
+      self.set_option('providentia_host', json_data['providentia_host'])
+      self.set_option('sso_token_url', json_data['sso_token_url'])
+      self.set_option('exercise', json_data['exercise'])
 
   async def store_access_token(self):
     keepass_creds = os.environ.get(self.get_option('credentials_lookup_env'),"").strip()
