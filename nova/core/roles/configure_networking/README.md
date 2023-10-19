@@ -10,6 +10,12 @@ None
 
 The variable structure is based on [Providentia](https://github.com/ClarifiedSecurity/Providentia) API output. When using file based inventory then make sure to follow the same structure. Check the example blow for more details.
 
+The variable `extra_routes` can be set to add extra routes per interfaces. It takes a list of 3 vars dict:
+  - `interface_id`: For the id of the interface
+  - `to`: Destination of the route
+  - `via`: Gateway
+This option is supported only on `netplan` renderer.
+
 ## Dependencies
 
 None

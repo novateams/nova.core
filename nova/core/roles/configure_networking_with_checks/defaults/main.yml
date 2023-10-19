@@ -27,3 +27,6 @@ connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equal
 supported_connection_modes:
   - ipv4_static
   - ipv6_static
+
+# Routing options
+extra_routes: [] # Configure extra routes per interfaces.
