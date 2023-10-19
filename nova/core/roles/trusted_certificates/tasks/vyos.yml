@@ -26,6 +26,7 @@
   ansible.builtin.command: update-ca-certificates --fresh
   become: true
   changed_when: true
+  when: trusted_certificates_list != []
 
 - name: Setting connection back to {{ default_connection_plugin }}...
   ansible.builtin.set_fact:

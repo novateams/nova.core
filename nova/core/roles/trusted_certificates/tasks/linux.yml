@@ -22,6 +22,7 @@
     - name: Updating CA certificates...
       ansible.builtin.command: update-ca-certificates --fresh
       changed_when: true
+      when: trusted_certificates_list != []
 
 - name: Adding trusted certificates for Archlinux based OS...
   when: ansible_facts.os_family == "Archlinux"
@@ -46,6 +47,7 @@
     - name: Trusting installed certificates...
       ansible.builtin.command: trust extract-compat
       changed_when: true
+      when: trusted_certificates_list != []
 
 - name: Adding trusted certificate(s) to Java keystore(s)...
   when: trusted_certificates_to_jks
