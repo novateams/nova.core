@@ -14,6 +14,12 @@ The variable `customization_method` can take: `bsd`, `macos`, `netplan`, `networ
 
 When selecting the network configuration method via the variable `customization_method`, if you are selecting `networkd` option, an extra variable is needed because this option can be used with different OS: `customization_method_distribution`. Possible options: `Debian`, `Archlinux`, `Scientific`
 
+The variable `extra_routes` can be set to add extra routes per interfaces. It takes a list of 3 vars dict:
+  - `interface_id`: For the id of the interface
+  - `to`: Destination of the route
+  - `via`: Gateway
+This option is supported only on `netplan` renderer.
+
 ## Dependencies
 
 None

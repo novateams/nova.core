@@ -37,14 +37,14 @@ network:
         - "{{ mgmt_ip }}":
             lifetime: 0
         {% elif (mgmt_ip != {}) and (interface.connection) %}
-		        - "{{ mgmt_ip }}"
+		    - "{{ mgmt_ip }}"
         {% endif %}
         {% if extra_ips[ interface.network_id ] is defined %}
         {% for extra_ip in extra_ips[ interface.network_id ] %}
         - {{ extra_ip }}
         {% endfor %}
         {% endif %}
-      {% if (interface.egress and interface.addresses | selectattr("gateway", "defined") and interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes[ interface.network_id ] != {}) %}
+      {% if (interface.egress and interface.addresses | selectattr("gateway", "defined") and interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes | selectattr('interface_id', 'equalto', interface.network_id) != []) %}
       routes:
       {% endif %}
       {% for ip_address in interface.addresses %}
@@ -59,12 +59,10 @@ network:
           via: "{{ ip_address.gateway }}"
       {% endif %}
       {% endfor %}
-      {% if extra_routes[ interface.network_id ] is defined %}
-      {% for route in extra_routes[ interface.network_id ] %}
+      {% for route in extra_routes | selectattr('interface_id', 'equalto', interface.network_id) %}
         - to: "{{ route.to }}"
           via: "{{ route.via }}"
       {% endfor %}
-      {% endif %}
       nameservers:
         addresses:
           {% for address in dns_servers %}
