@@ -27,7 +27,7 @@
     username: "{{ vault_username }}"
     password: "{{ vault_password }}"
     validate_certs: "{{ validate_vault_certs }}"
-    ca_cert: "{{ vault_ca_cert }}"
+    ca_cert: "{{ vault_ca_cert | default(omit) }}" # The path to the CA certificate file which is used to validate the Vault server certificate
   register: vault_acces_token
   delegate_to: localhost
   become: false
