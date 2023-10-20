@@ -36,6 +36,11 @@
     replace: "{{ providentia_app_fqdn }}"
   when: providentia_builtin_keycloak
 
+- name: Remove old version info
+  ansible.builtin.file:
+    path: "{{ providentia_install_dir }}/CURRENT_VERSION"
+    state: absent
+
 - name: Build image, start containers, clear cache
   ansible.builtin.make:
     chdir: "{{ providentia_install_dir }}"
