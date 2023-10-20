@@ -10,6 +10,10 @@ None
 
 The variable structure is based on [Providentia](https://github.com/ClarifiedSecurity/Providentia) API output. When using file based inventory then make sure to follow the same structure. Check the example blow for more details.
 
+The variable `customization_method` can take: `bsd`, `macos`, `netplan`, `networkd`, `nmcli`, `routeros`, `vyos`, `windows_cli`
+
+When selecting the network configuration method via the variable `customization_method`, if you are selecting `networkd` option, an extra variable is needed because this option can be used with different OS: `customization_method_distribution`. Possible options: `Debian`, `Archlinux`, `Scientific`
+
 The variable `extra_routes` can be set to add extra routes per interfaces. It takes a list of 3 vars dict:
   - `interface_id`: For the id of the interface
   - `to`: Destination of the route

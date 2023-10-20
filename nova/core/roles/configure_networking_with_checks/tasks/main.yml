@@ -1,7 +1,0 @@
----
-- name: Configuring VM network in vSphere environment...
-  ansible.builtin.include_tasks: vsphere/main.yml
-  when:
-    - infra_env == 'vsphere'
-    - fresh_deploy or reconfigure_network
-    - customization_context == "host"
