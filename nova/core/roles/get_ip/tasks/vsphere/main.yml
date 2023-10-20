@@ -1,30 +1,8 @@
 ---
-- name: Printing {{ inventory_hostname }} IP...
-  debug:
+- name: Printing {{ inventory_hostname }} IPs...
+  ansible.builtin.debug:
     msg: |
       FQDN - {{ fqdn }}
       IPv4 - {{ primary_ipv4 }}
       IPv6 - {{ primary_ipv6 }}
-      MGMT - {{ mgmt_ip | ansible.utils.ipaddr('address') }}
-  when:
-    - mgmt_ip != {}
-    - connection_ip == False
-
-- name: Printing {{ inventory_hostname }} IP...
-  debug:
-    msg: |
-      FQDN - {{ fqdn }}
-      IPv4 - {{ primary_ipv4 }}
-      IPv6 - {{ primary_ipv6 }}
-  when:
-    - mgmt_ip == {}
-    - connection_ip == False
-
-- name: Printing {{ inventory_hostname }} IP...
-  debug:
-    msg: |
-      FQDN - {{ fqdn }}
-      IPv4 - {{ primary_ipv4 }}
-      IPv6 - {{ primary_ipv6 }}
-      Connection - {{ connection_ip | ansible.utils.ipaddr('address') }}
-  when: connection_ip != False
+      Connection - {{ connection_address | default(connection_ip | ansible.utils.ipaddr('address')) }}
