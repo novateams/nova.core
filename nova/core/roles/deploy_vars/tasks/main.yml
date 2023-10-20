@@ -48,13 +48,20 @@
     - name: WARNING
       ansible.builtin.debug:
         msg: |
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           Loading instance parent host variables will be deprecated on 18.12.2023.
-          Move the file host_vars/{{ main_id }}.yml to group_vars/{{ main_id }}.yml to avoid this warning.
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      when: main_id in group_names
+          Move the file host_vars/{{ main_id }}.yml to group_vars/{{ main_id | replace("-", "_") }}.yml to avoid this warning.
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      when: main_id | replace("-", "_") in group_names
+
+    - name: Sleeping to read...
+      ansible.builtin.wait_for:
+        timeout: 30
+      become: false
+      delegate_to: localhost
+      when: main_id | replace("-", "_") in group_names
 
     - name: Loading host_vars...
       ansible.builtin.include_vars:
