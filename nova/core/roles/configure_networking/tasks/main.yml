@@ -5,3 +5,12 @@
     - infra_env == 'vsphere'
     - fresh_deploy or reconfigure_network
     - customization_context == "host"
+    - CATAPULT is defined
+
+- name: Configuring VM network in vSphere environment with checks...
+  ansible.builtin.include_tasks: vsphere_with_checks/main.yml
+  when:
+    - infra_env == 'vsphere'
+    - fresh_deploy or reconfigure_network
+    - customization_context == "host"
+    - CATAPULT is not defined

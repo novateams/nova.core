@@ -15,6 +15,8 @@ rest_api_credentials:
   type: USERNAME_PASSWORD
   user_name: "{{ template_username if fresh_deploy and not manual_fresh_deploy else admin_account }}"
   password: "{{ template_password if fresh_deploy and not manual_fresh_deploy else admin_account_password }}"
+retries_vmware_api: 60
+delay_vmware_api: 3
 
 # Connection mode
 primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}"
