@@ -3,7 +3,6 @@ dns_servers: []
 dns_servers6: []
 dns_server_combined: "{{ dns_servers + dns_servers6 }}"
 reconfigure_network: false # Can be used as as CLI var to re-run the network configuration part. Does not when sudo password is required because of vmware_tools plugin limitations
-mgmt_ip: {}
 netplan_renderer: {}
 primary_ipv4: false # False means that DHCP is used or IP is not present
 primary_ipv6: false # False means that DHCP is used or IP is not present
@@ -28,3 +27,8 @@ supported_connection_modes:
 
 # Routing options
 extra_routes: [] # Configure extra routes per interfaces.
+
+# Extra IPs
+extra_ipv4: [] # Configure extra IPv4s per interfaces.
+extra_ipv6: [] # Configure extra IPv6s per interfaces.
+extra_ips: "{{ extra_ipv4 + extra_ipv6 }}" # Combined list of extra IPs per interfaces

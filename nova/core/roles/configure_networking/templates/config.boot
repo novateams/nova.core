@@ -23,31 +23,20 @@ set interface ethernet $INTERFACE_NAME address {{ ip_address.address }}
 set interface ethernet $INTERFACE_NAME address {{ ip_address.address }}
 {% endif %}
 
-{% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway is defined) and (no_gateway is not defined) and (ip_address.gateway != none) %}
+{% if (ip_address.mode == 'ipv4_static') and (no_gateway is not defined) and (ip_address.gateway != none) %}
 set protocols static route 0.0.0.0/0 next-hop {{ ip_address.gateway }}
 {% endif %}
 
-{% if (ip_address.mode == 'ipv6_static') and (ip_address.gateway is defined) and (no_gateway is not defined) and (ip_address.gateway != none) %}
+{% if (ip_address.mode == 'ipv6_static') and (no_gateway is not defined) and (ip_address.gateway != none) %}
 set protocols static route6 ::/0 next-hop {{ ip_address.gateway }}
 {% endif %}
 
 {% endfor %}
-
-{% if (mgmt_ip != {}) and (interface.connection) %}
-set interface ethernet $INTERFACE_NAME address {{ mgmt_ip }}
-{% endif %}
-
 {% endfor %}
 
-{% if dns_servers is defined %}
-{% for dns_server in dns_servers %}
+{% if dns_server_combined != [] %}
+{% for dns_server in dns_server_combined %}
 set system name-server {{ dns_server }}
-{% endfor %}
-{% endif %}
-
-{% if dns_servers6 is defined %}
-{% for dns_server6 in dns_servers6 %}
-set system name-server {{ dns_server6 }}
 {% endfor %}
 {% endif %}
 

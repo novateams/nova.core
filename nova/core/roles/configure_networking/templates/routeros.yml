@@ -1,22 +1,16 @@
 ---
 router_os_networking_commands:
-{% for interface in interfaces %} # Looping over interfaces
+{% for interface in interfaces %}
 {% set interface_loop_index = loop.index %}
-{% for ip_address in interface.addresses %} # Looping over IP addresses
-{% if (ip_address.mode == 'ipv4_static') %} # Adding IPv4 addresse for interface
+{% for ip_address in interface.addresses %}
+{% if (ip_address.mode == 'ipv4_static') %}
 - /ip address add address={{ ip_address.address }} interface=ether{{ interface_loop_index }}
-{% endif %}
-{% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway is defined) and (ip_address.gateway != none) %} # Adding IPv4 gateway for interface
+{% elif (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
 - /ip route add gateway={{ ip_address.gateway }}
-{% endif %}
-{% if (ip_address.mode == 'ipv6_static') %} # Adding IPv6 addresse for interface
+{% elif (ip_address.mode == 'ipv6_static') %}
 - /ipv6 address add address={{ ip_address.address }} interface=ether{{ interface_loop_index }}
-{% endif %}
-{% if (ip_address.mode == 'ipv6_static') and (ip_address.gateway is defined) and (ip_address.gateway != none) %} # Adding IPv6 gateway for interface
+{% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway != none) %}
 - /ipv6 route add gateway={{ ip_address.gateway }}
 {% endif %}
 {% endfor %}
-{% if (mgmt_ip != {}) and (interface.connection) %} # Adding MGMT address for connection interface
-- /ipv6 address add address={{ mgmt_ip }} interface=ether{{ interface_loop_index }}
-{% endif %}
 {% endfor %}

@@ -10,11 +10,35 @@ None
 
 The variable structure is based on [Providentia](https://github.com/ClarifiedSecurity/Providentia) API output. When using file based inventory then make sure to follow the same structure. Check the example blow for more details.
 
-The variable `extra_routes` can be set to add extra routes per interfaces. It takes a list of 3 vars dict:
-  - `interface_id`: For the id of the interface
-  - `to`: Destination of the route
-  - `via`: Gateway
-This option is supported only on `netplan` renderer.
+Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/configure_networking/defaults/main.yml) for the full list of variables.
+
+`extra_routes` - Can be set to add extra routes per interfaces. Supported only for `netplan`
+
+```yaml
+# Example on how to configure extra routes when netplaN interface is named vpn
+extra_routes:
+  vpn:
+    - to: 10.0.0.0/8
+      via: 10.0.0.1
+```
+
+`extra_ipv4` - Can be set to add extra IPv4 addresses per interfaces
+`extra_ipv6` - Can be set to add extra IPv6 addresses per interfaces
+
+```yaml
+# Example on how to configure extra IPv4 addresses when interface is named vpn
+extra_ipv4:
+  vpn:
+    - 10.0.0.10/24
+    - 10.0.0.11/24
+    - 10.0.0.12/24
+
+extra_ipv6:
+  vpn:
+    - fd00:1234:5678:abcd::1234/64
+    - fd00:1234:5678:abcd::1235/64
+    - fd00:1234:5678:abcd::1236/64
+```
 
 ## Dependencies
 
