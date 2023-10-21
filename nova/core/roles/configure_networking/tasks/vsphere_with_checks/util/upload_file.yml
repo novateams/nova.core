@@ -1,3 +1,4 @@
+---
 - name: "Templating {{ item.dest }} file..."
   ansible.builtin.template:
     src: "{{ item.src }}"

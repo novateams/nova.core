@@ -10,22 +10,22 @@ set -e # exit when any command fails
     # Looping over IP addresses
     {% for ip_address in interface.addresses %}
 
-        {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway is defined) and (ip_address.gateway != none) and (ip_address.pool_id != 'mgmt') %}
+        {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) and (ip_address.pool_id != 'mgmt') %}
 
             # Adding IPv4 addresses with GW for interface
             networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}} {{ ip_address.gateway }}
 
-        {% elif (ip_address.mode == 'ipv4_static') and (ip_address.gateway is not defined or ip_address.gateway == none) and (ip_address.pool_id != 'mgmt') %}
+        {% elif (ip_address.mode == 'ipv4_static') and (ip_address.gateway == none) and (ip_address.pool_id != 'mgmt') %}
 
             # Adding IPv4 addresses without GW for interface
             networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}}
 
-        {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway is defined) and (ip_address.gateway != none) and (ip_address.pool_id != 'mgmt') %}
+        {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway != none) and (ip_address.pool_id != 'mgmt') %}
 
             # Adding IPv6 addresses with GW for interface
             networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }} {{ ip_address.gateway }}
 
-        {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway is not defined or ip_address.gateway == none) and (ip_address.pool_id != 'mgmt') %}
+        {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway == none) and (ip_address.pool_id != 'mgmt') %}
 
             # Adding IPv6 addresses without GW for interface
             networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }}
@@ -61,7 +61,7 @@ set -e # exit when any command fails
     {% endfor %}
 
     # Setting DNS servers
-    networksetup -setdnsservers $LOCAL_INTERFACE_NAME {{ dns_servers | join(' ') }} {{ dns_servers6 | join(' ') }}
+    networksetup -setdnsservers $LOCAL_INTERFACE_NAME {{ dns_server_combined | join(' ') }}
 
     # Disabling and enabling interface to apply changes
     networksetup -setnetworkserviceenabled $LOCAL_INTERFACE_NAME off

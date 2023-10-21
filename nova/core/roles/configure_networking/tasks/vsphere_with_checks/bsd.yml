@@ -2,26 +2,16 @@
 - become: false
   delegate_to: localhost
   block:
-    - name: Add sane SSH config so we can connect...
-      ansible.builtin.include_tasks: util/send_cmd.yml
-      vars:
-        bin_to_execute: /bin/bash
-        args_to_execute: -c "sed 's/^#\?[ ]\?UseDNS.*$/UseDNS no/' -i /etc/ssh/sshd_config && service sshd restart"
-
     - name: Upload files...
       ansible.builtin.include_tasks: util/upload_file.yml
       loop:
-        # rc.conf
-        - name: rc.conf
-          src: rc.conf
-          dest: /etc/rc.conf
-        # resolv.conf
-        - name: resolv.conf
-          src: resolv.conf
-          dest: /etc/resolv.conf
+        # rc.local
+        - name: rc.local
+          src: rc.local
+          dest: /etc/rc.local
 
     - name: Configuring network...
       ansible.builtin.include_tasks: util/send_cmd.yml
       vars:
-        bin_to_execute: /bin/bash
-        args_to_execute: -c "service netif restart && service routing restart"
+        bin_to_execute: /bin/tcsh
+        args_to_execute: -c "chmod +x /etc/rc.local ; /etc/rc.local"
