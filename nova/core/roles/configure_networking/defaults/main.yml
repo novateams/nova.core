@@ -1,4 +1,6 @@
 ---
+configure_networking_with_checks: false # Wait until task issued via REST API has finished
+
 dns_servers: []
 dns_servers6: []
 dns_server_combined: "{{ dns_servers + dns_servers6 }}"
