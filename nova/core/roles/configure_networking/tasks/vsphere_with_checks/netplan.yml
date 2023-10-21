@@ -17,7 +17,7 @@
           dest: /etc/netplan/01-netcfg.yaml
         # resolved.conf
         - name: resolved.conf
-          src: resolved.conf.j2
+          src: resolved.conf
           dest: /etc/systemd/resolved.conf
 
     # The double netplan apply is required for Ubuntu Desktop for the configuration to take effect

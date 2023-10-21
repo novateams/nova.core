@@ -15,17 +15,17 @@ ifconfig $INTERFACE_{{ interface_loop }}_NAME inet6 {{ ip_address.address | ansi
 route -6 delete default
 route -6 add default {{ ip_address.gateway }}
 {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway == none) %}
-ifconfig $INTERFACE_{{ interface_loop }}_NAME inet6 {{ ip_address.address | ansible.utils.ipaddr('address') }} alias
+ifconfig $INTERFACE_{{ interface_loop }}_NAME inet6 {{ ip_address.address | ansible.utils.ipaddr('address') }} prefixlen {{ ip_address.address | ansible.utils.ipaddr('prefix') }} alias
 {% endif %}
 {% endfor %}
 
-{% if extra_ipv4[interface.network_id] is defined %}
+{% if extra_ipv4 != [] %}
 {% for extra_ipv4 in extra_ipv4[interface.network_id] %}
 ifconfig $INTERFACE_{{ interface_loop }}_NAME inet {{ extra_ipv4 | ansible.utils.ipaddr('address') }} netmask {{ extra_ipv4 | ansible.utils.ipaddr('netmask') }} alias
 {% endfor %}
 {% endif %}
 
-{% if extra_ipv6[interface.network_id] is defined %}
+{% if extra_ipv6 != [] %}
 {% for extra_ipv6 in extra_ipv6[interface.network_id] %}
 ifconfig $INTERFACE_{{ interface_loop }}_NAME inet6 {{ extra_ipv6 | ansible.utils.ipaddr('address') }} prefixlen {{ extra_ipv6 | ansible.utils.ipaddr('prefix') }} alias
 {% endfor %}
