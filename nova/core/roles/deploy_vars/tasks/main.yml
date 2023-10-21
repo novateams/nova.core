@@ -2,13 +2,6 @@
 - name: Including validate variables task...
   ansible.builtin.include_tasks: validate_vars.yml
 
-- name: Including role for collections version check...
-  ansible.builtin.include_role:
-    name: "{{ collections_autoupdate_role }}"
-  when:
-    - CATAPULT is not defined
-    - collections_autoupdate_role is defined
-
 # Using set_fact so the credentials will be looked up only once
 - name: Setting credentials...
   ansible.builtin.set_fact:
@@ -21,6 +14,12 @@
     azure_service_principal: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AZURE_SERVICE_PRINCIPAL')), 'password') if (lookup('env', 'KEEPASS_AZURE_SERVICE_PRINCIPAL') | length != 0) else 'KEEPASS_AZURE_SERVICE_PRINCIPAL not defined in .makerc-vars' }}"
     my_ssh_public_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_SSH_KEYPAIR')), 'password') if (lookup('env', 'KEEPASS_SSH_KEYPAIR') | length != 0) else 'KEEPASS_SSH_KEYPAIR not defined in .makerc-vars' }}"
     my_ssh_private_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_SSH_KEYPAIR')), 'username') if (lookup('env', 'KEEPASS_SSH_KEYPAIR') | length != 0) else 'KEEPASS_SSH_KEYPAIR not defined in .makerc-vars' }}"
+
+- name: Including following post-deploy_vars roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop: "{{ deploy_vars_post_roles }}"
+  when: deploy_vars_post_roles != []
 
 - name: Setting correct admin_account for AWS template...
   ansible.builtin.set_fact:
