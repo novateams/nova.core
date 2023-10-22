@@ -1,5 +1,6 @@
 ---
-- become: false
+- name: Configuring networking on macOS...
+  become: false
   delegate_to: localhost
   block:
     - name: Upload file...

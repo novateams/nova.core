@@ -1,5 +1,6 @@
 ---
-- become: false
+- name: Configuring netplan networking...
+  become: false
   delegate_to: localhost
   block:
     - name: Removing existing netplan configuration file(s)...

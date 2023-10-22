@@ -1,5 +1,19 @@
 ---
-- block:
+- name: Configuring networking on RouterOS...
+  delegate_to: localhost
+  module_defaults:
+    community.vmware.vmware_vm_shell: "{{ vmware_defaults | combine(shell_defaults) }}"
+  vars:
+    shell_defaults:
+      datacenter: "{{ datacenter }}"
+      folder: /{{ datacenter }}/vm/{{ folder }}
+      vm_id: "{{ custom_vm_name | default(vm_name) }}"
+      vm_id_type: inventory_path
+      vm_username: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
+      vm_password: "{{ template_password if fresh_deploy else ansible_deployer_password }}"
+      vm_shell: inline
+      wait_for_process: false
+  block:
     - name: Removing default DHCP client addresses...
       community.vmware.vmware_vm_shell:
         vm_shell_args: "{{ item }}"
@@ -20,6 +34,7 @@
         src: routeros.yml
         dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_routeros.yml
         lstrip_blocks: true
+        mode: "0644"
 
     - name: Including network configuration commands var...
       ansible.builtin.include_vars:
@@ -29,17 +44,3 @@
       community.vmware.vmware_vm_shell:
         vm_shell_args: "{{ item }}"
       loop: "{{ router_os_networking_commands }}"
-
-  delegate_to: localhost
-  module_defaults:
-    community.vmware.vmware_vm_shell: "{{ vmware_defaults | combine(shell_defaults) }}"
-  vars:
-    shell_defaults:
-      datacenter: "{{ datacenter }}"
-      folder: /{{ datacenter }}/vm/{{ folder }}
-      vm_id: "{{ custom_vm_name | default(vm_name) }}"
-      vm_id_type: inventory_path
-      vm_username: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
-      vm_password: "{{ template_password if fresh_deploy else ansible_deployer_password }}"
-      vm_shell: inline
-      wait_for_process: false

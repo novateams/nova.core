@@ -1,10 +1,14 @@
 ---
-- block:
+- name: Configuring netplan...
+  become: false
+  delegate_to: localhost
+  block:
     - name: Templating network configuration script...
       ansible.builtin.template:
         src: netplan.yml
         dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_netplan.yml
         lstrip_blocks: true
+        mode: "0644"
 
     - name: Getting file info...
       ansible.builtin.stat:
@@ -70,10 +74,3 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
-
-  become: false
-  delegate_to: localhost
-
-- name: Rebooting to apply interface changes...
-  ansible.builtin.reboot:
-  when: "'os_ubuntu_18_04' in group_names"

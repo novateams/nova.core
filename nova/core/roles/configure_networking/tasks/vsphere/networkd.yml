@@ -37,7 +37,8 @@
       ansible.builtin.template:
         src: networkd.network.simple
         dest: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
-        lstrip_blocks: yes
+        lstrip_blocks: true
+        mode: "0644"
       loop: "{{ interfaces }}"
       loop_control:
         index_var: interface_index
@@ -93,7 +94,8 @@
       ansible.builtin.template:
         src: networkd.link.simple
         dest: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
-        lstrip_blocks: yes
+        lstrip_blocks: true
+        mode: "0644"
       loop: "{{ interfaces }}"
       loop_control:
         index_var: interface_index
@@ -102,7 +104,7 @@
     - name: Getting links(s) file info...
       ansible.builtin.stat:
         path: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
-      register: "link_file_size"
+      register: link_file_size
       loop: "{{ interfaces }}"
       loop_control:
         index_var: interface_index
@@ -120,7 +122,7 @@
             attributes:
               overwrite: true
               size: "{{ item.stat.size }}"
-            path: "/etc/systemd/network/{{ 10 + interface_index }}-{{ item.item.network_id }}.link"
+            path: /etc/systemd/network/{{ 10 + interface_index }}-{{ item.item.network_id }}.link
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
@@ -164,7 +166,8 @@
       ansible.builtin.template:
         src: resolv.conf
         dest: /tmp/{{ inventory_hostname }}_resolv.conf
-        lstrip_blocks: yes
+        lstrip_blocks: true
+        mode: "0644"
 
     - name: Getting resolv.conf file info...
       ansible.builtin.stat:
@@ -230,7 +233,7 @@
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
 
-      # Since the URI module doesn't give any output, we need to wait for the VM to be powered off and then power it back on to avoid potential race condition
+    # Since the URI module doesn't give any output, we need to wait for the VM to be powered off and then power it back on to avoid potential race condition
     - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
       vmware.vmware_rest.vcenter_vm_guest_power_info:
         vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"

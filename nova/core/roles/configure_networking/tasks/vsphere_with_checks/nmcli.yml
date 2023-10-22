@@ -1,5 +1,6 @@
 ---
-- become: false
+- name: Configuring nmcli networking...
+  become: false
   delegate_to: localhost
   block:
     - name: Upload nmcli.sh...

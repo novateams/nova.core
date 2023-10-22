@@ -7,6 +7,7 @@
       ansible.builtin.template:
         src: Configure-Network.ps1
         dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_Configure-Network.ps1
+        mode: "0644"
         lstrip_blocks: true
 
     - name: Getting file info...

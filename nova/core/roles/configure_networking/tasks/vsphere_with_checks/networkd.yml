@@ -1,5 +1,8 @@
 ---
-- block:
+- name: Configuring networkd...
+  become: false
+  delegate_to: localhost
+  block:
     - name: Disable legacy on Debian...
       ansible.builtin.include_tasks: util/send_cmd.yml
       vars:
@@ -63,6 +66,3 @@
         state: reboot-guest
         name: "{{ custom_vm_name | default(vm_name) }}"
         folder: "{{ folder }}"
-
-  become: false
-  delegate_to: localhost
