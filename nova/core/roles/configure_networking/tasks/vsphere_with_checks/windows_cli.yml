@@ -5,7 +5,7 @@
   block:
     - name: Upload file...
       ansible.builtin.include_tasks: util/upload_file.yml
-      loop: 
+      loop:
         - name: Configure-Network.ps1
           src: Configure-Network.ps1
           dest: C:\Windows\Temp\Configure-Network.ps1

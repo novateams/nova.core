@@ -1,5 +1,8 @@
 ---
-- block:
+- name: Configuring networking on macOS...
+  become: false
+  delegate_to: localhost
+  block:
     - name: Templating network configuration script...
       ansible.builtin.template:
         src: macos.sh
@@ -70,6 +73,3 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
-
-  become: false
-  delegate_to: localhost

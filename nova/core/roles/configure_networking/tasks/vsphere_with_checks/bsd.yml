@@ -1,5 +1,6 @@
 ---
-- become: false
+- name: Configure network on FreeBSD...
+  become: false
   delegate_to: localhost
   block:
     - name: Upload files...

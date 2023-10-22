@@ -1,5 +1,6 @@
 ---
-- become: false
+- name: Configuring VyOS networking...
+  become: false
   delegate_to: localhost
   block:
     - name: Uploading VyoS configuration script...

@@ -1,3 +1,4 @@
+---
 - name: Configuring BSD network...
   become: false
   delegate_to: localhost
@@ -7,6 +8,7 @@
         src: rc.local
         dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_rc.local
         lstrip_blocks: true
+        mode: "0644"
 
     - name: Getting file info...
       ansible.builtin.stat:
