@@ -1,7 +1,7 @@
 ---
 macos_no_python: true # By default MacOS does not have Python installed so it cannot gather facts
-primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}"
-connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
+primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default(interfaces | first) }}"
+connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first | default(primary_network.addresses | map(attribute='mode') | first) }}"
 connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
 sudo_requires_password: true # If this is true then either defined_become_password needs to be defined or ansible_deployer_username needs to be able to use it's ansible_deployer_password for sudo
 connection_ip: "{{ connection_address | default(primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address')) }}" # LEGACY variable that will be removed soon
