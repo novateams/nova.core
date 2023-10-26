@@ -1,4 +1,4 @@
-# Outline and supporting services installed on a single host
+# outline
 
 These are the required variables that you need to define for your environment.
 
@@ -41,7 +41,7 @@ Do not leave the bucket open as a "public bucket"
 
 Bucket access policy example - take care that you define the correct bucket name.
 
-```
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -52,9 +52,7 @@ Bucket access policy example - take care that you define the correct bucket name
         "s3:ListBucket",
         "s3:ListBucketMultipartUploads"
       ],
-      "Resource": [
-        "arn:aws:s3:::odata"
-      ]
+      "Resource": ["arn:aws:s3:::odata"]
     },
     {
       "Effect": "Allow",
@@ -65,9 +63,7 @@ Bucket access policy example - take care that you define the correct bucket name
         "s3:ListMultipartUploadParts",
         "s3:PutObject"
       ],
-      "Resource": [
-        "arn:aws:s3:::odata/*"
-      ]
+      "Resource": ["arn:aws:s3:::odata/*"]
     }
   ]
 }
@@ -75,10 +71,10 @@ Bucket access policy example - take care that you define the correct bucket name
 
 ## Public folders in the private bucket
 
-Outline wants to store and show user profile picures under bucketname/public/_ and some other avatars under bucketname/avatars/_
+Outline wants to store and show user profile picures under bucketname/public/_and some other avatars under bucketname/avatars/_
 Since we have locked down our bucket to be private, we have to add anonymous access rules under the bucket configuration (readonly access)
 
-```
+```shell
 avatars/
 public/
 ```
@@ -91,15 +87,15 @@ Default is set to **true** by variable `minio_client_configuration`
 ## Reverse proxy for the services
 
 Configuring a reverse proxy is not in the scope of this role.
-Example configuration: https://docs.getoutline.com/s/hosting/doc/nginx-6htaRboR57
+Example configuration: <https://docs.getoutline.com/s/hosting/doc/nginx-6htaRboR57>
 
 Keep in mind that you need to configure the reverse proxy for the outline service **and** the s3 service as well.
 
 Example
 
-- https://outline.domain.tld -> http://outline:3000
-- https://s3-outline.domain.tld -> http://outline:9000
-- https://s3-console-outline.domain.tld -> http://outline-storage:9090
+- <https://outline.domain.tld> -> <http://outline:3000>
+- <https://s3-outline.domain.tld> -> <http://outline:9000>
+- <https://s3-console-outline.domain.tld> -> <http://outline-storage:9090>
 
 ## Importing and exporting
 
