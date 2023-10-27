@@ -22,8 +22,8 @@ vault_unseal_shares: 1 # Number of shares to split the unseal key into
 vault_unseal_threshold: 1 # Number of shares required to unseal the Vault
 
 # Certificate Authority variables
-vault_crl_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API
-vault_aia_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API
+vault_crl_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API # in process of deprecation
+vault_aia_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API # in process of deprecation
 
 vault_create_root_ca: false # Create a self-signed root CA
 vault_create_intermediate_ca: false # Create an intermediate CA (signed by the root CA)
