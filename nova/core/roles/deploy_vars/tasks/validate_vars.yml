@@ -1,0 +1,9 @@
+---
+- name: Checking for Network...
+  ansible.builtin.fail:
+    msg: |
+      Missing networking configuration for {{ inventory_hostname }} machine!!!
+      Check that you have the following configuration set:
+        * {{ inventory_hostname }} machine has at least network interface defined
+        * {{ inventory_hostname }} machine has interface has the connection flag set to true
+  when: netdef_primary_network == []
