@@ -14,7 +14,6 @@ fresh_deploy: false # Set to true to run the deploy like the first time
 role_only: false # Includes customization role and then stops, great for developing roles
 role_only_wp: false # Run the deploy starting from customization_pre_vm_role
 just_clone: false # Runs the deploy until the end of os_configuration, creates a snapshot and the stops
-infra_env: {} # Required to be set to the correct environment, example: vsphere, aws, azure etc.
 datacenter_location: {} # Required when deploying to vSphere
 main_id: "{{ inventory_hostname }}" # For when using local inventory, main_id is a Providentia specific variable
 save_secrets_to_vault: false # Set to true to save accounts to vault, required a running HashiCorp Vault server with LDAP auth enabled

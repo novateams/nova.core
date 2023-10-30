@@ -1,7 +1,4 @@
 ---
-- name: Including validate variables task...
-  ansible.builtin.include_tasks: validate_vars.yml
-
 # Using set_fact so the credentials will be looked up only once
 - name: Setting credentials...
   ansible.builtin.set_fact:
