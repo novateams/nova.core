@@ -27,8 +27,7 @@ linked_clone_status: false
 linked_clone_snapshot_name: LinkedCloneSource # Case sensitive default value
 
 # Connection mode
-primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}" # in process of deprecation
-netdef_primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default([]) }}"
+primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}"
 connection_ip: "{{ connection_address | default(primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address')) }}" # LEGACY variable that will be removed soon
 connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
 connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
