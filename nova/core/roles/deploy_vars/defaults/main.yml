@@ -22,32 +22,6 @@ deploy_vars_post_roles: [] # List of roles to include after credentials facts ha
 
 legacy_host_var_path: "{{ inventory_dir }}/host_vars"
 
-#######################
-# Networking defaults #
-#######################
-
-# These are predefined networking lookups to simplify use cases where the same information is needed in multiple places
-# All these variables are based on the assumption that the netowrk interfaces data structure adherese to the Providentia API format
-# https://github.com/ClarifiedSecurity/Providentia
-
-netdef_primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default([]) }}"
-netdef_egress_network: "{{ interfaces | selectattr('egress', 'equalto', true) | first }}"
-netdef_connection_address: "{{ netdef_primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_primary_ipv4_network: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv4.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('network/prefix') }}"
-netdef_primary_ipv6_network: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv6.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('network/prefix') }}"
-netdef_primary_network_ipv4_gw: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv4_static.*') | map(attribute='gateway') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_primary_network_ipv6_gw: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv6_static.*') | map(attribute='gateway') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_primary_ipv4: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv4_static.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_primary_ipv6: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv6_static.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_egress_ipv4: "{{ netdef_egress_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv4_static.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_egress_ipv6: "{{ netdef_egress_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv6_static.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_vip_ipv4: "{{ netdef_primary_network.addresses | selectattr('mode', 'equalto', 'ipv4_vip') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_vip_ipv6: "{{ netdef_primary_network.addresses | selectattr('mode', 'equalto', 'ipv6_vip') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') }}"
-netdef_primary_ipv4_with_prefix: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv4_static.*') | map(attribute='address') | first | default(omit) }}"
-netdef_primary_ipv6_with_prefix: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv6_static.*') | map(attribute='address') | first | default(omit) }}"
-netdef_primary_ipv4_dns_enabled: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv4_static.*') | map(attribute='dns_enabled') | first | default(omit) }}"
-netdef_primary_ipv6_dns_enabled: "{{ netdef_primary_network.addresses | selectattr('pool_id', 'match', '^default.*') | selectattr('mode', 'match', '^ipv6_static.*') | map(attribute='dns_enabled') | first | default(omit) }}"
-
 #########
 # Vault #
 #########
