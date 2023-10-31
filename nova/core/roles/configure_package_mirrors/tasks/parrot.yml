@@ -1,0 +1,28 @@
+---
+- name: Checking if parrot.list (second file) backup exists...
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/parrot.list_backup
+  register: apt_backup_file
+
+- name: Backing up existing parrot.list
+  ansible.builtin.copy:
+    src: /etc/apt/sources.list.d/parrot.list
+    dest: /etc/apt/sources.list.d/parrot.list_backup
+    remote_src: true
+  when: not apt_backup_file.stat.exists
+
+- name: Templating custom parrot-sources.list to {{ inventory_hostname }}...
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  register: apt_sources
+  loop:
+    - src: parrot-sources-1.list
+      dest: /etc/apt/sources.list
+    - src: parrot-sources-2.list
+      dest: /etc/apt/sources.list.d/parrot.list
+
+- name: Running apt update...
+  ansible.builtin.apt:
+    update_cache: yes
+  when: apt_sources.results[0].changed or apt_sources.results[1].changed

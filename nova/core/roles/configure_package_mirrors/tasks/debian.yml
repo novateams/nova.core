@@ -1,7 +1,7 @@
 ---
-- name: Templating custom focal.list to {{ inventory_hostname }}...
+- name: Templating custom debian-sources.list to {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: focal.list
+    src: debian-sources.list
     dest: /etc/apt/sources.list
   register: apt_sources
 

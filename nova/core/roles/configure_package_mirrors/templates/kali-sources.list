@@ -1,0 +1,3 @@
+# The original sources.list is backed up as /etc/apt/sources.list_backup
+deb {{ package_mirror_kali_uri.general }} kali-rolling main contrib non-free
+deb-src {{ package_mirror_kali_uri.general }} kali-rolling main contrib non-free

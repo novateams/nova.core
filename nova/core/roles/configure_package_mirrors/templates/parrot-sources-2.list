@@ -1,0 +1,4 @@
+# The original sources.list is backed up as /etc/apt/sources.list.d/parrot.list_backup
+deb {{ package_mirror_parrot_uri.general }} parrot main contrib non-free
+deb {{ package_mirror_parrot_uri.security }} parrot-security main contrib non-free
+deb {{ package_mirror_parrot_uri.backports }}  parrot-backports main contrib non-free

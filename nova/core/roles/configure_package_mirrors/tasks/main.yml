@@ -27,14 +27,20 @@
             - ansible_distribution == "Kali"
             - package_mirror_kali_uri != {}
 
-        - name: Including Ubuntu Jammy mirror tasks...
-          include_tasks: jammy.yml
+        - name: Including Ubuntu mirror tasks...
+          include_tasks: ubuntu.yml
           when:
-            - ansible_distribution_release == "jammy"
-            - package_mirror_jammy_uri != {}
+            - ansible_distribution == "Ubuntu"
+            - package_mirror_ubuntu_uri != {}
 
-        - name: Including Ubuntu Focal mirror tasks...
-          include_tasks: focal.yml
+        - name: Including Debian mirror tasks...
+          include_tasks: debian.yml
           when:
-            - ansible_distribution_release == "focal"
-            - package_mirror_focal_uri != {}
+            - ansible_distribution == "Debian"
+            - package_mirror_debian_uri != {}
+
+        - name: Including Parrot mirror tasks...
+          include_tasks: parrot.yml
+          when:
+            - ansible_distribution == "Parrot"
+            - package_mirror_parrot_uri != {}
