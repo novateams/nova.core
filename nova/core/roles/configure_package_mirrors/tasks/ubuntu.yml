@@ -1,7 +1,7 @@
 ---
-- name: Templating custom jammy.list to {{ inventory_hostname }}...
+- name: Templating custom ubuntu-sources.list to {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: jammy.list
+    src: ubuntu-sources.list
     dest: /etc/apt/sources.list
   register: apt_sources
 

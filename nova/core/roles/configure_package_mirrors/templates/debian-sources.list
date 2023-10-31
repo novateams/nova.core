@@ -1,0 +1,9 @@
+# The original sources.list is backed up as /etc/apt/sources.list_backup
+deb {{ package_mirror_debian_uri.general }} {{ ansible_facts.lsb.codename }} main non-free-firmware
+deb-src {{ package_mirror_debian_uri.general }} {{ ansible_facts.lsb.codename }} main non-free-firmware
+
+deb {{ package_mirror_debian_uri.security }} {{ ansible_facts.lsb.codename }}-security main non-free-firmware
+deb-src {{ package_mirror_debian_uri.security }} {{ ansible_facts.lsb.codename }}-security main non-free-firmware
+
+deb {{ package_mirror_debian_uri.updates }} {{ ansible_facts.lsb.codename }}-updates main non-free-firmware
+deb-src {{ package_mirror_debian_uri.updates }} {{ ansible_facts.lsb.codename }}-updates main non-free-firmware

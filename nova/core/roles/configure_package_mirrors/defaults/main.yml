@@ -1,8 +1,9 @@
 ---
 # APT
-package_mirror_focal_uri: {} # URI of the Ubuntu Focal mirror to use
-package_mirror_jammy_uri: {} # URI of the Ubuntu Jammy mirror to use
-package_mirror_kali_uri: {} # URI of the Kali mirror to use
+package_mirror_ubuntu_uri: {} # dict (general, updates, security, backports fields) of URI of the Ubuntu mirror to use
+package_mirror_debian_uri: {} # dict (general, updates, security fields) of URI of the Debian mirror to use
+package_mirror_kali_uri: {} # dict (general field) of URI of the Kali mirror to use
+package_mirror_parrot_uri: {} # dict (general, lts, security, backports fields) of URI of the Kali mirror to use
 
 # Chocolatey
 package_mirror_chocolatey_sources_list: [] # List of Chocolatey mirrors to configure
