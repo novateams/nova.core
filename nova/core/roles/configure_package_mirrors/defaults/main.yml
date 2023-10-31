@@ -5,4 +5,4 @@ package_mirror_jammy_uri: {} # URI of the Ubuntu Jammy mirror to use
 package_mirror_kali_uri: {} # URI of the Kali mirror to use
 
 # Chocolatey
-package_mirror_choco_sources_list: [] # List of Chocolatey mirrors to configure
+package_mirror_chocolatey_sources_list: [] # List of Chocolatey mirrors to configure
