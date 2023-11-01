@@ -27,10 +27,6 @@
   ansible.builtin.include_tasks: debian_family.yml
   when: ansible_os_family == "Debian"
 
-- name: Include RedHat based OS specific configuration...
-  ansible.builtin.include_tasks: redhat.yml
-  when: ansible_os_family == "RedHat"
-
 # SSHD Configuration
 - name: Increasing SSHD MaxAuthTries to 20... # This to avoid erros when someone has more that 6 SSH keys in their agent
   ansible.builtin.lineinfile:
