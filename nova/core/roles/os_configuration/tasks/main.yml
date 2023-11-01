@@ -1,6 +1,8 @@
 ---
 - name: Including non-containers account tasks block...
-  when: customization_context == "host" # Alternative is container and then it doesn't need os_configuration
+  when:
+    - customization_context == "host" # Alternative is container and then it doesn't need os_configuration
+    - infra_env != "my_host" # my_host is computer where you run the play from
   block:
     - name: Including Windows configuration tasks...
       ansible.builtin.include_tasks: windows.yml

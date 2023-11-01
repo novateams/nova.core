@@ -7,9 +7,9 @@
   ansible.builtin.include_tasks: vmware_workstation.yml
   when: infra_env == 'vmware_workstation'
 
-- name: Configuring connection your for local laptop...
-  ansible.builtin.include_tasks: laptop.yml
-  when: "'zone_local' in group_names"
+- name: Configuring connection for your host... # The laptop or desktop you are running Ansible from
+  ansible.builtin.include_tasks: my_host.yml
+  when: infra_env == 'my_host'
 
 - name: Configuring connection in AWS environment...
   ansible.builtin.include_tasks: aws.yml
@@ -30,7 +30,7 @@
   ansible.builtin.set_fact:
     ansible_become_password: "{{ defined_become_password | default(ansible_deployer_password) }}"
   when:
-    - "'zone_local' not in group_names"
+    - infra_env != 'my_host'
     - sudo_requires_password
 
 - name: Waiting for {{ inventory_hostname }} to become reachable...
