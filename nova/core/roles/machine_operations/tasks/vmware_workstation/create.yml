@@ -24,8 +24,9 @@
             path: "{{ template_export_folder }}/{{ vm_template }}"
             state: absent
 
+        # regex_replace is required because urlib considers / as a safe character and doesn't encode it
         - name: Downloading {{ vm_template }}...
-          ansible.builtin.shell: ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} 'vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode() }}@{{ templates_path }}/{{ vm_template }}' {{ template_export_folder }}
+          ansible.builtin.shell: ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ template_export_folder }}
 
     - name: Checking if the {{ custom_vm_name | default(vm_name) }} already exists...
       ansible.builtin.stat:
