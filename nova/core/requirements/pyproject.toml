@@ -2,7 +2,7 @@
 name = "nova"
 version = "1.0.0"
 description = "Required libraries for running CCDCoE projects and Catapult"
-authors = ["CCDCOE <tech@ccdcoe.org> and Clarified Security <catapult@clarifiedsecurity.com>"]
+authors = ["CCDCOE <techadmin@ccdcoe.org> and Clarified Security <catapult@clarifiedsecurity.com>"]
 
 [tool.poetry.dependencies]
 aiohttp = "*"
