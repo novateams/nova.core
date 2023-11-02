@@ -12,7 +12,7 @@
     ansible_shell_type: "{{ default_ansible_shell_type }}"
   no_log: true
 
-- name: Wiping all interfaces from config.boot file
+- name: Wiping all interfaces from config.boot file...
   ansible.builtin.shell: |
     sed -i '/^service {/,$!d' /config/config.boot
     echo -e "interfaces {\n loopback lo\n}\n$(cat /config/config.boot)" > /config/config.boot
