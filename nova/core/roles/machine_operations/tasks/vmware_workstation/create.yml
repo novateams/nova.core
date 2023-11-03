@@ -51,6 +51,12 @@
           ansible.builtin.set_fact:
             fresh_deploy: true
 
+        - name: Create VM folder if it does not exist
+          ansible.builtin.file:
+            path: "{{ local_vm_folder }}"
+            state: directory
+            recurse: true
+
         - name: Creating {{ custom_vm_name | default(vm_name) }} from {{ vm_template }}...
           ansible.builtin.shell: ovftool -tt=vmx -n={{ custom_vm_name | default(vm_name) }} {{ local_vmx_template_path }} {{ local_vm_folder }}
 
