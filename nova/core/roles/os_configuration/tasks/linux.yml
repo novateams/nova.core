@@ -78,6 +78,8 @@
   register: regenerate_machine_id
   changed_when: regenerate_machine_id.stdout != "done"
 
-- name: Rebooting... # This required for journalctl to work properly after machine-id regeneration
-  ansible.builtin.reboot:
+- name: Restart systemd-journald... # This required for journalctl to work properly after machine-id regeneration
+  ansible.builtin.systemd:
+    name: systemd-journald
+    state: restarted
   when: regenerate_machine_id.changed
