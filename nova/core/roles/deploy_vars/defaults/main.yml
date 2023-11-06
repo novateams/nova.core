@@ -42,18 +42,18 @@ validate_vmware_certs: true
 
 vmware_defaults:
   hostname: "{{ vcenter_hostname | default(omit) }}"
-  username: "{{ deployer_username | default(omit) }}"
-  password: "{{ deployer_password | default(omit) }}"
+  username: "{{ vcenter_username | default(deployer_username) | default(omit) }}"
+  password: "{{ vcenter_password | default(deployer_password) | default(omit) }}"
   validate_certs: "{{ validate_vmware_certs }}"
 
 vmware_rest_defaults:
   vcenter_hostname: "{{ vcenter_hostname | default(omit) }}"
-  vcenter_username: "{{ deployer_username | default(omit) }}"
-  vcenter_password: "{{ deployer_password | default(omit) }}"
+  vcenter_username: "{{ vcenter_username | default(deployer_username) | default(omit) }}"
+  vcenter_password: "{{ vcenter_password | default(deployer_password) | default(omit) }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username: "{{ deployer_username }}@{{ ldap_auth_domain }}"
-nsx_deployer_password: "{{ deployer_password }}"
+nsx_deployer_username: "{{ nxs_username | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
+nsx_deployer_password: "{{ nxs_password | default(deployer_password) | default(omit) }}"
 
 #######
 # AWS #
