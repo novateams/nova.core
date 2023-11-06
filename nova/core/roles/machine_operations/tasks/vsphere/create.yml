@@ -116,6 +116,10 @@
           ansible.builtin.set_fact:
             linked_clone_status: false
 
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
     - name: Cloning VM...
       community.vmware.vmware_guest:
         wait_for_ip_address: "{{ primary_network.ipv4 is not defined }}"

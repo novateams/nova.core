@@ -20,6 +20,10 @@
         snapshot_name: "{{ default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
       when: snapshot_mode == 're-snap'
 
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
     - name: Creating a snapshot - {{ snapshot_name | default(ansible_date_time.iso8601) }}...
       community.vmware.vmware_guest_snapshot:
         datacenter: "{{ datacenter }}"

@@ -11,6 +11,10 @@
       - 400 # This means that the engine doesn't exist
   register: root_ca_pki_engine_status
 
+- name: Getting the time...
+  ansible.builtin.setup:
+    filter: "*_time"
+
 - name: Enabling Root CA PKI engine...
   ansible.builtin.uri:
     url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_root_ca_pki_engine_name }}{{ '/tune' if root_ca_pki_engine_status.status == 200 else '' }}"

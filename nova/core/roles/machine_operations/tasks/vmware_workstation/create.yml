@@ -13,6 +13,10 @@
         path: "{{ local_vmx_template_path }}"
       register: vm_template_presence
 
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
     - name: Downloading {{ vm_template }} if it does not exist or is older than 30 days...
       when:
         - not vm_template_presence.stat.exists or ((ansible_date_time.epoch | int) - (vm_template_presence.stat.ctime | round) >= 2592000) # 30 days
