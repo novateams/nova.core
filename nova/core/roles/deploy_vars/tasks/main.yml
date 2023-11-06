@@ -2,8 +2,8 @@
 # Using set_fact so the credentials will be looked up only once
 - name: Setting credentials...
   ansible.builtin.set_fact:
-    deployer_username: "{{ lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'username') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars' }}"
-    deployer_password: "{{ lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'password') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars' }}"
+    deployer_username: "{{ custom_deployer_username | default(lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'username') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars') }}"
+    deployer_password: "{{ custom_deployer_password | default(lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'password') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars') }}"
     gitlab_api_token: "{{ lookup('keepass', (lookup('env', 'KEEPASS_GITLAB_TOKEN')), 'password') if (lookup('env', 'KEEPASS_GITLAB_TOKEN') | length != 0) else 'KEEPASS_GITLAB_TOKEN not defined in .makerc-vars' }}"
     aws_access_key_id: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'username') if (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') | length != 0) else 'KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars' }}"
     aws_access_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'password') if (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') | length != 0) else 'KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars' }}"
