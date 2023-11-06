@@ -77,3 +77,7 @@
     executable: /bin/bash
   register: regenerate_machine_id
   changed_when: regenerate_machine_id.stdout != "done"
+
+- name: Rebooting... # This required for journalctl to work properly after machine-id regeneration
+  ansible.builtin.reboot:
+  when: regenerate_machine_id.changed
