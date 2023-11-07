@@ -1,4 +1,16 @@
 ---
+- name: Checking if sources.list backup exists...
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list_backup
+  register: apt_backup_file
+
+- name: Backing up existing sources.list...
+  ansible.builtin.copy:
+    src: /etc/apt/sources.list
+    dest: /etc/apt/sources.list_backup
+    remote_src: true
+  when: not apt_backup_file.stat.exists
+
 - name: Templating custom debian-sources.list to {{ inventory_hostname }}...
   ansible.builtin.template:
     src: debian-sources.list

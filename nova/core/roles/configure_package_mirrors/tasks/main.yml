@@ -9,18 +9,6 @@
     - name: Configuring Debian family sources.list
       when: ansible_os_family == "Debian"
       block:
-        - name: Checking if apt backup exists...
-          ansible.builtin.stat:
-            path: /etc/apt/sources.list_backup
-          register: apt_backup_file
-
-        - name: Backing up existing sources.list
-          ansible.builtin.copy:
-            src: /etc/apt/sources.list
-            dest: /etc/apt/sources.list_backup
-            remote_src: true
-          when: not apt_backup_file.stat.exists
-
         - name: Including Kali mirror tasks...
           include_tasks: kali.yml
           when:
