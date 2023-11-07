@@ -13,7 +13,6 @@
     rm -f /root/.vim/*
     rm -f /root/.viminfo
     rm -f /root/.vnc/*.log
-    rm -f /root/.vnc/passwd
     rm -f /root/selfconf
     rm -f /var/log/*.gz
     rm -f /var/log/ConsoleKit/*
