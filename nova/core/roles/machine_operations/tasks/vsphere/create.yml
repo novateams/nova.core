@@ -20,7 +20,7 @@
     msg: Machine doesn't exist, use deploy or redeploy first!
   when:
     - fresh_deploy
-    - role_only or role_only_wp
+    - role_only or role_only_wp or single_role is defined
 
 - name: Running VM creation tasks...
   delegate_to: localhost
