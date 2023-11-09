@@ -71,9 +71,12 @@
   delay: 10
   when: os_configuration_wait_for_site
 
-# - name: Regenerating Snakeoil certificates...
-#   ansible.builtin.command: make-ssl-cert generate-default-snakeoil --force-overwrite
-#   when: ansible_distribution in ['Ubuntu', 'Kali']
+- name: Regenerating Snakeoil certificates...
+  ansible.builtin.shell: "{{ lookup('template', 'regenerate-snakeoil-certificates.sh') }}"
+  args:
+    executable: /bin/bash
+  register: regenerate_snakeoil_certs
+  changed_when: regenerate_snakeoil_certs.stdout == "done"
 
 - name: Regenerating machine-id & host ssh keys...
   ansible.builtin.shell: "{{ lookup('template', 'regenerate-machine-id.sh') }}"
