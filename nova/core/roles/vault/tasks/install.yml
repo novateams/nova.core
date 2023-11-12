@@ -46,6 +46,16 @@
         container_default_behavior: no_defaults
       when: proxy_container_check.exists
 
+- name: Waiting until Vault is up...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
+    method: GET
+    status_code: 200
+  register: vault_status
+  until: vault_status.status == 200
+  retries: 12
+  delay: 5
+
 - name: Checking if the unseal script is present...
   ansible.builtin.stat:
     path: "{{ vault_config_folder }}/config/unseal-vault.sh"

@@ -1,14 +1,4 @@
 ---
-- name: Waiting until Vault is up...
-  ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/init"
-    method: GET
-    status_code: 200
-  register: vault_status
-  until: vault_status.status == 200
-  retries: 60
-  delay: 5
-
 - name: Including seal configuration block...
   when: not vault_status.json.initialized
   block:
@@ -69,8 +59,8 @@
     url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
     method: GET
     status_code: 200
-  register: vault_status
-  until: not vault_status.json.sealed
+  register: vault_seal_status
+  until: not vault_seal_status.json.sealed
   retries: 60
   delay: 5
 
