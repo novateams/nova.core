@@ -6,6 +6,16 @@
   ansible.builtin.include_tasks: configure.yml
   when: vault_configure
 
+- name: Waiting until Vault is unsealed... # This task is also here in case vault_configure is false
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
+    method: GET
+    status_code: 200
+  register: vault_seal_status
+  until: not vault_seal_status.json.sealed
+  retries: 60
+  delay: 5
+
 - name: Including {{ vault_root_ca_pki_engine_name }} creation tasks...
   ansible.builtin.include_tasks: ca_root.yml
   when: vault_create_root_ca
