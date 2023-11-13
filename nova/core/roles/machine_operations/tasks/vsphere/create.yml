@@ -47,8 +47,10 @@
 
     - name: Missing Operating System...
       ansible.builtin.fail:
-        msg: Cannot find vm_template variable! Did define the Operating System in the inventory?
-      when: vm_template is not defined
+        msg: Cannot find vm_template or base_vm_template variable! Did define the Operating System in the inventory?
+      when:
+        - vm_template is not defined
+        - base_vm_template is not defined
 
     - name: Looking up the VM template...
       vmware.vmware_rest.vcenter_vm_info:
