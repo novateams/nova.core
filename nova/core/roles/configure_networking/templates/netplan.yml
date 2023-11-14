@@ -33,9 +33,14 @@ network:
         - "{{ ip_address.address }}"
         {% endif %}
         {% endfor %}
-        {% if extra_ips[ interface.network_id ] is defined %}
-        {% for extra_ip in extra_ips[ interface.network_id ] %}
-        - {{ extra_ip }}
+        {% if extra_ipv4[ interface.network_id ] is defined %}
+        {% for ipv4 in extra_ipv4[ interface.network_id ] %}
+        - {{ ipv4 }}
+        {% endfor %}
+        {% endif %}
+        {% if extra_ipv6[ interface.network_id ] is defined %}
+        {% for ipv6 in extra_ipv6[ interface.network_id ] %}
+        - {{ ipv6 }}
         {% endfor %}
         {% endif %}
       {% if (interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes[ interface.network_id ] is defined) %}
