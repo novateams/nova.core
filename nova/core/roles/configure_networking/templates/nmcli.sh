@@ -43,14 +43,14 @@ fi
 
     {% endfor %}
 
-    {% if extra_ipv4 != [] %}
+    {% if extra_ipv4[ interface.network_id ] is defined %}
 
         # Adding extra ipv4 addresses for connection interface
         nmcli con modify $NMCLI_CONNECTION_NAME ipv4.method manual +ipv4.addresses "{{ extra_ipv4[ interface.network_id ] | join(', ') }}"
 
     {% endif %}
 
-    {% if extra_ipv6 != [] %}
+    {% if extra_ipv6[ interface.network_id ] is defined %}
 
         # Adding extra ipv6 addresses for connection interface
         nmcli con modify $NMCLI_CONNECTION_NAME ipv6.method manual +ipv6.addresses "{{ extra_ipv6[ interface.network_id ] | join(', ') }}"

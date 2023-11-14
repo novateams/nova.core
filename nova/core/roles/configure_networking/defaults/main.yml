@@ -32,8 +32,3 @@ supported_connection_modes:
 
 # Routing options
 extra_routes: [] # Configure extra routes per interfaces.
-
-# Extra IPs
-extra_ipv4: [] # Configure extra IPv4s per interfaces.
-extra_ipv6: [] # Configure extra IPv6s per interfaces.
-extra_ips: "{{ extra_ipv4 + extra_ipv6 }}" # Combined list of extra IPs per interfaces
