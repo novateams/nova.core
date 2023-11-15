@@ -44,5 +44,4 @@ unix_distro_skel_map:
   FreeBSD: /usr/share/skel
 
 unix_distro_sudoers_map:
-  Archlinux: /etc/sudoers.d/10-installer
   FreeBSD: /usr/local/etc/sudoers
