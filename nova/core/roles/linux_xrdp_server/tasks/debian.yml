@@ -1,9 +1,7 @@
 ---
 - name: Installing xrdp...
   ansible.builtin.package:
-    name:
-      - xrdp
-      - xorgxrdp # If this is missing RDP will login user to console
+    name: xrdp
     state: present
     update_cache: true
   register: xrdp_install
@@ -28,7 +26,8 @@
 - name: Setting xrdp configuration v1...
   ansible.builtin.lineinfile:
     dest: "{{ xrdp_config.dest }}"
-    regexp: "{{ xrdp_config.regexp }}"
+    regexp: "{{ xrdp_config.regexp | default(omit) }}"
+    insertafter: "{{ xrdp_config.insertafter | default(omit) }}"
     line: "{{ xrdp_config.line }}"
   loop_control:
     loop_var: xrdp_config
@@ -48,8 +47,15 @@
     - dest: /etc/xrdp/xrdp.ini
       regexp: ^#ls_background_image=
       line: ls_background_image= # Enables setting login screen background
-
   notify: Restarting xrdp service...
+
+- name: Creating xrdp start cron job... # Because if there's a lot of (security) agents installed the xrdp service times out on boot
+  ansible.builtin.cron:
+    name: Start xrdp.service
+    special_time: reboot
+    job: sleep 30 && systemctl restart xrdp.service
+    user: root
+  when: ansible_distribution == "Ubuntu"
 
 - name: Creating folders for configuration...
   ansible.builtin.file:
