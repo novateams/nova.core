@@ -15,6 +15,24 @@
       - wget
     state: present
 
+- name: Installing universal Linux packages...
+  ansible.builtin.package:
+    name:
+      - acl
+      - acpid
+      - bash-completion
+      - ca-certificates
+      - dbus
+      - dnsutils
+      - ethtool
+      - man
+      - net-tools
+      - nftables
+      - perl
+      - traceroute
+    state: present
+  when: ansible_system == "Linux"
+
 - name: Include Ubuntu specific configuration...
   ansible.builtin.include_tasks: ubuntu.yml
   when: ansible_distribution == "Ubuntu"
@@ -26,6 +44,10 @@
 - name: Include Debian based OS specific configuration...
   ansible.builtin.include_tasks: debian_family.yml
   when: ansible_os_family == "Debian"
+
+- name: Include Debian based OS specific configuration...
+  ansible.builtin.include_tasks: redhat_family.yml
+  when: ansible_os_family == "RedHat"
 
 # SSHD Configuration
 - name: Increasing SSHD MaxAuthTries to 20... # This to avoid erros when someone has more that 6 SSH keys in their agent
