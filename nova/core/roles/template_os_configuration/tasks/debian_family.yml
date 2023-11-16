@@ -1,25 +1,18 @@
 ---
-- name: Installed packages for Debian based OS...
+- name: Installing packages for Debian based OS...
   ansible.builtin.apt:
     name:
       - acpi-support
-      - acpid
-      - ca-certificates
       - cloud-guest-utils # Required for expanding disks
-      - dbus
-      - dnsutils
       - htop
       - kitty-terminfo # To pass your terminal settings over ssh
       - libpam-ssh-agent-auth # Required when using ssh-agent for sudo
       - libuser # Required for Domain Join & local accounts
-      - net-tools
       - network-manager
-      - nftables
-      - perl
       - python3-apt
       - python3-pip
       - python3-setuptools
-      - traceroute
+      - texinfo
     state: present
     update-cache: true
 
