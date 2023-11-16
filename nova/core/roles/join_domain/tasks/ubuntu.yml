@@ -95,6 +95,7 @@
 - name: Allowing sudo for members of {{ ad_sudo_group }}... # Defaults to Domain Admins
   ansible.builtin.lineinfile:
     dest: /etc/sudoers
+    regexp: .*{{ ad_domain_name }}.*
     line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL"
     insertafter: ^%sudo
 
