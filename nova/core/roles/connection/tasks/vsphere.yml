@@ -54,4 +54,4 @@
   ansible.builtin.set_fact:
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
-    ansible_password: "{{ template_password if fresh_deploy else ansible_deployer_password }}"
+    ansible_password: "{{ omit if connection_no_password else template_password if fresh_deploy else ansible_deployer_password }}"

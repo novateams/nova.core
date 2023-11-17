@@ -4,7 +4,7 @@
     ansible_host: "{{ primary_ipv4 }}"
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
-    ansible_password: "{{ linode_vm_password if fresh_deploy else ansible_deployer_password }}"
+    ansible_password: "{{ omit if connection_no_password else linode_vm_password if fresh_deploy else ansible_deployer_password }}"
 
 - name: Configuring sshd_config for {{ inventory_hostname }}...
   delegate_to: localhost
