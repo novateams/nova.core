@@ -59,7 +59,7 @@ none
   ansible.builtin.include_role:
     name: nova.core.configure_package_mirrors
   vars:
-    package_mirror_ubuntu_uri: 
+    package_mirror_ubuntu_uri:
       general: "https://nexus.example.com/repository/{{ ansible_facts.lsb.codename }}/"
       updates: "https://nexus.example.com/repository/{{ ansible_facts.lsb.codename }}-updates/"
       security: "https://nexus.example.com/repository/{{ ansible_facts.lsb.codename }}-security/"

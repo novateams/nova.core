@@ -34,7 +34,7 @@ One of the following variables must be set:
 Modifiers:
 
 - `live_snap` (true|false) - Affects `snap`, `clean-snap`, `re-snap`
-- `snapshot_name` (string) - Used to interact with the snapshos
+- `snapshot_name` (string) - Used to interact with the snapshots
 - `new_snapshot_name` (string) - Only used when `rename`
 - `start_vm_after_snapshot` (true|false)
 - `start_vm_after_revert` (true|false)
