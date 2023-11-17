@@ -1,5 +1,5 @@
 ---
-- name: ERROR
+- name: Host SSH access check...
   ansible.builtin.fail:
     msg: ALLOW_HOST_SSH_ACCESS not true in .makerc-vars, cannot connect to VMware Workstation!
   when: lookup('env', 'ALLOW_HOST_SSH_ACCESS') != 'true'

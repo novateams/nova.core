@@ -157,7 +157,7 @@
           line: guestos = "darwin20-64"
       when: "'os_macos' in group_names"
 
-    - name: Waiting for user to manually start VMware Workstation... # For some reason it doesn't start automatically
+    - name: Checking if VMware Workstation is running...
       ansible.builtin.shell: |
         if [ -z "$(ps -fC vmware --no-headers)" ]; then
             echo "Waiting for VMware..."
@@ -165,9 +165,39 @@
             echo "Moving on..."
         fi
       register: vmware_workstation_running
+
+    - name: Notifying user to start VMware Workstation...
+      when:
+        - lookup('env', 'SLACK_WEBHOOK_URL') | length != 0
+        - vmware_workstation_running.stdout == "Waiting for VMware..."
+      delegate_to: localhost
+      block:
+        - name: Notifying user to start VMware Workstation via Mattermost...
+          community.general.mattermost:
+            url: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/hooks/')[0] }}"
+            api_key: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/hooks/')[1] }}"
+            text: Please start VMware Workstation on your host
+            channel: "{{ lookup('env', 'SLACK_CHANNEL') }}"
+          when: ('/hooks/' in lookup('env', 'SLACK_WEBHOOK_URL'))
+
+        - name: Notifying user to start VMware Workstation via Slack...
+          community.general.slack:
+            token: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/services/')[1] }}"
+            msg: Please start VMware Workstation on your host
+            channel: "{{ lookup('env', 'SLACK_CHANNEL') }}"
+          when: ('/services/' in lookup('env', 'SLACK_WEBHOOK_URL'))
+
+    - name: Waiting for user to manually start VMware Workstation...
+      ansible.builtin.shell: |
+        if [ -z "$(ps -fC vmware --no-headers)" ]; then
+            echo "Waiting for VMware..."
+        else
+            echo "Moving on..."
+        fi
+      register: vmware_workstation_state
       retries: 90
       delay: 10
-      until: vmware_workstation_running.stdout == "Moving on..."
+      until: vmware_workstation_state.stdout == "Moving on..."
 
     - name: Starting {{ inventory_hostname }} and waiting for IP address...
       ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}
