@@ -1,6 +1,6 @@
 # template_os_configuration
 
-This is a role to pre-configure a VM template. It is reccomeneded that you have your VM templates in separate project or separately in your project's inventory so you use this role to configure them for use with the rest of the roles in this collection.
+This is a role to pre-configure a VM template. It is recommended that you have your VM templates in separate project or separately in your project's inventory so you use this role to configure them for use with the rest of the roles in this collection.
 
 ## Requirements
 
@@ -10,7 +10,7 @@ none
 
 Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/template_os_configuration/defaults/main.yml) file for a list and description of the variables used in this role.
 
-Currently some of the when conditions expect you to have specificly named group vars defined for certain settings to applied.
+Currently some of the when conditions expect you to have specifically named group vars defined for certain settings to applied.
 
 Examples:
 

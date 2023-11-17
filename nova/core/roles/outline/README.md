@@ -71,7 +71,7 @@ Bucket access policy example - take care that you define the correct bucket name
 
 ## Public folders in the private bucket
 
-Outline wants to store and show user profile picures under **bucketname/public/** and some other avatars under **bucketname/avatars/**.
+Outline wants to store and show user profile pictures under **bucketname/public/** and some other avatars under **bucketname/avatars/**.
 Since we have locked down our bucket to be private, we have to add anonymous access rules under the bucket configuration (readonly access)
 
 ```shell
@@ -102,4 +102,4 @@ Example
 - In order for the exporting/importing functions to be successful, please make sure that you have connectivity between the outline application container and the s3 service (that can also be a container, running on the same host).
 - If importing or exporting fails, make sure that there are no DNS issues (that the outline container can resolve the s3 service), no certificate trust issues etc.
 - Exporting the wiki **does not include users, groups or any permission schemes**, only articles and attachments are included. Makes sense to always make backups at the OS level as well.
-- Exporting the wiki includes only those collections that you have the premissions to read, even if you are admin.
+- Exporting the wiki includes only those collections that you have the permissions to read, even if you are admin.
