@@ -2,9 +2,7 @@
 - name: Cleaning up Linux machine...
   ansible.builtin.shell: |
     export HISTFILE=/dev/null
-    rm -rf /home/gt/.bash_history
     rm -f /home/*/.ssh/known_hosts
-    rm -rf /home/*/.cache/*
     rm -f /home/*/.sudo_as_admin_successful
     rm -f /root/.bconsole_history
     rm -f /root/.mysql_history
@@ -15,20 +13,20 @@
     rm -f /root/.vnc/*.log
     rm -f /root/selfconf
     rm -f /var/log/*.gz
-    rm -f /var/log/ConsoleKit/*
     rm -f /var/log/alternatives*
     rm -f /var/log/apache2/*
     rm -f /var/log/apt/*
+    rm -f /var/log/audit/*
     rm -f /var/log/auth*
     rm -f /var/log/boot
     rm -f /var/log/clamd.log
+    rm -f /var/log/ConsoleKit/*
     rm -f /var/log/cups/*
     rm -f /var/log/debug*
     rm -f /var/log/dmesg*
     rm -f /var/log/dpkg*
     rm -f /var/log/ejabberd/*
     rm -f /var/log/fsck/*
-    rm -rf /var/log/installer/*
     rm -f /var/log/kern*
     rm -f /var/log/landscape/*
     rm -f /var/log/lightdm/*
@@ -47,6 +45,9 @@
     rm -f /var/log/udev*
     rm -f /var/log/upstart/*
     rm -f /var/log/xferlog*
+    rm -rf /home/*/.cache/*
+    rm -rf /home/gt/.bash_history
+    rm -rf /var/log/installer/*
     service apache2 restart || true
     if [ -d "/run/log/journal" ]; then find /run/log/journal -name "*.journal" | xargs rm -f; fi
   args:
