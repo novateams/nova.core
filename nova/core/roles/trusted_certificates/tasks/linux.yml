@@ -49,6 +49,31 @@
       changed_when: true
       when: trusted_certificates_list != []
 
+- name: Including RedHat trusted certificates tasks...
+  when: ansible_facts.os_family == "RedHat"
+  block:
+    - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: /tmp/{{ item.name }}.crt
+        mode: "0644"
+      loop: "{{ trusted_certificates_list }}"
+      when: not item.src.startswith('http')
+
+    - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
+      ansible.builtin.get_url:
+        url: "{{ item.src }}"
+        dest: /tmp/{{ item.name }}.crt
+        mode: "0644"
+        timeout: 60
+      loop: "{{ trusted_certificates_list }}"
+      when: item.src.startswith('http')
+
+    - name: Updating CA certificates...
+      ansible.builtin.command: trust anchor --store /tmp/{{ item.name }}.crt
+      loop: "{{ trusted_certificates_list }}"
+      when: trusted_certificates_list != []
+
 - name: Adding trusted certificate(s) to Java keystore(s)...
   when: trusted_certificates_to_jks
   block:
