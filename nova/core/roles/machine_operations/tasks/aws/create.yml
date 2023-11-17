@@ -1,5 +1,8 @@
 ---
-- block:
+- name: Creating AWS EC2 instance for {{ inventory_hostname }}...
+  delegate_to: localhost
+  become: false
+  block:
     - name: Getting all OS images...
       amazon.aws.ec2_ami_info:
         owners: "{{ ami_owner_id }}"
@@ -33,6 +36,7 @@
         state: absent
 
     - name: Including fresh deploy tasks...
+      when: fresh_deploy
       block:
         - name: Creating a temp ssh key for {{ hostname }}...
           amazon.aws.ec2_key:
@@ -44,8 +48,6 @@
             content: "{{ aws_temp_private_key.key.private_key }}"
             dest: "{{ temp_ssh_key_path }}"
             mode: "600"
-
-      when: fresh_deploy
 
     - name: Creating AWS security group for {{ custom_vm_name | default(vm_name) }}...
       amazon.aws.ec2_security_group:
@@ -78,6 +80,3 @@
       amazon.aws.ec2_key:
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
-
-  delegate_to: localhost
-  become: false

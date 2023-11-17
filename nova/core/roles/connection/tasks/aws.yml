@@ -3,18 +3,19 @@
   ansible.builtin.set_fact:
     ansible_host: "{{ primary_ipv4 }}"
     ansible_connection: "{{ default_connection_plugin }}"
-    ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
+    ansible_user: "{{ aws_template_username if fresh_deploy else ansible_deployer_username }}"
+    ansible_password: "{{ omit if (connection_no_password or fresh_deploy) else ansible_deployer_password }}"
     ansible_private_key_file: "{{ temp_ssh_key_path if fresh_deploy else omit }}"
 
 - name: Increasing ssh MaxAuthTries to 20... # Using this hack because IdentitiesOnly yes breaks python ssh connection
   ansible.builtin.command: ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i {{ temp_ssh_key_path }} {{ ansible_user }}@{{ ansible_host }} "sudo sed -i 's#.*MaxAuthTries.*#MaxAuthTries 20#g' /etc/ssh/sshd_config ; sudo systemctl restart sshd.service"
   changed_when: true
   register: maxauthtries
-  until:
-    - maxauthtries.rc == 0
+  until: maxauthtries.rc == 0
   retries: 10
   delay: 3
   delegate_to: localhost
+  become: false
   when:
     - fresh_deploy
     - "'os_linux in group_name'"
