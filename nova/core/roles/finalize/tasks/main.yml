@@ -25,13 +25,6 @@
           ansible.builtin.include_tasks: vyos.yml
           when: "'os_vyos' in group_names"
 
-    - name: Removing AWS temp ssh key for {{ hostname }}...
-      ansible.builtin.file:
-        path: "{{ temp_ssh_key_path }}"
-        state: absent
-      delegate_to: localhost
-      when: infra_env == "aws"
-
 - name: Including following post-finalize roles...
   ansible.builtin.include_role:
     name: "{{ item }}"

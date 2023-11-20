@@ -47,11 +47,6 @@
       become: false
       register: auth
 
-    - name: Setting correct admin_account for AWS template...
-      set_fact:
-        admin_account: "{{ aws_template_username }}"
-      when: infra_env == "aws"
-
     - name: Generating & saving extra_secrets...
       include_tasks: save_extra_secrets.yml
       loop: "{{ extra_secrets }}"

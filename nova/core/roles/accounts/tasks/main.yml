@@ -30,7 +30,7 @@
           ansible.builtin.include_tasks: unix_create.yml
           when: ansible_system in ["FreeBSD", "Linux"]
 
-    - name: Configuring Netowork OS accounts...
+    - name: Configuring Network OS accounts...
       when: ansible_network_os is defined
       block:
         - name: Configure RouterOS accounts...
@@ -53,6 +53,7 @@
       ansible.builtin.set_fact:
         ansible_user: "{{ ansible_deployer_username }}"
         ansible_password: "{{ ansible_deployer_password | default(omit) }}" # Updated ansible_deployer_password
+        ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=no' if (fresh_deploy and infra_env == 'aws') else omit }}" # To avoid SSH MaxAuthTries limit
 
     # Accounts removal tasks
     # This will lookup all user profiles that are not in the accounts list and remove them
