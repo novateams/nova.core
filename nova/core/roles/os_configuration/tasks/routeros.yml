@@ -13,8 +13,8 @@
 
 - name: RouterOS missing licence warning...
   when:
-    - routeros_license_account = {}
-    - routeros_license_password = {}
+    - routeros_license_account == {}
+    - routeros_license_password == {}
   block:
     - name: WARNING
       ansible.builtin.debug:
