@@ -68,7 +68,7 @@ vmwarews_custom_params: []
 ################
 
 # Temporary ssh key path on your container
-temp_ssh_key_path: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_aws_key
+temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_aws_key
 
 # AWS security group rules
 aws_security_group_rules:

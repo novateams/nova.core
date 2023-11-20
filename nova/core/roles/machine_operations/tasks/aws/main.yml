@@ -1,6 +1,4 @@
 ---
-- name: Setting required facts for deploy...
-  ansible.builtin.include_tasks: setup_vars.yml
 - name: Starting the removal process...
   ansible.builtin.include_tasks: remove.yml
   when: deploy_mode == 'undeploy' or deploy_mode == 'redeploy'
