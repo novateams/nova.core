@@ -13,13 +13,26 @@
     name: "{{ item.username }}"
     password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) | password_hash('sha512') }}"
     shell: "{{ item.shell | default(unix_distro_shell_map[ansible_distribution] | default('/bin/bash')) }}"
-    groups: "{{ item.groups | default(root_group if item.username in admins_list else 'users') }}"
+    groups: "{{ item.groups | default(root_group if item.username in admin_accounts | map(attribute='username') else 'users') }}"
     skeleton: "{{ unix_distro_skel_map[ansible_distribution] | default('/etc/skel') }}"
     createhome: true
     append: true
-  loop: "{{ accounts }}"
+  loop: "{{ local_accounts_list }}"
   loop_control:
     label: "{{ item.username }}"
+
+- name: Adding account creation source flag...
+  ansible.builtin.lineinfile:
+    dest: /home/{{ item.username }}/.created
+    line: This account was created with {{ ansible_role_name }} role
+    state: present
+    create: true
+    owner: "{{ item.username }}"
+    group: "{{ item.username }}"
+  loop: "{{ local_accounts_list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username != admin_account # Cannot remove admin (usually root) account
 
 - name: Adding authorized keys for...
   ansible.posix.authorized_key:
@@ -27,7 +40,7 @@
     state: present
     key: "{{ item.ssh_key }}"
     exclusive: "yes"
-  loop: "{{ accounts }}"
+  loop: "{{ local_accounts_list }}"
   loop_control:
     label: "{{ item.username }}"
   when: item.ssh_key is defined
