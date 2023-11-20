@@ -13,27 +13,9 @@
           ansible.builtin.include_tasks: windows.yml
           when: ansible_system == "Win32NT"
 
-        - name: Including Windows on vSphere configuration tasks...
-          ansible.builtin.include_tasks: windows_vsphere.yml
-          when:
-            - ansible_system == "Win32NT"
-            - infra_env in ["vsphere" or "vmware_workstation"]
-
         - name: Including Linux configuration tasks...
           ansible.builtin.include_tasks: linux.yml
           when: ansible_system == "Linux"
-
-        - name: Including Linux in Cloud configuration tasks...
-          ansible.builtin.include_tasks: linux_cloud.yml
-          when:
-            - ansible_system == "Linux"
-            - infra_env in ["aws", "linode", "azure"]
-
-        - name: Including Windows in Cloud configuration tasks...
-          ansible.builtin.include_tasks: windows_cloud.yml
-          when:
-            - ansible_system == "Win32NT"
-            - infra_env in ["aws", "linode", "azure"]
 
         - name: Including FreeBSD configuration tasks...
           ansible.builtin.include_tasks: freebsd.yml

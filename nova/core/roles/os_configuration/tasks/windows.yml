@@ -8,3 +8,15 @@
     port: "{{ wait_for_port }}"
     timeout: "{{ wait_for_timeout }}"
   when: wait_for_host
+
+- name: Including Windows in Cloud configuration tasks...
+  ansible.builtin.include_tasks: windows_cloud.yml
+  when:
+    - ansible_system == "Win32NT"
+    - infra_env in ["aws", "linode", "azure"]
+
+- name: Including Windows on vSphere configuration tasks...
+  ansible.builtin.include_tasks: windows_vsphere.yml
+  when:
+    - ansible_system == "Win32NT"
+    - infra_env in ["vsphere" or "vmware_workstation"]
