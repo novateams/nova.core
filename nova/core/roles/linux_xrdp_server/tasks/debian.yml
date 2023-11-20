@@ -1,7 +1,9 @@
 ---
 - name: Installing xrdp...
   ansible.builtin.package:
-    name: xrdp
+    name:
+      - xrdp
+      - xorgxrdp
     state: present
     update_cache: true
   register: xrdp_install
