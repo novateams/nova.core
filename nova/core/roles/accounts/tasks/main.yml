@@ -4,29 +4,31 @@
     - customization_context == "host" # Alternative is container that doesn't need this role
     - infra_env != "my_host" # my_host is computer where you run the play from
   block:
+    # Accounts creation preparation tasks
     - name: Creating required admins & users lists...
       ansible.builtin.set_fact:
         accounts: "{{ user_accounts + admin_accounts + domain_user_accounts }}"
-        admins_list: "{{ admin_accounts | map(attribute='username') }}"
-        users_list: "{{ user_accounts | map(attribute='username') }}"
-        domain_users_list: "{{ domain_user_accounts | map(attribute='username') }}"
+        local_accounts_list: "{{ user_accounts + admin_accounts }}"
+        domain_accounts_list: "{{ domain_user_accounts + admin_accounts }}"
 
     - name: Setting required password fact...
       ansible.builtin.set_fact:
         pregenerated_password: "{{ random_generated_password }}"
       when: not save_secrets_to_vault
 
-    - name: Configuring Windows accounts...
-      ansible.builtin.include_tasks: windows.yml
-      when: "'os_windows' in group_names"
+    # Accounts creation tasks
+    - name: Creation accounts for non-Netowork OS accounts...
+      when:
+        - ansible_network_os is not defined
+        - "'os_macos' not in group_names"
+      block:
+        - name: Including Windows accounts creation tasks...
+          ansible.builtin.include_tasks: windows_create.yml
+          when: ansible_system == 'Win32NT'
 
-    - name: Including Linux & BSD accounts tasks...
-      ansible.builtin.include_tasks: unix.yml
-      when: ("os_linux" in group_names) or ("os_bsd" in group_names)
-
-    - name: Configure macOS accounts...
-      ansible.builtin.include_tasks: macos.yml
-      when: "'os_macos' in group_names"
+        - name: Including Linux & BSD accounts creation tasks...
+          ansible.builtin.include_tasks: unix_create.yml
+          when: ansible_system in ["FreeBSD", "Linux"]
 
     - name: Configuring Netowork OS accounts...
       when: ansible_network_os is defined
@@ -43,8 +45,28 @@
           include_tasks: ios.yml
           when: ansible_network_os == 'cisco.ios.ios'
 
-    - name: Setting correct credentials...
+    - name: Configure macOS accounts...
+      ansible.builtin.include_tasks: macos.yml
+      when: "'os_macos' in group_names"
+
+    - name: Setting {{ ansible_deployer_username }} as connection user...
       ansible.builtin.set_fact:
         ansible_user: "{{ ansible_deployer_username }}"
         ansible_password: "{{ ansible_deployer_password | default(omit) }}" # Updated ansible_deployer_password
 
+    # Accounts removal tasks
+    # This will lookup all user profiles that are not in the accounts list and remove them
+    # This needs to be done after the correct ansible_user is set as not to try to remove the user you are logged in as
+    - name: Removing accounts from non-Netowork OS...
+      when:
+        - accounts_remove_stale
+        - ansible_network_os is not defined
+        - "'os_macos' not in group_names"
+      block:
+        - name: Including Linux & BSD accounts removal tasks...
+          ansible.builtin.include_tasks: unix_remove.yml
+          when: ansible_system in ["FreeBSD", "Linux"]
+
+        - name: Including Windows accounts removal tasks...
+          ansible.builtin.include_tasks: windows_remove.yml
+          when: ansible_system == 'Win32NT'
