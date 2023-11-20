@@ -58,6 +58,14 @@
     - ansible_network_os is not defined
     - macos_no_python
 
+- name: Optimizing Powershell...
+  ansible.windows.win_shell: "{{ lookup('file', 'Optimize-PowerShell.ps1') }}"
+  when:
+    - ansible_system is defined
+    - ansible_system == "Win32NT"
+    - not role_only
+    - not role_only_wp
+
 - name: Gathering Network OS facts...
   when: ansible_network_os is defined
   block:
