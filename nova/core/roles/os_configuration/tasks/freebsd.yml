@@ -1,25 +1,24 @@
 ---
-- name: Setting hostname...
-  ansible.builtin.shell:
-    cmd: "hostname {{ fqdn }}"
+- name: Setting hostname for {{ inventory_hostname }}...
+  ansible.builtin.command: hostname -f {{ fqdn }}
 
-- name: Make hostname persistant...
+- name: Making hostname persistent...
   ansible.builtin.lineinfile:
-    line: 'hostname="{{ fqdn }}"'
+    line: hostname="{{ fqdn }}"
     path: /etc/rc.conf
     state: present
-    regexp: "^#?hostname"
+    regexp: .*hostname.*
 
-- name: Populate /etc/hosts...
+- name: Templating hosts file to {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: hosts.bsd.j2
+    src: bsd_hosts
     dest: /etc/hosts
 
-- name: Enable SSH forwarding for sudo...
+- name: Enabling SSH forwarding for sudo...
   ansible.builtin.lineinfile:
     dest: /usr/local/etc/sudoers
-    insertafter: '^#?\s*Defaults\s+env_keep\b'
-    line: 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+    insertafter: ^#?\s*Defaults\s+env_keep\b
+    line: Defaults    env_keep += "SSH_AUTH_SOCK"
 
 - name: Set ntp servers...
   ansible.builtin.lineinfile:
@@ -28,19 +27,19 @@
     regexp: "^server {{ item }}"
   loop: "{{ ntp_servers }}"
 
-- name: Disable ntp pools...
+- name: Disabling NTP pools...
   ansible.builtin.replace:
     path: /etc/ntp.conf
     regexp: "^(pool.*)$"
     replace: "#\\1"
 
-- name: Enable ntpd service...
+- name: Enabling ntpd service...
   ansible.builtin.lineinfile:
-    path: /etc/ntp.conf
-    line: 'ntpd_enable="YES"'
-    regexp: "^#?ntpd_enable"
+    path: /etc/rc.conf
+    line: ntpd_enable="YES"
+    regexp: .*ntpd_enable.*
 
-- name: Start ntpd service...
+- name: Starting ntpd service...
   ansible.builtin.service:
-    name: "ntpd"
+    name: ntpd
     state: started
