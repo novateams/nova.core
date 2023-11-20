@@ -1,0 +1,5 @@
+---
+- name: Updating all packages...
+  ansible.builtin.package:
+    name: "*"
+    state: latest
