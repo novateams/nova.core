@@ -5,16 +5,4 @@
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
     ansible_password: "{{ omit if connection_no_password else linode_vm_password if fresh_deploy else ansible_deployer_password }}"
-
-- name: Configuring sshd_config for {{ inventory_hostname }}...
-  delegate_to: localhost
-  when: fresh_deploy
-  block:
-    - name: Waiting until ssh is up for {{ inventory_hostname }}...
-      ansible.builtin.wait_for:
-        host: "{{ ansible_host }}"
-        port: 22
-
-    - name: Increasing ssh MaxAuthTries to 20...
-      ansible.builtin.command: sshpass -p {{ linode_vm_password }} ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o PreferredAuthentications=password {{ ansible_user }}@{{ ansible_host }} "sudo sed -i 's#.*MaxAuthTries.*#MaxAuthTries 20#g' /etc/ssh/sshd_config ; sudo systemctl restart sshd.service"
-      changed_when: true
+    ansible_ssh_common_args: "{{ '-o PreferredAuthentications=password' if fresh_deploy else omit }}" # Initial connection will forced to password to avoid SSH MaxAuthTries limit
