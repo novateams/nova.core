@@ -17,3 +17,7 @@
     - name: Including RedHat family update tasks...
       ansible.builtin.include_tasks: redhat_family.yml
       when: ansible_os_family == 'RedHat'
+
+    - name: Including FreeBSD update tasks...
+      ansible.builtin.include_tasks: freebsd.yml
+      when: ansible_system == "FreeBSD"
