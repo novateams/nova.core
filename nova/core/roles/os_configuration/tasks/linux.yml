@@ -90,3 +90,9 @@
     name: systemd-journald
     state: restarted
   when: regenerate_machine_id.changed
+
+- name: Including Linux in Cloud configuration tasks...
+  ansible.builtin.include_tasks: linux_cloud.yml
+  when:
+    - ansible_system == "Linux"
+    - infra_env in ["aws", "linode", "azure"]
