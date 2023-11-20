@@ -28,6 +28,9 @@
           ansible.builtin.include_tasks: freebsd.yml
           when: ansible_system == "FreeBSD"
 
+        - name: Including FortiOS configuration tasks...
+          include_tasks: fortios.yml
+          when: ansible_network_os == 'fortinet.fortios.fortios'
     - name: Including MacOS configuration tasks...
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"
