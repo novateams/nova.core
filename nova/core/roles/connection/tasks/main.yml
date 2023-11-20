@@ -77,9 +77,13 @@
       vyos.vyos.vyos_facts:
       when: ansible_network_os == 'vyos.vyos.vyos'
 
-    - name: Gather Cisco IOS facts...
+    - name: Gathering Cisco IOS facts...
       cisco.ios.ios_facts:
       when: ansible_network_os == 'cisco.ios.ios'
+
+    - name: Gathering facts for FortiOS...
+      fortinet.fortios.fortios_configuration_fact:
+      when: ansible_network_os == 'fortinet.fortios.fortios'
 # # Useful when debugging facts gathered from different operating systems
 # - name: Saving ansible_facts to file...
 #   ansible.builtin.copy:
@@ -87,4 +91,3 @@
 #     dest: "{{ inventory_hostname }}.yaml"
 #   delegate_to: localhost
 #   become: false
-
