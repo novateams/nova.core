@@ -1,0 +1,4 @@
+# This file was created by Ansible {{ ansible_role_name }} roles
+::1                     {{ fqdn }} {{ hostname }} localhost
+127.0.0.1               {{ fqdn }} {{ hostname }} localhost
+
