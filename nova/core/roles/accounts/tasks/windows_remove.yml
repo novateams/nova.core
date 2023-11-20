@@ -1,0 +1,61 @@
+---
+- name: Listing user accounts created with {{ ansible_role_name }}...
+  ansible.windows.win_shell: Get-ChildItem -Path C:\Users -Directory | Where-Object { Test-Path (Join-Path $_.FullName ".created") } | Select-Object -ExpandProperty Name
+  register: user_profiles
+
+- name: Getting and removing stale local accounts...
+  when:
+    - ansible_facts.windows_domain_role != "Primary domain controller"
+    - ansible_facts.windows_domain_role != "Backup domain controller"
+  block:
+    - name: Getting local users not defined in local_accounts_list...
+      ansible.builtin.set_fact:
+        local_users_to_remove: "{{ user_profiles.stdout_lines | difference(local_accounts_list | map(attribute='username')) }}"
+
+    - name: Rebooting to clear any open sessions...
+      ansible.windows.win_reboot:
+      when: local_users_to_remove != []
+
+    - name: Removing following local accounts...
+      ansible.windows.win_user:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ local_users_to_remove }}"
+
+    - name: Removing following user profiles...
+      ansible.windows.win_file:
+        path: C:\Users\{{ item }}
+        state: absent
+      loop: "{{ local_users_to_remove }}"
+
+- name: Getting and removing stale Domain Admin accounts...
+  when: ansible_facts.windows_domain_role in ["Primary domain controller", "Backup domain controller"]
+  block:
+    - name: Listing and removing stale accounts from AD...
+      when: ansible_facts.windows_domain_role == "Primary domain controller"
+      block:
+        - name: Getting domain users not defined in admin_accounts...
+          ansible.builtin.set_fact:
+            domain_users_to_remove: "{{ user_profiles.stdout_lines | difference(admin_accounts | map(attribute='username')) }}"
+
+        - name: Reboot and availability check...
+          when: domain_users_to_remove != []
+          block:
+            - name: Rebooting to close any open sessions...
+              ansible.windows.win_reboot:
+
+            - name: DC post-reboot availability check...
+              ansible.builtin.include_role:
+                name: nova.core.win_dc_post_reboot_check
+
+        - name: Removing following domain accounts...
+          microsoft.ad.user:
+            name: "{{ item }}"
+            state: absent
+          loop: "{{ domain_users_to_remove }}"
+
+    - name: Removing following user profiles...
+      ansible.windows.win_file:
+        path: C:\Users\{{ item }}
+        state: absent
+      loop: "{{ domain_users_to_remove }}"

@@ -12,16 +12,16 @@
     name: "{{ item.username }}"
     password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
     password_never_expires: true
+
     state: present
     groups_action: add
-    groups: "{{ item.groups | default(windows_admin_groups if item.username in admins_list else omit) }}"
-  loop: "{{ accounts }}"
+    groups: "{{ item.groups | default(windows_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"
+  loop: "{{ local_accounts_list }}"
   loop_control:
     label: "{{ item.username }}"
   when:
     - ansible_facts.windows_domain_role != "Primary domain controller"
     - ansible_facts.windows_domain_role != "Backup domain controller"
-    - item.username not in domain_users_list
 
 - name: Checking and creating domain accounts...
   when: ansible_facts.windows_domain_role == "Primary domain controller"
@@ -44,9 +44,9 @@
         state: present
         path: "{{ item.ou | default(omit) }}"
         groups:
-          add: "{{ item.groups | default(windows_domain_admin_groups if item.username in admins_list else omit) }}"
+          add: "{{ item.groups | default(windows_domain_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"
       register: win_domain_user
-      loop: "{{ accounts }}"
+      loop: "{{ domain_accounts_list }}"
       loop_control:
         label: "{{ item.username }}"
 
@@ -58,7 +58,20 @@
   loop: "{{ accounts }}"
   loop_control:
     label: "{{ item.username }}"
-  when: item.username not in domain_users_list # This to avoid creating profiles for domain users on DCs
+  when: item.username not in domain_user_accounts | map(attribute='username') # This to avoid configuring domain users on DCs
+
+- name: Adding account creation source flag for following admin accounts...
+  community.windows.win_lineinfile:
+    path: C:\Users\{{ item.username }}\.created
+    line: This account was created with {{ ansible_role_name }} role
+    state: present
+    create: true
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.username not in domain_user_accounts | map(attribute='username') # This to avoid removing domain users on DCs
+    - item.username != admin_account # Cannot remove admin (usually Administrator) account
 
 - name: Creating .ssh directories for...
   ansible.windows.win_file:
@@ -92,7 +105,9 @@
   loop: "{{ admin_accounts }}"
   loop_control:
     label: "{{ item.username }}"
-  when: item.ssh_key is defined
+  when:
+    - item.username == ansible_deployer_username # Because C:\ProgramData\ssh\administrators_authorized_keys supports only one key
+    - item.ssh_key is defined
 
 - name: Setting correct administrators_authorized_keys permissions...
   ansible.windows.win_shell: icacls.exe C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
