@@ -1,4 +1,21 @@
 ---
+# Universal
+- name: Updating SSHD MaxAuthTries for Cloud {{ inventory_hostname }}...
+  when: infra_env in ["aws", "linode", "azure"]
+  block:
+    - name: Setting SSHD MaxAuthTries to 20...
+      ansible.builtin.replace:
+        dest: /etc/ssh/sshd_config
+        regexp: .*MaxAuthTries.*
+        replace: MaxAuthTries 20
+      register: maxauthtries
+
+    - name: Restarting SSHD...
+      ansible.builtin.systemd:
+        name: sshd
+        state: restarted
+      when: maxauthtries.changed
+
 # AWS
 - name: Cleaning up AWS configurations for {{ inventory_hostname }}...
   when: infra_env == "aws"
@@ -45,7 +62,7 @@
     name: kali-desktop-xfce
     state: present
     update_cache: true
-  when: "'os_kali' in group_names"
+  when: ansible_distribution == "Kali"
 
 - name: Incluing XRDP roles...
   ansible.builtin.include_role:
@@ -62,4 +79,4 @@
     update_cache: true
   when:
     - use_ssh_agent_for_sudo
-    - ansible_facts.os_family == "Debian"
+    - ansible_os_family == "Debian"
