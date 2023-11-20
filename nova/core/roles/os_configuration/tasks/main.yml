@@ -4,56 +4,63 @@
     - customization_context == "host" # Alternative is container and then it doesn't need os_configuration
     - infra_env != "my_host" # my_host is computer where you run the play from
   block:
-    - name: Including Windows configuration tasks...
-      ansible.builtin.include_tasks: windows.yml
-      when: "'os_windows' in group_names"
-
-    - name: Including Windows in Azure configuration tasks...
-      ansible.builtin.include_tasks: windows_azure.yml
+    - name: Configuring non-Netowork OS ...
       when:
-        - "'os_windows' in group_names"
-        - infra_env == 'azure'
+        - ansible_network_os is not defined
+        - "'os_macos' not in group_names"
+      block:
+        - name: Including Windows configuration tasks...
+          ansible.builtin.include_tasks: windows.yml
+          when: ansible_system == "Win32NT"
 
-    - name: Including Windows on vSphere configuration tasks...
-      ansible.builtin.include_tasks: windows_vsphere.yml
-      when:
-        - "'os_windows' in group_names"
-        - infra_env == 'vsphere' or infra_env == 'vmware_workstation'
+        - name: Including Windows on vSphere configuration tasks...
+          ansible.builtin.include_tasks: windows_vsphere.yml
+          when:
+            - ansible_system == "Win32NT"
+            - infra_env in ["vsphere" or "vmware_workstation"]
 
-    - name: Including Linux configuration tasks...
-      ansible.builtin.include_tasks: linux.yml
-      when: "'os_linux' in group_names"
+        - name: Including Linux configuration tasks...
+          ansible.builtin.include_tasks: linux.yml
+          when: ansible_system == "Linux"
+
+        - name: Including Linux in Cloud configuration tasks...
+          ansible.builtin.include_tasks: linux_cloud.yml
+          when:
+            - ansible_system == "Linux"
+            - infra_env in ["aws", "linode", "azure"]
+
+        - name: Including Windows in Cloud configuration tasks...
+          ansible.builtin.include_tasks: windows_cloud.yml
+          when:
+            - ansible_system == "Win32NT"
+            - infra_env in ["aws", "linode", "azure"]
 
         - name: Including FreeBSD configuration tasks...
           ansible.builtin.include_tasks: freebsd.yml
           when: ansible_system == "FreeBSD"
 
+    - name: Configuring Network OS...
+      when: ansible_network_os is defined
+      block:
+        - name: Including RouterOS configuration tasks...
+          include_tasks: routeros.yml
+          when: ansible_network_os == 'community.routeros.routeros'
+
+        - name: Including VyOS configuration tasks...
+          ansible.builtin.include_tasks: vyos.yml
+          when: ansible_network_os == 'vyos.vyos.vyos'
+
+        - name: Including IOS configuration tasks...
+          include_tasks: ios.yml
+          when: ansible_network_os == 'cisco.ios.ios'
+
         - name: Including FortiOS configuration tasks...
           include_tasks: fortios.yml
           when: ansible_network_os == 'fortinet.fortios.fortios'
+
     - name: Including MacOS configuration tasks...
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"
-
-    - name: Including FreeBSD configuration tasks...
-      ansible.builtin.include_tasks: freebsd.yml
-      when: "'os_freebsd' in group_names"
-
-    - name: Including RouterOS configuration tasks...
-      include_tasks: routeros.yml
-      when: "'os_routeros' in group_names"
-
-    - name: Including VyOS configuration tasks...
-      ansible.builtin.include_tasks: vyos.yml
-      when: "'os_vyos' in group_names"
-
-    - name: Including IOS configuration tasks...
-      include_tasks: ios.yml
-      when: "'os_ciscoios' in group_names"
-
-    - name: Including FortiOS configuration tasks...
-      include_tasks: fortios.yml
-      when: "'os_fortios' in group_names"
 
     # Since there can be so many different partitioning methods and file systems we'll leave to the user to create a role that matches their templates
     # When `os_configuration_expand_os_disk_role_name` variable is defined then the role will be included here
