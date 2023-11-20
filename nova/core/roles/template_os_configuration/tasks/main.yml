@@ -8,13 +8,17 @@
     name: nova.core.updates
   when: update_system
 
-- name: Configure Windows machine
-  ansible.builtin.include_tasks: windows.yml
-  when: "'os_windows' in group_names"
+- name: Configuring non Network OS...
+  when:
+    - ansible_network_os is not defined
+  block:
+    - name: Configure Windows machine
+      ansible.builtin.include_tasks: windows.yml
+      when: ansible_system == "Win32NT"
 
-- name: Including Unix configuration tasks...
-  ansible.builtin.include_tasks: unix.yml
-  when: ("os_linux" in group_names) or ("os_bsd" in group_names)
+    - name: Including Unix configuration tasks...
+      ansible.builtin.include_tasks: unix.yml
+      when: ansible_system in ["Linux", "FreeBSD"]
 
 - name: Configure RouterOS machine
   ansible.builtin.include_tasks: routeros.yml
