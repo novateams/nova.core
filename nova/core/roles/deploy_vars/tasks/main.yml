@@ -18,11 +18,6 @@
   loop: "{{ deploy_vars_post_roles }}"
   when: deploy_vars_post_roles != []
 
-- name: Setting correct admin_account for AWS template...
-  ansible.builtin.set_fact:
-    admin_account: "{{ aws_template_username }}"
-  when: infra_env == "aws"
-
 - name: Generating Hashicorp Vault token for {{ vault_address }}...
   community.hashi_vault.vault_login:
     url: "{{ vault_address }}"
