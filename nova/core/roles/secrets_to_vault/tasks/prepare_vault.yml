@@ -13,6 +13,7 @@
         validate_certs: "{{ validate_vault_certs }}"
         body_format: json
       register: auth
+      when: vault_access_token is not defined # This usually comes from nova.core.deploy_vars role
 
     - name: Checking if secrets path already exists...
       ansible.builtin.uri:
@@ -20,7 +21,7 @@
         method: GET
         headers:
           X-Vault-Request: true
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+          X-Vault-Token: "{{ vault_access_token | default(auth.json.auth.client_token) }}"
         body_format: json
         status_code:
           - 200
@@ -39,7 +40,7 @@
         method: POST
         headers:
           X-Vault-Request: true
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+          X-Vault-Token: "{{ vault_access_token | default(auth.json.auth.client_token) }}"
         body:
           data: {}
         validate_certs: "{{ validate_vault_certs }}"
@@ -51,7 +52,7 @@
         method: GET
         headers:
           X-Vault-Request: true
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+          X-Vault-Token: "{{ vault_access_token | default(auth.json.auth.client_token) }}"
         body_format: json
         validate_certs: "{{ validate_vault_certs }}"
       register: secrets_path_present
@@ -65,7 +66,7 @@
         method: POST
         headers:
           X-Vault-Request: true
-          X-Vault-Token: "{{ auth.json.auth.client_token }}"
+          X-Vault-Token: "{{ vault_access_token | default(auth.json.auth.client_token) }}"
         body:
           max_versions: 100 # This sets the vault KV store secrets history to 100. Since using loops increments history quickly.
         body_format: json
@@ -78,7 +79,7 @@
     method: GET
     headers:
       X-Vault-Request: true
-      X-Vault-Token: "{{ auth.json.auth.client_token }}"
+      X-Vault-Token: "{{ vault_access_token | default(auth.json.auth.client_token) }}"
     body_format: json
     validate_certs: "{{ validate_vault_certs }}"
   register: existing_secrets
