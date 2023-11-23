@@ -1,56 +1,40 @@
-name: Updating collection version, git tag and release
+name: Creating a new release and changelog
 
 on:
   push:
     branches:
       - main
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
-  version_collection_and_tag:
+  version_changelog_relase:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.WORKFLOWS_PAT }}
 
-      - name: Configuring collection & tag versions
+      - name: Getting current version and generating changelog
         run: |
-          target_file="nova/core/galaxy.yml"
+          TARGET_FILE="nova/core/galaxy.yml"
+          CURRENT_VERSION=$(cat nova/core/galaxy.yml | grep version: | cut -d " " -f 2)
 
-          # Configuring git
-          git config --global user.name "Nova CI"
-          git config --global user.email "nova@example.com"
+          echo $CURRENT_VERSION
+          echo "LATEST_TAG=$CURRENT_VERSION" >> $GITHUB_ENV
 
-          # Updating the version in the galaxy.yml file
-          version_row_old=$(grep "version: " $target_file)
-          version=$(echo $version_row_old | cut -d: -f2)
-          major=$(echo $version | cut -d. -f1)
-          minor=$(echo $version | cut -d. -f2)
-          patch=$(echo $version | cut -d. -f3)
-          patch_new=$(( $patch+1 ))
-          version_row_new="version: $major.$minor.$patch_new"
-          sed -i "s/$version_row_old/$version_row_new/" $target_file
-
-          TAG_NAME="v$major.$minor.$patch_new"
-          echo "LATEST_TAG=$TAG_NAME" >> $GITHUB_ENV
-
-          # Adding the changed file to git
-          git add $target_file
-
-          # Committing the change
-          git commit -m "Set nova.core collection version to $major.$minor.$patch_new"
-          git push
-
-          # Tagging and pushing the change
-          git tag $TAG_NAME
-          git push origin $TAG_NAME
+          # Getting upstream tags
+          git fetch --tags https://github.com/novateams/nova.core
+          git push --tags
 
           # Creating temp changelog file
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^^)..HEAD > CHANGELOG.md
 
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ env.LATEST_TAG }}
+          tag: "v${{ env.LATEST_TAG }}"
           bodyFile: CHANGELOG.md
