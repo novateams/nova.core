@@ -39,9 +39,6 @@ jobs:
           version_row_new="version: $major.$minor.$patch_new"
           sed -i "s/$version_row_old/$version_row_new/" $target_file
 
-          TAG_NAME="v$major.$minor.$patch_new"
-          echo "LATEST_TAG=$TAG_NAME" >> $GITHUB_ENV
-
           # Adding the changed file to git
           git add $target_file
 
