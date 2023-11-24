@@ -1,4 +1,4 @@
-name: Creating a new release and changelog
+name: Releasing a new version...
 
 on:
   push:
@@ -9,32 +9,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  version_changelog_relase:
+  version_collection_and_tag:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Cloning repo...
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.WORKFLOWS_PAT }}
 
-      - name: Getting current version and generating changelog
+      - name: Generating changelog contents...
         run: |
           TARGET_FILE="nova/core/galaxy.yml"
           CURRENT_VERSION=$(cat nova/core/galaxy.yml | grep version: | cut -d " " -f 2)
 
-          echo $CURRENT_VERSION
           echo "LATEST_TAG=$CURRENT_VERSION" >> $GITHUB_ENV
-
-          # Getting upstream tags
-          git fetch --tags https://github.com/novateams/nova.core
-          git push --tags
 
           # Creating temp changelog file
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^^)..HEAD > CHANGELOG.md
 
-      - uses: ncipollo/release-action@v1
+      - name: Generating a new release...
+        uses: ncipollo/release-action@v1
         with:
           tag: "v${{ env.LATEST_TAG }}"
           bodyFile: CHANGELOG.md
