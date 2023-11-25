@@ -31,13 +31,13 @@
 - name: Getting and removing stale Domain Admin accounts...
   when: ansible_facts.windows_domain_role in ["Primary domain controller", "Backup domain controller"]
   block:
+    - name: Getting domain users not defined in admin_accounts...
+      ansible.builtin.set_fact:
+        domain_users_to_remove: "{{ user_profiles.stdout_lines | difference(admin_accounts | map(attribute='username')) }}"
+
     - name: Listing and removing stale accounts from AD...
       when: ansible_facts.windows_domain_role == "Primary domain controller"
       block:
-        - name: Getting domain users not defined in admin_accounts...
-          ansible.builtin.set_fact:
-            domain_users_to_remove: "{{ user_profiles.stdout_lines | difference(admin_accounts | map(attribute='username')) }}"
-
         - name: Reboot and availability check...
           when: domain_users_to_remove != []
           block:
