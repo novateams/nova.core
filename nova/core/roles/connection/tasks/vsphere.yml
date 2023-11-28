@@ -30,10 +30,9 @@
 
     - name: Setting {{ detect_dhcp.instance.guest.ipAddress }} IP for connection from DHCP...
       ansible.builtin.set_fact:
-        ansible_host: "{{ detect_dhcp.instance.guest.ipAddress }}"
+        connection_address: "{{ detect_dhcp.instance.guest.ipAddress }}"
 
 - name: Setting address for connection...
-  when: not connection_mode_dhcp
   block:
     - name: Setting {{ connection_ip }} IP for connection from local inventory... # Calculated connection address when using local inventory
       ansible.builtin.set_fact:
