@@ -30,19 +30,14 @@
 
     - name: Setting {{ detect_dhcp.instance.guest.ipAddress }} IP for connection from DHCP...
       ansible.builtin.set_fact:
-        connection_address: "{{ detect_dhcp.instance.guest.ipAddress }}"
+        ansible_host: "{{ detect_dhcp.instance.guest.ipAddress }}"
 
 - name: Setting address for connection...
+  when: not connection_mode_dhcp
   block:
-    - name: Setting {{ connection_ip }} IP for connection from local inventory... # Calculated connection address when using local inventory
-      ansible.builtin.set_fact:
-        ansible_host: "{{ connection_ip }}"
-      when: connection_address is not defined
-
     - name: Setting {{ connection_address }} IP for connection from Providentia... # This address comes from Providentia API
       ansible.builtin.set_fact:
         ansible_host: "{{ connection_address }}"
-      when: connection_address is defined
 
     - name: Setting custom {{ custom_connection_ip }} IP for connection... # This is for edge cases when connection IP must be overridden manually
       ansible.builtin.set_fact:

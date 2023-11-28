@@ -5,5 +5,4 @@
       FQDN - {{ fqdn }}
       IPv4 - {{ primary_ipv4 }}
       IPv6 - {{ primary_ipv6 }}
-      Connection - {{ connection_address | default(connection_ip | ansible.utils.ipaddr('address')) }}
-  when: connection_ip != False
+      Connection - {{ ansible_host if ansible_host is ansible.utils.ip else connection_address }}

@@ -38,8 +38,8 @@
             * {{ inventory_hostname }} machine interface has the connection flag set to true
       when: primary_network == []
 
-    - name: Checking that nothing is responding on {{ connection_address | default(connection_ip) }}...
-      local_action: shell ping -q -c 2 -W 2 {{ connection_address | default(connection_ip) }}
+    - name: Checking that nothing is responding on {{ connection_address }}...
+      local_action: shell ping -q -c 2 -W 2 {{ connection_address }}
       register: res
       failed_when: not (('0 received' in res.stdout) or ('0 packets received' in res.stdout))
       changed_when: false
