@@ -83,6 +83,8 @@
 
     - name: Gathering facts for FortiOS...
       fortinet.fortios.fortios_configuration_fact:
+        access_token: "{{ fortios_access_token }}"
+        selector: system_global
       when: ansible_network_os == 'fortinet.fortios.fortios'
 # # Useful when debugging facts gathered from different operating systems
 # - name: Saving ansible_facts to file...
