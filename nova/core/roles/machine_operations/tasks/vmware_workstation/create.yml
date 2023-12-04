@@ -93,6 +93,19 @@
             - regex: vhv.enable.*
               line: vhv.enable = "TRUE"
 
+        - name: Setting compatible Darwin OS type...
+          ansible.builtin.lineinfile:
+            path: "{{ local_vmx_path }}"
+            regex: "{{ item.regex }}"
+            line: "{{ item.line }}"
+            state: present
+          loop_control:
+            label: "{{ item.line }}"
+          loop:
+            - regex: guestos.*
+              line: guestos = "darwin20-64"
+          when: ansible_system == "Darwin"
+
         - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
           ansible.builtin.lineinfile:
             path: "{{ local_vmx_path }}"
@@ -143,19 +156,6 @@
             path: "{{ host_shared_folder_path }}"
             state: directory
             recurse: true
-
-    - name: Fixing Darwin compatibility...
-      ansible.builtin.lineinfile:
-        path: "{{ local_vmx_path }}"
-        regex: "{{ item.regex }}"
-        line: "{{ item.line }}"
-        state: present
-      loop_control:
-        label: "{{ item.line }}"
-      loop:
-        - regex: guestos.*
-          line: guestos = "darwin20-64"
-      when: "'os_macos' in group_names"
 
     - name: Checking if VMware Workstation is running...
       ansible.builtin.shell: |

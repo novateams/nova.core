@@ -1,6 +1,6 @@
 ---
 infra_env: {}
-macos_no_python: true # By default MacOS does not have Python installed so it cannot gather facts
+
 sudo_requires_password: true # If this is true then either defined_become_password needs to be defined or ansible_deployer_username needs to be able to use it's ansible_deployer_password for sudo
 connection_no_password: false # Set this to true if you are using SSH keys and do not want to use ansible_deployer_password for connection (example Ciso IOS)
 
@@ -9,3 +9,6 @@ primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | fi
 connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
 connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
 connection_address: "{{ 'DHCP' if connection_mode_dhcp else primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | ansible.utils.ipaddr('address') }}"
+
+# By default MacOS does not have Python installed so it cannot gather facts
+macos_has_python: false
