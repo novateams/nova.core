@@ -1,0 +1,69 @@
+---
+- name: Stat for /tmp/expo-{{ fqdn }} ...
+  ansible.builtin.stat:
+    path: /tmp/expo-{{ fqdn }}
+  delegate_to: localhost
+  become: false
+  register: app_folder_existence
+
+- name: Localhost delete /tmp/expo-{{ fqdn }} ...
+  ansible.builtin.file:
+    state: absent
+    path: /tmp/expo-{{ fqdn }}
+  delegate_to: localhost
+  become: false
+  when: app_folder_existence.stat.exists
+
+- name: Clone git repository to localhost /tmp/expo-{{ fqdn }} ...
+  ansible.builtin.git:
+    repo: "{{ expo_git_repo }}"
+    force: true
+    accept_hostkey: true
+    clone: true
+    dest: /tmp/expo-{{ fqdn }}
+    recursive: true
+    depth: 1
+  delegate_to: localhost
+  become: false
+
+- name: Create folder /srv/expo ...
+  ansible.builtin.file:
+    state: directory
+    path: /srv/expo
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Sync files to target ...
+  ansible.posix.synchronize:
+    src: /tmp/expo-{{ fqdn }}/
+    dest: /srv/expo
+    recursive: true
+    delete: true
+    rsync_opts:
+      - --exclude=.git
+      - --exclude=.gitmodules
+      - --exclude=.gitlab-ci.yml
+      - --exclude=.idea
+      - --exclude=.vscode
+      - --exclude=*/override.*.env
+      - --exclude=personal-functions.makerc
+      - --exclude=data
+      - --exclude=logs
+      - --exclude=expo-mongo/sync/
+      - --exclude=/test*
+    use_ssh_args: true
+  become: false
+
+- name: Localhost delete /tmp/expo-{{ fqdn }} ...
+  ansible.builtin.file:
+    state: absent
+    path: /tmp/expo-{{ fqdn }}
+  delegate_to: localhost
+  become: false
+
+- name: Template the configuration files ...
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: /srv/expo/env/{{ item | basename }}
+  with_fileglob:
+    - templates/srv/expo/env/*.env

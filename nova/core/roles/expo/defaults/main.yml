@@ -1,0 +1,103 @@
+---
+### general ###
+expo_git_repo:
+expo_fqdn: expo.localhost
+expo_configuration_folder: XS/2023/XS23TR
+expo_project_mode: production
+expo_readonly_mode: false
+expo_profiles: production ### "archive,docs,availability,consumer"
+expo_debug_mode: true
+expo_node_tls_check: 0
+
+### MKDOCS ###
+expo_mkdocs_fqdn: expo-mkdocs.localhost
+expo_mkdocs_build_content: all # guides or all
+
+### EXTERNAL ###
+expo_providentia_token:
+expo_gitlab_token:
+
+### EVIDENCE ###
+expo_evidence_public: ""
+expo_evidence_private: ""
+
+### BACKEND ###
+expo_backend_service_replicas: 6
+expo_session_secret: ""
+
+### BACKEND WORKER ###
+expo_backend_worker_service_replicas: 6
+
+### FRONTEND ###
+expo_frontend_service_replicas: 3
+
+### KEYCLOAK ###
+expo_keycloak_legacy: false
+expo_keycloak_fqdn: keycloak.localhost
+expo_keycloak_realm: EXPO
+expo_keycloak_client_secret: ""
+expo_keycloak_client_scope: resources
+expo_keycloak_resource_prefix: Re_EXPO_
+expo_keycloak_role_prefix: Ro_EXPO_
+expo_keycloak_client_id: expo
+expo_keycloak_local_admin_username: admin
+expo_keycloak_local_admin_password: admin-pass
+expo_keycloak_log_level: INFO
+
+### TRAEFIK ###
+expo_traefik_fqdn: expo-traefik.localhost
+expo_traefik_log_level: DEBUG
+expo_traefik_certificate_expo_fullchain_path: ./data/expo.localhost.crt
+expo_traefik_certificate_expo_key_path: ./data/expo.localhost.key
+expo_traefik_certificate_mkdocs_fullchain_path: ./data/mkdocs.localhost.crt
+expo_traefik_certificate_mkdocs_key_path: ./data/mkdocs.localhost.key
+expo_traefik_certificate_keycloak_fullchain_path: ./data/keycloak.localhost.crt
+expo_traefik_certificate_keycloak_key_path: ./data/keycloak.localhost.key
+expo_traefik_certificate_kafdrop_fullchain_path: ./data/kafdrop.localhost.crt
+expo_traefik_certificate_kafdrop_key_path: ./data/kafdrop.localhost.key
+expo_traefik_certificate_traefik_fullchain_path: ./data/traefik.localhost.crt
+expo_traefik_certificate_traefik_key_path: ./data/traefik.localhost.key
+
+### MONGO ###
+expo_mongo_pool_size: 500
+expo_mongo_query_profile: 1
+expo_mongo_query_slowms: 50
+expo_mongo_query_sample: 1.0
+expo_mongo_root_username: root
+expo_mongo_root_password: ""
+expo_mongo_dababase_name: expo
+expo_mongo_database_username: expo
+expo_mongo_database_password: ""
+
+### GUACAMOLE ###
+expo_guacamole_enabled: false
+expo_guacamole_api_username: guacadmin
+expo_guacamole_api_password: ""
+expo_guacamole_gt_for_gt_password: ""
+expo_guacamole_gt_for_bt_password: ""
+
+### DIRTY SOCKS ###
+expo_dirty_socks_enabled: false
+
+### HALL OF FAME ###
+expo_hall_of_fame_enabled: false
+
+### KAFKA ###
+expo_kafdrop_fqdn: expo-kafdrop.localhost
+expo_kafka_enabled: false
+expo_kafka_external: false
+expo_kafka_username: expo
+expo_kafka_password: ""
+
+### SENTRY ###
+expo_sentry_frontend_enabled: false
+expo_sentry_frontend_dsn:
+expo_sentry_frontend_tracing: 1
+expo_sentry_backend_enabled: false
+expo_sentry_backend_dsn:
+expo_sentry_backend_tracing: 1
+
+### NETWORK ###
+expo_network_name: expo-network
+expo_network_ipv4_subnet: 172.19.0.0/16
+expo_network_ipv6_subnet: fd71::/64
