@@ -1,0 +1,20 @@
+---
+- name: Sync EXPO code to target ...
+  ansible.builtin.include_tasks: sync-code.yml
+
+- name: Prepare app environment ...
+  community.general.make:
+    chdir: /srv/expo/
+    target: prepare
+
+- name: Build new app containers, this takes around 5 minutes  ...
+  community.general.make:
+    chdir: /srv/expo/
+    target: build
+
+- name: Run app with profiles {{ expo_profiles }} ...
+  community.general.make:
+    chdir: /srv/expo/
+    target: start-with-profiles-from-environment
+  environment:
+    COMPOSE_PROFILES: "{{ expo_profiles }}"

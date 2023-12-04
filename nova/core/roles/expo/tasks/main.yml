@@ -1,0 +1,13 @@
+---
+- name: Check if expo already present ...
+  ansible.builtin.stat:
+    path: /srv/expo
+  register: expo_folder_existence
+
+### install dependencies only if expo folder does not exist
+- name: Install dependencies ...
+  ansible.builtin.include_tasks: dependencies.yml
+  when: not expo_folder_existence.stat.exists
+
+- name: Deploy EXPO app ...
+  ansible.builtin.include_tasks: deploy-expo.yml

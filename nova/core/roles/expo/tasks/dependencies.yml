@@ -1,0 +1,32 @@
+---
+- name: Ensure we have required packages ...
+  ansible.builtin.apt:
+    name:
+      - make
+      - curl
+      - git
+      - jq
+    state: latest
+
+- name: Performance tuning for host ...
+  ansible.builtin.template:
+    src: etc/sysctl.d/11-expo.conf
+    dest: /etc/sysctl.d/11-expo.conf
+  register: expo_host_config
+
+- name: Reload expo sysctl values if conf file changed, ignore errors as some paths change over time  ...
+  ansible.builtin.command: sysctl -p /etc/sysctl.d/11-expo.conf
+  ignore_errors: true
+  when: expo_host_config.changed
+
+- name: Disable all kernel mitigations for more raw cpu ...
+  ansible.builtin.lineinfile:
+    dest: /etc/default/grub
+    regexp: ^GRUB_CMDLINE_LINUX_DEFAULT.*
+    line: GRUB_CMDLINE_LINUX_DEFAULT="autoinstall quiet splash mitigations=off"
+    state: present
+  register: grub_config
+
+- name: Update-grub if grub config changed ...
+  ansible.builtin.command: update-grub
+  when: grub_config.changed
