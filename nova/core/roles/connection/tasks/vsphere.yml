@@ -35,7 +35,7 @@
 - name: Setting address for connection...
   when: not connection_mode_dhcp
   block:
-    - name: Setting {{ connection_address }} IP for connection from Providentia... # This address comes from Providentia API
+    - name: Setting {{ connection_address }} IP for connection... # This address usually comes from Providentia API
       ansible.builtin.set_fact:
         ansible_host: "{{ connection_address }}"
 
@@ -44,7 +44,7 @@
         ansible_host: "{{ custom_connection_ip }}"
       when: custom_connection_ip is defined
 
-- name: Setting correct connection plugin and credentials for {{ inventory_hostname }}...
+- name: Setting correct connection plugin and {{ template_username if fresh_deploy else ansible_deployer_username }} user for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
