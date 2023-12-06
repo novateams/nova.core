@@ -11,6 +11,11 @@ default_interface:
     device_type: "{{ vmware_nic_type }}"
 extra_network_interfaces: []
 
+# List of Ansible Network OSes that require shutdown of the VM before adding a new NIC
+# The OS needs to have running VMTools
+machine_operations_extra_nic_shutdown:
+  - pfsense
+
 # Hardware
 hardware_cpu: # Nr of CPUs to add to machine if left empty it will use the same as the template
 hardware_ram: # Nr of GB of RAM to add to machine if left empty it will use the same as the template

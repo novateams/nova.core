@@ -122,7 +122,7 @@
       ansible.builtin.setup:
         filter: "*_time"
 
-    - name: Cloning VM...
+    - name: Cloning {{ custom_vm_name | default(vm_name) }} VM...
       community.vmware.vmware_guest:
         wait_for_ip_address: "{{ primary_network.ipv4 is not defined }}"
         datacenter: "{{ datacenter }}"
@@ -163,6 +163,15 @@
         annotation: "{{ template_description if template else vm_description }}"
         vapp_properties: "{{ vapp_options }}"
       register: vmware_guest
+
+    - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        shutdown: true
+      when:
+        - ansible_network_os is defined
+        - ansible_network_os in machine_operations_extra_nic_shutdown
 
     - name: Increasing video memory
       community.vmware.vmware_guest_video:
