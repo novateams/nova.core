@@ -1,0 +1,87 @@
+---
+{# https://forum.netgate.com/topic/85739/change-order-of-interfaces-on-vm/13 #}
+{# https://forum.netgate.com/topic/159909/adding-an-interface-to-a-pfsense-esx-vm-causes-them-to-be-re-ordered-on-reboot #}
+
+{% if interfaces | length == 1 %}
+  {% set nic_map = ["vmx0"] %}
+{% elif interfaces | length == 2 %}
+  {% set nic_map = ["vmx0","vmx1"] %}
+{% elif interfaces | length == 3 %}
+  {% set nic_map = ["vmx0","vmx1","vmx2"] %}
+{% elif interfaces | length == 4 %}
+  {% set nic_map = ["vmx1","vmx2","vmx3","vmx0"] %}
+{% elif interfaces | length == 5 %}
+  {% set nic_map = ["vmx1","vmx3","vmx4","vmx0","vmx2"] %}
+{% elif interfaces | length == 6 %}
+  {% set nic_map = ["vmx1","vmx3","vmx5","vmx0","vmx2","vmx4"] %}
+{% elif interfaces | length == 7 %}
+  {% set nic_map = ["vmx1","vmx3","vmx5","vmx0","vmx2","vmx4","vmx6"] %}
+{% elif interfaces | length == 8 %}
+  {% set nic_map = ["vmx2","vmx4","vmx6","vmx0","vmx3","vmx5","vmx7","vmx1"] %}
+{% elif interfaces | length == 9 %}
+  {% set nic_map = ["vmx2","vmx5","vmx7","vmx0","vmx3","vmx6","vmx8","vmx1","vmx4"] %}
+{% elif interfaces | length == 10 %}
+  {% set nic_map = ["vmx2","vmx5","vmx8","vmx0","vmx3","vmx6","vmx9","vmx1","vmx4","vmx7"] %}
+{% endif %}
+
+pfsense_interfaces:
+{% for interface in interfaces %}
+    {% if interface.egress %}
+    - WAN:
+    {% elif interface.connection %}
+    - LAN:
+    {% else %}
+    - {{ interface.network_id | replace("-", "_") }}{{ loop.index }}:
+    {% endif %}
+        _:
+          - if: {{ nic_map[loop.index - 1] | replace("-", "_") }}
+          - enable:
+          - descr: {{ interface.network_id | replace("-", "_") }}
+          {% for ip_address in interface.addresses %}
+          {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("default.*")) %}
+          - ipaddr: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+          - subnet: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+          {% endif %}
+          {% if (ip_address.mode == "ipv4_static") and (ip_address.gateway != none) %}
+          - gateway: WANGWv4
+          {% endif %}
+          {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("default.*")) %}
+          - ipaddrv6: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+          - subnetv6: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+          {% endif %}
+          {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway != none) %}
+          - gatewayv6: WANGWv6
+          {% endif %}
+          {% endfor %}
+{% endfor %}
+
+pfsense_gateways:
+{% for interface in interfaces %}
+{% if interface.egress %}
+{% for ip_address in interface.addresses %}
+{% if ip_address.gateway != none %}
+    {% if ip_address.mode == "ipv4_static" %}
+    - gateway_item:
+        _:
+          - interface: WAN
+          - gateway: "{{ ip_address.gateway }}"
+          - name: WANGWv4
+          - weight:
+          - ipprotocol: inet
+          - interval:
+          - descr: Egress IPv4 Gateway
+    {% endif %}
+    {% if ip_address.mode == "ipv6_static" %}
+    - gateway_item:
+        _:
+          - interface: WAN
+          - gateway: "{{ ip_address.gateway }}"
+          - name: WANGWv6
+          - weight:
+          - ipprotocol: inet6
+          - descr: Egress IPv6 Gateway
+    {% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}

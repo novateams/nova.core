@@ -40,6 +40,10 @@
           include_tasks: fortios.yml
           when: ansible_network_os == 'fortinet.fortios.fortios'
 
+        - name: Including pfSense configuration tasks...
+          include_tasks: pfsense.yml
+          when: ansible_network_os == 'pfsense'
+
     - name: Including MacOS configuration tasks...
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"
