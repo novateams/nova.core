@@ -45,6 +45,10 @@
           include_tasks: ios.yml
           when: ansible_network_os == 'cisco.ios.ios'
 
+        - name: Configure pfSense accounts...
+          include_tasks: pfsense.yml
+          when: ansible_network_os == 'pfsense'
+
     - name: Configure macOS accounts...
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"

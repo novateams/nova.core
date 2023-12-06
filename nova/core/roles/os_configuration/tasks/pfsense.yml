@@ -1,0 +1,43 @@
+---
+# Configuring pfSense accounts in lochost to avoid installing required Python modules on the remote host
+- name: Downloading config.xml from {{ inventory_hostname }}...
+  ansible.builtin.fetch:
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+    src: /conf/config.xml
+    flat: yes
+
+- name: Configuring OS hostname and domain...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Configuring following values...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        xpath: "{{ item.xpath }}"
+        value: "{{ item.value }}"
+        pretty_print: true
+      loop:
+        - xpath: /pfsense/system/hostname
+          value: "{{ hostname }}"
+        - xpath: /pfsense/system/domain
+          value: "{{ domain }}"
+      loop_control:
+        label: "{{ item.xpath }} > {{ item.value }}"
+
+- name: Uploading config.xml to {{ inventory_hostname }}...
+  ansible.builtin.copy:
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+    dest: /conf/config.xml
+    mode: "0644"
+    owner: root
+    group: wheel
+
+- name: Reloading pfSense configuration for {{ inventory_hostname }}...
+  ansible.builtin.shell: /etc/rc.reload_all
+
+- name: Removing local config.xml file...
+  ansible.builtin.file:
+    path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+    state: absent
+  delegate_to: localhost
+  become: false
