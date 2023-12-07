@@ -88,6 +88,36 @@
           - dnsserver: "{{ item }}"
       loop: "{{ dns_server_combined }}"
 
+    - name: Adding WAN Anti-Lockout Rule for WAN interface...
+      when: interfaces | selectattr('egress', 'equalto', true) | first == interfaces | selectattr('connection', 'equalto', true) | first
+      block:
+        - name: Deleting existing WAN Anti-Lockout Rule...
+          community.general.xml:
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+            xpath: /pfsense/filter/rule[@descr='WAN Anti-Lockout Rule']
+            state: absent
+
+        - name: Adding WAN Anti-Lockout Rule for {{ inventory_hostname }}...
+          community.general.xml:
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+            xpath: /pfsense/filter
+            pretty_print: true
+            add_children:
+              - rule:
+                  _:
+                    - id:
+                    - type: pass
+                    - interface: wan
+                    - ipprotocol: inet46
+                    - statetype: keep state
+                    - source:
+                        _:
+                          - any:
+                    - destination:
+                        _:
+                          - any:
+                    - descr: WAN Anti-Lockout Rule
+
     - name: Getting {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml file info...
       ansible.builtin.stat:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
