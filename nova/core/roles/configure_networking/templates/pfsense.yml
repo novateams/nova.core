@@ -27,9 +27,9 @@
 pfsense_interfaces:
 {% for interface in interfaces %}
     {% if interface.egress %}
-    - WAN:
+    - wan:
     {% elif interface.connection %}
-    - LAN:
+    - lan:
     {% else %}
     - {{ interface.network_id | replace("-", "_") }}{{ loop.index }}:
     {% endif %}
@@ -63,7 +63,7 @@ pfsense_gateways:
     {% if ip_address.mode == "ipv4_static" %}
     - gateway_item:
         _:
-          - interface: WAN
+          - interface: wan
           - gateway: "{{ ip_address.gateway }}"
           - name: WANGWv4
           - weight:
@@ -74,7 +74,7 @@ pfsense_gateways:
     {% if ip_address.mode == "ipv6_static" %}
     - gateway_item:
         _:
-          - interface: WAN
+          - interface: wan
           - gateway: "{{ ip_address.gateway }}"
           - name: WANGWv6
           - weight:
