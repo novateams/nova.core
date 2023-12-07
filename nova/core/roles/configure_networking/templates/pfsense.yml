@@ -52,6 +52,14 @@ pfsense_interfaces:
           {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway != none) %}
           - gatewayv6: WANGWv6
           {% endif %}
+          {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("mgmt.*")) %}
+          - ipaddr: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+          - subnet: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+          {% endif %}
+          {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("mgmt.*")) %}
+          - ipaddrv6: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+          - subnetv6: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+          {% endif %}
           {% endfor %}
 {% endfor %}
 
