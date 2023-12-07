@@ -21,12 +21,13 @@
     - name: Waiting until VMTools are running...
       vmware.vmware_rest.vcenter_vm_tools_info:
         vm: "{{ vmware_guest_info.value[0].vm }}"
-
       register: vm_tools
       until: vm_tools.value.run_state == "RUNNING"
       retries: 18
       delay: 10
-      when: vmware_guest_info.value[0].power_state != "POWERED_OFF"
+      when:
+        - vmware_guest_info.value[0].power_state != "POWERED_OFF"
+        - snapshot_mode != 'revert'
 
 - name: Including powerstate role...
   ansible.builtin.include_role:
