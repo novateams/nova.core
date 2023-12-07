@@ -10,7 +10,6 @@
   become: false
   delegate_to: localhost
   block:
-
     - name: Preparing /conf/config.xml download...
       ansible.builtin.uri:
         url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
@@ -58,13 +57,13 @@
     - name: Templating interfaces config...
       ansible.builtin.template:
         src: pfsense.yml
-        dest: "{{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_interfaces.yml"
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_interfaces.yml
         lstrip_blocks: true
         mode: "0600"
 
     - name: Including interfaces config...
       ansible.builtin.include_vars:
-        file: "{{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_interfaces.yml"
+        file: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_interfaces.yml
 
     - name: Configuring following pfSense interfaces for {{ inventory_hostname }}...
       community.general.xml:
