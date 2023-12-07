@@ -67,12 +67,12 @@ network:
       {% if (interface.egress) and (dns_server_combined != []) %}
       nameservers:
         addresses:
-          {% if (dns_servers != []) and (interface.addresses | map(attribute='pool_id') | regex_search(".*ipv4.*")) %}
+          {% if (dns_servers != []) and (interface.addresses | map(attribute='mode') | regex_search(".*ipv4.*")) %}
           {% for address in dns_servers %}
           - {{ address }}
           {% endfor %}
           {% endif %}
-          {% if (dns_servers6 != []) and (interface.addresses | map(attribute='pool_id') | regex_search(".*ipv6.*")) %}
+          {% if (dns_servers6 != []) and (interface.addresses | map(attribute='mode') | regex_search(".*ipv6.*")) %}
           {% for address in dns_servers6 %}
           - "{{ address }}"
           {% endfor %}
