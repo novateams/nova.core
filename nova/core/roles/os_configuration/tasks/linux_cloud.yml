@@ -42,7 +42,7 @@
           ansible.builtin.user:
             name: "{{ aws_template_username }}"
             state: absent
-            remove: yes
+            remove: true
 
     - name: Removing cloud managed hostname...
       ansible.builtin.replace:

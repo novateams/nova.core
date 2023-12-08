@@ -4,7 +4,7 @@
     hostname: "{{ hostname }}"
     domain_name: "{{ domain }}"
     domain_search: "{{ dns_search }}"
-    lookup_enabled: True
+    lookup_enabled: true
     name_servers: "{{ dns_servers }}"
 
 - name: Setting NTP time...
@@ -14,4 +14,4 @@
 
 - name: Save config
   cisco.ios.ios_command:
-    commands: "write memory"
+    commands: write memory
