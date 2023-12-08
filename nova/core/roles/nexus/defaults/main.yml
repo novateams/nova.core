@@ -8,7 +8,7 @@ nexus_admin_username: admin # Built-in Nexus admin user
 nexus_configure: false # Set to true to also configure Nexus after installation
 nexus_configure_ldap: false # Set to true to also configure LDAP after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
-nexus_version: 3.62.0 # Nexus version to install
+nexus_version: 3.63.0 # Nexus version to install
 nexus_trusted_ca_to_java: true # Looks up the trusted CAs from the host and adds it to the Java keystore of Nexus (required for LDAPs)
 
 realms_to_activate: # List of authentication realms to activate
