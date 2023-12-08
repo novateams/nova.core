@@ -61,3 +61,7 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
