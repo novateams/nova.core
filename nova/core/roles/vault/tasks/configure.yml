@@ -60,7 +60,9 @@
     method: GET
     status_code: 200
   register: vault_seal_status
-  until: not vault_seal_status.json.sealed
+  until:
+    - vault_seal_status.json.sealed is defined
+    - not vault_seal_status.json.sealed
   retries: 60
   delay: 5
 
