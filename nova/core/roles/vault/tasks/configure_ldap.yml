@@ -4,6 +4,7 @@
     url: "{{ vault_configuration_uri }}/v1/sys/auth"
     method: GET
     headers:
+      X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body_format: json
   register: all_auth_methods
@@ -14,6 +15,7 @@
     url: "{{ vault_configuration_uri }}/v1/sys/auth/ldap{{ '/tune' if vault_ldap_engine_name + '/' in all_auth_methods.json.data else '' }}"
     method: POST
     headers:
+      X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body:
       config:
@@ -44,6 +46,7 @@
     url: "{{ vault_configuration_uri }}/v1/auth/ldap/config"
     method: POST
     headers:
+      X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body: "{{ vault_ldap_configuration }}"
     body_format: json
