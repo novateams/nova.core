@@ -1,16 +1,24 @@
 #!/bin/vbash
+
+# Waiting until ssh.service is running since one of the last services to start
+# That way we can be sure that VyOS has booted and is ready to accept commands
+while true; do
+    if systemctl is-active --quiet ssh.service; then
+        break
+    else
+        sleep 1
+    fi
+done
+
 # Do not remove following line - VyOS-specific
 source /opt/vyatta/etc/functions/script-template
 
-# begin
-
-### whats up with duplicate macs yo:
-### find /sys/class/net -mindepth 1 -maxdepth 1 ! -name lo -printf "%P: " -execdir cat {}/address \;
+# Find duplicate MAC addresses
+# find /sys/class/net -mindepth 1 -maxdepth 1 ! -name lo -printf "%P: " -execdir cat {}/address \;
 
 {% for interface in interfaces %}
-### {{ loop.index }} {{ 'hw_eth' + ( loop.index - 1 ) | string }} {{ vmware_tools_information.instance[ 'hw_eth' + ( loop.index - 1 ) | string ]['macaddress'] }}
 MAC_ADDRESS="{{ vmware_tools_information.instance[ 'hw_eth' + ( loop.index - 1 ) | string ]['macaddress'] }}"
-INTERFACE_NAME=$( ip addr | grep -B1 "permaddr $MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . || ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs )
+INTERFACE_NAME=$( ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . | ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs)
 set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
 
 {% for ip_address in interface.addresses %}
