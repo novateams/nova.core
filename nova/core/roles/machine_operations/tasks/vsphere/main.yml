@@ -1,7 +1,10 @@
 ---
 - name: Setting required facts for deploy...
   ansible.builtin.include_tasks: setup_vars.yml
-  when: deploy_mode == 'deploy' or deploy_mode == 'redeploy'
+  when:
+    - deploy_mode == 'deploy' or deploy_mode == 'redeploy'
+    - not role_only
+    - not role_only_wp
 
 - name: Including vSphere VM removal tasks...
   ansible.builtin.include_tasks: remove.yml
