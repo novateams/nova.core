@@ -12,26 +12,15 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "systemctl stop networking; systemctl disable networking"
+            arguments: -c "rm -f /etc/systemd/network/* && systemctl disable networking"
             path: /bin/bash
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
+      register: network_config_command
 
-    - name: Removing existing network configuration file(s)...
-      ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "rm /etc/systemd/network/*"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
 
     - name: Templating interface(s) configuration...
       ansible.builtin.template:
@@ -203,21 +192,6 @@
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
 
-    - name: Starting systemd-resolved service...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-
     - name: Configuring network interface(s) names...
       ansible.builtin.uri:
         url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
@@ -227,11 +201,15 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "update-initramfs -k all -u; shutdown now"
+            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && update-initramfs -k all -u ; shutdown now"
             path: /bin/bash
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
 
     # Since the URI module doesn't give any output, we need to wait for the VM to be powered off and then power it back on to avoid potential race condition
     - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
