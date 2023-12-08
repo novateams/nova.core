@@ -12,3 +12,7 @@ connection_address: "{{ 'DHCP' if connection_mode_dhcp else primary_network.addr
 
 # By default MacOS does not have Python installed so it cannot gather facts
 macos_has_python: false
+
+# Deploy methods
+role_only: false # Includes customization role and then stops, great for developing roles
+role_only_wp: false # Run the deploy starting from customization_pre_vm_role
