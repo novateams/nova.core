@@ -18,7 +18,7 @@
   block:
     - name: WARNING
       ansible.builtin.debug:
-        msg: "RouterOS routeros_license_account or routeros_license_password is not defined, skipping license configuration"
+        msg: RouterOS routeros_license_account or routeros_license_password is not defined, skipping license configuration
 
     - name: Sleeping to read WARNING...
       ansible.builtin.wait_for:

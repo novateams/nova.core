@@ -25,7 +25,7 @@
       when: ansible_network_os is defined
       block:
         - name: Including RouterOS configuration tasks...
-          include_tasks: routeros.yml
+          ansible.builtin.include_tasks: routeros.yml
           when: ansible_network_os == 'community.routeros.routeros'
 
         - name: Including VyOS configuration tasks...
@@ -33,15 +33,15 @@
           when: ansible_network_os == 'vyos.vyos.vyos'
 
         - name: Including IOS configuration tasks...
-          include_tasks: ios.yml
+          ansible.builtin.include_tasks: ios.yml
           when: ansible_network_os == 'cisco.ios.ios'
 
         - name: Including FortiOS configuration tasks...
-          include_tasks: fortios.yml
+          ansible.builtin.include_tasks: fortios.yml
           when: ansible_network_os == 'fortinet.fortios.fortios'
 
         - name: Including pfSense configuration tasks...
-          include_tasks: pfsense.yml
+          ansible.builtin.include_tasks: pfsense.yml
           when: ansible_network_os == 'pfsense'
 
     - name: Including MacOS configuration tasks...
