@@ -135,7 +135,7 @@
 
 - name: Creating Code Signing certificate role...
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/roles/{{ item.path }}"
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/roles/code_signing"
     method: POST
     headers:
       X-Vault-Request: true
