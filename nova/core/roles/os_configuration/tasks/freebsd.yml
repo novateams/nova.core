@@ -1,6 +1,7 @@
 ---
 - name: Setting hostname for {{ inventory_hostname }}...
   ansible.builtin.command: hostname -f {{ fqdn }}
+  changed_when: true
 
 - name: Making hostname persistent...
   ansible.builtin.lineinfile:
@@ -13,6 +14,7 @@
   ansible.builtin.template:
     src: bsd_hosts
     dest: /etc/hosts
+    mode: "0644"
 
 - name: Enabling SSH forwarding for sudo...
   ansible.builtin.lineinfile:
@@ -24,13 +26,13 @@
   ansible.builtin.lineinfile:
     path: /etc/ntp.conf
     line: server {{ item }} iburst
-    regexp: "^server {{ item }}"
+    regexp: ^server {{ item }}
   loop: "{{ ntp_servers }}"
 
 - name: Disabling NTP pools...
   ansible.builtin.replace:
     path: /etc/ntp.conf
-    regexp: "^(pool.*)$"
+    regexp: ^(pool.*)$
     replace: "#\\1"
 
 - name: Enabling ntpd service...

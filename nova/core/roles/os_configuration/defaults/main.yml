@@ -20,5 +20,8 @@ os_configuration_post_roles: [] # List of extra roles to be included as one of t
 install_trusted_certificates: true # Set to false to skip trusted certificates installation with nova.core.trusted_certificates role
 
 ntp_servers:
-  - 0.pool.ntp.org
-  - 1.pool.ntp.org
+  - "0.pool.ntp.org"
+  - "1.pool.ntp.org"
+
+# PfSense
+os_configuration_pfsense_console_menu_password: true # Set to false to disable console menu password protection
