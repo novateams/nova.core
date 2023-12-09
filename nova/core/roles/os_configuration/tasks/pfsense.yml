@@ -6,7 +6,7 @@
     src: /conf/config.xml
     flat: true
 
-- name: Configuring OS hostname and domain...
+- name: Configuring OS hostname, domain & NTP...
   delegate_to: localhost
   become: false
   block:
@@ -23,6 +23,14 @@
           value: "{{ domain }}"
       loop_control:
         label: "{{ item.xpath }} > {{ item.value }}"
+
+    - name: Configuring NTP server(s)...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        xpath: /pfsense/system/timeservers
+        value: "{{ ntp_servers | join(' ') }}"
+        pretty_print: true
+      when: ntp_servers != []
 
 - name: Uploading config.xml to {{ inventory_hostname }}...
   ansible.builtin.copy:
