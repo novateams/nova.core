@@ -152,24 +152,12 @@
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
 
-    - name: Reloading {{ inventory_hostname }} configuration...
-      ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "/etc/rc.reload_all"
-            path: /bin/tcsh
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
-
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
+    # This is required fo Vmware console correct interfaces and for pfSense web interface to work
+    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
 
     - name: Removing local config.xml file...
       ansible.builtin.file:
