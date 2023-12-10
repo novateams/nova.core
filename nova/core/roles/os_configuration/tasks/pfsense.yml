@@ -32,6 +32,21 @@
         pretty_print: true
       when: ntp_servers != []
 
+    - name: Password protecting the console menu...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        xpath: /pfsense/system/disableconsolemenu
+        value:
+        pretty_print: true
+      when: os_configuration_pfsense_console_menu_password
+
+    - name: Removing console menu password...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        xpath: /pfsense/system/disableconsolemenu
+        state: absent
+      when: not os_configuration_pfsense_console_menu_password
+
 - name: Uploading config.xml to {{ inventory_hostname }}...
   ansible.builtin.copy:
     src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
