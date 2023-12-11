@@ -76,6 +76,12 @@
     - src: custom-configuration.pkla
       dest: /etc/polkit-1/localauthority/50-local.d/custom-configuration.pkla
 
+- name: Enabling xrdp service...
+  ansible.builtin.systemd_service:
+    name: xrdp
+    enabled: true
+    state: started
+
 - name: Rebooting on finalize..
   ansible.builtin.set_fact:
     reboot_on_finalize: true
