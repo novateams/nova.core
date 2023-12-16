@@ -62,6 +62,7 @@
       loop: "{{ admin_accounts }}"
       loop_control:
         index_var: idx
+        label: "{{ item.username }}"
 
     - name: Adding following pfSense users to admins group for {{ inventory_hostname }}...
       community.general.xml:
@@ -73,6 +74,7 @@
       loop: "{{ admin_accounts }}"
       loop_control:
         index_var: idx
+        label: "{{ item.username }}"
 
 - name: Uploading config.xml to {{ inventory_hostname }}...
   ansible.builtin.copy:
