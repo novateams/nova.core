@@ -201,7 +201,7 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && update-initramfs -k all -u ; shutdown now"
+            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && update-initramfs -k all -u ; reboot"
             path: /bin/bash
         status_code: 201
         body_format: json
