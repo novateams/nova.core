@@ -1,0 +1,23 @@
+---
+services:
+  caddy:
+    image: caddy:{{ caddy_version }}
+    hostname: caddy
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - /srv/caddy/etc:/etc/caddy # When only mounting Caddyfile the changes are not picked up inside the container
+      - /srv/caddy/data:/data/caddy
+      - /srv/caddy/config:/config/caddy
+      - /srv/caddy/logs:/srv/logs
+      - "{{ caddy_certificates_folder }}:/srv/certs"
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+
+networks:
+  default:
+    name: "{{ docker_network }}"
+    external: true
