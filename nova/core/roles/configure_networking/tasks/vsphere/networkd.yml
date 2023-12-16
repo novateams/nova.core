@@ -1,26 +1,34 @@
 ---
+# This comes from Waiting for VMware tools to become available... task
+- name: Setting OS as fact...
+  ansible.builtin.set_fact:
+    configure_networking_os: "{{ (vmware_tools_information.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
+
 - name: Including networkd configuration tasks...
   become: false
   delegate_to: localhost
   block:
-    - name: Disabling networking service...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "rm -f /etc/systemd/network/* && systemctl disable networking"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
+    - name: Cleaning up Debian...
+      when: configure_networking_os is search('Debian')
+      block:
+        - name: Disabling networking service on Debian...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "rm -f /etc/systemd/network/* && systemctl disable networking"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
 
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
 
     - name: Templating interface(s) configuration...
       ansible.builtin.template:
@@ -192,37 +200,49 @@
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
 
-    - name: Configuring network interface(s) names...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && update-initramfs -k all -u ; shutdown now"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
+    - name: Applying network configuration on Debian...
+      when: configure_networking_os is search('Debian')
+      block:
+        - name: Configuring network interface(s) names on Debian...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "update-initramfs -k all -u"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
 
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
 
-    # Since the URI module doesn't give any output, we need to wait for the VM to be powered off and then power it back on to avoid potential race condition
-    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
-      vmware.vmware_rest.vcenter_vm_guest_power_info:
-        vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"
-      register: poweroff_status
-      until: poweroff_status.value.state == "NOT_RUNNING"
-      retries: 60
-      delay: 5
+    - name: Applying network configuration on Debian...
+      when: configure_networking_os is search('Arch')
+      block:
+        - name: Configuring network interface(s) names on Arch...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && mkinitcpio -P"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
 
-    - name: Powering on {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware_rest.vcenter_vm_power:
-        state: start
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
         vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"
       register: vcenter_vm_start
       until: not vcenter_vm_start.failed
