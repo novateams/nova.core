@@ -1,0 +1,23 @@
+---
+- name: Including Caddy installation tasks...
+  ansible.builtin.include_tasks: install.yml
+
+- name: Including Caddyfile with variables mode tasks...
+  ansible.builtin.include_tasks: caddyfile_with_vars.yml
+  when: caddy_template_caddyfile_with_vars
+
+- name: Including Caddyfile template tasks...
+  ansible.builtin.include_tasks: caddy_template.yml
+  when: caddy_template_caddyfile
+
+- name: Composing Caddy for {{ inventory_hostname }}...
+  ansible.builtin.shell: docker compose -f {{ caddy_config_folder }}/docker-compose.yml up -d
+  changed_when: true
+
+- name: Formatting and reloading Caddyfile...
+  community.docker.docker_container_exec:
+    container: caddy
+    command: "{{ item }}"
+  loop:
+    - caddy fmt --overwrite /etc/caddy/Caddyfile
+    - caddy reload -c /etc/caddy/Caddyfile

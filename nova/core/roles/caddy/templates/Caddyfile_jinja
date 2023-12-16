@@ -1,0 +1,35 @@
+{
+	auto_https {{ caddy_auto_https }}
+	{% if not caddy_ocsp_stapling %}
+	ocsp_stapling off
+	{% endif %}
+}
+
+{% for server in caddy_servers %}
+{{ server.caddy_server_listen_addresses | join(" ") }} {
+
+	{% if not server.caddy_use_tls | default(caddy_use_tls) %}
+	# TLS Disabled
+	{% elif caddy_auto_https == 'disable_certs' or caddy_auto_https == 'off' %}
+	tls {{ server.caddy_server_certificate_path | default(caddy_certificates_folder + server.caddy_server_name + "_fullchain.crt") }} {{ server.caddy_server_certificate_key_path | default(caddy_certificates_folder + server.caddy_server_name + "_key.crt") }}
+	{% endif %}
+
+	log {{ server.caddy_server_name + loop.index | string }} {
+		output file /srv/logs/{{ server.caddy_server_name + loop.index | string }}_access.json {
+			roll_size 1000MiB
+			roll_keep 5
+			roll_uncompressed
+		}
+	}
+
+	request_body {
+		max_size {{ server.caddy_server_request_body_size | default("10MB") }}
+	}
+
+	{% if server.caddy_server_reverse_proxy_rewrite is defined %}
+	rewrite {{ server.caddy_server_reverse_proxy_rewrite }}
+	{% endif %}
+
+	reverse_proxy {{ server.caddy_server_reverse_proxy_to_address }}
+}
+{% endfor %}

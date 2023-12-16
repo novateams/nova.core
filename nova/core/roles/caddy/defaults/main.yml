@@ -1,0 +1,19 @@
+---
+docker_network: local-network
+
+# Caddy configuration modes
+caddy_template_caddyfile_with_vars: true
+caddy_template_caddyfile: false
+caddy_use_labels: false
+
+caddy_config_folder: /srv/caddy
+caddy_version: 2.7.6
+
+# caddy_template_caddyfile mode variables
+caddy_caddyfile_src: caddyfile_src # Will look for the file in templates folder for the role that includes this role
+
+caddy_certificates_folder: /srv/certs/
+
+caddy_auto_https: "off" # https://caddyserver.com/docs/caddyfile/options#auto-https
+caddy_ocsp_stapling: false
+caddy_use_tls: true # Set to false to disable TLS for all servers or add it as a variable per server

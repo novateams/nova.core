@@ -1,0 +1,7 @@
+---
+- name: Templating Caddyfile for {{ inventory_hostname }}...
+  ansible.builtin.template:
+    src: "{{ caddy_caddyfile_src }}"
+    dest: "{{ caddy_config_folder }}/etc/Caddyfile"
+    mode: "0644"
+    lstrip_blocks: true
