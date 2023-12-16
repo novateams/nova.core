@@ -53,7 +53,7 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "chmod +x /etc/rc.local ; /etc/rc.local"
+            arguments: -c "chmod +x /etc/rc.local && /etc/rc.local"
             path: /bin/tcsh
         status_code: 201
         body_format: json

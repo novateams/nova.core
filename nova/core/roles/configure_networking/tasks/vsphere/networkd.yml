@@ -153,7 +153,7 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c " systemctl enable systemd-networkd; systemctl restart systemd-networkd; systemctl enable systemd-udev-trigger; systemctl restart systemd-udev-trigger"
+            arguments: -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd && systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
             path: /bin/bash
         status_code: 201
         body_format: json
@@ -234,7 +234,7 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && mkinitcpio -P"
+                arguments: -c "mkinitcpio -P"
                 path: /bin/bash
             status_code: 201
             body_format: json
