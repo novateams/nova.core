@@ -201,15 +201,12 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && update-initramfs -k all -u ; reboot"
+            arguments: -c "systemctl enable systemd-resolved && systemctl start systemd-resolved && update-initramfs -k all -u ; shutdown now"
             path: /bin/bash
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
       register: network_config_command
-
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
 
     # Since the URI module doesn't give any output, we need to wait for the VM to be powered off and then power it back on to avoid potential race condition
     - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
