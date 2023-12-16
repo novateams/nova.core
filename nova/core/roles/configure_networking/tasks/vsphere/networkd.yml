@@ -243,8 +243,13 @@
 
         - name: Including command run check task...
           ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware_rest.vcenter_vm_guest_power:
+        state: reboot
         vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"
-      register: vcenter_vm_start
-      until: not vcenter_vm_start.failed
+        session_timeout: 1800
+      register: vcenter_vm_restart
+      until: not vcenter_vm_restart.failed
       retries: 5
       delay: 2
