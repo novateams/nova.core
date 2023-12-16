@@ -68,7 +68,7 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            # Ubuntu 22.04 Desktop needs 2x netplan apply for some reason
+            # Through testing, it was found that the following command gives the most consistent results for configuring the network.
             arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && systemctl restart systemd-networkd.service && netplan apply"
             path: /bin/bash
         status_code: 201
