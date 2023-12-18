@@ -104,7 +104,9 @@
           loop:
             - regex: guestos.*
               line: guestos = "darwin20-64"
-          when: ansible_system == "Darwin"
+          when:
+            - ansible_system is defined
+            - ansible_system == "Darwin"
 
         - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
           ansible.builtin.lineinfile:
