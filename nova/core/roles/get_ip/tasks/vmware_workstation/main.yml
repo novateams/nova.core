@@ -21,4 +21,5 @@
 - name: Printing {{ inventory_hostname }} IP...
   ansible.builtin.debug:
     msg: |
+      {{ fqdn | default('NA') }}
       IPv4 - {{ vmip.stdout }}

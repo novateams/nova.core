@@ -2,7 +2,7 @@
 - name: Printing {{ inventory_hostname }} IP...
   debug:
     msg: |
-      FQDN - {{ fqdn }}
+      FQDN - {{ fqdn | default('NA') }}
       IPv4 - {{ primary_ipv4 }}
       IPv6 - {{ primary_ipv6 }}
       Connection - {{ ansible_host if ansible_host is ansible.utils.ip else connection_address }}
