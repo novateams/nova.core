@@ -10,4 +10,5 @@
 - name: Printing {{ inventory_hostname }} IPs...
   debug:
     msg: |
+      {{ fqdn | default('NA') }}
       IPv4 - {{ ec2_instance_info.instances | selectattr('state.name', 'equalto', 'running') | map(attribute='public_ip_address') | first }}

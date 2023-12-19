@@ -9,5 +9,6 @@
 - name: Printing {{ inventory_hostname }} IPs...
   ansible.builtin.debug:
     msg: |
+      {{ fqdn | default('NA') }}
       IPv4 - {{ linode_vm.instance.ipv4[0] }}
       IPv6 - {{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}
