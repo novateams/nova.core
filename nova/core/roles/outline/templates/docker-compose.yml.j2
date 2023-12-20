@@ -1,5 +1,6 @@
 ---
 services:
+{% if outline_file_storage_mode == "s3" %}
   ## Minio for storage
   {{ storage_container_name }}:
     container_name: "{{ storage_container_name }}"
@@ -13,6 +14,7 @@ services:
       - MINIO_ROOT_PASSWORD={{ minio_root_password }}
       - MINIO_BROWSER_REDIRECT_URL={{ minio_browser_redirect_url }}
     command: "minio server /data --console-address ':9090'"
+{% endif %}
 
   {{ db_container_name }}:
     container_name: "{{ db_container_name }}"
@@ -42,8 +44,14 @@ services:
     hostname: "{{ app_container_name }}"
     image: "{{ app_container_image }}"
     restart: unless-stopped
+{% if outline_file_storage_mode == "local" and outline_container_remap_uid == true %}
+    user: {{ outline_container_user_id }}:{{ outline_container_user_id }}
+{% endif %}
     volumes:
       - "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt"
+{% if outline_file_storage_mode == "local" %}
+      - "{{ outline_local_file_storage_folder }}:/var/lib/outline/data"
+{% endif %}
     environment:
       - NODE_ENV={{ node_env }}
       - NODE_EXTRA_CA_CERTS={{ node_extra_ca_certs }}
@@ -54,14 +62,19 @@ services:
       - PGSSLMODE=disable
       - REDIS_URL={{ redis_url }}
       - URL={{ outline_url }}
+{% if outline_file_storage_mode == "s3" %}
       - AWS_ACCESS_KEY_ID={{ outline_s3_access_key_id }}
       - AWS_SECRET_ACCESS_KEY={{ outline_s3_secret_access_key }}
       - AWS_REGION=us-east-2
       - AWS_S3_UPLOAD_BUCKET_URL={{ outline_s3_bucket_url }}
       - AWS_S3_UPLOAD_BUCKET_NAME={{ outline_s3_bucket_name }}
-      - FILE_STORAGE_UPLOAD_MAX_SIZE={{ outline_file_storage_upload_max_size }}
       - AWS_S3_FORCE_PATH_STYLE={{ aws_s3_force_path_style }}
       - AWS_S3_ACL=private
+{% endif %}
+{% if outline_file_storage_mode == "local" %}
+      - FILE_STORAGE=local
+{% endif %}
+      - FILE_STORAGE_UPLOAD_MAX_SIZE={{ outline_file_storage_upload_max_size }}
       - OIDC_CLIENT_ID={{ outline_oidc_client_id }}
       - OIDC_CLIENT_SECRET={{ outline_oidc_client_secret }}
       - OIDC_AUTH_URI={{ outline_oidc_auth_uri }}
