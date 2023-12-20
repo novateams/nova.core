@@ -1,30 +1,37 @@
 ---
-- name: create directories
+- name: Create directories
   ansible.builtin.file:
     path: "{{ item }}"
     recurse: true
     state: directory
   with_items:
     - "{{ app_container_folder }}"
-    - "{{ minio_client_container_folder }}"
     - "{{ redis_container_folder }}"
     - "{{ db_container_folder }}"
-    - "{{ storage_container_folder }}"
     - "{{ db_container_folder }}/database-data"
-    - "{{ storage_container_folder }}/storage-data"
 
-- name: Change file ownership, group and permissions
+- name: Create directories for s3 mode
   ansible.builtin.file:
     path: "{{ item }}"
     recurse: true
+    state: directory
   with_items:
-    - "{{ app_container_folder }}"
     - "{{ minio_client_container_folder }}"
-    - "{{ redis_container_folder }}"
-    - "{{ db_container_folder }}"
     - "{{ storage_container_folder }}"
-    - "{{ db_container_folder }}/database-data"
     - "{{ storage_container_folder }}/storage-data"
+  when:
+    - outline_file_storage_mode == "s3"
+
+- name: Create directories for local filestorage mode
+  ansible.builtin.file:
+    path: "{{ item }}"
+    recurse: true
+    state: directory
+    owner: "{{ outline_container_uid }}"
+  with_items:
+    - "{{ outline_local_file_storage_folder }}"
+  when:
+    - outline_file_storage_mode == "local"
 
 ## MINIO CLIENT for automating the minio configuration
 - name: Copy minio bucket policy from template
@@ -34,6 +41,7 @@
     mode: 0600
   when:
     - minio_client_configuration | bool
+    - outline_file_storage_mode == "s3"
 
 - name: Copy compose config from template
   ansible.builtin.template:
@@ -42,13 +50,16 @@
     mode: 0600
   when:
     - minio_client_configuration | bool
+    - outline_file_storage_mode == "s3"
 
 - name: Composing {{ inventory_hostname }} minio client...
   ansible.builtin.shell: |
     cd {{ minio_client_container_folder }}
     docker compose pull
     docker compose up -d
-  when: minio_client_configuration | bool
+  when:
+    - minio_client_configuration | bool
+    - outline_file_storage_mode == "s3"
 
 ## Outline main compose
 - name: Copy compose config from template

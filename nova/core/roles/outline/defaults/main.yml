@@ -20,7 +20,17 @@ db_container_folder: "{{ app_container_folder }}/{{ db_container_name }}"
 storage_container_folder: "{{ app_container_folder }}/{{ storage_container_name }}"
 minio_client_container_folder: "/srv/{{ minio_client_container_name }}"
 
-## Do we want to use minio client to configure the s3 service
+## local storage folder default
+outline_local_file_storage_folder: "{{ app_container_folder }}/local_file_storage"
+
+## remap outline container user id for local storage
+outline_container_remap_uid: false
+outline_container_uid: 1001
+
+## Use "s3" or "local" file storage mode
+outline_file_storage_mode: s3
+
+## If we use the s3 mode, do we want to use minio client to configure the s3 service
 minio_client_configuration: true
 
 #####
