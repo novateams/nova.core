@@ -5,6 +5,7 @@
   },
   "ipv6": {{ docker_enable_ipv6 | lower }},
   "ip6tables": {{ docker_enable_ip6tables | lower }},
+  "iptables": {{ docker_enable_iptables | lower }},
   "fixed-cidr-v6": "{{ docker_bridge_ipv6_range }}",
   "userland-proxy": {{ docker_userland_proxy | lower }},
   "registry-mirrors": [

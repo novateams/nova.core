@@ -6,6 +6,7 @@ docker_enable_experimental_features: true
 docker_buildkit: true
 docker_enable_ipv6: true
 docker_enable_ip6tables: true
+docker_enable_iptables: true
 docker_bridge_ipv6_range: fd69::/64
 docker_userland_proxy: true
 docker_registry_mirrors: [] # List of mirrors to be added to the Docker daemon config. The mirror must be a complete URL including a protocol (http:// or https://)
