@@ -20,6 +20,7 @@ services:
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
     environment:
+      - RUBY_YJIT_ENABLE=1
       - DATABASE_URL={{ providentia_db_url }}
       - REDIS_URL={{ providentia_redis_url }}
       - OIDC_ISSUER={{ providentia_oidc_issuer }}
