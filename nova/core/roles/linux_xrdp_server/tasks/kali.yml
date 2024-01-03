@@ -1,0 +1,7 @@
+---
+# https://c-nergy.be/blog/?p=12073
+- name: Configuring XRDP polkit...
+  ansible.builtin.copy:
+    src: 10-configuration.rules
+    dest: /etc/polkit-1/rules.d/10-configuration.rules
+    mode: "0644"
