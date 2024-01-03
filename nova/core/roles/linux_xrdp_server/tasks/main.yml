@@ -1,4 +1,4 @@
 ---
 - name: Installing xrdp on Debian based OS...
   ansible.builtin.include_tasks: debian.yml
-  when: (ansible_distribution == 'Debian') or (ansible_distribution == 'Kali') or (ansible_distribution == "Ubuntu")
+  when: ansible_os_family == "Debian"

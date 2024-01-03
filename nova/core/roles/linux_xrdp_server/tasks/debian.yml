@@ -11,14 +11,6 @@
   retries: 5
   delay: 3
 
-- name: Creating colord start cron job... # Temporary hack to avoid colord error on first login
-  ansible.builtin.cron:
-    name: Start colord.service
-    special_time: reboot
-    job: systemctl start colord.service
-    user: root
-  when: ansible_facts.lsb.id == "Kali"
-
 - name: Adding xrdp user to ssl-cert group...
   ansible.builtin.user:
     name: xrdp
@@ -51,30 +43,13 @@
       line: ls_background_image= # Enables setting login screen background
   notify: Restarting xrdp service...
 
-- name: Creating xrdp start cron job... # Because if there's a lot of (security) agents installed the xrdp service times out on boot
-  ansible.builtin.cron:
-    name: Start xrdp.service
-    special_time: reboot
-    job: sleep 30 && systemctl restart xrdp.service
-    user: root
+- name: Including {{ ansible_distribution }} specific tasks...
+  ansible.builtin.include_tasks: ubuntu.yml
   when: ansible_distribution == "Ubuntu"
 
-- name: Creating folders for configuration...
-  ansible.builtin.file:
-    path: /etc/polkit-1/localauthority/50-local.d
-    state: directory
-    mode: "0755"
-
-- name: Configuring XRDP polkit...
-  ansible.builtin.copy:
-    src: "{{ polkit_config.src }}"
-    dest: "{{ polkit_config.dest }}"
-    mode: "0644"
-  loop_control:
-    loop_var: polkit_config
-  loop:
-    - src: custom-configuration.pkla
-      dest: /etc/polkit-1/localauthority/50-local.d/custom-configuration.pkla
+- name: Including {{ ansible_distribution }} specific tasks...
+  ansible.builtin.include_tasks: kali.yml
+  when: ansible_distribution == 'Kali'
 
 - name: Enabling xrdp service...
   ansible.builtin.systemd_service:
