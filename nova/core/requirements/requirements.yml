@@ -18,6 +18,9 @@ roles:
   - name: geerlingguy.postgresql
     src: https://github.com/geerlingguy/ansible-role-postgresql.git
     version: 3.5.0
+  - name: oefenweb.dnsmasq
+    src: https://github.com/Oefenweb/ansible-dnsmasq.git
+    version: v2.2.30
 
 collections:
   - name: amazon.aws
