@@ -140,9 +140,6 @@
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       register: file_upload_prep
-      until: file_upload_prep.status == 201
-      retries: "{{ retries_vmware_api }}"
-      delay: "{{ delay_vmware_api }}"
 
     - name: Uploading {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml file...
       ansible.builtin.uri:
@@ -154,17 +151,13 @@
         status_code: 200
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
-      register: file_upload
-      # Because Windows is still coming up from initial sysprep
-      until: file_upload.status == 200
-      retries: "{{ retries_vmware_api }}"
-      delay: "{{ delay_vmware_api }}"
 
-    - name: Applying {{ inventory_hostname }} configuration...
-      ansible.builtin.include_tasks: util/send_cmd.yml
+    # This is required fo Vmware console correct interfaces and for pfSense web interface to work
+    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
       vars:
-        bin_to_execute: /bin/tcsh
-        args_to_execute: -c "/etc/rc.reload_all"
+        restart: true
 
     - name: Removing local config.xml file...
       ansible.builtin.file:
