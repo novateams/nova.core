@@ -1,21 +1,19 @@
 ---
-- name: Enabling password requirement for sudo...
-  ansible.builtin.lineinfile:
-    dest: "{{ unix_distro_sudoers_map[ansible_distribution] }}"
-    state: present
-    regexp: ^%{{ unix_distro_root_group_map[ansible_distribution] }}
-    line: "%{{ unix_distro_root_group_map[ansible_distribution] }} ALL=(ALL:ALL) ALL"
-    validate: visudo -cf %s
-  when: sudo_requires_password
-
 - name: Disabling password requirement for sudo...
   ansible.builtin.lineinfile:
-    dest: "{{ unix_distro_sudoers_map[ansible_distribution] }}"
+    dest: /usr/local/etc/sudoers.d/sudoers
     state: present
-    regexp: ^%{{ unix_distro_root_group_map[ansible_distribution] }}
-    line: "%{{ unix_distro_root_group_map[ansible_distribution] }} ALL=(ALL) NOPASSWD: ALL"
+    regexp: ^%admins
+    line: "%admins ALL=(ALL) NOPASSWD: ALL"
     validate: visudo -cf %s
+    create: true
   when: not sudo_requires_password
+
+- name: Enabling password requirement for sudo...
+  ansible.builtin.file:
+    path: /usr/local/etc/sudoers.d/sudoers
+    state: absent
+  when: sudo_requires_password
 
 # Configuring pfSense accounts in localhost to avoid installing required Python modules on the remote host
 - name: Downloading config.xml from {{ inventory_hostname }}...
@@ -39,6 +37,22 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
         xpath: /pfsense/system/group[name='admins']/member
         state: absent
+
+    - name: Including custom sudoers file for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        xpath: /pfsense/installedpackages/sudo/config/add_includedir
+        value: include_end
+        pretty_print: true
+      when: not sudo_requires_password
+
+    - name: Not including custom sudoers file for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        xpath: /pfsense/installedpackages/sudo/config/add_includedir
+        value: none
+        pretty_print: true
+      when: sudo_requires_password
 
     - name: Adding following pfSense users for {{ inventory_hostname }}...
       community.general.xml:
@@ -82,10 +96,10 @@
     dest: /conf/config.xml
     mode: "0644"
     owner: root
-    group: "{{ unix_distro_root_group_map[ansible_distribution] }}"
+    group: admins
 
-- name: Reloading pfSense configuration for {{ inventory_hostname }}...
-  ansible.builtin.shell: /etc/rc.reload_all
+- name: Restarting pfSense to reload configuration for {{ inventory_hostname }}...
+  ansible.builtin.reboot:
 
 - name: Removing local config.xml file...
   ansible.builtin.file:
@@ -93,46 +107,3 @@
     state: absent
   delegate_to: localhost
   become: false
-
-# Next tasks are required because OS accounts are not created when reloading pfSense configuration from shell
-- name: Creating OS account for...
-  ansible.builtin.user:
-    name: "{{ item.username }}"
-    password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) | password_hash('sha512') }}"
-    groups:
-      - "{{ unix_distro_root_group_map[ansible_distribution] }}"
-      - admins # This group is created by pfSense
-    skeleton: "{{ unix_distro_skel_map[ansible_distribution] }}"
-    shell: "{{ '/etc/rc.initial' if item.username == admin_account else '/bin/tcsh' }}"
-    uid: "{{ 0 if item.username == admin_account else 2000 + idx }}"
-    createhome: true
-    append: true
-  loop: "{{ admin_accounts }}"
-  loop_control:
-    index_var: idx
-    label: "{{ item.username }}"
-
-- name: Adding authorized keys for...
-  ansible.posix.authorized_key:
-    user: "{{ item.username }}"
-    state: present
-    key: "{{ item.ssh_key }}"
-    exclusive: true
-  loop: "{{ admin_accounts }}"
-  loop_control:
-    label: "{{ item.username }}"
-  when: item.ssh_key is defined
-
-# This is required for OS admin_accounts to be able to use sudo and survive reboots
-- name: Templating {{ unix_distro_sudoers_map[ansible_distribution] }} members script...
-  ansible.builtin.template:
-    src: pfsense_wheel_users.sh
-    dest: /etc/cron.d/pfsense_wheel_users.sh
-    mode: u=rwx,g=,o=
-
-- name: Creating add members to {{ unix_distro_sudoers_map[ansible_distribution] }} group cronjob...
-  ansible.builtin.cron:
-    name: admin_accounts to {{ unix_distro_sudoers_map[ansible_distribution] }}
-    special_time: reboot
-    job: /etc/cron.d/pfsense_wheel_users.sh
-    user: root
