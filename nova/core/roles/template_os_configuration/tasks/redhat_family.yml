@@ -2,7 +2,7 @@
 - name: Installing packages for RedHat based OS...
   ansible.builtin.yum:
     name:
-      - python3-pip
-      - python3-setuptools
+      - python3-pip # Required for Ansible
+      - python3-setuptools # Required for Ansible
     state: present
     update_cache: true
