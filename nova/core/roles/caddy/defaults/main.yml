@@ -5,6 +5,10 @@ docker_network: local-network
 caddy_template_caddyfile_with_vars: true
 caddy_template_caddyfile: false
 caddy_use_labels: false
+caddy_container_ports:
+  - "80:80"
+  - "443:443"
+  - "443:443/udp"
 
 caddy_config_folder: /srv/caddy
 caddy_version: 2.7.6

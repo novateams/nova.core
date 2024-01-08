@@ -5,10 +5,7 @@ services:
     hostname: caddy
     container_name: caddy
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+    ports: "{{ caddy_container_ports }}"
     volumes:
       - /srv/caddy/etc:/etc/caddy # When only mounting Caddyfile the changes are not picked up inside the container
       - /srv/caddy/data:/data/caddy
