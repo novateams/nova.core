@@ -3,25 +3,26 @@
   ansible.builtin.template:
     src: "{{ firewall_config_file }}"
     dest: /etc/sysctl.d/fw.conf
-    lstrip_blocks: yes
+    mode: "0644"
+    lstrip_blocks: true
 
 - name: Configuring sysctl...
   ansible.posix.sysctl:
     name: net.ipv4.neigh.default.gc_interval # Just a random value to reload sysctl
     value: 3600
-    sysctl_set: yes
+    sysctl_set: true
     sysctl_file: /etc/sysctl.d/fw.conf
     state: present
-    reload: yes
+    reload: true
   register: configure_sysctl
   until: not configure_sysctl.failed
   retries: 3
   delay: 1
 
 - name: Including iptables config...
-  include_tasks: iptables.yml
+  ansible.builtin.include_tasks: iptables.yml
   when: mode == "iptables"
 
 - name: Including nftables config...
-  include_tasks: nftables.yml
+  ansible.builtin.include_tasks: nftables.yml
   when: mode == "nftables"

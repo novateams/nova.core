@@ -6,5 +6,5 @@ nftables_template_file: etc/nftables.conf
 
 firewall_config_file: fw.conf # Firewall config file to update sysctl values
 
-allow_routing: yes # Allow routing between interfaces
+allow_routing: true # Allow routing between interfaces
 mode: nftables # Can also be iptables
