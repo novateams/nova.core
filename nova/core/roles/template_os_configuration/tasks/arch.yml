@@ -4,10 +4,9 @@
     update_cache: true
     name:
       - cloud-guest-utils # Required for expanding disks
-      - htop
+      - htop # Useful for monitoring system resources
       - inetutils
       - kitty-terminfo # To pass your terminal settings over ssh
       - python-pip
-      - python-setuptools
-      - texinfo
+      - python-setuptools # Required for Ansible
     state: present
