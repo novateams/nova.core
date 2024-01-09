@@ -158,6 +158,10 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
 
     - name: Templating resolv.conf configuration script...
       ansible.builtin.template:
