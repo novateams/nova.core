@@ -6,13 +6,13 @@
     - name: Templating network configuration script...
       ansible.builtin.template:
         src: rc.local
-        dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_rc.local
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_rc.local
         lstrip_blocks: true
         mode: "0644"
 
     - name: Getting file info...
       ansible.builtin.stat:
-        path: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_rc.local
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_rc.local
       register: file_size
 
     - name: Preparing file upload...
@@ -39,7 +39,7 @@
         method: PUT
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_rc.local
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_rc.local
         status_code: 200
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
