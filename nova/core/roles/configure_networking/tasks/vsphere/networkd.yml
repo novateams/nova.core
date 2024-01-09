@@ -33,7 +33,7 @@
     - name: Templating interface(s) configuration...
       ansible.builtin.template:
         src: networkd.network.simple
-        dest: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
         lstrip_blocks: true
         mode: "0644"
       loop: "{{ interfaces }}"
@@ -43,7 +43,7 @@
 
     - name: Getting interface(s) file info...
       ansible.builtin.stat:
-        path: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
       register: network_file_size
       loop: "{{ interfaces }}"
       loop_control:
@@ -78,7 +78,7 @@
         method: PUT
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.item.item.network_id }}.network_networkd
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.item.item.network_id }}.network_networkd
         status_code: 200
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
@@ -90,7 +90,7 @@
     - name: Templating link(s) configuration script(s)...
       ansible.builtin.template:
         src: networkd.link.simple
-        dest: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
         lstrip_blocks: true
         mode: "0644"
       loop: "{{ interfaces }}"
@@ -100,7 +100,7 @@
 
     - name: Getting links(s) file info...
       ansible.builtin.stat:
-        path: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
       register: link_file_size
       loop: "{{ interfaces }}"
       loop_control:
@@ -135,7 +135,7 @@
         method: PUT
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.item.item.network_id }}.link_networkd
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.item.item.network_id }}.link_networkd
         status_code: 200
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
@@ -166,13 +166,13 @@
     - name: Templating resolv.conf configuration script...
       ansible.builtin.template:
         src: resolv.conf
-        dest: /tmp/{{ inventory_hostname }}_resolv.conf
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
         lstrip_blocks: true
         mode: "0644"
 
     - name: Getting resolv.conf file info...
       ansible.builtin.stat:
-        path: /tmp/{{ inventory_hostname }}_resolv.conf
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
       register: resolv_file_size
 
     - name: Preparing resolv.conf upload...
@@ -199,7 +199,7 @@
         method: PUT
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ inventory_hostname }}_resolv.conf
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
         status_code: 200
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"

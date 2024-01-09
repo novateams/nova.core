@@ -6,13 +6,13 @@
     - name: Templating network configuration script...
       ansible.builtin.template:
         src: Configure-Network.ps1
-        dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_Configure-Network.ps1
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1
         mode: "0644"
         lstrip_blocks: true
 
     - name: Getting file info...
       ansible.builtin.stat:
-        path: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_Configure-Network.ps1
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1
       register: file_size
 
     - name: Preparing file upload...
@@ -42,7 +42,7 @@
         method: PUT
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_Configure-Network.ps1
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1
         status_code: 200
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"

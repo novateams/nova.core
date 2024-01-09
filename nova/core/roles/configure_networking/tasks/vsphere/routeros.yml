@@ -32,13 +32,13 @@
     - name: Templating network configuration commands...
       ansible.builtin.template:
         src: routeros.yml
-        dest: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_routeros.yml
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_routeros.yml
         lstrip_blocks: true
         mode: "0644"
 
     - name: Including network configuration commands var...
       ansible.builtin.include_vars:
-        file: /tmp/{{ project_fullname }}_{{ inventory_hostname }}_routeros.yml
+        file: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_routeros.yml
 
     - name: Configuring networking...
       community.vmware.vmware_vm_shell:
