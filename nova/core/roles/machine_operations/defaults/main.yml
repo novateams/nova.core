@@ -121,5 +121,5 @@ aws_security_group_rules:
 ###################
 
 # The default root password for Linode VM
-linode_vm_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret={{ environment_name }}/data/{{ project_fullname }}:{{ inventory_hostname }}_{{ admin_account }}') }}"
+linode_vm_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + environment_name + '/data/' + project_fullname + ':' + inventory_hostname + '_' + admin_account) }}"
 rebuild: false # Use ctp-rebuild alias to rebuild the VM with different size but keeping the data

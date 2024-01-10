@@ -11,7 +11,7 @@ primary_ipv4: false # False means that DHCP is used or IP is not present
 primary_ipv6: false # False means that DHCP is used or IP is not present
 
 # VMWare REST API defaults
-admin_account_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret={{ secrets_vault_engine_path | default(environment_name) }}/data/{{ secrets_vault_secrets_path | default(project_fullname) }}:{{ inventory_hostname }}_{{ admin_account }}') }}"
+admin_account_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path | default(environment_name) + '/data/' + secrets_vault_secrets_path | default(project_fullname) + ':' + inventory_hostname + '_' + admin_account) }}"
 rest_api_credentials:
   interactive_session: false
   type: USERNAME_PASSWORD
