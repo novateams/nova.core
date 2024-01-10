@@ -31,7 +31,7 @@
 
 - name: Templating Caddy configuration files for {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: caddy.yml
+    src: caddy.yml.j2
     dest: "{{ caddy_config_folder }}/docker-compose.yml"
     mode: "0644"
     lstrip_blocks: true
