@@ -5,7 +5,10 @@ services:
     hostname: caddy
     container_name: caddy
     restart: unless-stopped
-    ports: "{{ caddy_container_ports }}"
+    ports:
+      {% for port in caddy_container_ports %}
+      - "{{ port }}"
+      {% endfor %}
     volumes:
       - /srv/caddy/etc:/etc/caddy # When only mounting Caddyfile the changes are not picked up inside the container
       - /srv/caddy/data:/data/caddy
