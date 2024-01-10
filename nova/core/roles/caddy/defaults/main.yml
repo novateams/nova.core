@@ -18,6 +18,6 @@ caddy_caddyfile_src: caddyfile_src # Will look for the file in templates folder 
 
 caddy_certificates_folder: /srv/certs/
 
-caddy_auto_https: "off" # https://caddyserver.com/docs/caddyfile/options#auto-https
+caddy_auto_https: "disable_certs" # https://caddyserver.com/docs/caddyfile/options#auto-https
 caddy_ocsp_stapling: false
 caddy_use_tls: true # Set to false to disable TLS for all servers or add it as a variable per server
