@@ -5,3 +5,4 @@
 
 - name: Ending play...
   ansible.builtin.meta: end_host
+  when: pre_role_stop
