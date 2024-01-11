@@ -39,7 +39,7 @@
     user: "{{ item.username }}"
     state: present
     key: "{{ item.ssh_key }}"
-    exclusive: "yes"
+    exclusive: "{{ item.ssh_key_exclusive | default(accounts_exclusive_ssh_key) }}"
   loop: "{{ local_accounts_list }}"
   loop_control:
     label: "{{ item.username }}"
