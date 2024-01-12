@@ -28,6 +28,7 @@ immutable: false
 no_undeploy: false
 role_only: false # Includes customization role and then stops, great for developing roles
 role_only_wp: false # Run the deploy starting from customization_pre_vm_role
+reboot_on_creation: false # Reboot the VM after creation. Might be used by some network OS
 
 # Linked clones
 linked_clone_status: false

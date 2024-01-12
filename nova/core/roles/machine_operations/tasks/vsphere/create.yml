@@ -248,3 +248,14 @@
   when:
     - fresh_deploy or vcenter_vm_info.value[0].power_state != "POWERED_ON"
     - not just_create
+
+- name: Reboot VM...
+  community.vmware.vmware_guest_powerstate:
+    state: reboot-guest
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    folder: "{{ folder }}"
+  delegate_to: localhost
+  become: false
+  when:
+    - fresh_deploy
+    - reboot_on_creation
