@@ -1,5 +1,5 @@
 ---
-- name: Terminating {{ hostname }} EC2 instance...
+- name: Terminating {{ custom_vm_name | default(vm_name) }} EC2 instance...
   amazon.aws.ec2_instance:
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: terminated
