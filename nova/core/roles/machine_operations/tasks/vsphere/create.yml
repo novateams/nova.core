@@ -201,7 +201,7 @@
       retries: 5
       delay: 2
 
-    - name: Getting the default network...
+    - name: Getting the {{ default_interface[0].name }} network info...
       vmware.vmware_rest.vcenter_network_info:
         filter_names: "{{ default_interface[0].name }}"
       register: default_network
@@ -216,7 +216,7 @@
           The network does not exist or you do not have permissions to access it.
       when: default_network.value == []
 
-    - name: Connecting the default interface...
+    - name: Connecting the {{ default_interface[0].name }} interface...
       vmware.vmware_rest.vcenter_vm_hardware_ethernet:
         vm: "{{ created_vm_info.value[0].vm }}"
         type: "{{ default_interface[0].device_type | upper }}"
@@ -231,12 +231,30 @@
       retries: 5
       delay: 2
 
-    - name: Looping over extra_nics task... # Using loop because then the NIC order stays intact
-      ansible.builtin.include_tasks: extra_nics.yml
-      loop: "{{ extra_network_interfaces | map(attribute='name') }}"
-      loop_control:
-        index_var: loop_index
-      when: extra_interfaces
+    - name: Configuring extra interfaces..
+      when: extra_network_interfaces != []
+      block:
+        - name: Getting info for the following interfaces...
+          vmware.vmware_rest.vcenter_network_info:
+            filter_names: "{{ item }}"
+          register: extra_interfaces
+          loop: "{{ extra_network_interfaces | map(attribute='name') }}"
+          until: not extra_interfaces.failed
+          retries: 5
+          delay: 2
+
+        - name: Adding the following network interfaces to {{ inventory_hostname }}...
+          vmware.vmware_rest.vcenter_vm_hardware_ethernet:
+            vm: "{{ created_vm_info.value[0].vm }}"
+            type: "{{ extra_network_interfaces[loop_index].device_type | upper | default('vmxnet3') }}"
+            backing:
+              type: "{{ item.value[0].type }}"
+              network: "{{ item.value[0].network }}"
+            start_connected: true
+          loop: "{{ extra_interfaces.results }}"
+          loop_control:
+            index_var: loop_index
+            label: "{{ item.value[0].name | default(omit) }}" # Omit is required to avoid error when this block is skipped
 
 - name: Starting VM...
   community.vmware.vmware_guest_powerstate:
