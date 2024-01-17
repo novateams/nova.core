@@ -44,7 +44,7 @@
         ansible_host: "{{ custom_connection_ip }}"
       when: custom_connection_ip is defined
 
-- name: Setting correct connection plugin and {{ template_username if fresh_deploy else ansible_deployer_username }} user for {{ inventory_hostname }}...
+- name: Setting connection to {{ default_connection_plugin | upper }} and user to {{ template_username if fresh_deploy else ansible_deployer_username }} for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
