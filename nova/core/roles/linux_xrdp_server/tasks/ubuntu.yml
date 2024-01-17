@@ -5,10 +5,3 @@
     src: 10-configuration.pkla
     dest: /etc/polkit-1/localauthority/50-local.d/10-configuration.pkla
     mode: "0644"
-
-- name: Creating xrdp start cron job... # Because if there's a lot of (security) agents installed the xrdp service times out on boot
-  ansible.builtin.cron:
-    name: Start xrdp.service
-    special_time: reboot
-    job: sleep 30 && systemctl restart xrdp.service
-    user: root
