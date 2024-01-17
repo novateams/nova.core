@@ -1,5 +1,5 @@
 ---
-- name: Removing VM...
+- name: Deleting {{ custom_vm_name | default(vm_name) }} VM...
   community.vmware.vmware_guest:
     datacenter: "{{ datacenter }}"
     name: "{{ custom_vm_name | default(vm_name) }}"

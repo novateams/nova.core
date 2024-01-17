@@ -1,5 +1,5 @@
 ---
-- name: Deleting {{ fqdn }} from Linode...
+- name: Deleting {{ custom_vm_name | default(vm_name) }} VM from Linode...
   linode.cloud.instance:
     api_token: "{{ linode_api_token }}"
     label: "{{ custom_vm_name | default(vm_name) }}"
