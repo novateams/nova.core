@@ -16,6 +16,7 @@
           recovery_pgp_keys:
           root_token_pgp_key: ""
         body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
       register: vault_init
 
     - name: Saving Vault root token credentials...
@@ -47,6 +48,7 @@
           reset: false
           migrate: false
         body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
       loop: "{{ vault_init.json.keys_base64 }}"
       loop_control:
         label: Unsealing with key{{ vault_unseal_key_index + 1 }}
@@ -58,6 +60,7 @@
     url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
     method: GET
     status_code: 200
+    validate_certs: "{{ vault_validate_cert }}"
   register: vault_seal_status
   until:
     - vault_seal_status.json.sealed is defined
@@ -65,7 +68,7 @@
   retries: 60
   delay: 5
 
-- name: Chcking if local root token exists...
+- name: Checking if local root token exists...
   ansible.builtin.stat:
     path: "{{ vault_config_folder }}/creds/root_token"
   register: root_token

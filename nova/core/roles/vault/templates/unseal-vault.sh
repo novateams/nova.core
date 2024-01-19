@@ -4,7 +4,7 @@ VAULT_UNSEAL_KEY="{{ vault_unseal_key }}"
 
 #----------End of variables, start of script----------#
 
-while ! curl {{ vault_configuration_uri }}
+while ! curl -k {{ vault_configuration_uri }}
 
 do
 

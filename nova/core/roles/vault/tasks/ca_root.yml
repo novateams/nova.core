@@ -6,6 +6,7 @@
     method: GET
     headers:
       X-Vault-Token: "{{ vault_root_token }}"
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 200
       - 400 # This means that the engine doesn't exist
@@ -36,6 +37,7 @@
       options: null
     status_code: 204
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
 
 - name: Creating Root CA...
   ansible.builtin.uri:
@@ -53,6 +55,7 @@
       key_type: "{{ vault_root_ca_key_type | default('ec') }}"
       key_bits: "{{ vault_root_ca_key_bits | default('384') }}"
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
 
 # CRL
 - name: Configuring {{ vault_root_ca_pki_engine_name }} CRL...
@@ -69,6 +72,7 @@
       enable_delta: false
       expiry: 8760h # 1 year
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 200
       - 204
@@ -85,6 +89,7 @@
       crl_distribution_points: "{{ vault_root_ca_crl_distribution_points }}"
       issuing_certificates: "{{ vault_root_ca_issuing_certificates }}"
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 200
       - 204

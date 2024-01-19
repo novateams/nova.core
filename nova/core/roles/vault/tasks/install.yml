@@ -51,6 +51,7 @@
     url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
     method: GET
     status_code: 200
+    validate_certs: "{{ vault_validate_cert }}"
   register: vault_status
   until: vault_status.status == 200
   retries: 12
