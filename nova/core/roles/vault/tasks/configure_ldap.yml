@@ -7,6 +7,7 @@
       X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
   register: all_auth_methods
 
 # vault_ldap_engine_name + '/' is required to match the strange output that comes from all_auth_methods.json.data
@@ -23,6 +24,7 @@
       path: ldap
       type: ldap
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 204
 
@@ -50,5 +52,6 @@
       X-Vault-Token: "{{ vault_root_token }}"
     body: "{{ vault_ldap_configuration }}"
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 204

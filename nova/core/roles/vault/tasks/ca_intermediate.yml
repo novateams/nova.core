@@ -6,6 +6,7 @@
     method: GET
     headers:
       X-Vault-Token: "{{ vault_root_token }}"
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 200
       - 400 # This means that the engine doesn't exist
@@ -32,6 +33,7 @@
       options: null
     status_code: 204
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
 
 - name: Including Intermediate CA configuration block...
   when: intermediate_ca_pki_engine_status.status != 200
@@ -52,6 +54,7 @@
           key_type: "{{ vault_intermediate_ca_key_type | default('ec') }}"
           key_bits: "{{ vault_intermediate_ca_key_bits | default('384') }}"
         body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
       register: intermediate_csr
 
     - name: Signing Intermediate CA...
@@ -66,6 +69,7 @@
           common_name: "{{ vault_intermediate_ca_name }}"
           use_csr_values: true
         body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
       register: signed_intermediate_ca
 
     - name: Setting signed Intermediate CA...
@@ -78,6 +82,7 @@
         body:
           certificate: "{{ signed_intermediate_ca.json.data.certificate }}"
         body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
         status_code:
           - 200
           - 204
@@ -117,6 +122,7 @@
       - 200
       - 204
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
   loop:
     # RSA Client/Server certificate
     - path: server_rsa
@@ -168,6 +174,7 @@
       - 200
       - 204
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
   when: vault_code_signing_enabled
 
 # CRLs
@@ -185,6 +192,7 @@
       enable_delta: false
       expiry: 8760h # 1 year
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 200
       - 204
@@ -201,6 +209,7 @@
       crl_distribution_points: "{{ vault_intermediate_ca_crl_distribution_points }}"
       issuing_certificates: "{{ vault_intermediate_ca_issuing_certificates }}"
     body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 200
       - 204
