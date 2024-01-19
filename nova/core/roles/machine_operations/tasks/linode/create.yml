@@ -6,7 +6,7 @@
     type: "{{ linode_vm_type | default('g6-dedicated-2') }}"
     region: "{{ linode_vm_region | default('eu-central') }}"
     image: "{{ linode_image }}"
-    root_pass: "{{ linode_vm_password }}"
+    root_pass: "{{ machine_operations_linode_vm_password }}"
     tags:
       - "{{ project_fullname | default(omit) }}"
     state: present
