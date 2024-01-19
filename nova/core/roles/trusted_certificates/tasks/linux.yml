@@ -16,6 +16,7 @@
         dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
         mode: "0644"
         timeout: 60
+        validate_certs: "{{ trusted_certificates_validate_certs }}"
       loop: "{{ trusted_certificates_list }}"
       when: item.src.startswith('http')
 
@@ -41,6 +42,7 @@
         dest: /etc/ca-certificates/trust-source/anchors/{{ item.name }}.crt
         mode: "0644"
         timeout: 60
+        validate_certs: "{{ trusted_certificates_validate_certs }}"
       loop: "{{ trusted_certificates_list }}"
       when: item.src.startswith('http')
 
@@ -66,6 +68,7 @@
         dest: /tmp/{{ item.name }}.crt
         mode: "0644"
         timeout: 60
+        validate_certs: "{{ trusted_certificates_validate_certs }}"
       loop: "{{ trusted_certificates_list }}"
       when: item.src.startswith('http')
 
@@ -96,7 +99,7 @@
       community.general.java_cert:
         cert_path: /usr/local/share/ca-certificates/{{ item.name }}.crt
         cert_alias: "{{ item.name }}"
-        keystore_path: /srv/certs/{{ jks_truststore_name }}.jks
+        keystore_path: /srv/certs/{{ trusted_certificates_jks_truststore_name }}.jks
         keystore_pass: changeit # Since the truststore contains public keys I don't see much point in setting different password than JKS default
         state: present
         keystore_create: true

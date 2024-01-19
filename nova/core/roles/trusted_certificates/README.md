@@ -22,7 +22,7 @@ none
   ansible.builtin.include_role:
     name: nova.core.trusted_certificates
   vars:
-    jks_truststore_name: true
+    trusted_certificates_to_jks: true
     trusted_certificates_list:
       - name: RootCA
         src: http://example.com/pem
