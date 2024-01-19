@@ -15,7 +15,7 @@
       Authorization: Bearer {{ linode_api_token }}
     body:
       image: "{{ linode_image }}"
-      root_pass: "{{ linode_vm_password }}"
+      root_pass: "{{ machine_operations_linode_vm_password }}"
     body_format: json
   delegate_to: localhost
 
