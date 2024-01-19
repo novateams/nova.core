@@ -18,6 +18,7 @@
     dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
     mode: "0644"
     timeout: 60
+    validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
   become: true
   when: item.src.startswith('http')

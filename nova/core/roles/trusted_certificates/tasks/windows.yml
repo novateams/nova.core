@@ -20,6 +20,7 @@
     url: "{{ item.src }}"
     dest: "{{ post_scripts_folder_on_target }}/{{ item.name }}.cer"
     timeout: 60
+    validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
     label: "{{ item.name }}"
