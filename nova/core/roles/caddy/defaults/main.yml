@@ -16,8 +16,13 @@ caddy_version: 2.7.6
 # caddy_template_caddyfile mode variables
 caddy_caddyfile_src: caddyfile_src # Will look for the file in templates folder for the role that includes this role
 
+caddy_generate_self_signed_certificate: false # Set to true to generate a self signed certificate that will be saved in the caddy_certificates_folder
+caddy_self_signed_certificate_common_name: "{{ fqdn }}"
+caddy_self_signed_certificate_path: "{{ caddy_certificates_folder }}{{ fqdn }}_fullchain.crt"
+caddy_self_signed_certificate_key_path: "{{ caddy_certificates_folder }}{{ fqdn }}_key.crt"
 caddy_certificates_folder: /srv/certs/
 
+# Caddyfile variables
 caddy_auto_https: "disable_certs" # https://caddyserver.com/docs/caddyfile/options#auto-https
 caddy_ocsp_stapling: false
 caddy_use_tls: true # Set to false to disable TLS for all servers or add it as a variable per server
