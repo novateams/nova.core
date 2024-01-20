@@ -28,6 +28,7 @@
     - "{{ caddy_config_folder }}/data"
     - "{{ caddy_config_folder }}/config"
     - "{{ caddy_config_folder }}/logs"
+    - "{{ caddy_certificates_folder }}"
 
 - name: Templating Caddy configuration files for {{ inventory_hostname }}...
   ansible.builtin.template:
@@ -35,3 +36,47 @@
     dest: "{{ caddy_config_folder }}/docker-compose.yml"
     mode: "0644"
     lstrip_blocks: true
+
+# Self signed certificate
+- name: Checking & Generating a self-signed certificate...
+  when: caddy_generate_self_signed_certificate
+  block:
+    - name: Checking for existing self-signed certificate...
+      ansible.builtin.stat:
+        path: "{{ caddy_self_signed_certificate_path }}"
+      register: certificate
+
+    - name: Getting info about existing self-signed certificate...
+      community.crypto.x509_certificate_info:
+        path: "{{ caddy_self_signed_certificate_path }}"
+        valid_at:
+          certificate_valid: "+20d"
+      register: certificate_is_valid
+      when: certificate.stat.exists
+
+    - name: Generating self-signed certificate...
+      when: (not certificate.stat.exists or not certificate_is_valid.valid_at.certificate_valid)
+      block:
+        - name: Installing self-signed certificate dependencies...
+          ansible.builtin.apt:
+            name: python3-cryptography
+            state: present
+
+        - name: Generating selfsigned private key...
+          community.crypto.openssl_privatekey:
+            path: "{{ caddy_self_signed_certificate_key_path }}"
+            curve: secp256r1
+            type: ECC
+
+        - name: Generating selfsigned CSR...
+          community.crypto.openssl_csr:
+            path: /tmp/selfsigned_{{ fqdn }}.csr
+            privatekey_path: "{{ caddy_self_signed_certificate_key_path }}"
+            common_name: "{{ caddy_self_signed_certificate_common_name }}"
+
+        - name: Signing selfsigned CSR...
+          community.crypto.x509_certificate:
+            path: "{{ caddy_self_signed_certificate_path }}"
+            privatekey_path: "{{ caddy_self_signed_certificate_key_path }}"
+            csr_path: /tmp/selfsigned_{{ fqdn }}.csr
+            provider: selfsigned
