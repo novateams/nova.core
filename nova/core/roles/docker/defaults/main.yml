@@ -1,4 +1,5 @@
 ---
+docker_engine_version: {}
 docker_daemon_template: daemon.json
 
 # Docker daemon.json defaults

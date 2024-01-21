@@ -51,16 +51,17 @@
 - name: Installing Docker and requirements...
   ansible.builtin.apt:
     name:
-      - docker-ce
-      - docker-ce-cli
       - containerd.io
+      - docker-ce-cli{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else none }}
+      - docker-ce{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else none }}
+      - docker-compose-plugin
+      - python3-jsondiff
+      - python3-pip
       - python3-setuptools
       - python3-wheel
-      - python3-pip
-      - python3-jsondiff
-      - docker-compose-plugin
     state: present
-    update-cache: true
+    allow_downgrade: true
+    update_cache: true
   register: docker_install
   until: not docker_install.failed # Because sometimes the primary DNS is not up yet
   retries: 6
