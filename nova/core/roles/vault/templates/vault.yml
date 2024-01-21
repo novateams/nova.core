@@ -2,13 +2,9 @@
 services:
   vault:
     image: hashicorp/vault:{{ vault_version }}
+    hostname: "{{ vault_container_name }}"
     container_name: "{{ vault_container_name }}"
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
-    expose:
-      - 80
+    restart: unless-stopped
     volumes:
       - "{{ vault_config_folder }}/config:/vault/config"
       - "{{ vault_config_folder }}/file:/vault/file"

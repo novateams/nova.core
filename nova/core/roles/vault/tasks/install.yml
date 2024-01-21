@@ -18,7 +18,7 @@
     group: 1000
     lstrip_blocks: true
   loop:
-    - src: vault.json # Changing the config file name breaks vault, unless you remove the old config file from container
+    - src: vault.json
       dest: config/vault.json
     - src: vault.yml
       dest: docker-compose.yml
