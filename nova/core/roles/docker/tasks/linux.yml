@@ -23,10 +23,18 @@
       retries: 10
       delay: 6
 
+    # This is to remove the legacy Docker repository filename that was previously used with this role
+    # This task should be removed on 01.09.2024
+    - name: Removing existing legacy Docker repository filename...
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/download_docker_com_linux_debian.list
+        state: absent
+
     - name: Adding Docker repository...
       ansible.builtin.apt_repository:
         repo: deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable
         state: present
+        filename: docker
         update_cache: true
 
 - name: Including Docker for not Kali APT configuration block...
@@ -42,10 +50,18 @@
       retries: 10
       delay: 6
 
+    # This is to remove the legacy Docker repository filename that was previously used with this role
+    # This task should be removed on 01.09.2024
+    - name: Removing existing legacy Docker repository filename...
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/download_docker_com_linux_{{ ansible_distribution | lower }}.list
+        state: absent
+
     - name: Adding Docker repository...
       ansible.builtin.apt_repository:
         repo: deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
         state: present
+        filename: docker
         update_cache: true
 
 - name: Installing Docker and requirements...
