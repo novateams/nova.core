@@ -83,6 +83,14 @@
   retries: 6
   delay: 5
 
+- name: "{{ 'Locking' if docker_engine_version != {} else 'Unlocking' }} Docker engine version..." # This is to avoid updating Docker with apt upgrade
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: "{{ 'hold' if docker_engine_version != {} else 'install' }}"
+  loop:
+    - docker-ce-cli
+    - docker-ce
+
 - name: Getting python3-pip version...
   ansible.builtin.shell: pip3 -V | cut -d " " -f 2
   changed_when: false
