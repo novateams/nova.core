@@ -53,6 +53,13 @@ template_description: Created on {{ ansible_date_time.iso8601 }}
 # VMWare workstation #
 ######################
 
+# Connection parameters
+machine_operations_vmware_workstation_host: "{{ ansible_host }}"
+machine_operations_vmware_workstation_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
+machine_operations_vmware_workstation_connection: ssh
+machine_operations_vmware_workstation_shell_type: sh
+machine_operations_vmware_workstation_python_interpreter: /usr/bin/python3
+
 # VM paths
 template_export_folder: /home/{{ lookup('env', 'USER') }}/vmware/templates
 local_vmx_template_path: "{{template_export_folder }}/{{ vm_template }}/{{ vm_template }}.vmx"
