@@ -64,7 +64,7 @@
     update_cache: true
   when: ansible_distribution == "Kali"
 
-- name: Incluing XRDP roles...
+- name: Including XRDP roles...
   ansible.builtin.include_role:
     name: "{{ item }}"
   loop:
