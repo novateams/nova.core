@@ -60,19 +60,6 @@
       retries: 60
       delay: 5
 
-    - name: Updating {{ secrets_vault_metadata_fullpath }} metadata...
-      ansible.builtin.uri:
-        url: "{{ secrets_vault_metadata_fullpath }}"
-        method: POST
-        headers:
-          X-Vault-Request: true
-          X-Vault-Token: "{{ vault_access_token | default(auth.json.auth.client_token) }}"
-        body:
-          max_versions: 100 # This sets the vault KV store secrets history to 100. Since using loops increments history quickly.
-        body_format: json
-        status_code: 204
-        validate_certs: "{{ validate_vault_certs }}"
-
 - name: Listing all secrets in {{ secrets_vault_secrets_path }}...
   ansible.builtin.uri:
     url: "{{ secrets_vault_data_fullpath }}"
