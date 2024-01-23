@@ -11,12 +11,12 @@
 
 - name: Including Windows in Cloud configuration tasks...
   ansible.builtin.include_tasks: windows_cloud.yml
-  when:
-    - ansible_system == "Win32NT"
-    - infra_env in ["aws", "linode", "azure"]
+  when: infra_env in ["aws", "linode", "azure"]
+
+- name: Including Windows on VMware Worksataion configuration tasks...
+  ansible.builtin.include_tasks: windows_vmware_workstation.yml
+  when: infra_env == "vmware_workstation"
 
 - name: Including Windows on vSphere configuration tasks...
   ansible.builtin.include_tasks: windows_vsphere.yml
-  when:
-    - ansible_system == "Win32NT"
-    - infra_env in ["vsphere" or "vmware_workstation"]
+  when: infra_env in ["vsphere" or "vmware_workstation"]
