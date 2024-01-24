@@ -12,7 +12,6 @@
     name: "{{ item.username }}"
     password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
     password_never_expires: true
-
     state: present
     groups_action: add
     groups: "{{ item.groups | default(windows_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"

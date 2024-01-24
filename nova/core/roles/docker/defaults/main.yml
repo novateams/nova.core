@@ -1,5 +1,5 @@
 ---
-docker_engine_version: 24.0.7 # Currently locked to 24.0.7 due to instability with 25.0.0
+docker_engine_version: {}
 docker_daemon_template: daemon.json
 
 # Docker daemon.json defaults
