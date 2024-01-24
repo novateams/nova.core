@@ -2,4 +2,4 @@
 - name: Updating all packages...
   ansible.builtin.package:
     name: "*"
-    state: latest
+    state: latest # Latest is used in order to perform a full upgrade
