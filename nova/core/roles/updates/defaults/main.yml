@@ -1,4 +1,8 @@
 ---
+# Linux Debian
 debian_family_updates_allow_reboot: true
 debian_family_unattended_upgrades: true
 debian_family_unattended_upgrades_allow_reboot: false
+
+# Windows
+updates_category_names: "*" # Which update categories to install - https://docs.ansible.com/ansible/latest/collections/ansible/windows/win_updates_module.html#parameter-category_names
