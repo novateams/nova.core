@@ -10,7 +10,7 @@ connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equal
 connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
 connection_address: "{{ 'DHCP' if connection_mode_dhcp else primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | ansible.utils.ipaddr('address') }}"
 
-# By default MacOS does not have Python installed so it cannot gather facts
+# By default MacOS does not have Python installed so it cannot use ansible.builtin.wait_for_connection
 macos_has_python: false
 
 # Deploy methods
