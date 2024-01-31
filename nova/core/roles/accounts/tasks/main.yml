@@ -59,6 +59,10 @@
         ansible_password: "{{ ansible_deployer_password | default(omit) }}" # Updated ansible_deployer_password
         ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=no' if (fresh_deploy and infra_env == 'aws') else omit }}" # To avoid SSH MaxAuthTries limit
 
+    - name: Including gather_facts role... # Since the connection account changed and we need to gather facts with the new account
+      ansible.builtin.include_role:
+        name: nova.core.gather_facts
+
     # Accounts removal tasks
     # This will lookup all user profiles that are not in the accounts list and remove them
     # This needs to be done after the correct ansible_user is set as not to try to remove the user you are logged in as
