@@ -1,7 +1,8 @@
 ---
+# No systemd (journal) in FreeBSD
 - name: Cleaning up Linux machine...
   ansible.builtin.shell: |
-    export HISTFILE=/dev/null
+    {{ 'setenv HISTFILE "/dev/null"' if ansible_system == 'FreeBSD' else 'export HISTFILE=/dev/null' }}
     rm -f /home/*/.ssh/known_hosts
     rm -f /home/*/.sudo_as_admin_successful
     rm -f /root/.bconsole_history
@@ -49,19 +50,20 @@
     rm -rf /home/gt/.bash_history
     rm -rf /var/log/installer/*
     service apache2 restart || true
-    if [ -d "/run/log/journal" ]; then find /run/log/journal -name "*.journal" | xargs rm -f; fi
+    {{ 'if [ -d "/run/log/journal" ]; then find /run/log/journal -name "*.journal" | xargs rm -f; fi' if ansible_system != 'FreeBSD' }}
   args:
-    executable: /bin/bash
+    executable: "/bin/{{'tcsh' if ansible_system == 'FreeBSD' else 'bash'}}"
 
 - name: Clearing journalctl logs...
   ansible.builtin.shell: journalctl --vacuum-time=1seconds || true
 
+# tcsh automatically writes current history in HISTFILE
 - name: Removing Linux bash history...
   ansible.builtin.shell: |
-    export HISTFILE=/dev/null
+    {{ 'setenv HISTFILE "/dev/null"' if ansible_system == 'FreeBSD' else 'export HISTFILE=/dev/null' }}
     rm -f /home/*/.bash_history
     rm -f /root/.bash_history
-    history -c && history -w && cat /dev/null > /root/.bash_history
+    history -c && {{ 'history -w && ' if ansible_system != 'FreeBSD' }}cat /dev/null > /root/.bash_history
   args:
-    executable: /bin/bash
+    executable: "/bin/{{'tcsh' if ansible_system == 'FreeBSD' else 'bash'}}"
   when: remove_bash_history
