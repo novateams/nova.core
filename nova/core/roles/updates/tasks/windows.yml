@@ -22,6 +22,7 @@
 
 - name: Installing Windows updates...
   ansible.windows.win_updates:
+    category_names: "{{ updates_category_names }}"
     reboot: true
   register: win_updates
   until: win_updates.failed == false
