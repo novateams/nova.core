@@ -16,6 +16,7 @@ extra_network_interfaces: []
 machine_operations_extra_nic_shutdown:
   - pfsense
   - fortinet.fortios.fortios
+  - panos
 
 # Hardware
 hardware_cpu: # Nr of CPUs to add to machine if left empty it will use the same as the template
