@@ -33,46 +33,15 @@
     - infra_env != 'my_host'
     - sudo_requires_password
 
-- name: Setting connection parameters for non-MacOS...
-  when: ansible_system is not defined
-  block:
-    - name: Waiting for {{ inventory_hostname }} to become reachable...
-      ansible.builtin.wait_for_connection:
-        timeout: 300
-      when:
-        - not role_only
-        - not role_only_wp
+- name: Waiting for {{ inventory_hostname }} to become reachable...
+  ansible.builtin.wait_for_connection:
+    timeout: 300
+  when:
+    - not role_only
+    - not role_only_wp
+    - ansible_system is not defined
 
-    - name: Gathering facts...
-      ansible.builtin.setup:
-      when: ansible_network_os is not defined
-
-    - name: Gathering Network OS facts...
-      when: ansible_network_os is defined
-      block:
-        - name: Gathering RouterOS facts...
-          community.routeros.facts:
-          when: ansible_network_os == 'community.routeros.routeros'
-
-        - name: Gathering VyOS facts...
-          vyos.vyos.vyos_facts:
-          when: ansible_network_os == 'vyos.vyos.vyos'
-
-        - name: Gathering Cisco IOS facts...
-          cisco.ios.ios_facts:
-          when: ansible_network_os == 'cisco.ios.ios'
-
-        - name: Gathering facts for FortiOS...
-          fortinet.fortios.fortios_configuration_fact:
-            access_token: "{{ fortios_access_token }}"
-            selector: system_global
-          when: ansible_network_os == 'fortinet.fortios.fortios'
-
-        - name: Gathering facts for pfSense...
-          ansible.builtin.setup:
-          when: ansible_network_os == 'pfsense'
-
-- name: Setting connection parameters for MacOS...
+- name: Setting wait for connection parameters for MacOS...
   when:
     - ansible_system is defined
     - ansible_system == "Darwin"
@@ -96,9 +65,9 @@
         - not role_only_wp
         - macos_has_python
 
-    - name: Gathering facts...
-      ansible.builtin.setup:
-      when: macos_has_python
+- name: Including gather_facts role...
+  ansible.builtin.include_role:
+    name: nova.core.gather_facts
 
 - name: Optimizing Powershell...
   ansible.windows.win_shell: "{{ lookup('file', 'Optimize-PowerShell.ps1') }}"
@@ -107,10 +76,3 @@
     - ansible_system == "Win32NT"
     - not role_only
     - not role_only_wp
-# # Useful when debugging facts gathered from different operating systems
-# - name: Saving ansible_facts to file...
-#   ansible.builtin.copy:
-#     content: "{{ ansible_facts | to_nice_yaml }}"
-#     dest: "{{ inventory_hostname }}.yaml"
-#   delegate_to: localhost
-#   become: false
