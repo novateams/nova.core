@@ -26,5 +26,5 @@
     reboot: true
   register: win_updates
   until: win_updates.failed == false
-  retries: 3
+  retries: 5
   delay: 10
