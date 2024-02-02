@@ -117,10 +117,6 @@
       name: EnableAutoTray
       data: 0
       type: dword
-    - path: HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet # Disabling Windows Defender sample submissions
-      name: SubmitSamplesConsent
-      data: 2
-      type: dword
 
 - name: Setting the following Windows Server registry values...
   ansible.windows.win_regedit:
