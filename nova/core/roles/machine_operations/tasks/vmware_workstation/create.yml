@@ -37,16 +37,12 @@
         path: "{{ local_vmx_path }}"
       register: vm_presence
 
-    - name: Checking for correct deploy method with non-existing VM...
+    - name: INCORRECT DEPLOY METHOD
+      ansible.builtin.fail:
+        msg: "{{ custom_vm_name | default(vm_name) }} doesn't exist, run deploy or redeploy first!"
       when:
         - not vm_presence.stat.exists
         - role_only or role_only_wp
-      block:
-        - ansible.builtin.debug:
-            msg: "{{ custom_vm_name | default(vm_name) }} doesn't exist, run ctp-deploy or ctp-redeploy first!"
-          failed_when:
-            - not vm_presence.stat.exists
-            - role_only or role_only_wp
 
     - name: Creating and configuring {{ custom_vm_name | default(vm_name) }}...
       when: not vm_presence.stat.exists
