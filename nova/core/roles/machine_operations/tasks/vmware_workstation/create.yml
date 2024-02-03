@@ -2,13 +2,13 @@
 - name: Including VMware Workstation tasks...
   become: false
   block:
-    - name: Making sure that {{ template_export_folder }} exists...
+    - name: Creating {{ template_export_folder }} folder...
       ansible.builtin.file:
         path: "{{ template_export_folder }}"
         state: directory
         recurse: true
 
-    - name: Checking if the VM Template is already present, if not then Downloading...
+    - name: Checking if {{ vm_template }} tremplate is already downloaded...
       ansible.builtin.stat:
         path: "{{ local_vmx_template_path }}"
       register: vm_template_presence
@@ -17,7 +17,7 @@
       ansible.builtin.setup:
         filter: "*_time"
 
-    - name: Downloading {{ vm_template }} if it does not exist or is older than 30 days...
+    - name: Downloading or updating VM template...
       when:
         - not vm_template_presence.stat.exists or ((ansible_date_time.epoch | int) - (vm_template_presence.stat.ctime | round) >= 2592000) # 30 days
         - not role_only
@@ -29,7 +29,7 @@
             state: absent
 
         # regex_replace is required because urlib considers / as a safe character and doesn't encode it
-        - name: Downloading {{ vm_template }}...
+        - name: Downloading {{ vm_template }} since it's not present or is older than 30 days...
           ansible.builtin.shell: ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ template_export_folder }}
 
     - name: Checking if the {{ custom_vm_name | default(vm_name) }} already exists...
