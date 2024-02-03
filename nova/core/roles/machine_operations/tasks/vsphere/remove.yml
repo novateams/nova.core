@@ -1,4 +1,9 @@
 ---
+- name: NO UNDEPLOY OR IMMUTABLE SET
+  ansible.builtin.fail:
+    msg: "{{ inventory_hostname }} HAS no_undeploy or immutable SET AND WON'T BE REMOVED"
+  when: immutable or no_undeploy or 'immutable' in group_names or 'no_undeploy' in group_names
+
 - name: Deleting {{ custom_vm_name | default(vm_name) }} VM...
   community.vmware.vmware_guest:
     datacenter: "{{ datacenter }}"
@@ -9,16 +14,7 @@
     state: absent
     force: true
   delegate_to: localhost
-  when:
-    - not no_undeploy
-    - "'no_undeploy' not in group_names"
-    - not immutable
-    - "'immutable' not in group_names"
-
-- name: Warning...
-  ansible.builtin.debug:
-    msg: "{{ inventory_hostname }} has no_undeploy or immutable set and won't be removed!"
-  when: immutable or no_undeploy or 'immutable' in group_names or 'no_undeploy' in group_names
+  become: false
 
 - name: Stopping play...
   ansible.builtin.meta: end_host

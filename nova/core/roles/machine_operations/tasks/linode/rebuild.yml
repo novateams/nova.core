@@ -1,10 +1,16 @@
 ---
+- name: NO UNDEPLOY OR IMMUTABLE SET
+  ansible.builtin.fail:
+    msg: "{{ inventory_hostname }} HAS no_undeploy or immutable SET AND WON'T BE REBUILT"
+  when: immutable or no_undeploy or 'immutable' in group_names or 'no_undeploy' in group_names
+
 - name: Getting {{ custom_vm_name | default(vm_name) }} info...
   linode.cloud.instance_info:
     api_token: "{{ linode_api_token }}"
     label: "{{ custom_vm_name | default(vm_name) }}"
   register: linode_vm
   delegate_to: localhost
+  become: false
 
 - name: Rebuilding {{ custom_vm_name | default(vm_name) }}...
   ansible.builtin.uri:
@@ -18,6 +24,7 @@
       root_pass: "{{ machine_operations_linode_vm_password }}"
     body_format: json
   delegate_to: localhost
+  become: false
 
 # This is required because there's a delay after the POST request and actual rebuild
 - name: Waiting until {{ custom_vm_name | default(vm_name) }} starts rebuilding...
@@ -29,6 +36,7 @@
   retries: 60
   delay: 1
   delegate_to: localhost
+  become: false
 
 - name: Waiting until {{ custom_vm_name | default(vm_name) }} rebuilding is complete...
   linode.cloud.instance_info:
@@ -39,6 +47,7 @@
   retries: 60
   delay: 1
   delegate_to: localhost
+  become: false
 
 - name: Setting fresh_deploy fact...
   ansible.builtin.set_fact:

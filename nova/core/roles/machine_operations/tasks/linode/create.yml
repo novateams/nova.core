@@ -12,6 +12,7 @@
     state: present
   register: linode_vm
   delegate_to: localhost
+  become: false
 
 - name: Setting fresh_deploy as fact...
   ansible.builtin.set_fact:
