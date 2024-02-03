@@ -11,15 +11,10 @@
       retries: 5
       delay: 2
 
-    - name: Stopping play if the VM doesn't exist...
+    - name: ERROR
+      ansible.builtin.fail:
+        msg: "{{ custom_vm_name | default(vm_name) }} VM not found!"
       when: vcenter_vm_info.value == []
-      block:
-        - name: INFO
-          ansible.builtin.debug:
-            msg: "{{ custom_vm_name | default(vm_name) }} VM doesn't exist!"
-
-        - name: Stopping play...
-          ansible.builtin.meta: end_host
 
     - name: Waiting until VMTools are running for {{ custom_vm_name | default(vm_name) }}...
       vmware.vmware_rest.vcenter_vm_tools_info:
