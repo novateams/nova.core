@@ -16,61 +16,24 @@
       when: vm_exists.stat.exists
       block:
         - name: Listing running VMs...
-          ansible.builtin.shell: vmrun -T ws list
+          ansible.builtin.command: vmrun -T ws list
           register: running_vms
 
         - name: Stopping {{ inventory_hostname }}...
-          ansible.builtin.shell: vmrun -T ws stop {{ local_vmx_path }} hard
+          ansible.builtin.command: vmrun -T ws stop {{ local_vmx_path }} hard
           when: local_vmx_path in running_vms.stdout_lines
 
-        - name: Checking if VMware Workstation is running...
-          ansible.builtin.shell: |
-            if [ -z "$(ps -fC vmware --no-headers)" ]; then
-                echo "Moving on..."
-            else
-                echo "Waiting for VMware to stop..."
-            fi
-          register: vmware_workstation_running
-
-        - name: Notifying user to start VMware Workstation...
-          when:
-            - lookup('env', 'SLACK_WEBHOOK_URL') | length != 0
-            - vmware_workstation_running.stdout == "Waiting for VMware to stop..."
-          delegate_to: localhost
+        - name: Removing VM...
           block:
-            - name: Notifying user to start VMware Workstation via Mattermost...
-              community.general.mattermost:
-                url: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/hooks/')[0] }}"
-                api_key: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/hooks/')[1] }}"
-                text: Please stop VMware Workstation on your host
-                channel: "{{ lookup('env', 'SLACK_CHANNEL') }}"
-              when: ('/hooks/' in lookup('env', 'SLACK_WEBHOOK_URL'))
+            - name: Removing {{ inventory_hostname }}...
+              ansible.builtin.command: vmrun -T ws deleteVM {{ local_vmx_path }}
 
-            - name: Notifying user to start VMware Workstation via Slack...
-              community.general.slack:
-                token: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/services/')[1] }}"
-                msg: Please stop VMware Workstation on your host
-                channel: "{{ lookup('env', 'SLACK_CHANNEL') }}"
-              when: ('/services/' in lookup('env', 'SLACK_WEBHOOK_URL'))
-
-        - name: Waiting for user to manually stop VMware Workstation... # Otherwise the remove command gets insufficient permissions error
-          ansible.builtin.shell: |
-            if [ -z "$(ps -fC vmware --no-headers)" ]; then
-                echo "Moving on..."
-            else
-                echo "Waiting for VMware to stop..."
-            fi
-          register: vmware_workstation_running
-          retries: 30
-          delay: 5
-          until: vmware_workstation_running.stdout == "Moving on..."
-
-        - name: Removing {{ inventory_hostname }}...
-          ansible.builtin.shell: vmrun -T ws deleteVM {{ local_vmx_path }}
-
-        - name: Stopping play for remove...
-          ansible.builtin.meta: end_host
-          when: deploy_mode == 'undeploy'
+          # This rescue is required because if user restarted the VMware Workstation and the VM is still running the deleteVM command will incorrectly error with "Insufficient permissions"
+          rescue:
+            - name: Removing {{ inventory_hostname }} folder...
+              ansible.builtin.file:
+                path: "{{ local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
+                state: absent
 
     - name: Removing {{ inventory_hostname }} folder...
       ansible.builtin.file:
