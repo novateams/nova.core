@@ -5,7 +5,7 @@ expo_fqdn: expo.localhost
 expo_configuration_folder: XS/2023/XS23TR
 expo_project_mode: production
 expo_readonly_mode: false
-expo_profiles: production ### "archive,docs,availability,consumer"
+expo_compose_profiles: production ### "archive,docs,availability,consumer"
 expo_debug_mode: true
 expo_node_tls_check: 0
 
@@ -88,6 +88,8 @@ expo_kafka_enabled: false
 expo_kafka_external: false
 expo_kafka_username: expo
 expo_kafka_password: ""
+expo_kafka_ksql_username: ksql
+expo_kafka_ksql_password: ""
 
 ### SENTRY ###
 expo_sentry_frontend_enabled: false
