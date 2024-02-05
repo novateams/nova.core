@@ -12,9 +12,7 @@
     chdir: /srv/expo/
     target: build
 
-- name: Run app with profiles {{ expo_profiles }} ...
+- name: Run app with profiles {{ expo_compose_profiles }} ...
   community.general.make:
     chdir: /srv/expo/
-    target: start-with-profiles-from-environment
-  environment:
-    COMPOSE_PROFILES: "{{ expo_profiles }}"
+    target: start-with-profiles-from-config
