@@ -5,17 +5,17 @@
 
 - name: Creating a live snapshot...
   ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws snapshot {{ local_vmx_path }} {{ snapshot_name | default(ansible_date_time.iso8601) }}
-  when: live_snap
+  when: live_snap | bool # Because CLI detects extra var as string
 
 - name: Including snapshot tasks...
-  when: not live_snap
+  when: not live_snap | bool # Because CLI detects extra var as string
   block:
     - name: Listing running VMs...
-      shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws list
+      ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws list
       register: running_vms
 
     - name: Stopping {{ inventory_hostname }}...
-      shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ local_vmx_path }} soft
+      ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ local_vmx_path }} soft
       when: local_vmx_path in running_vms.stdout_lines
 
     - name: Removing all existing snapshots...
@@ -26,4 +26,4 @@
       ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws snapshot {{ local_vmx_path }} {{ snapshot_name | default(ansible_date_time.iso8601) }}
 
     - name: Starting {{ inventory_hostname }}...
-      shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}
+      ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}
