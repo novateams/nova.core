@@ -30,7 +30,7 @@
 
           # This rescue is required because if user restarted the VMware Workstation and the VM is still running the deleteVM command will incorrectly error with "Insufficient permissions"
           rescue:
-            - name: Removing {{ inventory_hostname }} folder...
+            - name: Recovering from {{ inventory_hostname }} remove error...
               ansible.builtin.file:
                 path: "{{ local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
                 state: absent
