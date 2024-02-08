@@ -35,10 +35,10 @@
         description: Created at {{ ansible_date_time.iso8601 }} by {{ deployer_username }}
 
 - name: Including powerstate role...
-  include_role:
+  ansible.builtin.include_role:
     name: nova.core.powerstate
   vars:
     poweron: true
   when:
     - start_vm_after_snapshot | bool # Because CLI detects extra var as string
-    - not live_snap
+    - not live_snap | bool # Because CLI detects extra var as string
