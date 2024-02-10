@@ -7,6 +7,7 @@
       - htop # Useful for monitoring system resources
       - inetutils
       - kitty-terminfo # To pass your terminal settings over ssh
+      - lsb-release # For detecting OS with Ansible
       - python-pip
       - python-setuptools # Required for Ansible
     state: present
