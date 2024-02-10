@@ -17,12 +17,12 @@
 
 - name: Making sure locale exists...
   community.general.locale_gen:
-    name: en_US.UTF-8
+    name: "{{ os_configuration_locale }}"
     state: present
   when: ansible_os_family != 'RedHat'
 
 - name: Setting the default locale...
-  ansible.builtin.command: localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
+  ansible.builtin.command: localectl set-locale LANG={{ os_configuration_locale }} LANGUAGE={{ os_configuration_locale }}
   changed_when: true
 
 - name: Enabling SSH forwarding for sudo...

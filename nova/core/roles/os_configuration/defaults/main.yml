@@ -3,6 +3,7 @@
 # General #
 ###########
 
+os_configuration_locale: en_US.UTF-8 # Default locale to be set
 os_configuration_post_roles: [] # List of extra roles to be included as one of the last steps of this role
 install_trusted_certificates: true # Set to false to skip trusted certificates installation with nova.core.trusted_certificates role
 hosts_file_values: [] # Custom hosts file entries to be added.
