@@ -130,7 +130,8 @@
         template: "{{ base_vm_template if template else vm_template }}"
         folder: "{{ folder }}"
         state: poweredon
-        cluster: "{{ cluster }}"
+        esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
+        cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
         datastore: "{{ datastore }}"
         resource_pool: "{{ resource_pool | default(omit) }}"
         hardware:
@@ -182,7 +183,7 @@
         renderer_3D: "{{ 'automatic' if video_3d else omit }}"
         use_auto_detect: false
       when: video_increase_memory
-      
+
     - name: Add vGPU profile to VM...
       community.vmware.vmware_guest_vgpu:
         cluster: "{{ cluster }}"
