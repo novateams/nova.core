@@ -81,6 +81,12 @@
     mode: "0644"
     state: touch
 
+- name: Creating /var/lib/dbus folder... # Required for AlmaLinux server version for an example
+  ansible.builtin.file:
+    path: /var/lib/dbus
+    mode: "0755"
+    state: directory
+
 - name: Creating a symlink for machine-id in /var/lib/dbus/machine-id...
   ansible.builtin.file:
     src: /etc/machine-id
