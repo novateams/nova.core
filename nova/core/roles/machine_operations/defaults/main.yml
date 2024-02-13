@@ -23,6 +23,7 @@ hardware_cpu: # Nr of CPUs to add to machine if left empty it will use the same 
 hardware_ram: # Nr of GB of RAM to add to machine if left empty it will use the same as the template
 vmware_nic_type: vmxnet3
 vmware_scsi_controller_type: paravirtual
+machine_operations_vgpu: # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_vgpu_module.html
 
 # Deployment
 vapp_options: []
