@@ -169,9 +169,7 @@
         name: nova.core.powerstate
       vars:
         shutdown: true
-      when:
-        - ansible_network_os is defined
-        - ansible_network_os in machine_operations_extra_nic_shutdown
+      when: (ansible_network_os is defined and ansible_network_os in machine_operations_extra_nic_shutdown) or machine_operations_vgpu != none
 
     - name: Increasing video memory
       community.vmware.vmware_guest_video:
@@ -184,6 +182,14 @@
         renderer_3D: "{{ 'automatic' if video_3d else omit }}"
         use_auto_detect: false
       when: video_increase_memory
+      
+    - name: Add vGPU profile to VM...
+      community.vmware.vmware_guest_vgpu:
+        cluster: "{{ cluster }}"
+        datacenter: "{{ datacenter }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        vgpu: "{{ machine_operations_vgpu }}"
+      when: machine_operations_vgpu
 
     - name: Looking up the cloned VM...
       vmware.vmware_rest.vcenter_vm_info:
