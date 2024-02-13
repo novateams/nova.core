@@ -8,7 +8,8 @@
   community.vmware.vmware_guest:
     datacenter: "{{ datacenter }}"
     name: "{{ custom_vm_name | default(vm_name) }}"
-    cluster: "{{ cluster }}"
+    esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
+    cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
     resource_pool: "{{ resource_pool | default(omit) }}"
     folder: "{{ folder }}"
     state: absent
