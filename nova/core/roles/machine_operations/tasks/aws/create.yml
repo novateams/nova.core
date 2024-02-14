@@ -5,8 +5,8 @@
   block:
     - name: Getting all OS images...
       amazon.aws.ec2_ami_info:
-        owners: "{{ ami_owner_id }}"
         filters:
+          owner-id: "{{ ami_owner_id }}"
           name: "{{ ami_name_search_string }}"
           architecture: x86_64
       register: found_amis
@@ -67,10 +67,9 @@
           assign_public_ip: true
         image_id: "{{ all_images[-1].image_id }}"
       register: created_ec2_instance
-      until:
-        - created_ec2_instance.instances[0].public_ip_address is defined
-      retries: 24
-      delay: 5
+      until: created_ec2_instance.instances[0].public_ip_address is defined
+      retries: 60
+      delay: 1
 
     - name: Setting primary IPv4 as fact...
       ansible.builtin.set_fact:
