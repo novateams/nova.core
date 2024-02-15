@@ -17,13 +17,8 @@
   ansible.builtin.stat:
     path: /var/run/reboot-required
   register: reboot_required_file
+  notify: Rebooting...
   when: debian_family_updates_allow_reboot
-
-- name: Rebooting...
-  ansible.builtin.reboot:
-  when:
-    - debian_family_updates_allow_reboot
-    - reboot_required_file.stat.exists
 
 - name: Including unattended upgrades tasks...
   when: debian_family_unattended_upgrades

@@ -46,6 +46,7 @@
 - name: Removing {{ hostname }} from domain...
   ansible.builtin.command: /usr/sbin/realm leave
   changed_when: true
+  notify: Rebooting...
   when: realm_state.stdout_lines != []
 
 - name: Joining {{ hostname }} to {{ ad_domain_name }}...
@@ -98,8 +99,3 @@
     regexp: .*{{ ad_domain_name }}.*
     line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL"
     insertafter: ^%sudo
-
-- name: Rebooting on finalize..
-  ansible.builtin.set_fact:
-    reboot_on_finalize: true
-  when: realm_state.stdout_lines == []
