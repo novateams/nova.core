@@ -1,4 +1,13 @@
 ---
+- name: Installing required auth packages...
+  ansible.builtin.apt:
+    name: libpam-ssh-agent-auth
+    state: present
+    update_cache: true
+  when:
+    - use_ssh_agent_for_sudo
+    - ansible_os_family == "Debian"
+
 # Universal
 - name: Updating SSHD MaxAuthTries for Cloud {{ inventory_hostname }}...
   when: infra_env in ["aws", "linode", "azure"]
@@ -71,12 +80,3 @@
     - nova.core.linux_xrdp_server
     - nova.core.linux_xrdp_keyboard
   when: "'os_ubuntu_desktop_20_04' in group_names or 'os_ubuntu_desktop_22_04' in group_names or 'os_kali' in group_names"
-
-- name: Installing required auth packages...
-  ansible.builtin.apt:
-    name: libpam-ssh-agent-auth
-    state: present
-    update_cache: true
-  when:
-    - use_ssh_agent_for_sudo
-    - ansible_os_family == "Debian"
