@@ -1,5 +1,5 @@
 ---
-- name: Setting correct connection parameters for VMware Workstation VM...
+- name: Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper }} over {{ ansible_host }}...
   ansible.builtin.set_fact:
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
