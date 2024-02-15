@@ -4,4 +4,7 @@
     name: xrdp
     enabled: true
     state: restarted
-  when: not reboot_on_finalize | default(false) # Only restart xrdp service if reboot is not scheduled
+  when: not xrdp_install.changed # Only restart xrdp service if reboot is not scheduled
+
+- name: Rebooting...
+  ansible.builtin.reboot:

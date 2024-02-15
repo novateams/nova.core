@@ -31,7 +31,7 @@ immutable: false
 no_undeploy: false
 role_only: false # Includes customization role and then stops, great for developing roles
 role_only_wp: false # Run the deploy starting from customization_pre_vm_role
-machine_operations_esxi_hostname:  # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_module.html#parameter-esxi_hostname
+machine_operations_esxi_hostname: # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_module.html#parameter-esxi_hostname
 
 # Linked clones
 linked_clone_status: false

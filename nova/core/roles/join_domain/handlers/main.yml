@@ -7,3 +7,6 @@
   when:
     - ansible_system == "Linux"
     - not reboot_on_finalize | default(false) # Only restart sssd service if reboot is not scheduled
+
+- name: Rebooting...
+  ansible.builtin.reboot:
