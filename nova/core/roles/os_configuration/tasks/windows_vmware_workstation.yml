@@ -36,20 +36,20 @@
         - name: Starting {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ os_configuration_local_vmx_path }}
 
-        - name: Waiting for {{ custom_vm_name | default(vm_name) }} IP address...
-          ansible.builtin.shell: vmrun getGuestIPAddress {{ os_configuration_local_vmx_path }}
-          register: vmip
-          retries: 60
-          delay: 3
-          until:
-            - vmip.rc == 0
-            - vmip.stdout != "unknown"
-            - vmip.stdout | ansible.utils.ipv4() != false
+    - name: Waiting for {{ custom_vm_name | default(vm_name) }} IP address...
+      ansible.builtin.shell: vmrun getGuestIPAddress {{ os_configuration_local_vmx_path }}
+      register: vmip
+      retries: 60
+      delay: 3
+      until:
+        - vmip.rc == 0
+        - vmip.stdout != "unknown"
+        - vmip.stdout | ansible.utils.ipv4() != false
 
-        - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
-          ansible.builtin.set_fact:
-            ansible_host: "{{ vmip.stdout }}"
-            primary_ipv4: "{{ vmip.stdout }}"
+    - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
+      ansible.builtin.set_fact:
+        ansible_host: "{{ vmip.stdout }}"
+        primary_ipv4: "{{ vmip.stdout }}"
 
     # Re-including the connection role to reset the connection parameters
     - name: Re-Including the connection role for {{ custom_vm_name | default(vm_name) }}...
