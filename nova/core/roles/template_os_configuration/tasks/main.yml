@@ -2,6 +2,7 @@
 - name: Including VMTools role...
   ansible.builtin.include_role:
     name: nova.core.vcenter_vmtools_policy
+  when: infra_env == "vsphere"
 
 - name: Including updates role...
   ansible.builtin.include_role:
