@@ -1,7 +1,4 @@
 ---
-- name: Flushing handlers...
-  ansible.builtin.meta: flush_handlers
-
 - name: Including finalize block for non-containers...
   when: customization_context == "host" # Alternative is container that most likely doesn't need this role
   block:
@@ -25,6 +22,11 @@
           ansible.builtin.include_tasks: vyos.yml
           when: "'os_vyos' in group_names"
 
+- name: Flushing handlers...
+  ansible.builtin.meta: flush_handlers
+
+# This is an extra feature to include additional roles after the finalize role
+# Can be useful for some specific cases like disk encryption where the machine is locked after reboot
 - name: Including following post-finalize roles...
   ansible.builtin.include_role:
     name: "{{ item }}"
