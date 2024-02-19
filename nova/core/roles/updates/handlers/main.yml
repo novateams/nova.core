@@ -1,3 +1,8 @@
 ---
 - name: Rebooting...
   ansible.builtin.reboot:
+  when: ansible_system == "Linux"
+
+- name: Rebooting...
+  ansible.windows.win_reboot:
+  when: ansible_system == "Win32NT"
