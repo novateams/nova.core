@@ -1,13 +1,15 @@
 ---
-# Using VMware because vyos module isn't working & shell reboot is unstable
-- name: Rebooting VM...
-  community.vmware.vmware_guest_powerstate:
-    folder: "{{ folder }}"
-    name: "{{ custom_vm_name | default(vm_name) }}"
-    state: reboot-guest
-    force: true
-  delegate_to: localhost
-  become: false
-  when:
-    - reboot_on_finalize
-    - infra_env == 'vsphere'
+- name: Rebooting VyOS...
+  when: reboot_on_finalize
+  block:
+    - name: Setting SSH as connection plugin...
+      ansible.builtin.set_fact:
+        ansible_connection: ssh
+
+    - name: Rebooting...
+      ansible.builtin.reboot:
+      become: true
+
+    - name: Setting connection plugin back to default...
+      ansible.builtin.set_fact:
+        ansible_connection: "{{ default_connection_plugin }}"
