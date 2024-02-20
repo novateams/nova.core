@@ -1,8 +1,12 @@
 ---
 - name: Installing Docker on Windows machine...
   ansible.builtin.include_tasks: windows.yml
-  when: "'os_windows' in group_names"
+  when: ansible_os_family == "Windows"
 
 - name: Installing Docker on Debian based Linux machine...
-  ansible.builtin.include_tasks: linux.yml
-  when: ansible_facts.os_family == "Debian"
+  ansible.builtin.include_tasks: debian_os.yml
+  when: ansible_os_family == "Debian"
+
+- name: Installing Docker on Archlinux based machine...
+  ansible.builtin.include_tasks: archlinux.yml
+  when: ansible_os_family == "Archlinux"
