@@ -1,0 +1,64 @@
+---
+- name: Installing Docker and requirements...
+  ansible.builtin.package:
+    name:
+      - docker
+      - docker-compose
+      - docker-buildx
+    state: present
+    update_cache: true
+  register: docker_install
+  until: not docker_install.failed # Because sometimes the primary DNS is not up yet
+  retries: 6
+  delay: 5
+
+- name: Getting python3-pip version...
+  ansible.builtin.shell: pip3 -V | cut -d " " -f 2
+  changed_when: false
+  register: pip_version
+
+# https://peps.python.org/pep-0668/
+# Using this until a good cross-user venv is available
+- name: Installing required Python packages...
+  ansible.builtin.pip:
+    name: requests
+    extra_args: "{{ '--break-system-packages' if pip_version.stdout is version('23.0.0', 'gt', version_type='loose') else none }}"
+
+- name: Creating /etc/docker directory...
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    mode: "0755"
+
+- name: Adding Docker daemon config...
+  ansible.builtin.template:
+    src: "{{ docker_daemon_template }}"
+    dest: /etc/docker/daemon.json
+    lstrip_blocks: true
+    mode: "0644"
+  register: daemon_config
+
+- name: Enabling docker service...
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: true
+    daemon_reload: true
+    state: restarted
+  when: daemon_config.changed or docker_install.changed
+
+- name: Including default network creation tasks...
+  when: docker_create_network
+  block:
+    - name: Checking if {{ docker_network.name }} exists...
+      community.docker.docker_network_info:
+        name: "{{ docker_network.name }}"
+      register: docker_network_check
+
+    - name: Creating {{ docker_network.name }}...
+      community.docker.docker_network:
+        name: "{{ docker_network.name }}"
+        enable_ipv6: "{{ docker_network.enable_ipv6 }}"
+        ipam_config:
+          - subnet: "{{ docker_network.ipv4_subnet }}"
+          - subnet: "{{ docker_network.ipv6_subnet }}"
+      when: not docker_network_check.exists
