@@ -5,6 +5,7 @@
     dest: /etc/sysctl.d/fw.conf
     mode: "0644"
     lstrip_blocks: true
+  notify: Rebooting...
 
 - name: Configuring sysctl...
   ansible.posix.sysctl:
@@ -26,3 +27,6 @@
 - name: Including nftables config...
   ansible.builtin.include_tasks: nftables.yml
   when: mode == "nftables"
+
+- name: Flushing handlers...
+  ansible.builtin.meta: flush_handlers

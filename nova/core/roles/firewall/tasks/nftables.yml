@@ -1,11 +1,11 @@
 ---
 - name: Removing persistent iptables...
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name: iptables-persistent
     state: absent
 
 - name: Installing nftables...
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name: nftables
     state: present
     update_cache: true
@@ -21,26 +21,13 @@
     lstrip_blocks: true
     mode: "0644"
   register: nftables_rules
+  notify: Restarting nftables...
 
-- name: Restarting nftables & required services...
+# This is required to make sure automatic Docker IPTables rules get re-populated
+- name: Checking if Docker service exists...
+  ansible.builtin.systemd:
+    name: docker.service
+  register: docker_service_exists
+  changed_when: docker_service_exists.status.LoadState != "not-found"
+  notify: Restarting Docker...
   when: nftables_rules.changed
-  block:
-    - name: Starting & enabling nftables...
-      ansible.builtin.systemd:
-        name: nftables.service
-        state: restarted
-        enabled: true
-        daemon_reload: true
-
-    - name: Checking if Docker service exists...
-      ansible.builtin.systemd:
-        name: docker.service
-      register: docker_service_exists
-
-    # This part is required to make sure automatic Docker IPTables rules get re-populated
-    - name: Restarting Docker service...
-      ansible.builtin.systemd:
-        name: docker.service
-        state: restarted
-        enabled: true
-      when: docker_service_exists.status.LoadState != "not-found"
