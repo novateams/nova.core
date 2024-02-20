@@ -1,0 +1,16 @@
+---
+- name: Restarting nftables...
+  ansible.builtin.systemd:
+    name: nftables.service
+    state: restarted
+    enabled: true
+    daemon_reload: true
+
+- name: Restarting Docker...
+  ansible.builtin.systemd:
+    name: docker.service
+    state: restarted
+
+- name: Rebooting...
+  ansible.builtin.reboot:
+  when: ansible_os_family == "Archlinux" # For some reason nftables does not work without a reboot on Archlinux

@@ -1,25 +1,18 @@
 ---
 - name: Removing nftables...
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name: nftables
     state: absent
 
 - name: Installing iptables...
-  ansible.builtin.apt:
-    name:
-      - iptables
-      - iptables-persistent
+  ansible.builtin.package:
+    name: iptables
     state: present
     update_cache: true
-  register: firewall_dependencies_install
-  until: not firewall_dependencies_install.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+  register: iptables_install
+  until: not iptables_install.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
   retries: 10
   delay: 6
-
-- name: Enabling netfilter-persistent service...
-  ansible.builtin.service:
-    name: netfilter-persistent
-    enabled: true
 
 - name: Creating iptables directory...
   ansible.builtin.file:
@@ -27,51 +20,62 @@
     state: directory
     mode: "0755"
 
-- name: Templating iptables IPv4 rules...
-  ansible.builtin.template:
-    src: "{{ ipv4_template_file }}"
-    dest: /etc/iptables/rules.v4
-    lstrip_blocks: true
-    mode: "0644"
-  register: ipv4_rules_result
-
-- name: Templating iptables IPv6 rules...
-  ansible.builtin.template:
-    src: "{{ ipv6_template_file }}"
-    dest: /etc/iptables/rules.v6
-    lstrip_blocks: true
-    mode: "0644"
-  register: ipv6_rules_result
-
-- name: Restoring iptables IPv4 rules, if required...
-  ansible.builtin.shell: iptables-restore </etc/iptables/rules.v4
-  changed_when: true
-  when: ipv4_rules_result.changed
-
-- name: Restoring iptables IPv6 rules, if required...
-  ansible.builtin.shell: ip6tables-restore </etc/iptables/rules.v6
-  changed_when: true
-  when: ipv6_rules_result.changed
-
-- name: Starting & enabling iptables...
-  ansible.builtin.systemd:
-    name: iptables.service
-    state: started
-    enabled: true
-    daemon_reload: true
-
-- name: Restarting iptables & required services...
-  when: ipv4_rules_result.changed or ipv6_rules_result.changed
+- name: Installing and configuring iptables for Debian based OS...
+  when: ansible_os_family == "Debian"
   block:
-    - name: Checking if Docker service exists...
-      ansible.builtin.systemd:
-        name: docker.service
-      register: docker_service_exists
+    - name: Installing iptables-persistent...
+      ansible.builtin.package:
+        name:
+          - iptables-persistent
+        state: present
+      register: iptables_persistent_isntall
+      until: not iptables_persistent_isntall.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+      retries: 10
+      delay: 6
 
-    # This part is required to make sure automatic Docker IPTables rules get re-populated
-    - name: Restarting Docker service...
-      ansible.builtin.systemd:
-        name: docker.service
-        state: restarted
+    - name: Enabling netfilter-persistent service...
+      ansible.builtin.service:
+        name: netfilter-persistent
         enabled: true
-      when: docker_service_exists.status.LoadState != "not-found"
+
+    - name: Templating iptables IPv4 rules...
+      ansible.builtin.template:
+        src: "{{ ipv4_template_file }}"
+        dest: /etc/iptables/rules.v4
+        lstrip_blocks: true
+        mode: "0644"
+      register: ipv4_rules_result
+
+    - name: Templating iptables IPv6 rules...
+      ansible.builtin.template:
+        src: "{{ ipv6_template_file }}"
+        dest: /etc/iptables/rules.v6
+        lstrip_blocks: true
+        mode: "0644"
+      register: ipv6_rules_result
+
+    - name: Restoring iptables IPv4 rules, if required...
+      ansible.builtin.shell: iptables-restore </etc/iptables/rules.v4
+      changed_when: true
+      when: ipv4_rules_result.changed
+
+    - name: Restoring iptables IPv6 rules, if required...
+      ansible.builtin.shell: ip6tables-restore </etc/iptables/rules.v6
+      changed_when: true
+      when: ipv6_rules_result.changed
+
+    - name: Starting & enabling iptables...
+      ansible.builtin.systemd:
+        name: iptables.service
+        state: started
+        enabled: true
+        daemon_reload: true
+
+# This is required to make sure automatic Docker IPTables rules get re-populated
+- name: Checking if Docker service exists...
+  ansible.builtin.systemd:
+    name: docker.service
+  register: docker_service_exists
+  changed_when: docker_service_exists.status.LoadState != "not-found"
+  notify: Restarting Docker...
+  when: ipv4_rules_result.changed or ipv6_rules_result.changed
