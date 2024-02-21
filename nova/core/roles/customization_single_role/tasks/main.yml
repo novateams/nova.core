@@ -1,22 +1,18 @@
 ---
+- name: Creating {{ post_scripts_folder_on_target }} folder...
+  ansible.windows.win_file:
+    path: "{{ post_scripts_folder_on_target }}"
+    state: directory
+  when:
+    - ansible_network_os is not defined
+    - ansible_system == "Win32NT"
+
 - name: Including {{ single_role }} role...
   ansible.builtin.include_role:
     name: "{{ single_role }}"
 
 - name: Flushing handlers...
   ansible.builtin.meta: flush_handlers
-
-- name: Rebooting...
-  ansible.builtin.reboot:
-  when:
-    - reboot_on_finalize
-    - ansible_system == "Linux"
-
-- name: Rebooting...
-  ansible.windows.win_reboot:
-  when:
-    - reboot_on_finalize
-    - ansible_system == "Win32NT"
 
 - name: Including get_ip role...
   ansible.builtin.include_role:

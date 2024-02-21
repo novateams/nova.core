@@ -1,0 +1,2 @@
+---
+post_scripts_folder_on_target: C:\tmp # This is the folder where the post scripts will be stored on the target machine
