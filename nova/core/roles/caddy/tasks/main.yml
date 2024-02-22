@@ -4,7 +4,7 @@
 
 - name: Including Caddyfile with variables mode tasks...
   ansible.builtin.include_tasks: caddyfile_with_vars.yml
-  when: caddy_template_caddyfile_with_vars
+  when: not caddy_template_caddyfile
 
 - name: Including Caddyfile template tasks...
   ansible.builtin.include_tasks: caddy_template.yml

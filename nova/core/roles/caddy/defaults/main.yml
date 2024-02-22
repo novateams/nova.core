@@ -2,8 +2,7 @@
 docker_network: local-network
 
 # Caddy configuration modes
-caddy_template_caddyfile_with_vars: true
-caddy_template_caddyfile: false
+caddy_template_caddyfile: false # Set to true to use a custom Caddyfile template
 caddy_use_labels: false
 caddy_container_ports:
   - "80:80"

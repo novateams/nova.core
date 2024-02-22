@@ -28,6 +28,7 @@
     - "{{ caddy_config_folder }}/data"
     - "{{ caddy_config_folder }}/config"
     - "{{ caddy_config_folder }}/logs"
+    - "{{ caddy_config_folder }}/www"
     - "{{ caddy_certificates_folder }}"
 
 - name: Templating Caddy configuration files for {{ inventory_hostname }}...
