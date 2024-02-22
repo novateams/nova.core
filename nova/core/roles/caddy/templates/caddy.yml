@@ -14,6 +14,7 @@ services:
       - /srv/caddy/data:/data/caddy
       - /srv/caddy/config:/config/caddy
       - /srv/caddy/logs:/srv/logs
+      - /srv/caddy/www:/srv/www
       - "{{ caddy_certificates_folder }}:/srv/certs"
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
 
