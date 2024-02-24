@@ -6,13 +6,6 @@ $KMSServer = "{{ kms_server }}"
 
 {{ extra_activation_command }}
 
-if ((Get-WmiObject -class Win32_OperatingSystem).Caption -like "Microsoft Windows 11*") {
-
-    Write-Host "Setting the correct key KMS for Windows 11..."
-    cscript.exe $env:windir\system32\slmgr.vbs /ipk NPPR9-FWDCX-D2C8J-H872K-2YT43
-
-}
-
 Write-Host "Activating Windows..."
 cscript.exe $env:windir\system32\slmgr.vbs /skms $KMSServer
 cscript.exe $env:windir\system32\slmgr.vbs /ato
