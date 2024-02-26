@@ -18,10 +18,11 @@
   loop: "{{ deploy_vars_post_roles }}"
   when: deploy_vars_post_roles != []
 
-- name: Generating Hashicorp Vault token for {{ vault_address }}...
+- name: Using {{ deploy_vars_vault_auth_method | upper }} to get auth token for {{ vault_address }}...
   community.hashi_vault.vault_login:
     url: "{{ vault_address }}"
-    auth_method: "{{ vault_auth_method }}"
+    auth_method: "{{ deploy_vars_vault_auth_method }}"
+    token: "{{ deploy_vars_vault_root_token if deploy_vars_vault_auth_method == 'token' else omit }}"
     username: "{{ vault_username }}"
     password: "{{ vault_password }}"
     validate_certs: "{{ validate_vault_certs }}"
@@ -29,7 +30,9 @@
   register: deploy_vars_vault_token
   delegate_to: localhost
   become: false
-  when: vault_address != {}
+  when:
+    - vault_address != {}
+    - deploy_vars_get_vault_token | bool # | bool is required to pass the variable from the command line
 
 # Checking if a host_var matching the main_id is present
 # If so then including the host vars

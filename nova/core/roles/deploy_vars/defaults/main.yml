@@ -27,6 +27,8 @@ legacy_host_var_path: "{{ inventory_dir }}/host_vars"
 #########
 
 vault_address: {} # Required when Vault is used to save or retrieve secrets - example https://vault.example.com
+deploy_vars_get_vault_token: true # Set to false to skip getting a Vault token
+deploy_vars_vault_auth_method: ldap # Method used to authenticate to Vault. Can be ldap or token.
 vault_auth_method: ldap # Currenty in this role ldap or userpass are supported
 vault_username: "{{ deployer_username }}"
 vault_password: "{{ deployer_password }}"
