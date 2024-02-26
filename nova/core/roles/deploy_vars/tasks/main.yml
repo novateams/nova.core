@@ -1,10 +1,9 @@
 ---
-# Using set_fact so the credentials will be looked up only once
+# Setting credentials as fact because if they are in defaults Ansible will start making too many connections to Keepass and the socket will be closed
 - name: Setting credentials...
   ansible.builtin.set_fact:
     deployer_username: "{{ custom_deployer_username | default(lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'username') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars') }}"
     deployer_password: "{{ custom_deployer_password | default(lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'password') if (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') | length != 0) else 'KEEPASS_DEPLOYER_CREDENTIALS_PATH not defined in .makerc-vars') }}"
-    gitlab_api_token: "{{ lookup('keepass', (lookup('env', 'KEEPASS_GITLAB_TOKEN')), 'password') if (lookup('env', 'KEEPASS_GITLAB_TOKEN') | length != 0) else 'KEEPASS_GITLAB_TOKEN not defined in .makerc-vars' }}"
     aws_access_key_id: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'username') if (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') | length != 0) else 'KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars' }}"
     aws_access_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'password') if (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') | length != 0) else 'KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars' }}"
     linode_api_token: "{{ lookup('keepass', (lookup('env', 'KEEPASS_LINODE_API_TOKEN')), 'password') if (lookup('env', 'KEEPASS_LINODE_API_TOKEN') | length != 0) else 'KEEPASS_LINODE_API_TOKEN not defined in .makerc-vars' }}"
@@ -43,30 +42,14 @@
   become: false
   register: host_var_present
 
-- name: Warning but loading host_var...
-  when: host_var_present.stat.exists
-  block:
-    - name: WARNING
-      ansible.builtin.debug:
-        msg: |
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          Loading instance parent host variables will be deprecated on 18.12.2023.
-          Move the file host_vars/{{ main_id }}.yml to group_vars/{{ main_id | replace("-", "_") }}.yml to avoid this warning.
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      when: main_id | replace("-", "_") in group_names
-
-    - name: Sleeping to read...
-      ansible.builtin.wait_for:
-        timeout: 30
-      become: false
-      delegate_to: localhost
-      when: main_id | replace("-", "_") in group_names
-
-    - name: Loading host_vars...
-      ansible.builtin.include_vars:
-        file: "{{ legacy_host_var_path }}/{{ main_id }}.yml"
+- name: DEPRECATED FEATURE
+  ansible.builtin.fail:
+    msg: |
+      Loading instance parent host variables is deprecated.
+      Move the file host_vars/{{ main_id }}.yml to group_vars/{{ main_id | replace("-", "_") }}.yml to avoid this error.
+  when:
+    - host_var_present.stat.exists
+    - main_id | replace("-", "_") in group_names
 # # Uncommend to debug variables
 # - ansible.builtin.debug: msg="{{  }}"
 # - meta: end_play
