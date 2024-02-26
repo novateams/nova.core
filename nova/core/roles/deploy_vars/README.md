@@ -1,37 +1,23 @@
-# Role Name
+# deploy_vars
 
-COMING SOON
-A brief description of the role goes here.
+This role is used to set required deploy variables. Is is used as the very first role in the deploy process. By using this role, we can ensure that all required variables are set before any other roles are executed. This role also caches the required variables in a file so that they can be used by other roles.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in `defaults/main.yml`, `vars/main.yml`, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/deploy_vars/defaults/main.yml) file for a list and description of the variables used in this role.
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
-## Example Playbook
+## Example
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-## License
-
-AGPL-3.0-or-later
-
-## Author Information
-
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+- name: Including deploy_vars role...
+  ansible.builtin.include_role:
+    name: nova.core.deploy_vars
+```
