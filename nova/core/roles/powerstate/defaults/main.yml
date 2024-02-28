@@ -4,3 +4,9 @@ poweron: false
 poweroff: false
 restart: false
 reset: false
+
+# Delays
+shutdown_shutting_retries: 5
+shutdown_shutting_delay: 2
+shutdown_waiting_retries: 18
+shutdown_waiting_delay: 10
