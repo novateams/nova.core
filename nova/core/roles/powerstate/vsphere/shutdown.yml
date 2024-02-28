@@ -9,8 +9,8 @@
         vm: "{{ vcenter_vm_info.value[0].vm }}"
       register: vcenter_vm_stop
       until: not vcenter_vm_stop.failed
-      retries: 5
-      delay: 2
+      retries: "{{ shutdown_shutting_retries }}"
+      delay: "{{ shutdown_shutting_delay }}"
       when: vcenter_vm_info.value[0].power_state != "POWERED_OFF"
 
     - name: Waiting for {{ custom_vm_name | default(vm_name) }} shutdown...
@@ -20,5 +20,5 @@
       until:
         - shutdown_status.value.state is defined
         - shutdown_status.value.state == "NOT_RUNNING"
-      retries: 18
-      delay: 10
+      retries: "{{ shutdown_waiting_retries }}"
+      delay: "{{ shutdown_waiting_delay }}"
