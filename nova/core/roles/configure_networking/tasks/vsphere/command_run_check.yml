@@ -15,6 +15,22 @@
   retries: 30
   delay: 2
 
+# The task above does not "connect" the interface of a started VM!
+# If the VM template had the default NIC connected to a network that the destination
+# cluster does not have AND the VM is started right after cloning then the default interface remains
+# disconnected even after changing the backing network.
+# It seems the two tasks cannot be combined, because the backing has to be changed before connecting.
+- name: Make sure the default interface is actually connected...
+  vmware.vmware_rest.vcenter_vm_hardware_ethernet:
+    vm: "{{ created_vm_info.value[0].vm }}"
+    nic: "{{ existing_nic.value[0].nic }}"
+    state: connect
+  register: connect_default_nic
+  until: not connect_default_nic.failed
+  retries: 5
+  delay: 2
+  when: created_vm_info.value[0].power_state == "POWERED_ON"
+
 - name: ERROR
   ansible.builtin.fail:
     msg: |
