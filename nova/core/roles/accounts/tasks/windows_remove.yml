@@ -12,6 +12,13 @@
       ansible.builtin.set_fact:
         local_users_to_remove: "{{ user_profiles.stdout_lines | difference(local_accounts_list | map(attribute='username')) }}"
 
+    # This is to block any logins after reboot
+    - name: Disabling following local accounts...
+      ansible.windows.win_user:
+        name: "{{ item }}"
+        account_disabled: true
+      loop: "{{ local_users_to_remove }}"
+
     - name: Rebooting to clear any open sessions...
       ansible.windows.win_reboot:
       when: local_users_to_remove != []
@@ -41,6 +48,13 @@
         - name: Reboot and availability check...
           when: domain_users_to_remove != []
           block:
+            # This is to block any logins after reboot
+            - name: Disabling following domain accounts...
+              microsoft.ad.user:
+                name: "{{ item }}"
+                enabled: false
+              loop: "{{ domain_users_to_remove }}"
+
             - name: Rebooting to close any open sessions...
               ansible.windows.win_reboot:
 
