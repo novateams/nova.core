@@ -5,11 +5,14 @@ router_os_networking_commands:
 {% for ip_address in interface.addresses %}
 {% if (ip_address.mode == 'ipv4_static') %}
 - /ip address add address={{ ip_address.address }} interface=ether{{ interface_loop_index }}
-{% elif (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
+{% endif %}
+{% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
 - /ip route add gateway={{ ip_address.gateway }}
-{% elif (ip_address.mode == 'ipv6_static') %}
+{% endif %}
+{% if (ip_address.mode == 'ipv6_static') %}
 - /ipv6 address add address={{ ip_address.address }} interface=ether{{ interface_loop_index }}
-{% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway != none) %}
+{% endif %}
+{% if (ip_address.mode == 'ipv6_static') and (ip_address.gateway != none) %}
 - /ipv6 route add gateway={{ ip_address.gateway }}
 {% endif %}
 {% endfor %}
