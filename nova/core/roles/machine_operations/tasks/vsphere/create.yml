@@ -200,6 +200,14 @@
       retries: 5
       delay: 2
 
+    - name: Getting {{ custom_vm_name | default(vm_name) }} interfaces...
+      vmware.vmware_rest.vcenter_vm_hardware_ethernet_info:
+        vm: "{{ created_vm_info.value[0].vm }}"
+      register: existing_nic
+      until: not existing_nic.failed
+      retries: 5
+      delay: 2
+
     - name: Getting the {{ default_interface[0].name }} network info...
       vmware.vmware_rest.vcenter_network_info:
         filter_names: "{{ default_interface[0].name }}"
@@ -215,13 +223,31 @@
           The network does not exist or you do not have permissions to access it.
       when: default_network.value == []
 
-    # Using community.vmware module because unlike the REST module it attaches and connects the nic
-    - name: Connecting {{ default_interface[0].name }} interface...
-      community.vmware.vmware_guest_network:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        network_name: "{{ default_interface[0].name }}"
-        mac_address: "{{ vmware_guest.instance.hw_eth0.macaddress }}"
+    - name: Attaching the {{ default_interface[0].name }} interface...
+      vmware.vmware_rest.vcenter_vm_hardware_ethernet:
+        vm: "{{ created_vm_info.value[0].vm }}"
+        type: "{{ default_interface[0].device_type | upper }}"
+        nic: "{{ existing_nic.value[0].nic }}"
+        backing:
+          type: "{{ default_network.value[0].type }}"
+          network: "{{ default_network.value[0].network }}"
+        start_connected: true
         state: present
+      register: add_default_nic
+      until: not add_default_nic.failed
+      retries: 5
+      delay: 2
+
+    # Connect is required when cloning to a cluster that does not have the template network available
+    - name: Connecting the {{ default_interface[0].name }} interface...
+      vmware.vmware_rest.vcenter_vm_hardware_ethernet:
+        vm: "{{ created_vm_info.value[0].vm }}"
+        nic: "{{ existing_nic.value[0].nic }}"
+        state: connect
+      register: connect_default_nic
+      until: not connect_default_nic.failed
+      retries: 5
+      delay: 2
 
     - name: Configuring extra interfaces..
       when: extra_network_interfaces != []
