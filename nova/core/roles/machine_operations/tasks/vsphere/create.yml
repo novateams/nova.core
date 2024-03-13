@@ -238,17 +238,6 @@
       retries: 5
       delay: 2
 
-    # Connect is required when cloning to a cluster that does not have the template network available
-    - name: Connecting the {{ default_interface[0].name }} interface...
-      vmware.vmware_rest.vcenter_vm_hardware_ethernet:
-        vm: "{{ created_vm_info.value[0].vm }}"
-        nic: "{{ existing_nic.value[0].nic }}"
-        state: connect
-      register: connect_default_nic
-      until: not connect_default_nic.failed
-      retries: 5
-      delay: 2
-
     - name: Configuring extra interfaces..
       when: extra_network_interfaces != []
       block:
@@ -274,13 +263,26 @@
             index_var: loop_index
             label: "{{ item.value[0].name | default(omit) }}" # Omit is required to avoid error when this block is skipped
 
-- name: Starting VM...
-  community.vmware.vmware_guest_powerstate:
-    state: powered-on
-    name: "{{ custom_vm_name | default(vm_name) }}"
-    folder: "{{ folder }}"
+- name: Starting VM & Connecting the {{ default_interface[0].name }} interface...
   delegate_to: localhost
   become: false
   when:
     - fresh_deploy or vcenter_vm_info.value[0].power_state != "POWERED_ON"
     - not just_create
+  block:
+    - name: Starting VM...
+      community.vmware.vmware_guest_powerstate:
+        state: powered-on
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        folder: "{{ folder }}"
+
+    # Connect is required when cloning to a cluster that does not have the template network available
+    - name: Connecting the {{ default_interface[0].name }} interface...
+      vmware.vmware_rest.vcenter_vm_hardware_ethernet:
+        vm: "{{ created_vm_info.value[0].vm }}"
+        nic: "{{ existing_nic.value[0].nic }}"
+        state: connect
+      register: connect_default_nic
+      until: not connect_default_nic.failed
+      retries: 5
+      delay: 2
