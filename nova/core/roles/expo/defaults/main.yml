@@ -9,13 +9,14 @@ expo_compose_profiles: production ### "archive,docs,availability,consumer"
 expo_debug_mode: true
 expo_node_tls_check: 0
 
+### EXTERNAL ###
+expo_remote_deploy_ssh: "NOTCONFIGURED" ### user@expo.tld
+expo_providentia_token:
+expo_gitlab_token:
+
 ### MKDOCS ###
 expo_mkdocs_fqdn: expo-mkdocs.localhost
 expo_mkdocs_build_content: all # guides or all
-
-### EXTERNAL ###
-expo_providentia_token:
-expo_gitlab_token:
 
 ### EVIDENCE ###
 expo_evidence_public: ""
