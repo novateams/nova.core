@@ -141,12 +141,9 @@
           memory_reservation_lock: false
           mem_reservation: 0
         cdrom:
-          - controller_number: 0 # Unmounting existing ISO
+          - controller_number: 0 # Unmounting any existing ISO
             unit_number: 0
             type: none
-          - controller_number: 0 # Removing extra cdrom left from packer
-            unit_number: 1
-            state: absent
         disk:
           - size_mb: "{{ os_disk_size }}"
             controller_type: "{{ vmware_scsi_controller_type }}"
