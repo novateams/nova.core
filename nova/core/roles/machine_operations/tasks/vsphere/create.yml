@@ -283,3 +283,6 @@
       until: not connect_default_nic.failed
       retries: 5
       delay: 2
+      when:
+        - fresh_deploy
+        - not manual_fresh_deploy # Since this block can only be ran once during clone
