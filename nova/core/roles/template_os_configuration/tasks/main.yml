@@ -38,7 +38,10 @@
 - name: Including sysprep role...
   ansible.builtin.include_role:
     name: nova.core.win_sysprep
-  when: sysprep
+  when:
+    - ansible_network_os is not defined
+    - sysprep
+    - ansible_system == "Win32NT"
 
 - name: Including powerstate role...
   ansible.builtin.include_role:
