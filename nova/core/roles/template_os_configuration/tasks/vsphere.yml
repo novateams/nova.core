@@ -1,0 +1,52 @@
+---
+- name: Including VMTools role...
+  ansible.builtin.include_role:
+    name: nova.core.vcenter_vmtools_policy
+
+- name: Finding and removing extra cdroms...
+  delegate_to: localhost
+  become: false
+  when: template_os_configuration_remove_extra_cdroms_on_vsphere
+  block:
+    - name: Looking up the VM...
+      vmware.vmware_rest.vcenter_vm_info:
+        filter_names: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+      until: not vcenter_vm_info.failed
+      retries: 5
+      delay: 2
+
+    - name: Listing all {{ custom_vm_name | default(vm_name) }} cdroms...
+      vmware.vmware_rest.vcenter_vm_hardware_cdrom_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: existing_cdroms
+      until: not existing_cdroms.failed
+      retries: 5
+      delay: 2
+
+    - name: Removing extra cdroms...
+      when: existing_cdroms.value | length > 1
+      block:
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            shutdown: true
+
+        - name: Removing following cdrom(s)...
+          vmware.vmware_rest.vcenter_vm_hardware_cdrom:
+            vm: "{{ vcenter_vm_info.value[0].vm }}"
+            cdrom: "{{ item.cdrom }}"
+            state: absent
+          loop: "{{ existing_cdroms.value[1:] }}"
+          when: existing_cdroms.value | length > 1 # If there are more than 1 cdroms, removing the extra ones
+          register: removed_cdroms
+          until: not removed_cdroms.failed
+          retries: 5
+          delay: 2
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
