@@ -1,3 +1,4 @@
 ---
 update_system: true
-sysprep: "{{ true if 'os_windows' in group_names else false }}"
+sysprep: true
+template_os_configuration_remove_extra_cdroms_on_vsphere: true # Find and remove extra cdroms on vSphere if there are more than 1
