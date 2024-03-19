@@ -26,6 +26,12 @@
     - ansible_network_os is defined
     - ansible_network_os == "community.routeros.routeros"
 
+- name: Configure Opnsense machine
+  ansible.builtin.include_tasks: opnsense.yml
+  when:
+    - ansible_network_os is defined
+    - ansible_network_os == "opnsense"
+
 - name: Including following role...
   ansible.builtin.include_role:
     name: "{{ item }}"
