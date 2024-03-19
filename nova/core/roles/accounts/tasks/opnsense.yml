@@ -1,0 +1,137 @@
+---
+- name: Disabling password requirement for sudo...
+  ansible.builtin.lineinfile:
+    dest: /usr/local/etc/sudoers.d/sudoers
+    state: present
+    regexp: ^%admins
+    line: "%admins ALL=(ALL) NOPASSWD: ALL"
+    validate: visudo -cf %s
+    create: true
+  when: not sudo_requires_password
+
+- name: Enabling password requirement for sudo...
+  ansible.builtin.file:
+    path: /usr/local/etc/sudoers.d/sudoers
+    state: absent
+  when: sudo_requires_password
+
+# Configuring Opnsense accounts in localhost to avoid installing required Python modules on the remote host
+- name: Downloading config.xml from {{ inventory_hostname }}...
+  ansible.builtin.fetch:
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+    src: /conf/config.xml
+    flat: yes
+
+- name: Re-creating users and adding them to groups...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Deleting existing users...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system/user
+        state: absent
+
+    - name: Deleting existing admins group members...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system/group[name='admins']/member
+        state: absent
+
+    - name: Including custom sudoers file for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/installedpackages/sudo/config/add_includedir
+        value: include_end
+        pretty_print: true
+      when: not sudo_requires_password
+
+    - name: Not including custom sudoers file for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/installedpackages/sudo/config/add_includedir
+        value: none
+        pretty_print: true
+      when: sudo_requires_password
+
+    - name: Adding following Opnsense users for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system
+        pretty_print: true
+        add_children:
+          - user:
+              _:
+                - name: "{{ item.username }}"
+                - descr: "{{ 'System Administrator' if item.username == admin_account else item.username }}"
+                - scope: "{{ 'system' if item.username == admin_account else 'user' }}"
+                - groupname: admins
+                - password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) | password_hash('sha512') }}"
+                - authorizedkeys: "{{ (item.ssh_key | b64encode) if item.ssh_key is defined }}"
+                - shell: "{{ '/usr/local/sbin/opnsense-shell' if item.username == admin_account else '/bin/tcsh' }}"
+                - uid: "{{ 0 if item.username == admin_account else 2000 + idx -1 }}"
+      loop: "{{ admin_accounts }}"
+      loop_control:
+        index_var: idx
+        label: "{{ item.username }}"
+
+    - name: Adding following Opnsense users to admins group for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system/group[name='admins']
+        pretty_print: true
+        add_children:
+          - member: "{{ 0 if item.username == admin_account else 2000 + idx -1 }}"
+      loop: "{{ admin_accounts }}"
+      loop_control:
+        index_var: idx
+        label: "{{ item.username }}"
+
+- name: Uploading config.xml to {{ inventory_hostname }}...
+  ansible.builtin.copy:
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+    dest: /conf/config.xml
+    mode: "0644"
+    owner: root
+    group: admins
+
+- name: Removing local config.xml file...
+  ansible.builtin.file:
+    path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+    state: absent
+  delegate_to: localhost
+  become: false
+
+# The next tasks are so that the the machine has time to reboot and apply the updated user configuration
+# Otherwise Ansible will start reconnection to fast and will error out with incorrect credentials
+- name: Restarting {{ inventory_hostname }} to apply configuration...
+  ansible.builtin.command: shutdown -r now
+  async: 0
+  poll: 0
+
+- name: Waiting until ssh is down for {{ inventory_hostname }}...
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    state: stopped
+    timeout: 300
+  delegate_to: localhost
+  become: false
+
+- name: Waiting until ssh is up for {{ inventory_hostname }}...
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    state: started
+    timeout: 300
+  delegate_to: localhost
+  become: false
+
+- name: Waiting for VMware tools to become available...
+  community.vmware.vmware_guest_tools_wait:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+  delegate_to: localhost
+  become: false
+  when:
+    - infra_env is defined
+    - infra_env == "vsphere" | default('undefined')

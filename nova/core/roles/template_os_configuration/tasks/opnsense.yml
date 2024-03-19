@@ -1,0 +1,34 @@
+---
+- name: Including vSphere specific configuration tasks...
+  when: infra_env == "vsphere"
+  block:
+    # Configuring Opnsense in localhost to avoid installing required Python modules on the remote host
+    - name: Downloading config.xml from {{ inventory_hostname }}...
+      ansible.builtin.fetch:
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        src: /conf/config.xml
+        flat: true
+
+    - name: Disabling integrated authentication... # Required for auth to work over VMTools https://github.com/opnsense/core/issues/1399
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system/disableintegratedauth
+        value: "1"
+        pretty_print: true
+      delegate_to: localhost
+      become: false
+
+    - name: Uploading config.xml to {{ inventory_hostname }}...
+      ansible.builtin.copy:
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        dest: /conf/config.xml
+        mode: "0644"
+        owner: root
+        group: wheel
+
+    - name: Removing local config.xml file...
+      ansible.builtin.file:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        state: absent
+      delegate_to: localhost
+      become: false

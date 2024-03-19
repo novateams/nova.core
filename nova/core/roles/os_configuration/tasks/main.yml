@@ -44,6 +44,10 @@
           ansible.builtin.include_tasks: pfsense.yml
           when: ansible_network_os == 'pfsense'
 
+        - name: Including Opnsense configuration tasks...
+          include_tasks: opnsense.yml
+          when: ansible_network_os == 'opnsense'
+
     - name: Including MacOS configuration tasks...
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"

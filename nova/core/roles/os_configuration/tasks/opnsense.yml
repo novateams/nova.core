@@ -1,0 +1,48 @@
+---
+# Configuring Opnsense accounts in lochost to avoid installing required Python modules on the remote host
+- name: Downloading config.xml from {{ inventory_hostname }}...
+  ansible.builtin.fetch:
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+    src: /conf/config.xml
+    flat: true
+
+- name: Configuring OS hostname, domain & NTP...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Configuring following values...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: "{{ item.xpath }}"
+        value: "{{ item.value }}"
+        pretty_print: true
+      loop:
+        - xpath: /opnsense/system/hostname
+          value: "{{ hostname }}"
+        - xpath: /opnsense/system/domain
+          value: "{{ domain }}"
+      loop_control:
+        label: "{{ item.xpath }} > {{ item.value }}"
+
+    - name: Configuring NTP server(s)...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system/timeservers
+        value: "{{ ntp_servers | join(' ') }}"
+        pretty_print: true
+      when: ntp_servers != []
+
+- name: Uploading config.xml to {{ inventory_hostname }}...
+  ansible.builtin.copy:
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+    dest: /conf/config.xml
+    mode: "0644"
+    owner: root
+    group: wheel
+
+- name: Removing local config.xml file...
+  ansible.builtin.file:
+    path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+    state: absent
+  delegate_to: localhost
+  become: false
