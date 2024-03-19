@@ -67,7 +67,7 @@
                 - scope: "{{ 'system' if item.username == admin_account else 'user' }}"
                 - groupname: admins
                 - bcrypt-hash: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) | password_hash('sha512') }}"
-                - uid: "{{ 0 if item.username == admin_account else 2000 + idx }}"
+                - uid: "{{ 0 if item.username == admin_account else 2000 + idx - 1 }}"
                 - authorizedkeys: "{{ (item.ssh_key | b64encode) if item.ssh_key is defined }}"
                 - webguicss: pfSense.css
                 - keephistory:
@@ -84,7 +84,7 @@
         xpath: /pfsense/system/group[name='admins']
         pretty_print: true
         add_children:
-          - member: "{{ 0 if item.username == admin_account else 2000 + idx }}"
+          - member: "{{ 0 if item.username == admin_account else 2000 + idx - 1 }}"
       loop: "{{ admin_accounts }}"
       loop_control:
         index_var: idx
