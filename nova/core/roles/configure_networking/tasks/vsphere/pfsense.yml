@@ -31,26 +31,26 @@
         method: GET
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         status_code: 200
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
 
     - name: Deleting existing interfaces...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/interfaces/*
         state: absent
 
     - name: Deleting existing gateways...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/gateways/*
         state: absent
 
     - name: Deleting existing DNS servers...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/system/dnsserver
         state: absent
 
@@ -67,21 +67,21 @@
 
     - name: Configuring following pfSense interfaces for {{ inventory_hostname }}...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/interfaces
         pretty_print: true
         add_children: "{{ pfsense_interfaces }}"
 
     - name: Configuring egress interface gateways for {{ inventory_hostname }}...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/gateways
         pretty_print: true
         add_children: "{{ pfsense_gateways }}"
 
     - name: Configuring following DNS server for {{ inventory_hostname }}...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/system
         pretty_print: true
         add_children:
@@ -93,13 +93,13 @@
       block:
         - name: Deleting existing WAN Anti-Lockout Rule...
           community.general.xml:
-            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
             xpath: /pfsense/filter/rule[@descr='WAN Anti-Lockout Rule']
             state: absent
 
         - name: Adding WAN Anti-Lockout Rule for {{ inventory_hostname }}...
           community.general.xml:
-            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
             xpath: /pfsense/filter
             pretty_print: true
             add_children:
@@ -118,12 +118,12 @@
                           - any:
                     - descr: WAN Anti-Lockout Rule
 
-    - name: Getting {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml file info...
+    - name: Getting {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml file info...
       ansible.builtin.stat:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
       register: file_size
 
-    - name: Preparing {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml file upload...
+    - name: Preparing {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml file upload...
       ansible.builtin.uri:
         url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
@@ -141,13 +141,13 @@
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       register: file_upload_prep
 
-    - name: Uploading {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml file...
+    - name: Uploading {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml file...
       ansible.builtin.uri:
         url: "{{ file_upload_prep.json }}"
         method: PUT
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         status_code: 200
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
@@ -161,5 +161,5 @@
 
     - name: Removing local config.xml file...
       ansible.builtin.file:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         state: absent

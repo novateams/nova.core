@@ -2,7 +2,7 @@
 # Configuring pfSense accounts in lochost to avoid installing required Python modules on the remote host
 - name: Downloading config.xml from {{ inventory_hostname }}...
   ansible.builtin.fetch:
-    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
     src: /conf/config.xml
     flat: true
 
@@ -12,7 +12,7 @@
   block:
     - name: Configuring following values...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: "{{ item.xpath }}"
         value: "{{ item.value }}"
         pretty_print: true
@@ -26,7 +26,7 @@
 
     - name: Configuring NTP server(s)...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/system/timeservers
         value: "{{ ntp_servers | join(' ') }}"
         pretty_print: true
@@ -34,7 +34,7 @@
 
     - name: Password protecting the console menu...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/system/disableconsolemenu
         value:
         pretty_print: true
@@ -42,26 +42,26 @@
 
     - name: Removing console menu password...
       community.general.xml:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
         xpath: /pfsense/system/disableconsolemenu
         state: absent
       when: not os_configuration_pfsense_console_menu_password
 
 - name: Uploading config.xml to {{ inventory_hostname }}...
   ansible.builtin.copy:
-    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
     dest: /conf/config.xml
     mode: "0644"
     owner: root
     group: wheel
 
-- name: Reloading pfSense configuration for {{ inventory_hostname }}...
-  ansible.builtin.command: /etc/rc.reload_all
-  changed_when: true
-
 - name: Removing local config.xml file...
   ansible.builtin.file:
-    path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.xml
+    path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
     state: absent
   delegate_to: localhost
   become: false
+
+- name: Reloading pfSense configuration for {{ inventory_hostname }}...
+  ansible.builtin.command: /etc/rc.reload_all
+  changed_when: true
