@@ -24,6 +24,10 @@
       ansible.builtin.setup:
       when: ansible_network_os == 'pfsense'
 
+    - name: Gathering facts for Opnsense...
+      ansible.builtin.setup:
+      when: ansible_network_os == 'opnsense'
+
 - name: Gathering facts for {{ inventory_hostname }}...
   ansible.builtin.setup:
   when:
