@@ -124,12 +124,11 @@
 
     - name: Cloning {{ custom_vm_name | default(vm_name) }} VM...
       community.vmware.vmware_guest:
-        wait_for_ip_address: "{{ primary_network.ipv4 is not defined }}"
         datacenter: "{{ datacenter }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         template: "{{ base_vm_template if template else vm_template }}"
         folder: "{{ folder }}"
-        state: poweredon
+        state: "{{ 'poweredoff' if fresh_deploy else 'present' }}"
         esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
         cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
         datastore: "{{ datastore }}"
@@ -160,14 +159,6 @@
         snapshot_src: "{{ linked_clone_snapshot_name if linked_clone_status else omit }}"
         annotation: "{{ template_description if template else vm_description }}"
         vapp_properties: "{{ vapp_options }}"
-      register: vmware_guest
-
-    - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
-      ansible.builtin.include_role:
-        name: nova.core.powerstate
-      vars:
-        shutdown: true
-      when: (ansible_network_os is defined and ansible_network_os in machine_operations_extra_nic_shutdown) or machine_operations_vgpu != none
 
     - name: Increasing video memory
       community.vmware.vmware_guest_video:
