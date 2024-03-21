@@ -24,8 +24,9 @@
     token: "{{ deploy_vars_vault_root_token if deploy_vars_vault_auth_method == 'token' else omit }}"
     username: "{{ vault_username }}"
     password: "{{ vault_password }}"
+    mount_point: "{{ deploy_vars_vault_mount_point }}"
     validate_certs: "{{ validate_vault_certs }}"
-    ca_cert: "{{ vault_ca_cert | default(omit) }}" # The path to the CA certificate file which is used to validate the Vault server certificate
+    ca_cert: "{{ vault_ca_cert }}"
   register: deploy_vars_vault_token
   delegate_to: localhost
   become: false
