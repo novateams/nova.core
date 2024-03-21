@@ -90,6 +90,8 @@
     executable: /bin/bash
   register: regenerate_machine_id
   changed_when: regenerate_machine_id.stdout != "done"
+  retries: 5
+  delay: 3
 
 - name: Restart systemd-journald... # This required for journalctl to work properly after machine-id regeneration
   ansible.builtin.systemd:
