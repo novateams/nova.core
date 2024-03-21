@@ -1,15 +1,10 @@
 ---
 - name: DEPRECATED
-  ansible.builtin.debug:
+  ansible.builtin.fail:
     msg: |
       THIS NETWORK CONFIGURATION MODE IS DEPRECATED.
       PLEASE REMOVE configure_networking_with_checks VARIABLE FROM YOUR PROJECT TO REMOVE THIS MESSAGE.
-
-- name: Sleeping to read...
-  ansible.builtin.wait_for:
-    timeout: 60
-  become: false
-  delegate_to: localhost
+  whem: configure_networking_with_checks
 
 - name: Waiting for VMware tools to become available...
   community.vmware.vmware_guest_tools_wait:
