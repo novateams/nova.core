@@ -33,6 +33,17 @@
     - infra_env != 'my_host'
     - sudo_requires_password
 
+# Setting PanOS connection parameters here because the correct ansible_host is calculated no matter what infra_env is used
+- name: Setting connection parameters for PanOS {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    panos_connection_params:
+      ip_address: "{{ ansible_host }}"
+      username: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
+      password: "{{ template_password if fresh_deploy else ansible_deployer_password }}"
+  when:
+    - ansible_network_os is defined
+    - ansible_network_os == "panos"
+
 - name: Waiting for {{ inventory_hostname }} to become reachable...
   ansible.builtin.wait_for_connection:
     timeout: 300
