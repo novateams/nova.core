@@ -27,6 +27,8 @@ delay_vmware_api: 3
 # Connection mode
 primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default([]) }}"
 connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
+connection_ip: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first }}"
+connection_ip_gw: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='gateway') | first }}"
 
 # List of supported connection modes for what we can configure
 # The connection modes are coming from https://github.com/ClarifiedSecurity/Providentia API

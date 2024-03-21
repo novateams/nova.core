@@ -13,6 +13,7 @@
     - name: Configuring MGMT interface on fresh deploy...
       when: fresh_deploy
       block:
+        # This is not an ideal solution but if trying to login to quickly, the PanOS will not accept the credentials or reset you back to login prompt
         - name: Sleeping for 2 minutes for PanOS to settle down...
           ansible.builtin.wait_for:
             timeout: 120
@@ -70,17 +71,17 @@
               ansible.builtin.set_fact:
                 panos_mgmt_ip: "{{ primary_network.addresses | selectattr('pool_id', 'match', '^mgmt.*') | map(attribute='address') | first }}"
 
-            - name: Configuring MGMT IPv4 {{ panos_mgmt_ip }} for {{ custom_vm_name | default(vm_name) }}...
+            - name: Configuring OOB MGMT IPv4 {{ panos_mgmt_ip }} for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ip-address {{ panos_mgmt_ip }}
-              when: panos_mgmt_ip | ansible.utils.ipaddr('address') is ansible.utils.ipv6 == false
+                string_send: set deviceconfig system ip-address {{ panos_mgmt_ip | ansible.utils.ipaddr('address') }}
+              when: panos_mgmt_ip | ansible.utils.ipaddr('address') is ansible.utils.ipv4
 
-            - name: Configuring MGMT IPv6 {{ panos_mgmt_ip }} for {{ custom_vm_name | default(vm_name) }}...
+            - name: Configuring OOB MGMT IPv6 {{ panos_mgmt_ip }} for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
                 string_send: set deviceconfig system ipv6-address {{ panos_mgmt_ip }}
-              when: panos_mgmt_ip | ansible.utils.ipaddr('address') is ansible.utils.ipv6 == true
+              when: panos_mgmt_ip | ansible.utils.ipaddr('address') is ansible.utils.ipv6
 
             - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -89,13 +90,19 @@
                   - ENTER
 
         - name: Configuring non-OOB MGMT interface IP...
-          when: primary_network.addresses | selectattr('pool_id', 'match', '^mgmt.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address') == False
+          when: not primary_network.addresses | selectattr('pool_id', 'match', '^mgmt.*') | map(attribute='address') | first | default(omit) | ansible.utils.ipaddr('address')
           block:
-            - name: Configuring MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
+            - name: Configuring non-OOB MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ip-address {{ primary_ipv4 }} netmask {{ primary_ipv4_network | ansible.utils.ipaddr('netmask') }} default-gateway {{ primary_network_ipv4_gw }}
-              when: primary_ipv4 != False
+                string_send: set deviceconfig system ip-address {{ connection_ip | ansible.utils.ipaddr('address') }} netmask {{ connection_ip | ansible.utils.ipaddr('netmask') }} {{ ' ' if connection_ip_gw == '' else 'default-gateway ' + connection_ip_gw }}
+              when: connection_ip | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+
+            - name: Configuring non-OOB MGMT interface IPv6 for {{ custom_vm_name | default(vm_name) }}...
+              community.vmware.vmware_guest_sendkey:
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                string_send: set deviceconfig system ipv6-address {{ connection_ip }}
+              when: connection_ip | ansible.utils.ipaddr('address') is ansible.utils.ipv6
 
             - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -103,29 +110,21 @@
                 keys_send:
                   - ENTER
 
-            - name: Configuring MGMT interface IPv6 for {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ipv6-address {{ primary_ipv6_with_prefix }}
-              when: primary_ipv6 != False
+            - name: Configuring non-OOB MGMT interface IPv6 GW for {{ custom_vm_name | default(vm_name) }}...
+              when:
+                - connection_ip | ansible.utils.ipaddr('address') is ansible.utils.ipv6
+                - connection_ip_gw != ''
+              block:
+                - name: Configuring non-OOB MGMT interface IPv6 gateway for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system ipv6-default-gateway {{ connection_ip_gw }}
 
-            - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                keys_send:
-                  - ENTER
-
-            - name: Configuring MGMT interface IPv6 gateway for {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ipv6-default-gateway {{ primary_network_ipv6_gw }}
-              when: primary_ipv6 != False
-
-            - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                keys_send:
-                  - ENTER
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
 
         - name: Commiting changes for {{ custom_vm_name | default(vm_name) }}...
           community.vmware.vmware_guest_sendkey:
@@ -143,34 +142,8 @@
         provider: "{{ panos_connection_params }}"
       register: panos_facts
       until: panos_facts is succeeded
-      retries: 10
+      retries: 20
       delay: 3
-
-    - name: Exiting PanOS console...
-      when: fresh_deploy
-      block:
-        - name: Exiting {{ custom_vm_name | default(vm_name) }} configuration mode...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            string_send: exit
-          when: primary_ipv6 != False
-
-        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            keys_send:
-              - ENTER
-
-        - name: Exiting {{ custom_vm_name | default(vm_name) }} console...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            string_send: exit
-
-        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            keys_send:
-              - ENTER
 
     - name: Removing any existing addresses from following interfaces(s)...
       paloaltonetworks.panos.panos_interface:
@@ -225,3 +198,28 @@
       paloaltonetworks.panos.panos_commit_firewall:
         provider: "{{ panos_connection_params }}"
         force: true
+
+    - name: Exiting PanOS console...
+      when: fresh_deploy
+      block:
+        - name: Exiting {{ custom_vm_name | default(vm_name) }} configuration mode...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: exit
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Exiting {{ custom_vm_name | default(vm_name) }} console...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: exit
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
