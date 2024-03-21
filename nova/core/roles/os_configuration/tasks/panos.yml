@@ -1,0 +1,15 @@
+---
+- name: Configuring PanOS...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Configuring PanOS...
+      paloaltonetworks.panos.panos_mgtconfig:
+        provider: "{{ panos_connection_params }}"
+        hostname: "{{ hostname }}"
+        timezone: "{{ os_configuration_timezone }}"
+        domain: "{{ domain }}"
+
+    - name: Commiting PanOS changes...
+      paloaltonetworks.panos.panos_commit_firewall:
+        provider: "{{ panos_connection_params }}"

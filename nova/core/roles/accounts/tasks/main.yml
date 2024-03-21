@@ -53,6 +53,10 @@
           include_tasks: opnsense.yml
           when: ansible_network_os == 'opnsense'
 
+        - name: Configure PanOS accounts...
+          include_tasks: panos.yml
+          when: ansible_network_os == 'panos'
+
     - name: Configure macOS accounts...
       ansible.builtin.include_tasks: macos.yml
       when: "'os_macos' in group_names"

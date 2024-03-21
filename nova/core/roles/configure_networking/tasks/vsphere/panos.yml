@@ -1,0 +1,199 @@
+---
+- name: Setting connection parameters for PanOS {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    panos_connection_params:
+      ip_address: "{{ connection_address }}"
+      username: "{{ rest_api_credentials.user_name }}"
+      password: "{{ rest_api_credentials.password }}"
+
+- name: Configuring PanOS MGMT interface...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Configuring MGMT interface on fresh deploy...
+      when: fresh_deploy
+      block:
+        - name: Sleeping for 2 minutes for PanOS to settle down...
+          ansible.builtin.wait_for:
+            timeout: 120
+
+        - name: Typing username to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: "{{ rest_api_credentials.user_name }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            sleep_time: 2
+            keys_send:
+              - ENTER
+
+        - name: Typing password to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: "{{ rest_api_credentials.password }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            sleep_time: 20
+            keys_send:
+              - ENTER
+
+        - name: Entering configuration mode in {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: configure
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Setting static IP configuration for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: set deviceconfig system type static
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Configuring MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: set deviceconfig system ip-address {{ primary_ipv4 }} netmask {{ primary_ipv4_network | ansible.utils.ipaddr('netmask') }} default-gateway {{ primary_network_ipv4_gw }}
+          when: primary_ipv4 != False
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Configuring MGMT interface IPv6 for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: set deviceconfig system ipv6-address {{ primary_ipv6_with_prefix }}
+          when: primary_ipv6 != False
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Configuring MGMT interface IPv6 gateway for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: set deviceconfig system ipv6-default-gateway {{ primary_network_ipv6_gw }}
+          when: primary_ipv6 != False
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Commiting changes for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: commit
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+    - name: Waiting for {{ inventory_hostname }} to become reachable...
+      paloaltonetworks.panos.panos_facts:
+        provider: "{{ panos_connection_params }}"
+      register: panos_facts
+      until: panos_facts is succeeded
+      retries: 10
+      delay: 3
+
+    - name: Exiting PanOS console...
+      when: fresh_deploy
+      block:
+        - name: Exiting {{ custom_vm_name | default(vm_name) }} configuration mode...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: exit
+          when: primary_ipv6 != False
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Exiting {{ custom_vm_name | default(vm_name) }} console...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: exit
+
+        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+    - name: Removing any existing addresses from following interfaces(s)...
+      paloaltonetworks.panos.panos_interface:
+        provider: "{{ panos_connection_params }}"
+        if_name: ethernet1/{{ idx + 1 }}
+        mode: layer3
+        state: absent
+      loop: "{{ interfaces[1:] }}"
+      loop_control:
+        index_var: idx
+        label: "{{ item.network_id }}"
+      when: not fresh_deploy
+
+    - name: Configuring IPv4 for following interfaces(s)...
+      paloaltonetworks.panos.panos_interface:
+        provider: "{{ panos_connection_params }}"
+        if_name: ethernet1/{{ idx + 1 }}
+        mode: layer3
+        ip: "{{ item.addresses | selectattr('mode', 'equalto', 'ipv4_static') | map(attribute='address') | list }}"
+        enable_dhcp: false
+        ipv6_enabled: "{{ configure_networking_panos_enable_ipv6 }}"
+      loop: "{{ interfaces[1:] }}"
+      loop_control:
+        index_var: idx
+        label: "{{ item.network_id }}"
+
+    # Using templates task for IPv6 because paloaltonetworks.panos.panos_ipv6_address does not support list of addresses
+    - name: Templating PanOS IPv6 adding tasks...
+      ansible.builtin.template:
+        src: panos.yml
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_panos.yml
+        mode: "0600"
+
+    - name: Including PanOS IPv6 adding tasks...
+      ansible.builtin.include_tasks:
+        file: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_panos.yml
+
+    - name: Removing IPv6 adding tasks file...
+      ansible.builtin.file:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_panos.yml
+        state: absent
+
+    - name: Configuring PanOS DNS...
+      paloaltonetworks.panos.panos_mgtconfig:
+        provider: "{{ panos_connection_params }}"
+        dns_server_primary: "{{ dns_servers[0] }}"
+        dns_server_secondary: "{{ dns_servers6[0] }}"
+        ntp_server_primary: "{{ ntp_servers[0] }}"
+        ntp_server_secondary: "{{ ntp_servers[1] }}"
+
+    - name: Commiting PanOS changes...
+      paloaltonetworks.panos.panos_commit_firewall:
+        provider: "{{ panos_connection_params }}"
+        force: true

@@ -1,0 +1,13 @@
+---
+{% for interface in interfaces[1:] %}
+{% set interface_loop = loop.index %}
+{% for address in interface.addresses %}
+{% if address.mode == "ipv6_static" %}
+- name: Configuring IPv6 for {{ interface.network_id }} interface...
+  paloaltonetworks.panos.panos_ipv6_address:
+    provider: {{ panos_connection_params }}
+    iface_name: ethernet1/{{ interface_loop }}
+    address: {{ address.address }}
+{% endif %}
+{% endfor %}
+{% endfor %}
