@@ -19,3 +19,6 @@ docker_network:
   enable_ipv6: true
   ipv4_subnet: 172.18.0.0/16
   ipv6_subnet: fd42::/64
+
+# Docker APT proxy
+docker_apt_proxy: https://download.docker.com/linux/{{ ansible_distribution | lower }}
