@@ -8,6 +8,10 @@
     name: nova.core.updates
   when: update_system
 
+# To reboot the machine after updates if required and avoid future issues
+- name: Flush handlers...
+  ansible.builtin.meta: flush_handlers
+
 - name: Configuring non Network OS...
   when:
     - ansible_network_os is not defined
