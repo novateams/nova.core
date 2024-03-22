@@ -139,10 +139,7 @@
           memory_mb: "{{ omit if not hardware_ram else (hardware_ram | int * 1024) | round(0) | int }}"
           memory_reservation_lock: false
           mem_reservation: 0
-        cdrom:
-          - controller_number: 0 # Unmounting any existing ISO
-            unit_number: 0
-            type: none
+        cdrom: "{{ machine_operations_vsphere_cdrom_config }}"
         disk:
           - size_mb: "{{ os_disk_size }}"
             controller_type: "{{ vmware_scsi_controller_type }}"
