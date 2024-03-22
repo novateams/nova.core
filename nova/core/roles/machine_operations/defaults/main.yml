@@ -17,6 +17,10 @@ hardware_ram: # Nr of GB of RAM to add to machine if left empty it will use the 
 vmware_nic_type: vmxnet3
 vmware_scsi_controller_type: paravirtual
 machine_operations_vgpu: # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_vgpu_module.html
+machine_operations_vsphere_cdrom_config:
+  - controller_number: 0 # Unmounting any existing ISO
+    unit_number: 0
+    type: none
 
 # Deployment
 vapp_options: []
