@@ -39,6 +39,7 @@ services:
     {% if providentia_builtin_reverse_proxy %}
     labels:
       caddy: "{{ providentia_app_fqdn }}"
+      caddy.encode: 'zstd gzip'
       {% if providentia_builtin_reverse_proxy_tls_mode == 'selfsigned' %}
       caddy.tls: internal
       {% elif providentia_builtin_reverse_proxy_tls_mode == 'pregenerated' %}
