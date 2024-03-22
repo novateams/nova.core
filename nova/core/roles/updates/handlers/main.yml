@@ -1,7 +1,7 @@
 ---
 - name: Rebooting...
   ansible.builtin.reboot:
-  when: ansible_system == "Linux"
+  when: ansible_system in ["Linux", "FreeBSD"]
 
 - name: Rebooting...
   ansible.windows.win_reboot:
