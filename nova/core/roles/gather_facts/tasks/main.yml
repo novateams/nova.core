@@ -11,7 +11,7 @@
       when: ansible_network_os == 'vyos.vyos.vyos'
 
     - name: Gathering Cisco IOS facts...
-      cisco.ios.ios:
+      cisco.ios.ios_facts:
       when: ansible_network_os == 'cisco.ios.ios'
 
     - name: Gathering facts for FortiOS...
