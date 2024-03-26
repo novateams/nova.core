@@ -1,0 +1,4 @@
+---
+role_metadata_post_clear_existing: false # Set to true to clear existing metadata before uploading new metadata.
+role_metadata_post_endpoint: providentia # Options: providentia, custom. In case of custom, provide the path to the custom task to include.
+role_metadata_post_custom_task_path: none # Path to the custom task to include when posting metadata to non-providentia endpoint.

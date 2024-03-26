@@ -1,5 +1,24 @@
 ---
-- block:
+# EXPERIMENTAL feature, expect future changes
+- name: Getting and also posting metadata when undeploy...
+  when: generate_role_metadata | default(false)
+  block:
+    - name: Including metadata generation role...
+      ansible.builtin.include_role:
+        name: nova.core.role_metadata_generate
+      vars:
+        role_metadata:
+          last_used_deploy_mode: "{{ deploy_mode }}"
+          vm_name: "{{ custom_vm_name | default(vm_name) }}"
+
+    - name: Including metadata generation role...
+      ansible.builtin.include_role:
+        name: nova.core.role_metadata_post
+      when: (just_create) or (deploy_mode == "undeploy") # Post metadata here only when undeploying or just creating the machine
+
+- name: Including type - host machine operations...
+  when: customization_context == "host" # Alternative is container and then it's not creating it with this role
+  block:
     - name: Including vSphere environment tasks...
       ansible.builtin.include_tasks: vsphere/main.yml
       when: infra_env == 'vsphere'
@@ -20,8 +39,6 @@
       ansible.builtin.include_tasks: external/main.yml
       when: infra_env == 'external'
 
-  when: customization_context == "host" # Alternative is container and then it's not creating it with this role
-
 - name: Stopping play...
   ansible.builtin.meta: end_host
-  when: (just_create) or (deploy_mode == "undeploy")
+  when: just_create
