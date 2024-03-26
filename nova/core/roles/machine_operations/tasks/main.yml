@@ -1,4 +1,14 @@
 ---
+# This is an extra feature to include additional roles before vm deletions
+# Can be useful for some specific cases where some extra tasks like licence deregistration, etc. are needed before machine undeploy
+- name: Including following machine_operations pre-roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop: "{{ machine_operations_pre_undeploy_roles }}"
+  when:
+    - machine_operations_pre_undeploy_roles != []
+    - deploy_mode == "undeploy"
+
 # EXPERIMENTAL feature, expect future changes
 - name: Getting and also posting metadata when undeploy...
   when: generate_role_metadata | default(false)
