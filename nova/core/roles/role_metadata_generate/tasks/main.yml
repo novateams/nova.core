@@ -1,0 +1,8 @@
+---
+- name: Generating metadata for {{ role }} role...
+  ansible.builtin.set_fact:
+    role_specific_metadata: "{{ role_metadata }}"
+
+- name: Combining role_specific_metadata with deploy_metadata...
+  ansible.builtin.set_fact:
+    deploy_metadata: "{{ deploy_metadata | combine(role_metadata) }}"

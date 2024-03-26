@@ -1,0 +1,8 @@
+---
+- name: Including post role metadata to Providentia tasks...
+  ansible.builtin.include_tasks: providentia.yml
+  when: role_metadata_post_endpoint == "providentia"
+
+- name: Including post role metadata to custom location tasks...
+  ansible.builtin.include_tasks: custom.yml
+  when: role_metadata_post_endpoint == "custom"

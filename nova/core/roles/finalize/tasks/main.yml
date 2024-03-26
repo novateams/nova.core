@@ -30,6 +30,11 @@
 - name: Flushing handlers...
   ansible.builtin.meta: flush_handlers
 
+- name: Including metadata posting role...
+  ansible.builtin.include_role:
+    name: nova.core.role_metadata_post
+  when: generate_role_metadata | default(false) # Post gathered metadata to Providentia or custom endpoint
+
 # This is an extra feature to include additional roles after the finalize role
 # Can be useful for some specific cases like disk encryption where the machine is locked after reboot
 - name: Including following post-finalize roles...

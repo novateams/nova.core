@@ -1,0 +1,44 @@
+---
+- name: Getting Providentia token and uploading metadata...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Getting Providentia authentication token...
+      ansible.builtin.uri:
+        url: "{{ keycloak_uri }}/realms/Apps/protocol/openid-connect/token"
+        method: POST
+        headers:
+          Content-Type: application/x-www-form-urlencoded
+        body:
+          username: "{{ deployer_username }}"
+          password: "{{ deployer_password }}"
+          client_id: "{{ providentia_client_id | default('Providentia') }}"
+          grant_type: password
+        body_format: form-urlencoded
+        status_code: 200
+      register: providentia_token
+
+    - name: Clearing existing metadata for {{ inventory_hostname }}...
+      ansible.builtin.uri:
+        url: "{{ providentia_uri }}/api/v3/{{ providentia_project_name | default(project_fullname) }}/hosts/{{ main_id }}/instances/{{ inventory_hostname }}"
+        method: PUT
+        headers:
+          accept: application/json
+          Content-Type: application/json
+          Authorization: Token {{ providentia_token.json.access_token }}
+        body:
+          metadata: {}
+        body_format: json
+      when: role_metadata_post_clear_existing
+
+    - name: Uploading metadata for {{ inventory_hostname }}...
+      ansible.builtin.uri:
+        url: "{{ providentia_uri }}/api/v3/{{ providentia_project_name | default(project_fullname) }}/hosts/{{ main_id }}/instances/{{ inventory_hostname }}"
+        method: PATCH
+        headers:
+          accept: application/json
+          Content-Type: application/json
+          Authorization: Token {{ providentia_token.json.access_token }}
+        body:
+          metadata: "{{ deploy_metadata }}"
+        body_format: json

@@ -1,0 +1,4 @@
+---
+- name: Including custom post metadata tasks...
+  ansible_builtin.include_tasks: "{{ role_metadata_post_custom_task_path }}"
+  when: role_metadata_post_custom_task_path != none

@@ -2,6 +2,7 @@
 - name: Checking if the machine is already domain joined...
   ansible.windows.win_shell: "{{ lookup('file', 'Domain-Check.ps1') }}"
   register: secure_channel
+  changed_when: false
 
 - name: Including Windows tasks to fix broken trust...
   delegate_to: "{{ primary_domain_controller }}"
