@@ -4,7 +4,7 @@
     msg: |
       THIS NETWORK CONFIGURATION MODE IS DEPRECATED.
       PLEASE REMOVE configure_networking_with_checks VARIABLE FROM YOUR PROJECT TO REMOVE THIS MESSAGE.
-  whem: configure_networking_with_checks
+  when: configure_networking_with_checks
 
 - name: Waiting for VMware tools to become available...
   community.vmware.vmware_guest_tools_wait:
