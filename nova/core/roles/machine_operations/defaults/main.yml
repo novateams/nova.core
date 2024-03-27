@@ -1,4 +1,15 @@
 ---
+###########
+# General #
+###########
+
+# Deployment
+immutable: false
+no_undeploy: false
+role_only: false # Includes customization role and then stops, great for developing roles
+role_only_wp: false # Run the deploy starting from customization_pre_vm_role
+machine_operations_pre_undeploy_roles: [] # Roles to include before undeploying the VM
+
 ####################
 # vSphere defaults #
 ####################
@@ -24,10 +35,6 @@ machine_operations_vsphere_cdrom_config:
 
 # Deployment
 vapp_options: []
-immutable: false
-no_undeploy: false
-role_only: false # Includes customization role and then stops, great for developing roles
-role_only_wp: false # Run the deploy starting from customization_pre_vm_role
 machine_operations_esxi_hostname: # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_module.html#parameter-esxi_hostname
 
 # Linked clones
