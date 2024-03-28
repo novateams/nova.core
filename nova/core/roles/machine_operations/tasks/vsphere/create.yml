@@ -238,7 +238,7 @@
         - name: Adding the following network interfaces to {{ inventory_hostname }}...
           vmware.vmware_rest.vcenter_vm_hardware_ethernet:
             vm: "{{ created_vm_info.value[0].vm }}"
-            type: "{{ extra_network_interfaces[loop_index].device_type | upper | default('vmxnet3') }}"
+            type: "{{ extra_network_interfaces[loop_index].device_type | upper | default('VMXNET3') }}"
             backing:
               type: "{{ item.value[0].type }}"
               network: "{{ item.value[0].network }}"

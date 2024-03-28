@@ -48,3 +48,5 @@ unix_distro_skel_map:
 
 unix_distro_sudoers_map:
   FreeBSD: /usr/local/etc/sudoers
+
+accounts_panos_temp_username: temp # The username to use for the temporary account to change the admin_accounts password(s) in PanOS

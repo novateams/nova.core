@@ -1,0 +1,62 @@
+---
+- name: Configuring PanOS accounts for {{ inventory_hostname }}...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Generating {{ accounts_panos_temp_username }} user account password...
+      ansible.builtin.set_fact:
+        accounts_panos_temp_password: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+
+    - name: Creating temp user...
+      paloaltonetworks.panos.panos_administrator:
+        provider: "{{ panos_connection_params }}"
+        admin_username: "{{ accounts_panos_temp_username }}"
+        admin_password: "{{ accounts_panos_temp_password }}"
+        superuser: true
+        state: present
+
+    - name: Commiting PanOS changes...
+      paloaltonetworks.panos.panos_commit_firewall:
+        provider: "{{ panos_connection_params }}"
+        force: true
+
+    - name: Setting {{ ansible_deployer_username }} as connection user...
+      ansible.builtin.set_fact:
+        panos_connection_params:
+          ip_address: "{{ ansible_host }}"
+          username: "{{ accounts_panos_temp_username }}"
+          password: "{{ accounts_panos_temp_password }}"
+
+    - name: Configuring following PanOS users...
+      paloaltonetworks.panos.panos_administrator:
+        provider: "{{ panos_connection_params }}"
+        admin_username: "{{ item.username }}"
+        admin_password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
+        #ssh_public_key: "{{ item.ssh_key | default(omit) }}"
+        superuser: true
+      loop: "{{ admin_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+    - name: Commiting PanOS changes...
+      paloaltonetworks.panos.panos_commit_firewall:
+        provider: "{{ panos_connection_params }}"
+        force: true
+
+    - name: Setting {{ ansible_deployer_username }} as connection user...
+      ansible.builtin.set_fact:
+        panos_connection_params:
+          ip_address: "{{ ansible_host }}"
+          username: "{{ ansible_deployer_username }}"
+          password: "{{ ansible_deployer_password }}"
+
+    - name: Removing {{ accounts_panos_temp_username }} user...
+      paloaltonetworks.panos.panos_administrator:
+        provider: "{{ panos_connection_params }}"
+        admin_username: "{{ accounts_panos_temp_username }}"
+        state: absent
+
+    - name: Commiting PanOS changes...
+      paloaltonetworks.panos.panos_commit_firewall:
+        provider: "{{ panos_connection_params }}"
+        force: true
