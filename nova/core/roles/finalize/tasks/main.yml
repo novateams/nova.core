@@ -10,6 +10,11 @@
             name: nova.core.updates
           when: update_system
 
+        - name: Including cleanup role...
+          ansible.builtin.include_role:
+            name: nova.core.cleanup
+          when: finalize_cleanup_system
+
         - name: Windows deploy finalization...
           ansible.builtin.include_tasks: windows.yml
           when: "'os_windows' in group_names"
@@ -21,11 +26,6 @@
         - name: Vyos deploy finalization...
           ansible.builtin.include_tasks: vyos.yml
           when: "'os_vyos' in group_names"
-
-        - name: Including cleanup role...
-          ansible.builtin.include_role:
-            name: nova.core.cleanup
-          when: finalize_cleanup_system
 
 - name: Flushing handlers...
   ansible.builtin.meta: flush_handlers
