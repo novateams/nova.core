@@ -1,2 +1,3 @@
 ---
 remove_bash_history: true
+cleanup_post_reboot: false # Set to true to reboot the system after cleanup

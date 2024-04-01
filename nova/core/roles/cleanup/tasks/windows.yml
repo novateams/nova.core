@@ -31,3 +31,7 @@
   until: windows_cleanup.rc == 0
   retries: 10
   delay: 12
+
+- name: Rebooting...
+  ansible.windows.win_reboot:
+  when: cleanup_post_reboot
