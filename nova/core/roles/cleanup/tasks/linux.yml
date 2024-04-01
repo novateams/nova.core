@@ -67,3 +67,7 @@
   args:
     executable: "/bin/{{'tcsh' if ansible_system == 'FreeBSD' else 'bash'}}"
   when: remove_bash_history
+
+- name: Rebooting...
+  ansible.builtin.reboot:
+  when: cleanup_post_reboot

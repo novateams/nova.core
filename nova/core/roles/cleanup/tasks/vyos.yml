@@ -29,7 +29,7 @@
     - /home/gt
     - /home/vyos
 
-- name: Rebooting...
+- name: Rebooting... # VyOS always requires a reboot
   ansible.builtin.reboot:
   become: true
 
