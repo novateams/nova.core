@@ -44,10 +44,10 @@
         state: stopped
       when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>')
 
+    # Removing Windows Update cache using rd because Powershell (win_file module) can't do it in some cases although it's possible manually
+    # The issue is most likely related to long paths
     - name: Removing C:\Windows\SoftwareDistribution...
-      ansible.windows.win_file:
-        path: C:\Windows\SoftwareDistribution
-        state: absent
+      ansible.windows.win_shell: if ((Test-Path "C:\Windows\SoftwareDistribution") -eq $true) {cmd /c rd C:\Windows\SoftwareDistribution /S /Q}
       register: remove_win_update_cache
       until: not remove_win_update_cache.failed
       retries: 5
