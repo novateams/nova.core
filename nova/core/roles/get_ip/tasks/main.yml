@@ -14,10 +14,3 @@
 - name: Getting IP for VM in Linode environment...
   ansible.builtin.include_tasks: linode/main.yml
   when: infra_env == 'linode'
-
-- name: Saving connection info to /tmp/_connection_address...
-  ansible.builtin.copy:
-    content: "{{ ansible_deployer_username }}@{{ connection_address }} -o StrictHostKeyChecking=no"
-    dest: /tmp/_connection_address
-  delegate_to: localhost
-  become: false
