@@ -1,12 +1,16 @@
 ---
-- block:
-    - name: INFO
+- name: Checking for Linode API token...
+  when: linode_api_token is not defined or linode_api_token in [none, '']
+  block:
+    - name: MISSING LINODE API TOKEN
       ansible.builtin.debug:
-        msg: KEEPASS_LINODE_API_TOKEN not defined in .makerc-vars.
+        msg: |
+          KEEPASS_LINODE_API_TOKEN not defined in .makerc-vars.
+          or
+          linode_api_token is not set in Ansible Vault.
 
     - name: Stopping play...
       ansible.builtin.meta: end_host
-  when: lookup('env', 'KEEPASS_LINODE_API_TOKEN') | length == 0
 
 - name: Starting the rebuild process...
   ansible.builtin.include_tasks: rebuild.yml

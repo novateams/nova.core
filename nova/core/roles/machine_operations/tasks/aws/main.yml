@@ -1,4 +1,17 @@
 ---
+- name: Checking for AWS API key...
+  when: aws_access_key is not defined or aws_access_key in [none, '']
+  block:
+    - name: MISSING AWS API KEY
+      ansible.builtin.debug:
+        msg: |
+          KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars.
+          or
+          aws_access_key_id and aws_access_key are not set in Ansible Vault.
+
+    - name: Stopping play...
+      ansible.builtin.meta: end_host
+
 - name: Starting the removal process...
   ansible.builtin.include_tasks: remove.yml
   when: deploy_mode == 'undeploy' or deploy_mode == 'redeploy'
