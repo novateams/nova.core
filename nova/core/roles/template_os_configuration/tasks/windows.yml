@@ -1,7 +1,4 @@
 ---
-- name: Optimizing PowerShell...
-  ansible.windows.win_shell: "{{ lookup('file', 'Optimize-PowerShell.ps1') }}"
-
 - name: Stopping Windows Update service... # To make sure nothing is updating during the configuration
   ansible.windows.win_service:
     name: wuauserv
