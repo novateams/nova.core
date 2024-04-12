@@ -42,7 +42,12 @@
       ansible.builtin.include_tasks: restart.yml
       when: restart
 
-    - name: Shutting down VM...
+    - name: Including {{ custom_vm_name | default(vm_name) }} suspend tasks...
+      ansible.builtin.include_tasks: suspend.yml
+      when:
+        - suspend
+        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+
       ansible.builtin.include_tasks: shutdown.yml
       when:
         - shutdown
