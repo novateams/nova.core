@@ -1,0 +1,23 @@
+- name: Delegating suspend tasks to localhost...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Suspending {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware_rest.vcenter_vm_guest_power:
+        state: standby
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: vcenter_vm_suspend
+      until: not vcenter_vm_suspend.failed
+      retries: "{{ shutdown_shutting_retries }}"
+      delay: "{{ shutdown_shutting_delay }}"
+      when: vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+
+    - name: Waiting for {{ custom_vm_name | default(vm_name) }} to suspend...
+      vmware.vmware_rest.vcenter_vm_guest_power_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: suspend_status
+      until:
+        - suspend_status.value.state is defined
+        - suspend_status.value.state == "NOT_RUNNING"
+      retries: "{{ shutdown_waiting_retries }}"
+      delay: "{{ shutdown_waiting_delay }}"

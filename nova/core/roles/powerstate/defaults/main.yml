@@ -1,9 +1,10 @@
 ---
-shutdown: false
-poweron: false
 poweroff: false
-restart: false
+poweron: false
 reset: false
+restart: false
+shutdown: false
+suspend: false
 
 # Delays
 shutdown_shutting_retries: 5
