@@ -68,7 +68,6 @@ class InventoryModule(BaseInventoryPlugin):
 
   def init_inventory(self):
     self.inventory.add_group("all")
-
     self.inventory.set_variable("all", "providentia_api_version", 3)
 
   async def store_access_token(self):
@@ -78,7 +77,25 @@ class InventoryModule(BaseInventoryPlugin):
     self._access_token = self.fetch_access_token(sso_creds)
 
   def fetch_creds(self, creds_path):
-    if 'KEEPASS_DEPLOYER_CREDENTIALS_PATH' in os.environ and os.environ['KEEPASS_DEPLOYER_CREDENTIALS_PATH'].strip() != "":
+    project = self.get_option('exercise')
+
+    # Feature to allow project specific deployer credentials from Ansible vault
+    project_deployer_username = self._options.get(project + '_deployer_username')
+    project_deployer_password = self._options.get(project + '_deployer_password')
+
+    if project_deployer_username is not None and project_deployer_password is not None:
+
+      # Adding project specific deployer credentials as variables
+      self.inventory.set_variable("all", "project_deployer_username", project_deployer_username)
+      self.inventory.set_variable("all", "project_deployer_password", project_deployer_password)
+
+      return {
+        'username': project_deployer_username,
+        'password': project_deployer_password
+      }
+
+    # Feature to get deployer credentials from KeePass
+    elif 'KEEPASS_DEPLOYER_CREDENTIALS_PATH' in os.environ and os.environ['KEEPASS_DEPLOYER_CREDENTIALS_PATH'].strip() != "":
 
       kp_soc = "/tmp/ansible-keepass.sock"
       sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -95,13 +112,14 @@ class InventoryModule(BaseInventoryPlugin):
       sock.close()
 
       if(username['status']=='error' or password['status']=='error'):
-        raise AnsibleParserError('Error retrieving credentials from Keepass')
+        raise AnsibleParserError('Error retrieving credentials from KeePass')
 
       return {
         'username': username['text'],
         'password': password['text']
       }
 
+    # Feature to get deployer credentials from Ansible vault
     else:
 
       if(self.get_option('deployer_username') is None or self.get_option('deployer_password') is None):
