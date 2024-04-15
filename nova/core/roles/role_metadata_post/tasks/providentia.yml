@@ -10,8 +10,8 @@
         headers:
           Content-Type: application/x-www-form-urlencoded
         body:
-          username: "{{ deployer_username }}"
-          password: "{{ deployer_password }}"
+          username: "{{ project_deployer_username | default(deployer_username) }}"
+          password: "{{ project_deployer_password | default(deployer_password) }}"
           client_id: "{{ providentia_client_id | default('Providentia') }}"
           grant_type: password
         body_format: form-urlencoded

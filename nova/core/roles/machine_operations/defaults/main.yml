@@ -53,7 +53,7 @@ video_memory: 64
 video_3d: false
 video_3d_memory: 256
 
-vm_description: Created on {{ ansible_date_time.iso8601 }} by {{ deployer_username }} - {{ inventory_hostname }}
+vm_description: Created on {{ ansible_date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }} - {{ inventory_hostname }}
 template_description: Created on {{ ansible_date_time.iso8601 }}
 
 ######################

@@ -32,8 +32,8 @@ deploy_vars_vault_auth_method: ldap # Method used to authenticate to Vault. Can 
 deploy_vars_vault_mount_point: "{{ omit }}" # The mount point for the secrets engine in Vault will be omitted if empty
 vault_ca_cert: "{{ omit }}" # The path to the CA certificate file which is used to validate the Vault server certificate
 vault_auth_method: ldap # Currenty in this role ldap or userpass are supported
-vault_username: "{{ deployer_username }}"
-vault_password: "{{ deployer_password }}"
+vault_username: "{{ project_deployer_username | default(deployer_username) }}"
+vault_password: "{{ project_deployer_password | default(deployer_password) }}"
 validate_vault_certs: true
 vault_access_token: "{{ deploy_vars_vault_token.login.auth.client_token }}" # Comes from Vault token generation task in main.yml
 vault_lookup_fragment: "url={{ vault_address }} token={{ vault_access_token }} " # The space before the ending quote is required
@@ -46,18 +46,18 @@ validate_vmware_certs: true
 
 vmware_defaults:
   hostname: "{{ vcenter_hostname | default(omit) }}"
-  username: "{{ vcenter_username | default(deployer_username) | default(omit) }}"
-  password: "{{ vcenter_password | default(deployer_password) | default(omit) }}"
+  username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default(omit) }}"
+  password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
   validate_certs: "{{ validate_vmware_certs }}"
 
 vmware_rest_defaults:
   vcenter_hostname: "{{ vcenter_hostname | default(omit) }}"
-  vcenter_username: "{{ vcenter_username | default(deployer_username) | default(omit) }}"
-  vcenter_password: "{{ vcenter_password | default(deployer_password) | default(omit) }}"
+  vcenter_username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default(omit) }}"
+  vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username: "{{ nxs_username | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
-nsx_deployer_password: "{{ nxs_password | default(deployer_password) | default(omit) }}"
+nsx_deployer_username: "{{ nxs_username | default(project_deployer_username) | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
+nsx_deployer_password: "{{ nxs_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
 
 #######
 # AWS #

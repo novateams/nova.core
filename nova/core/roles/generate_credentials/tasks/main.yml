@@ -8,10 +8,10 @@
       block:
         - name: Authenticating to {{ vault_address }}...
           ansible.builtin.uri:
-            url: "{{ vault_address }}/v1/auth/ldap/login/{{ deployer_username }}"
+            url: "{{ vault_address }}/v1/auth/ldap/login/{{ project_deployer_username | default(deployer_username) }}"
             method: POST
             body:
-              password: "{{ deployer_password }}"
+              password: "{{ project_deployer_password | default(deployer_password }}"
             status_code: 200
             body_format: json
             validate_certs: "{{ validate_vault_certs }}"
@@ -36,10 +36,10 @@
   block:
     - name: Authenticating to {{ vault_address }}...
       uri:
-        url: "{{ vault_address }}/v1/auth/ldap/login/{{ deployer_username }}"
+        url: "{{ vault_address }}/v1/auth/ldap/login/{{ project_deployer_username | default(deployer_username) }}"
         method: POST
         body:
-          password: "{{ deployer_password }}"
+          password: "{{ project_deployer_password | default(deployer_password }}"
         status_code: 200
         body_format: json
         validate_certs: "{{ validate_vault_certs }}"
