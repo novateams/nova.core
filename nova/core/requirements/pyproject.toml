@@ -6,12 +6,12 @@ authors = ["CCDCOE <techadmin@ccdcoe.org> and Clarified Security <catapult@clari
 
 [tool.poetry.dependencies]
 aiohttp = "*"
-ansible-core = "2.16.3"
+ansible-core = "2.16.5"
 ansible-lint = { version = "*", markers = "platform_system != 'Windows'" } # https://github.com/python-poetry/poetry/issues/7112#issuecomment-1329385572
 ansible-pylibssh = "*"
 ansible-specdoc = "*"
 boto3 = "*"
-botocore = "^1.33" # Versioned because of https://github.com/python-poetry/poetry/issues/2094
+botocore = "^1.34" # Versioned because of https://github.com/python-poetry/poetry/issues/2094
 cryptography = "*"
 dnspython = "*"
 dpath = "*"
@@ -19,7 +19,7 @@ hvac = "*"
 jinja2 = "*"
 jmespath = "*"
 linode-api4 = "*"
-lxml = "*"
+lxml = "5.1.0" # 5.2.0 breaks XML modifications for PfSense & Opnsense
 netaddr = "*"
 oauthlib = "*"
 packaging = "*"
@@ -34,7 +34,7 @@ prettytable = "*"
 psycopg2-binary = "*"
 pykeepass = "*"
 pyopenssl = "*"
-python = "3.11.7"
+python = "3.11.9"
 pyvmomi = "*"
 pywinrm = "*"
 redis = "*"
