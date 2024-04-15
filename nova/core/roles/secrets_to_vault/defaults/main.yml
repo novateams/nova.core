@@ -14,6 +14,6 @@ secrets_vault_data_fullpath: "{{ secrets_vault_address }}/v1/{{ secrets_vault_en
 secrets_vault_metadata_fullpath: "{{ secrets_vault_address }}/v1/{{ secrets_vault_engine_path }}/metadata/{{ secrets_vault_secrets_path }}"
 
 # The following variables are used to authenticate to Vault.
-# deployer_username & deployer_username come from Catapult's .makerc-vars KEEPASS_DEPLOYER_CREDENTIALS_PATH.
-vault_username: "{{ deployer_username }}"
-vault_password: "{{ deployer_password }}"
+# These credentials come from Ansible Vault
+vault_username: "{{ project_deployer_username | default(deployer_username) }}"
+vault_password: "{{ project_deployer_password | default(deployer_password) }}"

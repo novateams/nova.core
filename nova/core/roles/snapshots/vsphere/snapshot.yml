@@ -32,7 +32,7 @@
         state: present
         memory_dump: "{{ true if live_snap else false }}"
         snapshot_name: "{{ snapshot_name | default(ansible_date_time.iso8601) }}"
-        description: Created at {{ ansible_date_time.iso8601 }} by {{ deployer_username }}
+        description: Created at {{ ansible_date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }}
 
 - name: Including powerstate role...
   ansible.builtin.include_role:
