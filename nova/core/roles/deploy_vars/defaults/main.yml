@@ -56,8 +56,8 @@ vmware_rest_defaults:
   vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username: "{{ nxs_username | default(project_deployer_username) | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
-nsx_deployer_password: "{{ nxs_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
+nsx_deployer_username: "{{ nsx_username | default(project_deployer_username) | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
+nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default(omit) }}"
 
 #######
 # AWS #
