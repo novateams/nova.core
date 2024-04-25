@@ -2,14 +2,16 @@
 # All of the vmware.vmware_rest have retries for stability
 - name: Checking if the VM exists...
   vmware.vmware_rest.vcenter_vm_info:
-    filter_names: "{{ old_vm_name | default(vm_name) }}"
+    filter_names: "{{ old_vm_name | default(custom_vm_name) | default(vm_name) }}"
   register: vcenter_vm_info
   until: not vcenter_vm_info.failed
   retries: 5
   delay: 2
   delegate_to: localhost
 
-- block:
+- name: Renaming VM in vSphere environment...
+  when: vcenter_vm_info.value != []
+  block:
     - name: Looking up the existing VM UUID...
       community.vmware.vmware_guest_info:
         datacenter: "{{ datacenter }}"
@@ -23,4 +25,3 @@
         uuid: "{{ old_vcenter_vm_info.instance.hw_product_uuid }}"
         name: "{{ new_vm_name }}"
       delegate_to: localhost
-  when: vcenter_vm_info.value != []

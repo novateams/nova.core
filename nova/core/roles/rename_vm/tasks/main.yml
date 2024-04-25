@@ -1,5 +1,7 @@
 ---
-- block:
+- name: Including VM rename tasks...
+  when: customization_context == "host" # Alternative is container
+  block:
     - name: Renaming VM in vSphere environment...
       include_tasks: vsphere/main.yml
       when: infra_env == 'vsphere'
@@ -15,5 +17,3 @@
     - name: Renaming VM in Linode environment...
       include_tasks: linode/main.yml
       when: infra_env == 'linode'
-
-  when: customization_context == "host" # Alternative is container
