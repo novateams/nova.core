@@ -23,7 +23,9 @@
       ansible.windows.win_file:
         path: "{{ post_scripts_folder_on_target }}"
         state: directory
-      when: "'os_windows' in group_names"
+      when:
+        - ansible_system is defined
+        - ansible_system == "Win32NT"
 
     - name: Including {{ customization_role_path }}/{{ role }} role...
       ansible.builtin.include_role:
@@ -32,12 +34,12 @@
 - name: Flushing handlers and including get_ip role if role_only is used...
   when: role_only
   block:
-    - name: Flushing handlers...
-      ansible.builtin.meta: flush_handlers
-
     - name: Including get_ip role...
       ansible.builtin.include_role:
         name: nova.core.get_ip
 
     - name: Ending play for role_only...
       ansible.builtin.meta: end_host
+
+- name: Flushing handlers...
+  ansible.builtin.meta: flush_handlers
