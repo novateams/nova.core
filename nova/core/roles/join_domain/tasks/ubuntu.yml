@@ -10,6 +10,7 @@
       - oddjob-mkhomedir
       - packagekit
       - policykit-1
+      - python3-pexpect
       - python3-pip
       - realmd
       - samba-common
@@ -19,10 +20,6 @@
     update_cache: true
   register: domain_join_packages
   until: not domain_join_packages.failed
-
-- name: Install pexpect...
-  ansible.builtin.pip:
-    name: pexpect
 
 - name: Templating krb5.conf...
   ansible.builtin.template:
@@ -46,7 +43,7 @@
 - name: Removing {{ hostname }} from domain...
   ansible.builtin.command: /usr/sbin/realm leave
   changed_when: true
-  notify: Rebooting...
+  notify: Rebooting Unix...
   when: realm_state.stdout_lines != []
 
 - name: Joining {{ hostname }} to {{ ad_domain_name }}...

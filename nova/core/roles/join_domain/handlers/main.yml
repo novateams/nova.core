@@ -5,5 +5,5 @@
     enabled: true
     state: restarted
 
-- name: Rebooting...
+- name: Rebooting Unix...
   ansible.builtin.reboot:
