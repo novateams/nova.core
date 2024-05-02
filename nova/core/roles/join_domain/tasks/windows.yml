@@ -10,8 +10,8 @@
   block:
     - name: Setting required facts for delegation...
       ansible.builtin.set_fact:
-        ansible_user: "{{ domain_admin_username | default(ansible_deployer_username) }}@{{ ad_domain_name }}"
-        ansible_password: "{{ domain_admin_password | default(ansible_deployer_password) }}"
+        ansible_user: "{{ domain_join_user }}@{{ ad_domain_name }}"
+        ansible_password: "{{ domain_join_password }}"
         ansible_shell_type: "{{ default_ansible_shell_type }}"
       delegate_facts: true
 
@@ -45,8 +45,8 @@
       microsoft.ad.membership:
         dns_domain_name: "{{ ad_domain_name }}"
         hostname: "{{ hostname }}"
-        domain_admin_user: "{{ domain_join_user | default(domain_admin_username) }}@{{ ad_domain_name }}"
-        domain_admin_password: "{{ domain_join_password | default(domain_admin_password) }}"
+        domain_admin_user: "{{ domain_join_user }}@{{ ad_domain_name }}"
+        domain_admin_password: "{{ domain_join_password }}"
         domain_ou_path: "{{ computer_ou | default(omit) }}"
         state: domain
         reboot: true
