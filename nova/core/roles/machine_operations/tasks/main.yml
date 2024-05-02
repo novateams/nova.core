@@ -7,7 +7,7 @@
   loop: "{{ machine_operations_pre_undeploy_roles }}"
   when:
     - machine_operations_pre_undeploy_roles != []
-    - deploy_mode == "undeploy"
+    - deploy_mode in ["undeploy", "redeploy"]
 
 # EXPERIMENTAL feature, expect future changes
 - name: Getting and also posting metadata when undeploy...
