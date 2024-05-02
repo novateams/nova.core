@@ -1,4 +1,11 @@
 ---
+- name: Creating /etc/polkit-1/localauthority/50-local.d
+  ansible.builtin.file:
+    path: /etc/polkit-1/localauthority/50-local.d
+    state: directory
+    recurse: true
+    mode: "0755"
+
 # http://c-nergy.be/blog/?p=12043
 - name: Configuring XRDP polkit...
   ansible.builtin.copy:
