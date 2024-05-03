@@ -6,12 +6,12 @@ authors = ["CCDCOE <techadmin@ccdcoe.org> and Clarified Security <catapult@clari
 
 [tool.poetry.dependencies]
 aiohttp = "*"
-ansible-core = "2.16.5"
+ansible-core = "2.16.6"
 ansible-lint = { version = "*", markers = "platform_system != 'Windows'" } # https://github.com/python-poetry/poetry/issues/7112#issuecomment-1329385572
 ansible-pylibssh = "*"
 ansible-specdoc = "*"
 boto3 = "*"
-botocore = "^1.34" # Versioned because of https://github.com/python-poetry/poetry/issues/2094
+botocore = "*"
 cryptography = "*"
 dnspython = "*"
 dpath = "*"
