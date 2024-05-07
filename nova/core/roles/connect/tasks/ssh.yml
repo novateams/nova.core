@@ -1,0 +1,8 @@
+---
+# Can be picked up manually with ssh $(cat /tmp/ansible_connect)
+- name: Saving connection info to /tmp/ansible_connect
+  ansible.builtin.copy:
+    content: -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ ansible_user }}@{{ ansible_host }}
+    dest: /tmp/ansible_connect
+  delegate_to: localhost
+  become: false

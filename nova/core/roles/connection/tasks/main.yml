@@ -76,6 +76,11 @@
         - not role_only_wp
         - macos_has_python
 
+- name: Including connect role...
+  ansible.builtin.include_role:
+    name: nova.core.connect
+  when: connection_connect
+
 - name: Including gather_facts role...
   ansible.builtin.include_role:
     name: nova.core.gather_facts

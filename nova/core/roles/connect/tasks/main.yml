@@ -1,0 +1,6 @@
+---
+- name: Including {{ connect_connection_method }} connection method tasks...
+  ansible.builtin.include_tasks: "{{ connect_connection_method }}.yml"
+
+- name: Ending play...
+  ansible.builtin.meta: end_host
