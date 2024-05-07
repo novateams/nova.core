@@ -59,4 +59,3 @@
 #     dest: "{{ inventory_hostname }}.yaml"
 #   delegate_to: localhost
 #   become: false
-
