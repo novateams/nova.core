@@ -1,2 +1,3 @@
 ---
 connect_connection_method: ssh
+connect_connection_method_ssh_forward_agent: true # Set to false if you don't want to forward your SSH agent. It can be unsafe for multi-user or untrusted systems.
