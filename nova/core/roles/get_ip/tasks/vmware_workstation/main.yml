@@ -9,14 +9,14 @@
     ansible_host: host.docker.internal
 
 - name: Getting {{ inventory_hostname }} IP address...
-  ansible.builtin.shell: vmrun getGuestIPAddress {{ local_vmx_path }}
+  ansible.builtin.shell: vmrun getGuestIPAddress {{ local_vmx_path }} -wait
   register: vmip
   retries: 60
   delay: 3
   until:
     - vmip.rc == 0
     - vmip.stdout != "unknown"
-    - vmip.stdout | ansible.utils.ipv4() != false
+    - vmip.stdout is not match("^fe80") # Skip link-local addresses
 
 - name: Printing {{ inventory_hostname }} IP...
   ansible.builtin.debug:
