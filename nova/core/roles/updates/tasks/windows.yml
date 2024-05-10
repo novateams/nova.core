@@ -28,3 +28,7 @@
   until: win_updates.failed == false
   retries: 5
   delay: 10
+
+- name: Reporting update state... # Useful when WSUS is used
+  ansible.windows.win_command: wuauclt /reportnow
+  changed_when: false
