@@ -18,9 +18,7 @@
 
     # Accounts creation tasks
     - name: Creation accounts for non-Netowork OS accounts...
-      when:
-        - ansible_network_os is not defined
-        - "'os_macos' not in group_names"
+      when: ansible_network_os is not defined
       block:
         - name: Including Windows accounts creation tasks...
           ansible.builtin.include_tasks: windows_create.yml
@@ -29,6 +27,10 @@
         - name: Including Linux & BSD accounts creation tasks...
           ansible.builtin.include_tasks: unix_create.yml
           when: ansible_system in ["FreeBSD", "Linux"]
+
+        - name: Including MacOS accounts creation tasks...
+          ansible.builtin.include_tasks: macos_create.yml
+          when: ansible_system == "Darwin"
 
     - name: Configuring Network OS accounts...
       when: ansible_network_os is defined
@@ -57,10 +59,6 @@
           include_tasks: panos.yml
           when: ansible_network_os == 'panos'
 
-    - name: Configure macOS accounts...
-      ansible.builtin.include_tasks: macos.yml
-      when: "'os_macos' in group_names"
-
     - name: Setting {{ ansible_deployer_username }} as connection user...
       ansible.builtin.set_fact:
         ansible_user: "{{ ansible_deployer_username }}"
@@ -74,11 +72,10 @@
     # Accounts removal tasks
     # This will lookup all user profiles that are not in the accounts list and remove them
     # This needs to be done after the correct ansible_user is set as not to try to remove the user you are logged in as
-    - name: Removing accounts from non-Netowork OS...
+    - name: Removing accounts from non-Network OS...
       when:
         - accounts_remove_stale
         - ansible_network_os is not defined
-        - "'os_macos' not in group_names"
       block:
         - name: Including Linux & BSD accounts removal tasks...
           ansible.builtin.include_tasks: unix_remove.yml
@@ -87,3 +84,7 @@
         - name: Including Windows accounts removal tasks...
           ansible.builtin.include_tasks: windows_remove.yml
           when: ansible_system == 'Win32NT'
+
+        - name: Including MacOS accounts removal tasks...
+          ansible.builtin.include_tasks: macos_remove.yml
+          when: ansible_system == "Darwin"

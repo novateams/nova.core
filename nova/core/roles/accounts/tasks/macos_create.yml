@@ -1,0 +1,61 @@
+---
+- name: Configuring following users...
+  ansible.builtin.raw: |
+    if dscl . -list /Users | grep -q "^{{ item.username }}$"; then
+
+        echo Setting existing {{ item.username }} user password
+        sysadminctl -resetPasswordFor {{ item.username }} -newPassword {{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }} -adminUser {{ ansible_user }} -adminPassword {{ ansible_password }}
+
+    else
+
+        echo Creating new {{ item.username }} account
+        sysadminctl -addUser {{ item.username }} -password {{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }} -admin -shell /bin/zsh
+
+    fi
+  changed_when: true
+  loop: "{{ admin_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+
+- name: Adding account creation source flag...
+  ansible.builtin.raw: |
+    echo "This account was created with {{ ansible_role_name }} role" > /Users/{{ item.username }}/.created
+    chown {{ item.username }}:staff /Users/{{ item.username }}/.created
+  loop: "{{ local_accounts_list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username != admin_account # Cannot remove root user
+
+- name: Enabling password requirement for sudo...
+  ansible.builtin.raw: |
+    sed -i "" "s/^\%admin.*/\%admin\t\tALL = \(ALL\:ALL\) ALL/g" /etc/sudoers
+  changed_when: true
+  when: sudo_requires_password
+
+- name: Disabling password requirement for sudo
+  ansible.builtin.raw: |
+    sed -i "" "s/^\%admin.*/\%admin\t\tALL = \(ALL\) NOPASSWD\: ALL/g" /etc/sudoers
+  changed_when: true
+  when: not sudo_requires_password
+
+- name: Adding ssh keys for...
+  ansible.builtin.raw: |
+    line="$( echo {{ item.ssh_key }} )"
+    if [ "{{ admin_account }}" = "{{ item.username }}" ];
+    then
+        echo "Adding ssh key to root user"
+        file=/var/root/.ssh/authorized_keys
+        mkdir -p /var/root/.ssh/
+        touch $file
+    else
+        file=/Users/{{ item.username }}/.ssh/authorized_keys
+        mkdir -p /Users/{{ item.username }}/.ssh/
+        touch $file
+        chown -R {{ item.username }}:staff /Users/{{ item.username }}/.ssh/
+    fi
+    grep -qxF "$line" $file || echo "$line" >> $file
+  changed_when: true
+  loop: "{{ admin_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.ssh_key is defined
