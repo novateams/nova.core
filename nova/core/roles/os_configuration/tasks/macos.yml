@@ -9,7 +9,7 @@
 
 - name: Lineinfile_raw ( /etc/hosts )
   ansible.builtin.raw: |
-    line="127.0.1.1 {{ hostname }}.{{ domain }} {{ hostname }}"
+    line="127.0.1.1 {{ fqdn }} {{ hostname }}"
     file=/etc/hosts
     grep -qxF "$line" $file || echo "$line" >> $file
   changed_when: true
