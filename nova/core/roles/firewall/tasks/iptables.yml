@@ -70,6 +70,7 @@
         state: started
         enabled: true
         daemon_reload: true
+      register: iptables_service_result
 
 # This is required to make sure automatic Docker IPTables rules get re-populated
 - name: Checking if Docker service exists...
@@ -78,4 +79,4 @@
   register: docker_service_exists
   changed_when: docker_service_exists.status.LoadState != "not-found"
   notify: Restarting Docker...
-  when: ipv4_rules_result.changed or ipv6_rules_result.changed
+  when: ipv4_rules_result.changed or ipv6_rules_result.changed or iptables_service_result.changed
