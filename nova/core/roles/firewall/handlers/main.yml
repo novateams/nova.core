@@ -11,6 +11,6 @@
     name: docker.service
     state: restarted
 
-- name: Rebooting...
+- name: Rebooting Unix...
   ansible.builtin.reboot:
   when: ansible_os_family == "Archlinux" # For some reason nftables does not work without a reboot on Archlinux
