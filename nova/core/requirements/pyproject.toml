@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "nova"
 version = "2.0.0"
-description = "Required libraries for running CCDCoE projects and Catapult"
-authors = ["CCDCOE <techadmin@ccdcoe.org> and Clarified Security <catapult@clarifiedsecurity.com>"]
+description = "Required libraries for running CCDCoE projects"
+authors = ["CCDCOE <techadmin@ccdcoe.org>"]
 
 [tool.poetry.dependencies]
 aiohttp = "*"
 ansible-core = "2.16.6"
-ansible-lint = { version = "*", markers = "platform_system != 'Windows'" } # https://github.com/python-poetry/poetry/issues/7112#issuecomment-1329385572
+ansible-lint = "*"
 ansible-pylibssh = "*"
 ansible-specdoc = "*"
 boto3 = "*"
@@ -19,7 +19,7 @@ hvac = "*"
 jinja2 = "*"
 jmespath = "*"
 linode-api4 = "*"
-lxml = "5.1.0" # 5.2.0 breaks XML modifications for PfSense & Opnsense
+lxml = "*"
 netaddr = "*"
 oauthlib = "*"
 packaging = "*"
