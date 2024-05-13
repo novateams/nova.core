@@ -3,8 +3,7 @@
   ansible.builtin.file:
     path: "{{ container_config_folder }}/data"
     owner: 200 # ID of the nexus container user
-    group: 200 # ID of the nexus container user group
-    mode: u=rwX,g=rwX
+    group: root # Host machine root group
     state: directory
     recurse: true
 
