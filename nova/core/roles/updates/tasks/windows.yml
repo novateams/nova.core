@@ -25,7 +25,7 @@
     category_names: "{{ updates_category_names }}"
     reboot: true
   register: win_updates
-  until: win_updates.failed == false
+  until: not win_updates.failed
   retries: 5
   delay: 10
 

@@ -3,7 +3,7 @@
   ansible.builtin.yum:
     name: "*"
     update_cache: true
-    state: latest # Latest is used in order to perform a full upgrade
+    state: latest # noqa: package-latest - Latest is used in order to perform a full upgrade
 
 - name: Running update cleanup...
   ansible.builtin.yum:
