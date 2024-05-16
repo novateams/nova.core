@@ -21,3 +21,9 @@
     - name: Including FreeBSD update tasks...
       ansible.builtin.include_tasks: freebsd.yml
       when: ansible_system == "FreeBSD"
+- name: Inlcuding network OS update tasks...
+  when: ansible_network_os is defined
+  block:
+    - name: Including RouterOS update tasks...
+      include_tasks: routeros.yml
+      when: ansible_network_os == 'community.routeros.routeros'

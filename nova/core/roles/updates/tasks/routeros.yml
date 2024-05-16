@@ -1,0 +1,15 @@
+---
+- name: Updating RouterOS...
+  community.routeros.command:
+    commands: /system package update install
+
+- name: Resetting connection for {{ inventory_hostname }}...
+  ansible.builtin.meta: reset_connection
+
+- name: Waiting until reboot is done for {{ inventory_hostname }}... # Because if there are updates RouterOS will reboot automatically
+  community.routeros.command:
+    commands: /system/clock print
+  register: reboot_state
+  until: reboot_state is succeeded
+  retries: 60
+  delay: 3
