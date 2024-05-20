@@ -21,6 +21,11 @@
     - name: Including FreeBSD update tasks...
       ansible.builtin.include_tasks: freebsd.yml
       when: ansible_system == "FreeBSD"
+
+    - name: Including MacOS update tasks...
+      ansible.builtin.include_tasks: macos.yml
+      when: ansible_system == "Darwin"
+
 - name: Inlcuding network OS update tasks...
   when: ansible_network_os is defined
   block:
