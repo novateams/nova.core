@@ -1,12 +1,17 @@
 ---
-- name: Installing Docker on Windows machine...
-  ansible.builtin.include_tasks: windows.yml
-  when: ansible_os_family == "Windows"
+- name: Installing Docker for supported OSs...
+  when: ansible_os_family is defined
+  block:
+    - name: Installing Docker on Windows machine...
+      ansible.builtin.include_tasks: windows.yml
+      when:
+        - ansible_os_family == "Windows"
+        - ansible_os_installation_type == "Server"
 
-- name: Installing Docker on Debian based Linux machine...
-  ansible.builtin.include_tasks: debian_os.yml
-  when: ansible_os_family == "Debian"
+    - name: Installing Docker on Debian based Linux machine...
+      ansible.builtin.include_tasks: debian_os.yml
+      when: ansible_os_family == "Debian"
 
-- name: Installing Docker on Archlinux based machine...
-  ansible.builtin.include_tasks: archlinux.yml
-  when: ansible_os_family == "Archlinux"
+    - name: Installing Docker on Archlinux based machine...
+      ansible.builtin.include_tasks: archlinux.yml
+      when: ansible_os_family == "Archlinux"
