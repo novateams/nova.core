@@ -1,4 +1,4 @@
 ---
-- name: Info...
+- name: INFO...
   ansible.builtin.debug:
-    msg: Bypassing create_vm role for external machines.
+    msg: Bypassing machine_operations role for external machines.

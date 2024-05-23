@@ -24,7 +24,7 @@
           ansible.builtin.include_tasks: windows_create.yml
           when: ansible_system == 'Win32NT'
 
-        - name: Including Linux & BSD accounts creation tasks...
+        - name: Including Unix accounts creation tasks...
           ansible.builtin.include_tasks: unix_create.yml
           when: ansible_system in ["FreeBSD", "Linux"]
 
@@ -77,7 +77,7 @@
         - accounts_remove_stale
         - ansible_network_os is not defined
       block:
-        - name: Including Linux & BSD accounts removal tasks...
+        - name: Including Unix accounts removal tasks...
           ansible.builtin.include_tasks: unix_remove.yml
           when: ansible_system in ["FreeBSD", "Linux"]
 
