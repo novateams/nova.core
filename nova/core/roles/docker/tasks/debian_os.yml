@@ -1,5 +1,5 @@
 ---
-- name: Installing apt_key dependencies...
+- name: Installing apt dependencies...
   ansible.builtin.apt:
     update_cache: true
     name:
@@ -77,8 +77,10 @@
       - docker-ce-cli{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else none }}
       - docker-ce{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else none }}
       - docker-compose-plugin
+      - python3-docker
       - python3-jsondiff
       - python3-pip
+      - python3-requests
       - python3-setuptools
       - python3-wheel
     state: present
@@ -96,18 +98,6 @@
   loop:
     - docker-ce-cli
     - docker-ce
-
-- name: Getting python3-pip version...
-  ansible.builtin.shell: pip3 -V | cut -d " " -f 2
-  changed_when: false
-  register: pip_version
-
-# https://peps.python.org/pep-0668/
-# Using this until a good cross-user venv is available
-- name: Installing Docker Python modules...
-  ansible.builtin.pip:
-    name: docker
-    extra_args: "{{ '--break-system-packages' if pip_version.stdout is version('23.0.0', 'gt', version_type='loose') else none }}"
 
 - name: Adding Docker daemon config...
   ansible.builtin.template:
