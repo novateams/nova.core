@@ -1,5 +1,5 @@
 ---
-- name: Waiting until Nexus is up...
+- name: Waiting until https://{{ fqdn }} is up...
   ansible.builtin.uri:
     url: https://{{ fqdn }}
     method: GET
