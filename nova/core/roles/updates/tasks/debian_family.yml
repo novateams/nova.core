@@ -5,11 +5,10 @@
     state: present
     autoclean: true
     autoremove: true
-    upgrade: full
-    dpkg_options: force-confold,force-confdef
+    upgrade: safe
     allow_downgrade: true
-  register: linux_updates
-  until: not linux_updates.failed
+  register: apt_updates
+  until: not apt_updates.failed
   retries: 5
   delay: 3
 
@@ -28,8 +27,8 @@
       ansible.builtin.apt:
         name: unattended-upgrades
         state: present
-      register: linux_updates
-      until: not linux_updates.failed
+      register: apt_updates
+      until: not apt_updates.failed
       retries: 5
       delay: 3
 
