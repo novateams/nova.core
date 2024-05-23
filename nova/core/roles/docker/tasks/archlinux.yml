@@ -3,8 +3,9 @@
   ansible.builtin.package:
     name:
       - docker
-      - docker-compose
       - docker-buildx
+      - docker-compose
+      - python-requests
     state: present
     update_cache: true
   register: docker_install
@@ -12,17 +13,9 @@
   retries: 6
   delay: 5
 
-- name: Getting python3-pip version...
-  ansible.builtin.shell: pip3 -V | cut -d " " -f 2
-  changed_when: false
-  register: pip_version
-
-# https://peps.python.org/pep-0668/
-# Using this until a good cross-user venv is available
-- name: Installing required Python packages...
-  ansible.builtin.pip:
-    name: requests
-    extra_args: "{{ '--break-system-packages' if pip_version.stdout is version('23.0.0', 'gt', version_type='loose') else none }}"
+- name: Rebooting...
+  ansible.builtin.reboot:
+  when: docker_install.changed
 
 - name: Creating /etc/docker directory...
   ansible.builtin.file:
