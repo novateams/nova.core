@@ -223,6 +223,18 @@
       retries: 5
       delay: 2
 
+    - name: Creating a list of extra NICs...
+      ansible.builtin.set_fact:
+        extra_network_interfaces: "{{ extra_network_interfaces + [merged] }}"
+      loop: "{{ interfaces[1:] }}"
+      loop_control:
+        label: "{{ item.cloud_id }}"
+      vars:
+        merged:
+          name: "{{ item.cloud_id }}"
+          device_type: "{{ vmware_nic_type }}"
+      when: interfaces | length > 1
+
     - name: Configuring extra interfaces..
       when: extra_network_interfaces != []
       block:
