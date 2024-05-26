@@ -33,7 +33,6 @@ expo_backend_worker_service_replicas: 6
 expo_frontend_service_replicas: 3
 
 ### KEYCLOAK ###
-expo_keycloak_legacy: false
 expo_keycloak_fqdn: keycloak.localhost
 expo_keycloak_realm: EXPO
 expo_keycloak_client_secret: ""
