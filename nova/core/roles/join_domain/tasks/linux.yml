@@ -1,0 +1,104 @@
+---
+- name: Installing required Linux packages for domain join...
+  ansible.builtin.package:
+    name:
+      - adcli
+      - oddjob
+      - oddjob-mkhomedir
+      - python3-pexpect
+      - realmd
+      - samba-common
+      - sssd
+      - sssd-tools
+    state: present
+    update_cache: true
+  register: domain_join_packages
+  until: not domain_join_packages.failed
+
+- name: Starting & enabling realmd service...
+  ansible.builtin.systemd:
+    name: realmd
+    state: started
+    enabled: true
+
+- name: Verifying domain trust...
+  ansible.builtin.command: /usr/sbin/adcli testjoin
+  changed_when: true
+  failed_when: domain_joined.rc not in [0, 3] # 3 is the return code for broken trust or not joined
+  register: domain_joined
+
+- name: (Re)Adding host to domain...
+  when: domain_joined.rc == 3
+  block:
+    - name: Checking if machine was already domain joined...
+      ansible.builtin.command: /usr/sbin/realm list
+      changed_when: true
+      register: realm_state
+
+    - name: Removing {{ hostname }} from domain...
+      ansible.builtin.command: /usr/sbin/realm leave
+      changed_when: true
+      when: realm_state.stdout_lines != []
+
+    - name: Joining {{ hostname }} to {{ ad_domain_name }}...
+      ansible.builtin.expect:
+        command: /usr/sbin/realm join --user={{ domain_join_user }} {{ ad_domain_name }} --install=/ --computer-ou {{ computer_ou | default('CN=Computers,' + domain_dn) }}
+        responses:
+          (?i)Password for *: "{{ domain_join_password }}"
+      register: domain_join_state
+      until: domain_join_state.rc == 0
+      retries: 3
+      delay: 3
+      notify: Rebooting Unix...
+
+- name: Creating user home folder automatically...
+  ansible.builtin.command: pam-auth-update --enable mkhomedir
+  changed_when: true
+  when: ansible_os_family == "Debian"
+
+- name: Creating user home folder automatically for RedHat...
+  when: ansible_os_family == "RedHat"
+  block:
+    - name: Installing required packages for {{ ansible_os_family }}...
+      ansible.builtin.package:
+        name: authconfig
+        state: present
+        update_cache: true
+
+    - name: Creating user home folder automatically for {{ ansible_os_family }}...
+      ansible.builtin.command: authconfig --enablemkhomedir --update
+      changed_when: true
+
+- name: Updating domain related config...
+  ansible.builtin.lineinfile:
+    dest: "{{ item.dest }}"
+    line: "{{ item.line }}"
+    regexp: "{{ item.regexp | default(omit) }}"
+    insertafter: "{{ item.insertafter | default(omit) }}"
+    mode: "0600"
+  loop:
+    - dest: /etc/sssd/sssd.conf
+      insertafter: ^\[sssd\]
+      line: default_domain_suffix = {{ ad_domain_name }}
+
+    - dest: /etc/sssd/sssd.conf
+      insertafter: ^\[domain/{{ ad_domain_name }}\]
+      line: ad_gpo_map_remote_interactive = +xrdp-sesman, +vmtoolsd # Allowing RDP login when ad_gpo_access_control = enforcing
+
+    - dest: /etc/sssd/sssd.conf
+      insertafter: ^ad_gpo_map_remote_interactive = .*
+      line: ad_gpo_access_control = enforcing
+
+    - dest: /etc/sssd/sssd.conf
+      regexp: ^services = nss
+      line: services = nss, pam, sudo
+
+    - dest: /etc/sssd/sssd.conf
+      regexp: ^default_shell =
+      line: default_shell = /bin/bash
+
+    - dest: /etc/sudoers
+      regexp: .*{{ ad_domain_name }}.*
+      line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL" # Defaults to Domain Admins
+      insertafter: ^%sudo
+  notify: Restarting sssd service...

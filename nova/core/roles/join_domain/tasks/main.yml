@@ -1,11 +1,13 @@
 ---
-- name: Including Ubuntu domain join tasks...
-  ansible.builtin.include_tasks: ubuntu.yml
-  when: "'os_ubuntu' in group_names"
+- name: Including Linux domain join tasks...
+  ansible.builtin.include_tasks: linux.yml
+  when:
+    - ansible_system == "Linux"
+    - ansible_distribution not in ["Kali", "Archlinux"] # Kali and Archlinux are currently not supported
 
 - name: Including Windows domain join tasks...
   ansible.builtin.include_tasks: windows.yml
-  when: "'os_windows' in group_names"
+  when: ansible_system == "Win32NT"
 
 - name: Including metadata generation role... # EXPERIMENTAL feature, expect future changes
   ansible.builtin.include_role:
