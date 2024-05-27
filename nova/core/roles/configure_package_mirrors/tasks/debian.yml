@@ -11,9 +11,9 @@
     remote_src: true
   when: not apt_backup_file.stat.exists
 
-- name: Templating custom debian-sources.list to {{ inventory_hostname }}...
+- name: Templating custom debian-{{ ansible_distribution_release }}.list to {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: debian-sources.list
+    src: debian-{{ ansible_distribution_release }}.list
     dest: /etc/apt/sources.list
   register: apt_sources
 
