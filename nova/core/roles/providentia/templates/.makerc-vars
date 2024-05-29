@@ -1,1 +1,2 @@
 DEPLOY_ENVIRONMENT := prod
+SUDO_COMMAND := sudo -E
