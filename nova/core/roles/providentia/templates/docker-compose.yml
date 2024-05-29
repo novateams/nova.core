@@ -38,14 +38,21 @@ services:
       {% endif %}
     {% if providentia_builtin_reverse_proxy %}
     labels:
-      caddy: "{{ providentia_app_fqdn }}"
-      caddy.encode: 'zstd gzip'
+      caddy_0: "http://{{ providentia_app_fqdn }}"
+      caddy_0.@api.path: /api/*
+      caddy_0.handle_0: "@api"
+      caddy_0.handle_0.header_0: Upgrade TLS1.3, HTTP/1.1
+      caddy_0.handle_0.header_1: Connection Upgrade
+      caddy_0.handle_0.respond: '"Use TLS please!" 426'
+      caddy_0.handle_1.redir: https://{host}{uri} permanent
+      caddy_1: "https://{{ providentia_app_fqdn }}"
+      caddy_1.encode: 'zstd gzip'
       {% if providentia_builtin_reverse_proxy_tls_mode == 'selfsigned' %}
-      caddy.tls: internal
+      caddy_1.tls: internal
       {% elif providentia_builtin_reverse_proxy_tls_mode == 'pregenerated' %}
-      caddy.tls: /certs/cert.crt /certs/cert.key
+      caddy_1.tls: /certs/cert.crt /certs/cert.key
       {% endif %}
-      caddy.reverse_proxy: "{% raw %}{{upstreams 3000}}{% endraw %}"
+      caddy_1.reverse_proxy: "{% raw %}{{upstreams 3000}}{% endraw %}"
     {% endif %}
 
   {% if providentia_builtin_reverse_proxy %}
@@ -71,6 +78,9 @@ services:
           {% if providentia_builtin_keycloak %}
           - {{ providentia_builtin_keycloak_fqdn }}
           {% endif %}
+    labels:
+      caddy_0:
+      caddy_0.auto_https: off
   {% endif %}
 
   {% if providentia_builtin_redis %}
