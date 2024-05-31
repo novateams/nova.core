@@ -19,7 +19,11 @@ DOCUMENTATION = """
     exercise:
       description: Exercise abbreviation which defines configuration to populate inventory with.
       type: string
-      required: True
+      required: False
+    project:
+      description: Project abbreviation which defines configuration to populate inventory with.
+      type: string
+      required: False
     sso_token_url:
       description: The endpoint where token may be obtained for Providentia
     sso_client_id:
@@ -51,8 +55,16 @@ class InventoryModule(BaseInventoryPlugin):
   def parse(self, inventory, loader, path, cache=True):
     super(InventoryModule, self).parse(inventory, loader, path)
     self._read_config_data(path)
-    # merge extra vars
+
+    # Merging extra vars
     self._options = combine_vars(self._options, load_extra_vars(loader))
+
+    if self.get_option('exercise') is not None:
+        print("\033[93m[DEPRECATION WARNING]: The 'exercise' option will be deprecated. Replace 'exercise' with 'project' in your Providentia inventory file.\033[0m")
+        self.project = self.get_option('exercise')
+
+    if self.get_option('project') is not None:
+        self.project = self.get_option('project')
 
     asyncio.run(self.run())
 
@@ -77,11 +89,10 @@ class InventoryModule(BaseInventoryPlugin):
     self._access_token = self.fetch_access_token(sso_creds)
 
   def fetch_creds(self, creds_path):
-    project = self.get_option('exercise')
 
     # Feature to allow project specific deployer credentials from Ansible vault
-    project_deployer_username = self._options.get(project + '_deployer_username')
-    project_deployer_password = self._options.get(project + '_deployer_password')
+    project_deployer_username = self._options.get(self.project + '_deployer_username')
+    project_deployer_password = self._options.get(self.project + '_deployer_password')
 
     if project_deployer_username is not None and project_deployer_password is not None:
 
@@ -195,9 +206,7 @@ class InventoryModule(BaseInventoryPlugin):
 
   async def fetch_from_providentia(self, endpoint=""):
     providentia_host = self.get_option('providentia_host')
-    exercise = self.get_option('exercise')
-
-    url = f"{providentia_host}/api/v3/{exercise}/{endpoint}"
+    url = f"{providentia_host}/api/v3/{self.project}/{endpoint}"
 
     headers = {
       'Authorization': f"{self._access_token['token_type']} {self._access_token['access_token']}"
