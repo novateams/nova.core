@@ -173,16 +173,6 @@ class InventoryModule(BaseInventoryPlugin):
       if priority:
         self.inventory.set_variable(group, 'ansible_group_priority', int(priority))
 
-    # Add groups to inventory
-    # We do this in separate loop because of groups can reference to
-    # child groups that may not have been added to inventory already
-    for group_data in groups['result']:
-      group = group_data['id']
-      group_children = group_data['children']
-
-      for child_group in group_children:
-        self.inventory.add_child(group, child_group)
-
   async def fetch_hosts(self):
     hosts = await self.fetch_from_providentia('inventory')
 
