@@ -93,8 +93,27 @@
   retries: 5
   delay: 3
 
-- name: Restart systemd-journald... # This required for journalctl to work properly after machine-id regeneration
-  ansible.builtin.systemd:
-    name: systemd-journald
-    state: restarted
+- name: Restarting required services...
   when: regenerate_machine_id.changed
+  block:
+    - name: Checking if systemd-journald service exists...
+      ansible.builtin.systemd:
+        name: systemd-journald
+      register: systemd_journald_service_exists
+
+    - name: Restarting systemd-journald... # This required for journalctl to work properly after machine-id regeneration
+      ansible.builtin.systemd:
+        name: systemd-journald
+        state: restarted
+      when: systemd_journald_service_exists.status.LoadState == "enabled"
+
+    - name: Checking if NetworkManager service exists...
+      ansible.builtin.systemd:
+        name: NetworkManager.service
+      register: networkmanager_service_exists
+
+    - name: Restarting NetworkManager... # This required for DNS to work properly after machine-id regeneration
+      ansible.builtin.systemd:
+        name: NetworkManager.service
+        state: restarted
+      when: networkmanager_service_exists.status.LoadState == "enabled"
