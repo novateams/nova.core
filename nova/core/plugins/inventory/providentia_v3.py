@@ -53,18 +53,27 @@ class InventoryModule(BaseInventoryPlugin):
     return False
 
   def parse(self, inventory, loader, path, cache=True):
+    '''
+      inventory: inventory object with existing data and the methods to add hosts/groups/variables to inventory
+      loader: Ansible DataLoader. The DataLoader can read files, auto load JSON/YAML and decrypt vaulted data, and cache read files.
+      path: string with inventory source (this is usually a path, but is not required)
+      cache: indicates whether the plugin should use or avoid caches (cache plugin and/or loader)
+    '''
     super(InventoryModule, self).parse(inventory, loader, path)
     self._read_config_data(path)
 
     # Merging extra vars
     self._options = combine_vars(self._options, load_extra_vars(loader))
 
+    # Define object to get a dict with all the available variables at execution time
+    self.templar.available_variables = self._vars
+
     if self.get_option('exercise') is not None:
         print("\033[93m[DEPRECATION WARNING]: The 'exercise' option will be deprecated. Replace 'exercise' with 'project' in your Providentia inventory file.\033[0m")
-        self.project = self.get_option('exercise')
+        self.project = self.templar.template(self.get_option('exercise'))
 
     if self.get_option('project') is not None:
-        self.project = self.get_option('project')
+        self.project = self.templar.template(self.get_option('project'))
 
     asyncio.run(self.run())
 
