@@ -10,7 +10,7 @@ caddy_container_ports:
   - "443:443/udp"
 
 caddy_config_folder: /srv/caddy
-caddy_version: 2.7.6
+caddy_version: 2.8.4
 
 # caddy_template_caddyfile mode variables
 caddy_caddyfile_src: caddyfile_src # Will look for the file in templates folder for the role that includes this role
