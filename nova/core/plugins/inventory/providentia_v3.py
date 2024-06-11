@@ -65,9 +65,12 @@ class InventoryModule(BaseInventoryPlugin):
     # Merging extra vars
     self._options = combine_vars(self._options, load_extra_vars(loader))
 
-    # Define object to get a dict with all the available variables at execution time
+    # Making sure all variables coming from the inventory file can be templated with jinja
     self.templar.available_variables = self._vars
+    for key, value in self._options.items():
+        self._options[key] = self.templar.template(value)
 
+    # Checking for deprecated exercise option in the inventory file
     if self.get_option('exercise') is not None:
         print("\033[93m[DEPRECATION WARNING]: The 'exercise' option will be deprecated. Replace 'exercise' with 'project' in your Providentia inventory file.\033[0m")
         self.project = self.templar.template(self.get_option('exercise'))
