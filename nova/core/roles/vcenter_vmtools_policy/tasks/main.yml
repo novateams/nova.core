@@ -7,17 +7,23 @@
       vmware.vmware_rest.vcenter_vm_info:
         filter_names:
           - "{{ custom_vm_name | default(vm_name) }}"
+      retries: 5
+      delay: 2
       register: vm_filter
 
     - name: Collecting info about VM...
       vmware.vmware_rest.vcenter_vm_info:
         vm: "{{ vm_filter.value[0].vm }}"
+      retries: 5
+      delay: 2
       register: vm_info
 
     - name: Configuring VM Tools upgrade policy to {{ vmtools_upgrade_policy }}...
       vmware.vmware_rest.vcenter_vm_tools:
         vm: "{{ vm_info.id }}"
         upgrade_policy: "{{ vmtools_upgrade_policy }}"
+      retries: 5
+      delay: 2
 
     - name: Waiting until VMTools are running...
       vmware.vmware_rest.vcenter_vm_tools_info:
