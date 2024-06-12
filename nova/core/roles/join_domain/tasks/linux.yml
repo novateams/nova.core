@@ -22,7 +22,7 @@
     enabled: true
 
 - name: Verifying domain trust...
-  ansible.builtin.command: /usr/sbin/adcli testjoin
+  ansible.builtin.command: /usr/sbin/adcli testjoin --domain {{ ad_domain_name }}
   changed_when: true
   failed_when: domain_joined.rc not in [0, 3] # 3 is the return code for broken trust or not joined
   register: domain_joined
