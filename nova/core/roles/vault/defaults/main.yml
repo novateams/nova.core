@@ -78,17 +78,14 @@ vault_code_signing_key_bits: 384
 
 # LDAPs configuration
 vault_ldap_engine_name: ldap
-vault_ldaps_certificate_source: {} # Trusted certificate for LDAPs connections. Can be file in the Vault host or remote url
-
-vault_ldaps_certificate_file: # This is just an empty placeholder, it will be populated by the role if vault_ldaps_certificate_source is defined
-  content: {}
+vault_ldap_admin_group_name: vault_admins # This is the AD group that will have full access to Vault
 
 vault_ldap_configuration:
   anonymous_group_search: false
   binddn: "{{ vault_binddn }}"
   bindpass: "{{ vault_bindpass }}"
   case_sensitive_names: false
-  certificate: "{{ omit if vault_ldaps_certificate_source == {} else vault_ldaps_certificate_file.content | b64decode }}"
+  certificate: "{{ vault_ldaps_certificate_file.content | b64decode }}"
   deny_null_bind: true
   discoverdn: false
   groupattr: sAMAccountName
