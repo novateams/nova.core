@@ -95,15 +95,21 @@
         state: directory
         mode: "0755"
 
-    - name: Creating a JKS truststore(s)...
+    - name: Getting all trusted CAs
+      ansible.builtin.find:
+        paths: /usr/local/share/ca-certificates
+      register: trusted_cas
+
+    - name: Creating a JKS truststore from following certificates...
       community.general.java_cert:
-        cert_path: /usr/local/share/ca-certificates/{{ item.name }}.crt
-        cert_alias: "{{ item.name }}"
+        cert_path: "{{ trusted_certificates_jks.path }}"
+        cert_alias: "{{ trusted_certificates_jks.path }}"
         keystore_path: /srv/certs/{{ trusted_certificates_jks_truststore_name }}.jks
         keystore_pass: changeit # Since the truststore contains public keys I don't see much point in setting different password than JKS default
         state: present
         keystore_create: true
         trust_cacert: true
-      loop: "{{ trusted_certificates_list }}"
+      loop: "{{ trusted_cas.files }}"
       loop_control:
-        label: "{{ item.name }}"
+        label: "{{ trusted_certificates_jks.path }}"
+        loop_var: trusted_certificates_jks
