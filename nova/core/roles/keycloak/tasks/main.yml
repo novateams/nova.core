@@ -1,0 +1,41 @@
+---
+- name: Missing required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - keycloak_admin_password
+      - keycloack_postgres_db_password
+  when: keycloak_admin_password == {} or keycloack_postgres_db_password == {}
+
+- name: Creating following configuration folders...
+  ansible.builtin.file:
+    path: "{{ dir.path }}"
+    state: directory
+    recurse: true
+    owner: "{{ dir.owner }}"
+  loop_control:
+    loop_var: dir
+  loop:
+    - path: "{{ keycloak_container_config_folder }}/data"
+      owner: 1000
+    - path: "{{ keycloak_container_config_folder }}/postgres"
+      owner: 999
+
+- name: Templating configuration to machine...
+  ansible.builtin.template:
+    src: "{{ config.src }}"
+    dest: "{{ keycloak_container_config_folder }}/{{ config.dest }}"
+    lstrip_blocks: true
+    mode: "0644"
+  register: template
+  loop_control:
+    loop_var: config
+  loop:
+    - src: keycloak.yml
+      dest: docker-compose.yml
+    - src: config.yaml
+      dest: config.yaml
+
+- name: Composing Keycloak on {{ inventory_hostname }}...
+  ansible.builtin.command: docker compose -f {{ keycloak_container_config_folder }}/docker-compose.yml up -d
+  changed_when: true

@@ -1,0 +1,81 @@
+---
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:{{ keycloak_version }}
+    container_name: keycloak
+    hostname: keycloak
+    restart: unless-stopped
+    command: start --db=postgres
+    environment:
+      # https://www.keycloak.org/server/all-config
+      KC_HOSTNAME_STRICT: false
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      DB_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak_postgres
+      KC_DB_PASSWORD: {{ keycloack_postgres_db_password }}
+      KC_HTTP_ENABLED: true
+      KEYCLOAK_ADMIN: {{ keycloak_admin_user }}
+      KEYCLOAK_ADMIN_PASSWORD: {{ keycloak_admin_password }}
+      KC_PROXY: edge # Since we're using separate reverse proxy
+      KC_CACHE: local
+      JAVA_OPTS_APPEND: "-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=true"
+      # https://www.keycloak.org/server/all-provider-config
+      {% if keycloak_use_custom_jks %}
+      KC_SPI_TRUSTSTORE_FILE_FILE: {{ keycloak_jks_truststore_path }}
+      KC_SPI_TRUSTSTORE_FILE_PASSWORD: {{ keycloak_jks_password }}
+      {% endif %}
+    volumes:
+      - "{{ keycloak_container_config_folder }}/data:/opt/jboss/keycloak/standalone/data"
+      - "/srv/certs:/srv/certs"
+      - "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-host-ca-certificates.crt"
+    depends_on:
+      - keycloak_postgres
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+  keycloak_postgres:
+    image: postgres:{{ keycloak_postgres_version }}
+    container_name: keycloak-postgres
+    hostname: postgres
+    restart: unless-stopped
+    volumes:
+      - "{{ keycloak_container_config_folder }}/postgres/:/var/lib/postgresql/data"
+    environment:
+      TZ: UTC
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_postgres
+      POSTGRES_PASSWORD: {{ keycloack_postgres_db_password }}
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+  keycloak_config:
+    image: adorsys/keycloak-config-cli:latest-{{ keycloak_version }}
+    container_name: keycloak-config
+    depends_on:
+      - keycloak
+    volumes:
+      - "{{ keycloak_container_config_folder }}/config.yaml:/config/config.yaml"
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080/
+      KEYCLOAK_USER: {{ keycloak_admin_user }}
+      KEYCLOAK_PASSWORD: {{ keycloak_admin_password }}
+      KEYCLOAK_AVAILABILITYCHECK_ENABLED: true
+      KEYCLOAK_AVAILABILITYCHECK_TIMEOUT: 60s
+      IMPORT_FILES: "/config/*"
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+networks:
+  default:
+    name: "{{ docker_network }}"
+    external: true
