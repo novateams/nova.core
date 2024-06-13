@@ -1,0 +1,273 @@
+{% for realm in keycloak_realms %}
+---
+realm: "{{ realm.realm_name }}"
+enabled: true
+{% if realm.sso_session_idle_timeout is defined %}
+ssoSessionIdleTimeout: "{{ realm.sso_session_idle_timeout }}"
+{% endif %}
+{% if realm.sso_session_max_lifespan is defined %}
+ssoSessionMaxLifespan: "{{ realm.sso_session_max_lifespan }}"
+{% endif %}
+{% if realm.access_token_lifespan is defined %}
+accessTokenLifespan: "{{ realm.access_token_lifespan }}"
+{% endif %}
+{% if realm.default_groups is defined %}
+defaultGroups: {{ realm.default_groups | to_json }}
+{% endif %}
+{% if realm.configure_ldap | default(false)  %}
+components:
+  org.keycloak.storage.UserStorageProvider:
+    - name: "{{ realm.ldap_provider_name | default( ad_domain_name ) }}"
+      providerId: ldap
+      subComponents:
+        org.keycloak.storage.ldap.mappers.LDAPStorageMapper:
+          - {
+              name: "last name",
+              providerId: user-attribute-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  is.mandatory.in.ldap: ["true"],
+                  read.only: ["false"],
+                  always.read.value.from.ldap: ["true"],
+                  user.model.attribute: [lastName],
+                },
+            }
+          - {
+              name: "first name",
+              providerId: user-attribute-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  ldap.attribute: [givenName],
+                  is.mandatory.in.ldap: ["true"],
+                  always.read.value.from.ldap: ["true"],
+                  read.only: ["false"],
+                  user.model.attribute: [firstName],
+                },
+            }
+          - {
+              name: "creation date",
+              providerId: user-attribute-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  ldap.attribute: [createTimestamp],
+                  is.mandatory.in.ldap: ["false"],
+                  always.read.value.from.ldap: ["true"],
+                  read.only: ["true"],
+                  user.model.attribute: [createTimestamp],
+                },
+            }
+          - {
+              name: username,
+              providerId: user-attribute-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  ldap.attribute: [sAMAccountName],
+                  is.mandatory.in.ldap: ["true"],
+                  always.read.value.from.ldap: ["false"],
+                  read.only: ["false"],
+                  user.model.attribute: [username],
+                },
+            }
+          - {
+              name: "modify date",
+              providerId: user-attribute-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  ldap.attribute: [modifyTimestamp],
+                  is.mandatory.in.ldap: ["false"],
+                  read.only: ["true"],
+                  always.read.value.from.ldap: ["true"],
+                  user.model.attribute: [modifyTimestamp],
+                },
+            }
+          - {
+              name: email,
+              providerId: user-attribute-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  ldap.attribute: [mail],
+                  is.mandatory.in.ldap: ["false"],
+                  always.read.value.from.ldap: ["false"],
+                  read.only: ["false"],
+                  user.model.attribute: [email],
+                },
+            }
+          {% if realm.ldap_group_mappers is defined %}
+          {% for mapper in realm.ldap_group_mappers %}
+          - {
+              name: "{{ mapper.ldap_group_mapper_name }}-groups",
+              providerId: group-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  drop.non.existing.groups.during.sync: ["false"],
+                  group.name.ldap.attribute: [sAMAccountName],
+                  group.object.classes: [group],
+                  groups.dn: ["{{ mapper.ldap_groups_dn }}"],
+                  groups.ldap.filter: [],
+                  groups.path: [/],
+                  ignore.missing.groups: ["false"],
+                  mapped.group.attributes: [],
+                  memberof.ldap.attribute: [memberOf],
+                  membership.attribute.type: [DN],
+                  membership.ldap.attribute: [member],
+                  membership.user.ldap.attribute: [sAMAccountName],
+                  mode: [READ_ONLY],
+                  preserve.group.inheritance: ["true"],
+                  user.roles.retrieve.strategy: [LOAD_GROUPS_BY_MEMBER_ATTRIBUTE_RECURSIVELY],
+                },
+            }
+          {% endfor %}
+          {% endif %}
+          {% if realm.ldap_role_mappers is defined %}
+          {% for mapper in realm.ldap_role_mappers %}
+          - {
+              name: "{{ mapper.client_name }}-roles",
+              providerId: role-ldap-mapper,
+              subComponents: {},
+              config:
+                {
+                  client.id: [{{ mapper.client_name }}],
+                  role.name.ldap.attribute: [sAMAccountName],
+                  role.object.classes: [group],
+                  roles.dn: ["{{ mapper.ldap_groups_dn }}"],
+                  memberof.ldap.attribute: [memberOf],
+                  membership.attribute.type: [DN],
+                  membership.ldap.attribute: [member],
+                  membership.user.ldap.attribute: [sAMAccountName],
+                  mode: [READ_ONLY],
+                  use.realm.roles.mapping: ['false'],
+                  user.roles.retrieve.strategy: [LOAD_ROLES_BY_MEMBER_ATTRIBUTE_RECURSIVELY]
+                },
+            }
+          {% endfor %}
+          {% endif %}
+      config:
+        enabled: [true]
+        priority: ["0"]
+        fullSyncPeriod: ["3600"]
+        changedSyncPeriod: ["900"]
+        cachePolicy: ["{{ realm.ldap_cache_policy | default( 'DEFAULT' ) }}"]
+        editMode: ["{{ realm.ldap_edit_mode | default( 'READ_ONLY' ) }}"]
+        syncRegistrations: [false]
+        vendor: [ad]
+        usePasswordModifyExtendedOp: []
+        usernameLDAPAttribute: ["{{ realm.username_attribute | default( 'sAMAccountName' ) }}"] # For some cases UserPrincipalName might be used
+        rdnLDAPAttribute: [cn]
+        uuidLDAPAttribute: [objectGUID]
+        userObjectClasses: ["person, organizationalPerson, user"]
+        connectionUrl: ["{{ realm.ldap_server }}"] # Format ldap(s)://fqdn
+        usersDn: ["{{ realm.users_search_dn }}"]
+        authType: [simple]
+        startTls: []
+        bindDn: ["{{ realm.bind_user_dn }}"]
+        bindCredential: ["{{ realm.bind_user_password }}"]
+        customUserSearchFilter: {{ realm.custom_user_search_filter | default([]) }}
+        searchScope: ["2"]
+        validatePasswordPolicy: [false]
+        trustEmail: [false]
+        useTruststoreSpi: [ldapsOnly]
+        connectionPooling: [true]
+{% endif %}
+
+{% if realm.clients is defined %}
+clients:
+  {% for client in realm.clients %}
+  - clientId: {{ client.client_name }}
+    enabled: true
+    clientAuthenticatorType: client-secret
+    baseUrl: {{ client.base_uri }}
+    adminUrl: {{ client.admin_uri }}
+    redirectUris: {{ client.redirect_uris }}
+    rootUrl: {{ client.root_uri }}
+    webOrigins: {{ client.weborigin_uris }}
+    protocol: openid-connect
+    standardFlowEnabled: {{ client.standard_flow_enabled | default(true) }}
+    implicitFlowEnabled: {{ client.implicit_flow_enabled | default(false) }}
+    publicClient: {{ client.public_client | default(true) }}
+    secret: {{ client.client_secret | default('') }}
+    directAccessGrantsEnabled: {{ client.direct_access_grants_enabled | default(true) }}
+    defaultClientScopes:
+      - profile
+      - email
+      {% if 'create_client_scope' in client and client.create_client_scope %}
+      - {{ client.client_name }}-roles
+      {% endif %}
+    optionalClientScopes: []
+    {% if 'auth_flow_override_browser' in client %}
+    authenticationFlowBindingOverrides:
+      browser: {{ client.auth_flow_override_browser }}
+    {% endif %}
+    {% if 'client_session_max_lifespan' in client or 'client_session_idle_timeout' in client %}
+    attributes:
+       {% if 'client_session_max_lifespan' in client %}
+       client.session.max.lifespan: {{ client.client_session_max_lifespan }}
+       {% endif %}
+       {% if 'client_session_idle_timeout' in client %}
+       client.session.idle.timeout: {{ client.client_session_idle_timeout }}
+       {% endif %}
+    {% endif %}
+  {% endfor %}
+clientScopes:
+  {% for client in realm.clients %}
+    {% if 'create_client_scope' in client and client.create_client_scope %}
+    - name: {{ client.client_name }}-roles
+      description: ""
+      protocol: openid-connect
+      attributes:
+        include.in.token.scope: "false"
+        display.on.consent.screen: "true"
+        consent.screen.text: "${rolesScopeConsentText}"
+      protocolMappers:
+        - name: "client roles"
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-client-role-mapper
+          consentRequired: false
+          config:
+            multivalued: "true"
+            id.token.claim: "true"
+            access.token.claim: "true"
+            claim.name: "resource_access.${client_id}.roles"
+            jsonType.label: String
+            usermodel.clientRoleMapping.clientId: {{ client.client_name }}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if realm.authenticationFlows is defined %}
+authenticationFlows:
+{{ realm.authenticationFlows | to_yaml }}
+{% endif %}
+
+{% if realm.authenticatorConfig is defined %}
+authenticatorConfig:
+{{ realm.authenticatorConfig | to_yaml }}
+{% endif %}
+
+{% if realm.keycloak_local_users is defined and realm.keycloak_local_users is iterable %}
+users:
+{% for keycloak_local_user in realm.keycloak_local_users %}
+- {{ keycloak_local_user | to_json }}
+{% endfor %}
+{% endif %}
+
+{% if realm.keycloak_local_groups is defined and realm.keycloak_local_groups is iterable %}
+groups:
+{% for keycloak_local_group in realm.keycloak_local_groups %}
+- {{ keycloak_local_group | to_json }}
+{% endfor %}
+{% endif %}
+
+{% if realm.identity_providers is defined and realm.identity_providers is iterable %}
+identityProviders:
+{% for idp in realm.identity_providers %}
+- {{ idp | to_json }}
+{% endfor %}
+{% endif %}
+{% endfor %}
