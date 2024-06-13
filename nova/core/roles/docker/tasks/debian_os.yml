@@ -93,8 +93,10 @@
 
 - name: "{{ 'Locking' if docker_engine_version != {} else 'Unlocking' }} Docker engine version..." # This is to avoid updating Docker with apt upgrade
   ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
+    name: "{{ docker_package }}"
     selection: "{{ 'hold' if docker_engine_version != {} else 'install' }}"
+  loop_control:
+    loop_var: docker_package
   loop:
     - docker-ce-cli
     - docker-ce

@@ -29,13 +29,14 @@
     - name: Saving Vault unseal key(s)...
       ansible.builtin.lineinfile:
         path: "{{ vault_config_folder }}/creds/unseal_key"
-        line: "{{ item }}"
+        line: "{{ vault_unseal_key_save }}"
         create: yes
         mode: "0600"
       loop: "{{ vault_init.json.keys_base64 }}"
       loop_control:
         label: Saving unseal key{{ vault_unseal_key_index + 1 }}
         index_var: vault_unseal_key_index
+        loop_var: vault_unseal_key_save
 
     - name: Unsealing...
       ansible.builtin.uri:
@@ -44,7 +45,7 @@
         headers:
           X-Vault-Request: true
         body:
-          key: "{{ item }}"
+          key: "{{ vault_unseal_key_unlock }}"
           reset: false
           migrate: false
         body_format: json
@@ -53,6 +54,7 @@
       loop_control:
         label: Unsealing with key{{ vault_unseal_key_index + 1 }}
         index_var: vault_unseal_key_index
+        loop_var: vault_unseal_key_unlock
       when: vault_unseal_key_index != vault_unseal_threshold
 
 - name: Waiting until Vault is unsealed...
