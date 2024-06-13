@@ -1,0 +1,21 @@
+---
+- name: Generating & saving secrets to vault...
+  ansible.builtin.include_role:
+    name: nova.core.secrets_to_vault
+  vars:
+    secrets_vault_address: "https://{{ monolith_vault_fqdn }}"
+    secrets_vault_secrets_path: keycloak
+    secrets:
+      - key: "{{ inventory_hostname }}_keycloak_{{ keycloak_admin_user | default('admin') }}_password"
+        value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+      - key: "{{ inventory_hostname }}_keycloak_postgres_db_password"
+        value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+
+- name: Including Keycloak role...
+  ansible.builtin.include_role:
+    name: nova.core.keycloak
+  vars:
+    secrets_vault_secrets_path: keycloak
+    keycloak_hostname: "{{ monolith_keycloak_fqdn }}"
+    keycloak_admin_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_keycloak_' + keycloak_admin_user | default('admin') + '_password') }}"
+    keycloack_postgres_db_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_keycloak_postgres_db_password') }}"
