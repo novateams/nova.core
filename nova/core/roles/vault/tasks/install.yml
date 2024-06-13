@@ -1,10 +1,12 @@
 ---
 - name: Creating required Vault folders...
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ vault_dir }}"
     state: directory
     owner: 100
     group: 1000
+  loop_control:
+    loop_var: vault_dir
   loop:
     - "{{ vault_config_folder }}"
     - "{{ vault_config_folder }}/config"
@@ -12,11 +14,13 @@
 
 - name: Templating configuration to machine...
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ vault_config_folder }}/{{ item.dest }}"
+    src: "{{ vault_config.src }}"
+    dest: "{{ vault_config_folder }}/{{ vault_config.dest }}"
     owner: 100
     group: 1000
     lstrip_blocks: true
+  loop_control:
+    loop_var: vault_config
   loop:
     - src: vault.json
       dest: config/vault.json
@@ -24,7 +28,7 @@
       dest: docker-compose.yml
   register: template
 
-- name: Composing {{ inventory_hostname }}...
+- name: Composing Vault on {{ inventory_hostname }}...
   ansible.builtin.command: docker compose -f {{ vault_config_folder }}/docker-compose.yml up -d
   changed_when: true
 

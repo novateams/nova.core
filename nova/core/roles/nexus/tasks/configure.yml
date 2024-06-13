@@ -151,23 +151,24 @@
           when: trusted_cas.files != []
           block:
             - name: Getting CA file(s) content...
-              ansible.builtin.command: cat "{{ item.path }}"
+              ansible.builtin.command: cat "{{ nexus_trusted_ca.path }}"
               changed_when: true
               loop: "{{ trusted_cas.files }}"
               loop_control:
-                label: "{{ item.path }}"
+                loop_var: nexus_trusted_ca
+                label: "{{ nexus_trusted_ca.path }}"
               register: nexus_certificates
 
             - name: Adding certificate(s) to Nexus trust store...
               ansible.builtin.uri:
-                url: https://{{ fqdn }}/service/rest/v1/security/ssl/truststore
+                url: https://{{ nexus_fqdn }}/service/rest/v1/security/ssl/truststore
                 user: "{{ nexus_admin_username }}"
                 password: "{{ nexus_admin_password }}"
                 method: POST
                 headers:
                   accept: application/json
                   Content-Type: application/json
-                body: "{{ item.stdout }}"
+                body: "{{ nexus_trusted_ca.stdout }}"
                 body_format: json
                 force_basic_auth: true
                 status_code:
@@ -175,4 +176,5 @@
                   - 409 # Already exists
               loop: "{{ nexus_certificates.results }}"
               loop_control:
-                label: "{{ item.item.path }}"
+                loop_var: nexus_trusted_ca
+                label: "{{ nexus_trusted_ca.nexus_trusted_ca.path }}"

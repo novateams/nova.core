@@ -10,7 +10,7 @@
       - git
       - make
 
-- name: Clone repo
+- name: Clone Providentia repo
   ansible.builtin.git:
     accept_hostkey: yes
     repo: https://github.com/ClarifiedSecurity/Providentia.git
@@ -19,11 +19,13 @@
     force: yes
     separate_git_dir: "{{ providentia_install_dir_git }}"
 
-- name: Template configuration
+- name: Template Providentia configuration
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ providentia_install_dir }}/{{ item.dest | default(item.src) }}"
+    src: "{{ conf.src }}"
+    dest: "{{ providentia_install_dir }}/{{ conf.dest | default(conf.src) }}"
     lstrip_blocks: true
+  loop_control:
+    loop_var: conf
   loop:
     - src: .makerc-vars
     - src: docker-compose.yml
@@ -41,10 +43,12 @@
     path: "{{ providentia_install_dir }}/CURRENT_VERSION"
     state: absent
 
-- name: Build image, start containers, clear cache
+- name: Build Providentia image, start containers, clear cache
   ansible.builtin.make:
     chdir: "{{ providentia_install_dir }}"
-    target: "{{ item }}"
+    target: "{{ build }}"
+  loop_control:
+    loop_var: build
   loop:
     - build
     - start
