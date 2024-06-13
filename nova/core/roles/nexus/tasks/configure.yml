@@ -1,7 +1,7 @@
 ---
-- name: Waiting until https://{{ fqdn }} is up...
+- name: Waiting until https://{{ nexus_fqdn }} is up...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}
+    url: https://{{ nexus_fqdn }}
     method: GET
     status_code: 200
   register: uri
@@ -24,7 +24,7 @@
 
     - name: Changing Nexus default password...
       ansible.builtin.uri:
-        url: https://{{ fqdn }}/service/rest/v1/security/users/admin/change-password
+        url: https://{{ nexus_fqdn }}/service/rest/v1/security/users/admin/change-password
         user: "{{ nexus_admin_username }}"
         password: "{{ password.content | b64decode }}"
         method: PUT
@@ -37,7 +37,7 @@
 
 - name: Setting anonymous access to - {{ 'ENABLED' if nexus_allow_anonymous_access else 'DISABLED' }}...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}/service/rest/v1/security/anonymous
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/anonymous
     user: "{{ nexus_admin_username }}"
     password: "{{ nexus_admin_password }}"
     method: PUT
@@ -54,7 +54,7 @@
 
 - name: Getting all roles...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}/service/rest/v1/security/roles
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/roles
     user: "{{ nexus_admin_username }}"
     password: "{{ nexus_admin_password }}"
     method: GET
@@ -65,12 +65,14 @@
     force_basic_auth: true
     status_code: 200
   register: all_roles
+  retries: 3
+  delay: 3
 
 # The nx-nothing role is used to make sure that anonymous user doesn't see everything
 # It is needed when anonymous access is disabled but Nexus is used as Docker registry proxy
 - name: Creating nx-nothing role...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}/service/rest/v1/security/roles/{{ '' if 'nx-nothing' not in all_roles.json | map(attribute='id') else 'nx-nothing' }}
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/roles/{{ '' if 'nx-nothing' not in all_roles.json | map(attribute='id') else 'nx-nothing' }}
     user: "{{ nexus_admin_username }}"
     password: "{{ nexus_admin_password }}"
     method: "{{ 'POST' if 'nx-nothing' not in all_roles.json | map(attribute='id') else 'PUT' }}"
@@ -92,7 +94,7 @@
 # This makes sure that anonymous user doesn't see everything
 - name: Setting nx-nothing for anonymous user...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}/service/rest/v1/security/users/anonymous
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/users/anonymous
     user: "{{ nexus_admin_username }}"
     password: "{{ nexus_admin_password }}"
     method: PUT
@@ -119,7 +121,7 @@
 
 - name: Activating required realms...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}/service/rest/v1/security/realms/active
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/realms/active
     user: "{{ nexus_admin_username }}"
     password: "{{ nexus_admin_password }}"
     method: PUT
