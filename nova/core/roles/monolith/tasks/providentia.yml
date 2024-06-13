@@ -1,0 +1,26 @@
+---
+- name: Generating & saving secrets to vault...
+  ansible.builtin.include_role:
+    name: nova.core.secrets_to_vault
+  vars:
+    secrets_vault_address: "https://{{ monolith_vault_fqdn }}"
+    secrets_vault_secrets_path: providentia
+    secrets:
+      - key: "{{ inventory_hostname }}_providentia_db_password"
+        value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+
+- name: Including Providentia role...
+  ansible.builtin.include_role:
+    name: nova.core.providentia
+  vars:
+    # Providentia
+    providentia_install_docker: false
+    providentia_external_docker_network: true
+    providentia_builtin_keycloak: false
+    providentia_builtin_reverse_proxy: false
+    providentia_app_fqdn: "{{ monolith_providentia_fqdn }}"
+    secrets_vault_secrets_path: providentia
+    providentia_builtin_database_db_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_providentia_db_password') }}"
+
+    # SSO
+    providentia_oidc_issuer: https://{{ monolith_keycloak_fqdn }}/realms/Apps

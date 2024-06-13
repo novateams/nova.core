@@ -1,0 +1,36 @@
+---
+# This is so we can exclude the vault.yml if when needed for only configuring single service
+- name: Checking if Vault credentials already exist...
+  ansible.builtin.stat:
+    path: /srv/vault/creds/root_token
+  register: vault_creds_state
+
+- name: Getting Vault token...
+  when: vault_creds_state.stat.exists
+  block:
+    - name: Getting Vault root token & unseal key...
+      ansible.builtin.command: cat /srv/vault/creds/root_token
+      register: vault_creds
+
+    - name: Generating Hashicorp Vault token for {{ monolith_vault_fqdn }}...
+      community.hashi_vault.vault_login:
+        url: https://{{ monolith_vault_fqdn }}
+        auth_method: token
+        token: "{{ vault_creds.stdout }}"
+        validate_certs: "{{ vault_validate_cert | default(true) }}"
+      register: deploy_vars_vault_token
+
+    - name: Setting vault_access_token fact...
+      ansible.builtin.set_fact:
+        vault_already_configured: true
+        vault_access_token: "{{ deploy_vars_vault_token.login.auth.client_token }}"
+        vault_lookup_fragment: "url=https://{{ monolith_vault_fqdn }} token={{ vault_access_token }} "
+
+- name: Including following configuration tasks...
+  ansible.builtin.include_tasks:
+    file: "{{ item }}.yml"
+  loop:
+    - vault
+    - keycloak
+    - providentia
+    - nexus
