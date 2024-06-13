@@ -59,3 +59,97 @@
     validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 204
+
+- name: Creating {{ vault_ldap_admin_group_name }} policy...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/policy/{{ vault_ldap_admin_group_name }}"
+    method: PUT
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      policy: 'path "*" { capabilities = ["create", "read", "update", "patch", "delete", "list", "sudo", ] }'
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 204
+
+- name: Re-listing all auth methods...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/auth"
+    method: GET
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+  register: all_auth_methods
+
+- name: Creating {{ vault_ldap_admin_group_name }} group...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/identity/group"
+    method: PUT
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      name: "{{ vault_ldap_admin_group_name }}"
+      policies:
+        - "{{ vault_ldap_admin_group_name }}"
+      type: external
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 204
+
+- name: Getting all groups...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/identity/group/id"
+    method: LIST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+  register: vault_all_groups
+
+- name: Getting GUID for {{ vault_ldap_admin_group_name }} group...
+  ansible.builtin.set_fact:
+    vault_admin_group_guid: "{{ vault_all_groups.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_ldap_admin_group_name) | map(attribute='key') | first }}"
+
+- name: Listing all group aliases...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/identity/group-alias/id"
+    method: LIST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 404 # Means no aliases exist
+  register: all_group_aliases
+
+- name: Getting GUID for {{ vault_ldap_admin_group_name }} group alias...
+  ansible.builtin.set_fact:
+    vault_admin_group_alias_guid: "{{ all_group_aliases.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_ldap_admin_group_name) | map(attribute='key') | first }}"
+  when: all_group_aliases.status != 404
+
+- name: Mapping local {{ vault_ldap_admin_group_name }} group {{ vault_ldap_admin_group_name }} to LDAP group...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/identity/group-alias{{ '' if vault_admin_group_alias_guid is not defined else '/id/' + vault_admin_group_alias_guid }}"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      canonical_id: "{{ vault_admin_group_guid }}"
+      mount_accessor: "{{ all_auth_methods.json.data['ldap/'].accessor }}"
+      name: "{{ vault_ldap_admin_group_name }}"
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 204
