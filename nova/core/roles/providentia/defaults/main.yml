@@ -25,7 +25,7 @@ providentia_builtin_reverse_proxy_tls_pregenerated_cert: # path to TLS cert on h
 providentia_builtin_reverse_proxy_tls_pregenerated_key: # path to TLS key on host
 
 # app config
-providentia_app_fqdn: # fqdn for deployed instance
+providentia_app_fqdn: "{{ fqdn }}" # fqdn for deployed instance
 providentia_deploy_branch: main # gitref used for deployment, can be overriden to deploy other tags or branches
 providentia_redis_url: redis://redis:6379/0 # URL for app redis, defaults to builtin
 providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_password }}@postgresql/providentia?pool=5 # full database URL used by the app, defaults to builtin postgres
