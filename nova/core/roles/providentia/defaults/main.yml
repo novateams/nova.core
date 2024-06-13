@@ -3,6 +3,12 @@
 providentia_install_docker: true # whether to install nova.core.docker on host
 providentia_install_dir: /srv/providentia # path where providentia will be installed
 providentia_install_dir_git: /srv/providentia.git # path where git configuration will be stored
+providentia_external_docker_network: false # Set to true if providentia should use an external docker network with the default config below
+providentia_external_docker_network_config:
+  networks:
+    default:
+      name: local-network # Comes from nova.core.docker
+      external: true
 
 # dependencies
 providentia_builtin_keycloak: true # Should keycloak instance be deployed with Providentia

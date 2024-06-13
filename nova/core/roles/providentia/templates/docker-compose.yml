@@ -1,8 +1,8 @@
-version: "3.7"
-
+---
 name: providentia
 services:
   web:
+    hostname: providentia-web
     depends_on:
       {% if providentia_builtin_database %}
       - "postgresql"
@@ -26,7 +26,7 @@ services:
       - OIDC_ISSUER={{ providentia_oidc_issuer }}
       - OIDC_CLIENT_ID={{ providentia_oidc_client_id }}
       - OIDC_CLIENT_SECRET={{ providentia_oidc_client_secret }}
-      - OIDC_RESOURCE_PREFIX={{ providentia_resource_prefix}}
+      - OIDC_RESOURCE_PREFIX={{ providentia_resource_prefix }}
       - BASE_URI=https://{{ providentia_app_fqdn }}
       - AUTH_MODE={{ providentia_auth_mode }}
       {% if providentia_sentry_dsn %}
@@ -146,3 +146,7 @@ volumes:
   {% if providentia_builtin_database or providentia_builtin_keycloak %}
   database_storage: {}
   {% endif %}
+
+{% if providentia_external_docker_network %}
+{{ providentia_external_docker_network_config | to_nice_yaml }}
+{% endif %}
