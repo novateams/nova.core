@@ -42,20 +42,10 @@
     status_code:
       - 204
 
-- name: Getting trusted certificate for LDAPS...
-  when: vault_ldaps_certificate_source != {}
-  block:
-    - name: Getting LDAPs certificate...
-      ansible.builtin.get_url:
-        url: "{{ vault_ldaps_certificate_source if vault_ldaps_certificate_source.startswith('http') else 'file://' + vault_ldaps_certificate_source }}"
-        dest: /tmp/ldaps.crt
-        mode: "0644"
-      register: vault_ldaps_certificate_file
-
-    - name: Getting LDAPs certificate contents...
-      ansible.builtin.slurp:
-        path: /tmp/ldaps.crt
-      register: vault_ldaps_certificate_file
+- name: Getting /etc/ssl/certs/ca-certificates.crt contents for LDAPs...
+  ansible.builtin.slurp:
+    path: /etc/ssl/certs/ca-certificates.crt
+  register: vault_ldaps_certificate_file
 
 - name: Configuring LDAP...
   ansible.builtin.uri:
