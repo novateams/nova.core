@@ -28,6 +28,20 @@
     status_code:
       - 204
 
+- name: Setting LDAP auth as default engine...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/auth/ldap/tune"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      listing_visibility: unauth
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 204
+
 - name: Getting trusted certificate for LDAPS...
   when: vault_ldaps_certificate_source != {}
   block:
