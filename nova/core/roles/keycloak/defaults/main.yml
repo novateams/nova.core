@@ -1,0 +1,12 @@
+---
+keycloak_version: 22.0.0
+keycloak_postgres_version: 15
+keycloak_container_config_folder: /srv/keycloak
+docker_network: local-network # Comes from nova.core.docker
+
+keycloak_admin_user: admin
+keycloak_admin_password: {} # Define as role variable (Vault lookup for a an example)
+keycloack_postgres_db_password: {} # Define as role variable (Vault lookup for a an example)
+keycloak_use_custom_jks: true # Set to false if you don't want to use a custom jks truststore. For example, if you are using LE certificates.
+keycloak_jks_truststore_path: /srv/certs/{{ fqdn }}.jks
+keycloak_jks_password: changeit
