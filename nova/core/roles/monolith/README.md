@@ -15,7 +15,7 @@ It's meant for easy deployment of all required services for running a Cyber Exer
 
 - Pre existing/installed and configured Active Directory (AD) server for LDAPs.
 - Pre installed Debian based OS (Ubuntu 22.04 preferred) with SSH & sudo access where the application will be installed if not pre-existing infrastructure is present.
-- TLS certificates under the `/srv/certs` directory for using TLS. Alternatively, the `nova.core.caddy` role can be used to generate self-signed certificates.
+- TLS certificate for all services under the `/srv/certs/{{ fqdn }}_fullchain.crt` must be pre-installed. Alternatively, the `nova.core.caddy` role will generate self-signed certificates.
 - The DNS names defined in `monolith_*` variables must be resolvable from the host where this role is executed from.
 
 ## Role Variables
