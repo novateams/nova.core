@@ -1,14 +1,7 @@
 ---
-- name: Configuring network...
+- name: Configuring VM network in vSphere environment...
+  ansible.builtin.include_tasks: vsphere/main.yml
   when:
-    - infra_env == 'vsphere'
-    - fresh_deploy or reconfigure_network
     - customization_context == "host"
-  block:
-    - name: Configuring VM network in vSphere environment...
-      ansible.builtin.include_tasks: vsphere/main.yml
-      when: not configure_networking_with_checks
-
-    - name: Configuring VM network in vSphere environment with checks...
-      ansible.builtin.include_tasks: vsphere_with_checks/main.yml
-      when: configure_networking_with_checks
+    - fresh_deploy or reconfigure_network
+    - infra_env == 'vsphere'
