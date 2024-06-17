@@ -129,13 +129,15 @@
     validate_certs: "{{ vault_validate_cert }}"
     status_code:
       - 200
-      - 404 # Means no aliases exist
+      - 404
   register: all_group_aliases
 
 - name: Getting GUID for {{ vault_ldap_admin_group_name }} group alias...
   ansible.builtin.set_fact:
     vault_admin_group_alias_guid: "{{ all_group_aliases.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_ldap_admin_group_name) | map(attribute='key') | first }}"
-  when: all_group_aliases.status != 404
+  when:
+    - all_group_aliases.status != 404 # Means no aliases exist
+    - all_group_aliases.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_ldap_admin_group_name) | map(attribute='key') != [] # Means aliases matching vault_ldap_admin_group_name does not exists
 
 - name: Mapping local {{ vault_ldap_admin_group_name }} group {{ vault_ldap_admin_group_name }} to LDAP group...
   ansible.builtin.uri:
