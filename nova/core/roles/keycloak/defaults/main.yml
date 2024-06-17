@@ -4,6 +4,7 @@ keycloak_config_cli_version: 6.0.0 # https://github.com/adorsys/keycloak-config-
 keycloak_postgres_version: 15
 keycloak_container_config_folder: /srv/keycloak
 keycloak_docker_network: local-network # Comes from nova.core.docker
+keycloak_proxy_container_name: {} # Define as role variable to restart the proxy container after Keycloak configuration
 
 keycloak_admin_user: admin
 keycloak_admin_password: {} # Define as role variable (Vault lookup for a an example)
