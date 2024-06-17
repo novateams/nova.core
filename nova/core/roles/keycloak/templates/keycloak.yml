@@ -8,26 +8,21 @@ services:
     command: start --db=postgres
     environment:
       # https://www.keycloak.org/server/all-config
-      KC_HOSTNAME_STRICT: false
-      KC_DB: postgres
-      KC_DB_URL_HOST: postgres
       DB_DATABASE: keycloak
-      KC_DB_USERNAME: keycloak_postgres
-      KC_DB_PASSWORD: {{ keycloack_postgres_db_password }}
-      KC_HTTP_ENABLED: true
-      KEYCLOAK_ADMIN: {{ keycloak_admin_user }}
-      KEYCLOAK_ADMIN_PASSWORD: {{ keycloak_admin_password }}
-      KC_PROXY: edge # Since we're using separate reverse proxy
-      KC_CACHE: local
       JAVA_OPTS_APPEND: "-Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=true"
-      # https://www.keycloak.org/server/all-provider-config
-      {% if keycloak_use_custom_jks %}
-      KC_SPI_TRUSTSTORE_FILE_FILE: {{ keycloak_jks_truststore_path }}
-      KC_SPI_TRUSTSTORE_FILE_PASSWORD: {{ keycloak_jks_password }}
-      {% endif %}
+      KC_CACHE: local
+      KC_DB_PASSWORD: "{{ keycloak_postgres_db_password }}"
+      KC_DB_URL_HOST: postgres
+      KC_DB_USERNAME: keycloak_postgres
+      KC_DB: postgres
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
+      KC_PROXY_HEADERS: "{{ keycloak_proxy_headers }}"
+      KC_TRUSTSTORE_PATHS: /etc/ssl/certs/ca-host-ca-certificates.crt
+      KEYCLOAK_ADMIN_PASSWORD: "{{ keycloak_admin_password }}"
+      KEYCLOAK_ADMIN: "{{ keycloak_admin_user }}"
     volumes:
       - "{{ keycloak_container_config_folder }}/data:/opt/jboss/keycloak/standalone/data"
-      - "/srv/certs:/srv/certs"
       - "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-host-ca-certificates.crt"
     depends_on:
       - keycloak_postgres
@@ -48,7 +43,7 @@ services:
       TZ: UTC
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak_postgres
-      POSTGRES_PASSWORD: {{ keycloack_postgres_db_password }}
+      POSTGRES_PASSWORD: "{{ keycloak_postgres_db_password }}"
     logging:
       driver: json-file
       options:
@@ -56,16 +51,16 @@ services:
         max-file: "1"
 
   keycloak_config:
-    image: adorsys/keycloak-config-cli:latest-{{ keycloak_version }}
+    image: adorsys/keycloak-config-cli:{{ keycloak_config_cli_version }}
     container_name: keycloak-config
     depends_on:
       - keycloak
     volumes:
-      - "{{ keycloak_container_config_folder }}/config.yaml:/config/config.yaml"
+      - "{{ keycloak_container_config_folder }}/config.yml:/config/config.yml"
     environment:
       KEYCLOAK_URL: http://keycloak:8080/
-      KEYCLOAK_USER: {{ keycloak_admin_user }}
-      KEYCLOAK_PASSWORD: {{ keycloak_admin_password }}
+      KEYCLOAK_USER: "{{ keycloak_admin_user }}"
+      KEYCLOAK_PASSWORD: "{{ keycloak_admin_password }}"
       KEYCLOAK_AVAILABILITYCHECK_ENABLED: true
       KEYCLOAK_AVAILABILITYCHECK_TIMEOUT: 60s
       IMPORT_FILES: "/config/*"
@@ -77,5 +72,5 @@ services:
 
 networks:
   default:
-    name: "{{ docker_network }}"
+    name: "{{ keycloak_docker_network }}"
     external: true
