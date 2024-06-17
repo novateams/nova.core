@@ -9,7 +9,7 @@ This role combines the following roles:
 - `nova.core.providentia`
 - `nova.core.nexus`
 
-It's meant for easy deployment of all required services for running a Cyber Exercise.
+It's meant for easy deployment of all required services for running a Cyber Exercise. The role generates and writes it's application default credentials into Vault. The login token for the Vault can be found at `/srv/vault/creds/root_token`.
 
 ## Requirements
 
