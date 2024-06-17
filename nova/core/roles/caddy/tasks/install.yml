@@ -74,6 +74,7 @@
             path: /tmp/selfsigned_{{ fqdn }}.csr
             privatekey_path: "{{ caddy_self_signed_certificate_key_path }}"
             common_name: "{{ caddy_self_signed_certificate_common_name }}"
+            subject_alt_name: "{{ caddy_self_signed_certificate_subject_alt_name }}"
 
         - name: Signing selfsigned CSR...
           community.crypto.x509_certificate:
