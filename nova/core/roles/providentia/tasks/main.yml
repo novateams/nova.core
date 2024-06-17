@@ -44,7 +44,7 @@
     state: absent
 
 - name: Build Providentia image, start containers, clear cache
-  ansible.builtin.make:
+  community.general.make:
     chdir: "{{ providentia_install_dir }}"
     target: "{{ build }}"
   loop_control:
