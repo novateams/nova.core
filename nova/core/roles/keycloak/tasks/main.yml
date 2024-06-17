@@ -4,8 +4,8 @@
     msg: |
       Following variables are required to run this role:
       - keycloak_admin_password
-      - keycloack_postgres_db_password
-  when: keycloak_admin_password == {} or keycloack_postgres_db_password == {}
+      - keycloak_postgres_db_password
+  when: keycloak_admin_password == {} or keycloak_postgres_db_password == {}
 
 - name: Creating following configuration folders...
   ansible.builtin.file:
@@ -33,8 +33,8 @@
   loop:
     - src: keycloak.yml
       dest: docker-compose.yml
-    - src: config.yaml
-      dest: config.yaml
+    - src: config.yml
+      dest: config.yml
 
 - name: Composing Keycloak on {{ inventory_hostname }}...
   ansible.builtin.command: docker compose -f {{ keycloak_container_config_folder }}/docker-compose.yml up -d
