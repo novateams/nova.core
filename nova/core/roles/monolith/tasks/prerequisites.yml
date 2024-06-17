@@ -1,0 +1,28 @@
+---
+- name: MISSING REQUIRED VARIABLES...
+  ansible.builtin.fail:
+    msg: |
+      Following variable is not defined:
+      {{ monolith_missing_var.key }}
+  vars:
+    vars_to_check:
+      connection_address: "{{ connection_address }}"
+      ansible_deployer_username: "{{ ansible_deployer_username }}"
+      ansible_deployer_password: "{{ ansible_deployer_password }}"
+      hostname: "{{ hostname }}"
+      domain: "{{ domain }}"
+      fqdn: "{{ fqdn }}"
+  loop: "{{ vars_to_check | dict2items }}"
+  loop_control:
+    loop_var: monolith_missing_var
+  when: monolith_missing_var.value == {}
+
+- name: Checking if /srv/certs/{{ fqdn }}_fullchain.crt exists...
+  ansible.builtin.stat:
+    path: /srv/certs/{{ fqdn }}_fullchain.crt
+  register: fullchain_cert_state
+
+- name: Generating self-signed certificats with Caddy...
+  ansible.builtin.set_fact:
+    caddy_generate_self_signed_certificate: true
+  when: not fullchain_cert_state.stat.exists

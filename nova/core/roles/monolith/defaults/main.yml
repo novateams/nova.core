@@ -1,4 +1,20 @@
 ---
+# Required connection and host variables that need to be defined when deploying Monolith on a pre-existing host
+connection_address: {} # IP address or hostname of the host to deploy Monolith on to connect over SSH
+ansible_deployer_username: {} # Username of the user to connect to the host over SSH
+ansible_deployer_password: {} # Password of the user to connect to the host over SSH. Can be set to dummy value if using SSH keys and sudo password is not required
+hostname: {} # Hostname of the host to deploy Monolith on
+domain: {} # Domain of the host to deploy Monolith on
+fqdn: "{{ hostname }}.{{ domain }}" # Fully Qualified Domain Name of the host to deploy Monolith on
+
+# Default addresses for monolith applications
+monolith_providentia_fqdn: providentia.{{ domain }}
+monolith_nexus_fqdn: nexus.{{ domain }}
+monolith_keycloak_fqdn: keycloak.{{ domain }}
+monolith_vault_fqdn: vault.{{ domain }}
+
+vault_validate_cert: false # Can be set to true if using trusted certificates
+
 monolith_nexus_repositories:
   # Chocolatey proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/nuget/proxy
