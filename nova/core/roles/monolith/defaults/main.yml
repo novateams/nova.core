@@ -13,8 +13,6 @@ monolith_nexus_fqdn: nexus.{{ domain }}
 monolith_keycloak_fqdn: keycloak.{{ domain }}
 monolith_vault_fqdn: vault.{{ domain }}
 
-vault_validate_cert: false # Can be set to true if using trusted certificates
-
 monolith_nexus_repositories:
   # Chocolatey proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/nuget/proxy
