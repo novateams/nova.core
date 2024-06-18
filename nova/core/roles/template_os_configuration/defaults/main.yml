@@ -1,4 +1,5 @@
 ---
-update_system: true
 sysprep: true
+template_os_configuration_install_chocolatey: true # Set to false to skip Chocolatey installation
 template_os_configuration_remove_extra_cdroms_on_vsphere: true # Find and remove extra cdroms on vSphere if there are more than 1
+update_system: true
