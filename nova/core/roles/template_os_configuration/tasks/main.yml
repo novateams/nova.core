@@ -1,4 +1,8 @@
 ---
+- name: Including nova.core.customization_pre_vm_role role...
+  ansible.builtin.include_role:
+    name: nova.core.customization_pre_vm_role
+
 - name: Including vSphere specific configuration tasks...
   ansible.builtin.include_tasks: vsphere.yml
   when: infra_env == "vsphere"
