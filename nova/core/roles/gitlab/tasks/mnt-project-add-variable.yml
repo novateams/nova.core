@@ -1,0 +1,91 @@
+---
+- name: Look up existing projects info..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gl_existing_projects
+
+- name: Look up existing GitLab namespaces (groups)..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_existing_namespaces
+
+## This is to be sure that the search is precise, project name in gitlab is not unique
+- name: Search for the project using namespace and project name..
+  ansible.builtin.set_fact:
+    gl_matched_projects:
+      "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace) |
+      selectattr('name', 'equalto', project.name) }}"
+
+- name: Set current existing project ID variable..
+  ansible.builtin.set_fact:
+    gl_project_id: "{{ gl_matched_projects[0].id | default(None) }}"
+
+# - debug: var=gl_project_id
+
+## Futureproofing, right now every project is recreated during the play
+## So there are no existing variables...
+- name: Get existing variables in current project..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/variables"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  register: gl_existing_variables
+  when:
+    - gl_project_id != ''
+# - debug: var=gl_existing_variables
+
+- name: Add new variables to project..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/variables"
+    method: POST
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body_format: json
+    body:
+      key: "{{ variable.key }}"
+      value: "{{ variable.value }}"
+      masked: "{{ variable.masked | default(false) }}"
+      protected: "{{ variable.protected | default(true) }}"
+      variable_type: "{{ variable.type | default('env_var') }}"
+    status_code: [200, 201]
+  become: false
+  loop: "{{ project.variables }}"
+  loop_control:
+    loop_var: variable
+    label: "{{ variable.key }}"
+  when:
+    - gl_project_id != ''
+    - gl_existing_variables is not defined or variable.key not in gl_existing_variables.json | map(attribute="key")
+
+- name: Update variables that are already present..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/variables"
+    method: PUT
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body_format: json
+    body:
+      key: "{{ variable.key }}"
+      value: "{{ variable.value }}"
+      masked: "{{ variable.masked | default(false) }}"
+      protected: "{{ variable.protected | default(true) }}"
+      variable_type: "{{ variable.type | default('env_var') }}"
+    status_code: [200, 201]
+  become: false
+  loop: "{{ project.variables }}"
+  loop_control:
+    loop_var: variable
+    label: "{{ variable.key }}"
+  when:
+    - gl_project_id != ''
+    - variable.key in gl_existing_variables.json | map(attribute="key")

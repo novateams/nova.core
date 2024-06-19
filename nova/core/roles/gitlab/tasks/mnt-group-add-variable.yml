@@ -1,0 +1,61 @@
+---
+- name: Look up namespace (group) id..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups?name={{ group.name }}&with_custom_attributes=true"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gitlab_group
+
+- name: Get existing variables in current group..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/variables"
+    method: GET
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  register: gl_existing_variables
+
+- name: Add new variables to group..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/variables"
+    method: POST
+    body_format: json
+    body:
+      key: "{{ variable.key }}"
+      value: "{{ variable.value }}"
+      masked: "{{ variable.masked | default(false) }}"
+      protected: "{{ variable.protected | default(true) }}"
+      variable_type: "{{ variable.type | default('env_var') }}"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  loop: "{{ group.variables }}"
+  loop_control:
+    loop_var: variable
+    label: "{{ variable.key }}"
+  when: variable.key not in gl_existing_variables.json | map(attribute="key")
+
+- name: Update variables that already present..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/variables/{{ variable.key }}"
+    method: PUT
+    body_format: json
+    body:
+      key: "{{ variable.key }}"
+      value: "{{ variable.value }}"
+      masked: "{{ variable.masked | default(false) }}"
+      protected: "{{ variable.protected | default(true) }}"
+      variable_type: "{{ variable.type | default('env_var') }}"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  loop: "{{ group.variables }}"
+  loop_control:
+    loop_var: variable
+    label: "{{ variable.key }}"
+  when:
+    - variable.key in gl_existing_variables.json | map(attribute="key")

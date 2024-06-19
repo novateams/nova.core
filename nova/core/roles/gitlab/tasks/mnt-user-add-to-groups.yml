@@ -1,0 +1,68 @@
+---
+- name: Look up user id..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users?username={{ user.username }}&with_custom_attributes=true"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gl_user
+
+- name: Look ip existing GitLab groups..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_existing_namespaces
+
+- name: Look up user memberships..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users/{{ gl_user.json[0].id }}/memberships"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gl_user_memberships
+
+- name: Add user to group..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json | \
+      selectattr('name', 'equalto', group.name))[0].id }}/members"
+    method: POST
+    body_format: json
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      user_id: "{{ gl_user.json[0].id }}"
+      access_level: "{{ group.access_level }}"
+    status_code: [200, 201]
+  loop: "{{ user.groups }}"
+  loop_control:
+    loop_var: group
+  when:
+    - user.groups is defined
+    - user.groups | length > 0
+    - group.name not in gl_user_memberships.json | map(attribute="source_name")
+
+- name: Modify user group membership..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json
+      | selectattr('name', 'equalto', group.name))[0].id }}/members/{{ gl_user.json[0].id }}"
+    method: PUT
+    body_format: json
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      user_id: "{{ gl_user.json[0].id }}"
+      access_level: "{{ group.access_level }}"
+    status_code: [200, 201]
+  loop: "{{ user.groups }}"
+  loop_control:
+    loop_var: group
+  when:
+    - user.groups is defined
+    - user.groups | length > 0
+    - group.name in gl_user_memberships.json | map(attribute="source_name")

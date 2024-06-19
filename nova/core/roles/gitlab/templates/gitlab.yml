@@ -1,0 +1,48 @@
+---
+services:
+  gitlab:
+    container_name: gitlab
+    hostname: gitlab-container
+    image: gitlab/gitlab-ee:{{ gitlab_version | default('latest') }}
+    restart: always
+    ports:
+      - "{{ gitlab_ssh_port }}:22"
+    volumes:
+      - "{{ gitlab_config_folder }}/etc:/etc/gitlab"
+      - "{{ gitlab_config_folder }}/logs:/var/log/gitlab"
+      - "{{ gitlab_config_folder }}/data:/var/opt/gitlab"
+      - "{{ gitlab_config_folder }}/registry:/var/opt/gitlab/gitlab-rails/shared/registry"
+      - "{{ gitlab_config_folder }}/temp_configuration:/temp_configuration"
+      - "/srv/certs:/srv/certs"
+      - "/usr/local/share/ca-certificates:/usr/local/share/ca-certificates"
+      ### gitlab keeps custom certs in this folder https://docs.gitlab.com/omnibus/settings/ssl.html#troubleshooting
+      - "/usr/local/share/ca-certificates:/etc/gitlab/trusted-certs"
+    shm_size: "1G"
+    environment:
+      GITLAB_OMNIBUS_CONFIG: "from_file('/omnibus_config.rb')"
+    configs:
+      - source: gitlab
+        target: /omnibus_config.rb
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65535
+        hard: 65535
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+configs:
+  gitlab:
+    file: ./gitlab.rb
+
+networks:
+  default:
+    name: "{{ gitlab_docker_network }}"
+    external: true

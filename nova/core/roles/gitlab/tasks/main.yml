@@ -1,0 +1,20 @@
+---
+- name: Missing required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - gitlab_initial_root_personal_passwd
+      - gitlab_root_personal_token
+  when: gitlab_initial_root_personal_passwd == {} or gitlab_root_personal_token == {}
+
+- name: Including Gitlab installation tasks..
+  ansible.builtin.include_tasks: install.yml
+
+- name: Including Gitlab root user token tasks..
+  ansible.builtin.include_tasks: create-root-api-token.yml
+
+- name: Including Gitlab cleanup tasks..
+  ansible.builtin.include_tasks: cleanup.yml
+
+- name: Including Gitlab general application settings..
+  ansible.builtin.include_tasks: general-settings.yml

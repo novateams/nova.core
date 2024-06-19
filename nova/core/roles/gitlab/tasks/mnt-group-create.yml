@@ -1,0 +1,48 @@
+---
+- name: Get existing GitLab namespaces (groups)..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_existing_namespaces
+
+- name: Add new group if not already there..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups"
+    method: POST
+    body_format: json
+    body:
+      name: "{{ group.name }}"
+      path: "{{ group.name }}"
+      visibility: "{{ group.visibility | default('public') }}"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  when: group.name not in gl_existing_namespaces.json | map(attribute="name")
+
+- name: Get existing group id..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ group.name }}"
+    method: GET
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  register: gitlab_group
+  when: group.name in gl_existing_namespaces.json | map(attribute="name")
+
+- name: Modify existing group..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json.id }}"
+    method: PUT
+    body_format: json
+    body:
+      name: "{{ group.name }}"
+      visibility: "{{ group.visibility }}"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  when: group.name in gl_existing_namespaces.json | map(attribute="name")

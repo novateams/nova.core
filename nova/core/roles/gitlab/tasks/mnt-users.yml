@@ -1,0 +1,28 @@
+---
+- name: Include - create or modify users..
+  ansible.builtin.include_tasks: mnt-user-create-modify.yml
+  loop: "{{ gitlab_users }}"
+  loop_control:
+    loop_var: "user"
+
+## Including this task only when the ssh key is defined for a user, this does cleanup and add keys
+- name: Include | manage ssh keys for user..
+  ansible.builtin.include_tasks: mnt-user-manage-ssh-keys.yml
+  when: user.ssh_keys is defined
+  loop: "{{ gitlab_users }}"
+  loop_control:
+    loop_var: "user"
+
+- name: Include | manage groups for user..
+  ansible.builtin.include_tasks: mnt-user-add-to-groups.yml
+  when: user.groups is defined
+  loop: "{{ gitlab_users }}"
+  loop_control:
+    loop_var: "user"
+
+- name: Include | api tokens for user..
+  ansible.builtin.include_tasks: mnt-user-apitokens.yml
+  when: user.apitokens is defined
+  loop: "{{ gitlab_users }}"
+  loop_control:
+    loop_var: "user"
