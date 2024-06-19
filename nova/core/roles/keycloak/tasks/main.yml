@@ -37,8 +37,10 @@
       dest: config.yml
 
 - name: Composing Keycloak on {{ inventory_hostname }}...
-  ansible.builtin.command: docker compose -f {{ keycloak_container_config_folder }}/docker-compose.yml up -d
-  changed_when: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ keycloak_container_config_folder }}"
+    state: present
+    wait: true
 
 - name: Finding and restarting proxy container...
   when:
