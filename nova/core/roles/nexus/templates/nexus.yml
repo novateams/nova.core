@@ -1,7 +1,8 @@
 ---
 services:
   nexus:
-    image: sonatype/nexus3:{{ nexus_version }}
+    build:
+      dockerfile: Dockerfile
     container_name: nexus
     hostname: nexus
     restart: unless-stopped

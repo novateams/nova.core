@@ -9,16 +9,22 @@
 
 - name: Templating Nexus configuration files...
   ansible.builtin.template:
-    src: nexus.yml
-    dest: "{{ container_config_folder }}/docker-compose.yml"
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     mode: "0644"
     lstrip_blocks: true
+  loop:
+    - src: nexus.yml
+      dest: "{{ container_config_folder }}/docker-compose.yml"
+    - src: Dockerfile
+      dest: "{{ container_config_folder }}/Dockerfile"
   register: template
 
-# Using shell because community.docker.docker_compose uses legacy docker-compose
 - name: Composing Nexus on {{ inventory_hostname }}...
-  ansible.builtin.command: docker compose -f {{ container_config_folder }}/docker-compose.yml up -d
-  changed_when: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ container_config_folder }}"
+    state: present
+    wait: true
 
 - name: Finding and restarting proxy container...
   when:
