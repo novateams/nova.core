@@ -1,0 +1,101 @@
+---
+- name: Look up existing projects info..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gl_existing_projects
+
+- name: Look ip existing GitLab groups..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_existing_namespaces
+
+- name: Set the current projects namespace ID variable..
+  ansible.builtin.set_fact:
+    gl_namespace_id: "{{ (gl_existing_namespaces.json | selectattr('name', 'equalto', project.namespace) | first).id }}"
+
+## This is to be sure that the search is precise, project name is not unique
+- name: Search for the project using namespace and project name..
+  ansible.builtin.set_fact:
+    gl_matched_projects:
+      "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace) |
+      selectattr('name', 'equalto', project.name) }}"
+
+- name: Set current existing project ID variable..
+  ansible.builtin.set_fact:
+    gl_project_id: "{{ gl_matched_projects[0].id | default(None) }}"
+
+- name: Removing the project..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}"
+    method: DELETE
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 202]
+  when:
+    - gl_project_id != ''
+
+- name: Creating the project..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects"
+    method: POST
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body_format: json
+    body:
+      name: "{{ project.name }}"
+      namespace_id: "{{ gl_namespace_id }}"
+      description: "{{ project.description | default(project.name) }}"
+      visibility: "{{ project.visibility | default('public') }}"
+      initialize_with_readme: false
+    status_code: [200, 201]
+  when:
+    - gl_project_id == ''
+
+- name: Cleanup tmp for project files sync..
+  ansible.builtin.file:
+    path: /tmp/{{ project.namespace }}_{{ project.name }}
+    state: absent
+
+- name: Synchronizing project files to /tmp/..
+  ansible.builtin.synchronize:
+    src: "{{ project.source_path }}/"
+    dest: "/tmp/{{ project.namespace }}_{{ project.name }}"
+    recursive: true
+    rsync_opts:
+      - "--chown=root:root"
+    use_ssh_args: "yes"
+  when:
+    - project.source is defined
+    - project.source_path is defined
+    - project.source == "files"
+
+- name: Copying file from template..
+  ansible.builtin.template:
+    src: "{{ project.source_path }}/{{ item }}"
+    dest: "/tmp/{{ project.namespace }}_{{ project.name }}/{{ item }}"
+    mode: "0600"
+  with_items: "{{ project.files_to_template }}"
+  when: project.files_to_template is defined
+
+- name: Commit project to gitlab..
+  ansible.builtin.shell: |
+    token={{ gitlab_root_personal_token }}
+    git config --global user.name "{{ gitlab_git_user_name }}"
+    git config --global user.email "{{ gitlab_git_user_email }}"
+    cd /tmp/{{ project.namespace }}_{{ project.name }}
+    git init
+    git remote add origin https://gitlab-ci-token:${token}@{{ gitlab_fqdn }}/{{ project.namespace }}/{{ project.name }}.git
+    git add .
+    git commit -m "Initial commit"
+    git push --set-upstream origin master
+    echo yo
+  changed_when: false

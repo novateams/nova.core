@@ -1,0 +1,37 @@
+---
+- name: Look up group id..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups?name={{ group.name }}&with_custom_attributes=true"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gitlab_group
+
+- name: Get existing deploy_tokens in current group..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/deploy_tokens"
+    method: GET
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  register: existing_deploy_tokens
+
+- name: Create deploy tokens that are not set..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/deploy_tokens"
+    method: POST
+    body_format: json
+    body:
+      name: "{{ token.name }}"
+      username: "{{ token.username }}"
+      token_value: "{{ token.value }}"
+      scopes: "{{ token.scopes | default(['read_repository']) }}"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  loop: "{{ group.deploy_tokens }}"
+  loop_control:
+    loop_var: token
+  when: token.name not in existing_deploy_tokens.json | map(attribute="name")

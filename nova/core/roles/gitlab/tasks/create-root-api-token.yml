@@ -1,0 +1,48 @@
+---
+- name: Checking if root api token exists...
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/license"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    method: GET
+    status_code:
+      - 200
+      - 401
+  register: gitlab_root_token
+
+### https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html
+- name: Creating root token..
+  when: gitlab_root_token.status == 401
+  block:
+    - name: Create temporary configuration file
+      ansible.builtin.copy:
+        content: |
+          ### vars
+          personal_token_username = 'root'
+          personal_token_content = '{{ gitlab_root_personal_token }}'
+          ### root personal api token
+          user = User.find_by_username( personal_token_username )
+          token = user.personal_access_tokens.create(scopes: ['api', 'read_user', 'create_runner', 'sudo' ], \
+          name: 'Admin PAT', expires_at: 365.days.from_now)
+          token.set_token( personal_token_content )
+          token.save!
+        dest: "{{ gitlab_config_folder }}/temp_configuration/temp_script.rb"
+        mode: "0755"
+
+    - name: Creating api token for Root user, this can take up to a minute...
+      community.docker.docker_container_exec:
+        container: "{{ gitlab_container_name }}"
+        command: gitlab-rails runner /temp_configuration/temp_script.rb
+        user: root
+
+- name: Waiting until root api token is created...
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/license"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    method: GET
+    status_code: 200
+  register: updated_gitlab_root_token
+  until: updated_gitlab_root_token.status == 200
+  retries: 60
+  delay: 3

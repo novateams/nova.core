@@ -1,0 +1,14 @@
+---
+- name: Check if we have any temp files..
+  ansible.builtin.find:
+    paths: "{{ gitlab_config_folder }}/temp_configuration/"
+    hidden: true
+    recurse: true
+    file_type: any
+  register: temp_configuration_files
+
+- name: Remove temp files..
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ temp_configuration_files.files }}"

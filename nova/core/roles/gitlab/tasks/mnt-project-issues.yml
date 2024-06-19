@@ -1,0 +1,48 @@
+---
+- name: Look up existing projects info..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gl_existing_projects
+
+- name: Look up existing GitLab namespaces (groups)..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_existing_namespaces
+
+## This is to be sure that the search is precise, project name is not unique
+- name: Search for the project using namespace and project name..
+  ansible.builtin.set_fact:
+    gl_matched_projects:
+      "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace) |
+      selectattr('name', 'equalto', project.name) }}"
+
+- name: Set current existing project ID variable..
+  ansible.builtin.set_fact:
+    gl_project_id: "{{ gl_matched_projects[0].id | default(None) }}"
+
+- name: Create an issue in the project..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/issues?sudo={{ (gl_existing_users.json |
+      selectattr('username', 'equalto', issue.impersonate_username))[0].id }}"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    method: POST
+    body_format: json
+    body:
+      title: "{{ issue.issue_title }}"
+      description: "{{ issue.issue_description }}"
+    status_code: 201
+  become: false
+  loop: "{{ project.issues }}"
+  loop_control:
+    loop_var: "issue"
+  when:
+    - gl_project_id != ''

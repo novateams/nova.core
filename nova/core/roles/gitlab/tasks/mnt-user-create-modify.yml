@@ -1,0 +1,59 @@
+---
+- name: Get existing GitLab users..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_existing_users
+
+- name: Create a new GitLab user if already not created..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users"
+    method: POST
+    body_format: json
+    body:
+      email: "{{ user.email }}"
+      password: "{{ user.password if user.password is defined else omit }}"
+      username: "{{ user.username }}"
+      name: "{{ user.name }}"
+      force_random_password: "{{ user.password is not defined }}" ## true if user.password is not defined
+      skip_confirmation: true
+      skip_reconfirmation: true
+      admin: "{{ user.admin }}"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  when: user.username not in gl_existing_users.json | map(attribute="username")
+
+- name: Look up user id
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users?username={{ user.username }}&with_custom_attributes=true"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gitlab_user
+  when: user.username in gl_existing_users.json | map(attribute="username")
+
+- name: If the user exists, modify instead...
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users/{{ gitlab_user.json[0].id }}"
+    method: PUT
+    body_format: json
+    body:
+      email: "{{ user.email }}"
+      ## we should not update the user password by default, since this will force
+      ## the user to change the password after login.
+      password: "{{ user.password if (user.password is defined and user.update_password | default(false)) else omit }}"
+      username: "{{ user.username }}"
+      name: "{{ user.name }}"
+      reset_password": false
+      skip_confirmation: true
+      skip_reconfirmation: true
+      admin: "{{ user.admin }}"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 201]
+  when: user.username in gl_existing_users.json | map(attribute="username")

@@ -1,0 +1,25 @@
+---
+- name: Look up user id..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users?username={{ user.username }}&with_custom_attributes=true"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gitlab_user
+
+- name: Look up user's personal access tokens..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/personal_access_tokens?user_id={{ gitlab_user.json[0].id }}"
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gitlab_user_tokens
+  when:
+    - gitlab_user.json[0].id is defined
+
+- name: Include tasks to add user access token..
+  ansible.builtin.include_tasks: mnt-user-add-apitoken.yml
+  loop: "{{ user.apitokens }}"
+  loop_control:
+    loop_var: "token"
+  when: user.apitokens is defined

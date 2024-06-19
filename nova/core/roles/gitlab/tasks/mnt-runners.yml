@@ -1,0 +1,30 @@
+---
+- name: Get info on all runners in gitlab..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/runners/all"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gl_existing_runners
+
+- name: Remove all dangling runners with status "never contacted"..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/runners/{{ item.id }}"
+    method: DELETE
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: 204
+  loop: "{{ gl_existing_runners.json | selectattr('status', 'equalto', 'never_contacted') }}"
+
+- name: Get info on all runners in gitlab after cleanup..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/runners/all"
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+  register: gl_existing_runners
+
+- name: Include tasks for instance wide runner creation..
+  ansible.builtin.include_tasks: mnt-runners-instance.yml
+  loop: "{{ gitlab_instance_runners }}"
+  loop_control:
+    loop_var: runner
+  when: gitlab_instance_runners is defined

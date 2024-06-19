@@ -1,0 +1,45 @@
+---
+- name: Set gravatar_enabled {{ gitlab_general_settings_gravatar_enabled }}...
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/application/settings"
+    method: PUT
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      gravatar_enabled: "{{ gitlab_general_settings_gravatar_enabled }}"
+    return_content: true
+    status_code:
+      - 200
+      - 201
+  when: gitlab_general_settings_gravatar_enabled is defined
+
+- name: Set signup_enabled {{ gitlab_general_settings_signup_enabled }}...
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/application/settings"
+    method: PUT
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      signup_enabled: "{{ gitlab_general_settings_signup_enabled }}"
+    return_content: true
+    status_code:
+      - 200
+      - 201
+  when: gitlab_general_settings_signup_enabled is defined
+
+- name: Set CICD Maximum Artifacts Size to {{ gitlab_general_settings_max_artifacts_size }}...
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/application/settings"
+    method: PUT
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      max_artifacts_size: "{{ gitlab_general_settings_max_artifacts_size }}"
+    return_content: true
+    status_code:
+      - 200
+      - 201
+  when: gitlab_general_settings_max_artifacts_size is defined

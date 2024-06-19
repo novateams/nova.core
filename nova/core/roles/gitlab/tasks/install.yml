@@ -1,0 +1,52 @@
+---
+- name: Creating Gitlab folders..
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: true
+  loop:
+    - "{{ gitlab_config_folder }}"
+    - "{{ gitlab_config_folder }}/etc"
+    - "{{ gitlab_config_folder }}/data"
+    - "{{ gitlab_config_folder }}/logs"
+    - "{{ gitlab_config_folder }}/registry"
+    - "{{ gitlab_config_folder }}/temp_configuration"
+
+- name: Templating Gitlab configuration files for {{ inventory_hostname }}..
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+    lstrip_blocks: true
+  loop:
+    - src: gitlab.yml
+      dest: "{{ gitlab_config_folder }}/docker-compose.yml"
+    - src: gitlab.rb
+      dest: "{{ gitlab_config_folder }}/gitlab.rb"
+  register: gitlab_config
+
+- name: Composing Gitlab on {{ inventory_hostname }}...
+  community.docker.docker_compose_v2:
+    project_src: "{{ gitlab_config_folder }}"
+    recreate: "{{ 'always' if gitlab_config.changed else 'auto' }}"
+    state: present
+    wait: true
+
+- name: Increase gitlab ssh MaxAuthTries to 30..
+  ansible.builtin.raw: docker exec -it {{ gitlab_container_name }} bash -c "grep -q '^MaxAuthTries' /assets/sshd_config || echo MaxAuthTries 30 >> '/assets/sshd_config'"
+
+- name: Finding and restarting proxy container..
+  when: gitlab_proxy_container_name != {}
+  block:
+    - name: Checking if the proxy container exists..
+      community.docker.docker_container_info:
+        name: "{{ gitlab_proxy_container_name }}"
+      register: proxy_container_check
+
+    - name: Restarting {{ gitlab_proxy_container_name }}..
+      community.docker.docker_container:
+        name: "{{ gitlab_proxy_container_name }}"
+        state: started
+        restart: true
+        container_default_behavior: no_defaults
+      when: proxy_container_check.exists
