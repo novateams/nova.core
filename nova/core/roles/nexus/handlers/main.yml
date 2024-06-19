@@ -1,0 +1,7 @@
+---
+- name: Restarting Nexus container...
+  community.docker.docker_container:
+    name: nexus
+    state: started
+    restart: true
+    container_default_behavior: no_defaults
