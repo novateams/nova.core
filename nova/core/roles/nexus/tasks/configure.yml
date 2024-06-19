@@ -11,7 +11,7 @@
 
 - name: Checking for first run password file...
   ansible.builtin.stat:
-    path: /srv/nexus/data/admin.password
+    path: "{{ container_config_folder }}/data/admin.password"
   register: stat
 
 - name: Default password change block...
@@ -19,7 +19,7 @@
   block:
     - name: Getting default password...
       ansible.builtin.slurp:
-        src: /srv/nexus/data/admin.password
+        src: "{{ container_config_folder }}/data/admin.password"
       register: password
 
     - name: Changing Nexus default password...
@@ -34,6 +34,12 @@
         body: "{{ nexus_admin_password }}"
         force_basic_auth: true
         status_code: 204
+
+- name: Increasing HTTP timeout to 10 minutes... # Required for large file/slow connection upload/download
+  ansible.builtin.lineinfile:
+    path: "{{ container_config_folder }}/data/etc/nexus.properties"
+    line: jetty.http.timeout=600000
+  notify: Restarting Nexus container...
 
 - name: Setting anonymous access to - {{ 'ENABLED' if nexus_allow_anonymous_access else 'DISABLED' }}...
   ansible.builtin.uri:
