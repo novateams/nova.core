@@ -11,8 +11,10 @@
   when: caddy_template_caddyfile
 
 - name: Composing Caddy for {{ inventory_hostname }}...
-  ansible.builtin.shell: docker compose -f {{ caddy_config_folder }}/docker-compose.yml up -d
-  changed_when: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ caddy_config_folder }}"
+    state: present
+    wait: true
 
 - name: Formatting and reloading Caddyfile...
   community.docker.docker_container_exec:
