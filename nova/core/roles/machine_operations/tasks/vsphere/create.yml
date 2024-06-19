@@ -156,6 +156,7 @@
         snapshot_src: "{{ linked_clone_snapshot_name if linked_clone_status else omit }}"
         annotation: "{{ template_description if template else vm_description }}"
         vapp_properties: "{{ vapp_options }}"
+      register: cloned_vmware_vm
 
     - name: Increasing video memory
       community.vmware.vmware_guest_video:
@@ -241,9 +242,9 @@
         - name: Getting info for the following interfaces...
           vmware.vmware_rest.vcenter_network_info:
             filter_names: "{{ item }}"
-          register: extra_interfaces
+          register: extra_interfaces_search
           loop: "{{ extra_network_interfaces | map(attribute='name') }}"
-          until: not extra_interfaces.failed
+          until: not extra_interfaces_search.failed
           retries: 5
           delay: 2
 
@@ -255,10 +256,34 @@
               type: "{{ item.value[0].type }}"
               network: "{{ item.value[0].network }}"
             start_connected: true
-          loop: "{{ extra_interfaces.results }}"
+          loop: "{{ extra_interfaces_search.results }}"
           loop_control:
             index_var: loop_index
             label: "{{ item.value[0].name | default(omit) }}" # Omit is required to avoid error when this block is skipped
+          register: extra_interfaces_add
+          until: not extra_interfaces_add.failed
+          retries: 5
+          delay: 2
+
+        - name: Listing all interfaces on {{ custom_vm_name | default(vm_name) }}...
+          vmware.vmware_rest.vcenter_vm_hardware_ethernet_info:
+            vm: "{{ created_vm_info.value[0].vm }}"
+          register: list_added_interfaces
+          until: not list_added_interfaces.failed
+          retries: 5
+          delay: 2
+
+        # All vmware.vmware_rest have retries for stability
+        # This compares the expected number of interfaces with the actual number of interfaces to make sure no extra interfaces are added in previous steps
+        # The reason for this is that the to avoid the loop retries from adding the same interface multiple times when retry is triggered
+        - name: Incorrect nr of interfaces...
+          ansible.builtin.fail:
+            msg: |
+              The number of interfaces on {{ custom_vm_name | default(vm_name) }} is not correct!
+              Expected: {{ (cloned_vmware_vm.instance.hw_interfaces | length) + (extra_network_interfaces | length) }}
+              Actual: {{ list_added_interfaces.value | length }}
+              Try to redeploy the machine to fix the issue.
+          when: (cloned_vmware_vm.instance.hw_interfaces | length) + (extra_network_interfaces | length) != list_added_interfaces.value | length
 
 - name: Starting VM & Connecting the {{ default_interface[0].name }} interface...
   delegate_to: localhost
