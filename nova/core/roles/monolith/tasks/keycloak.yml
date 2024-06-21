@@ -10,6 +10,10 @@
         value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
       - key: "{{ inventory_hostname }}_keycloak_postgres_db_password"
         value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+      - key: "{{ inventory_hostname }}_keycloak_wiki_client_id"
+        value: Wiki
+      - key: "{{ inventory_hostname }}_keycloak_wiki_client_secret"
+        value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
 
 - name: Including Keycloak role...
   ansible.builtin.include_role:
