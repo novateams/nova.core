@@ -5,14 +5,15 @@
     owner: 200 # ID of the nexus container user
     group: root # Host machine root group
     state: directory
-    recurse: true
 
 - name: Templating Nexus configuration files...
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+    src: "{{ nexus_config_item.src }}"
+    dest: "{{ nexus_config_item.dest }}"
     mode: "0644"
     lstrip_blocks: true
+  loop_control:
+    loop_var: nexus_config_item
   loop:
     - src: nexus.yml
       dest: "{{ container_config_folder }}/docker-compose.yml"
