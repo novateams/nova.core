@@ -44,7 +44,7 @@
       until:
         - vmip.rc == 0
         - vmip.stdout != "unknown"
-        - vmip.stdout | ansible.utils.ipv4() != false
+        - vmip.stdout is ansible.utils.ipv4 # Waiting until IP address is a valid IPv4 address
 
     - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
       ansible.builtin.set_fact:
