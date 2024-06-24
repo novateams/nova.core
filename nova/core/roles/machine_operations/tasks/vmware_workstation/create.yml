@@ -208,7 +208,7 @@
       until:
         - vmip.rc == 0
         - vmip.stdout != "unknown"
-        - vmip.stdout is not match("^fe80") # Skip link-local addresses
+        - vmip.stdout is ansible.utils.ipv4 # Waiting until IP address is a valid IPv4 address
 
     - name: Enabling shared folders... # Needs to be enabled here again because otherwise VMWare Workstation disables shared folders for new machines on first run
       ansible.builtin.shell: vmrun enableSharedFolders {{ local_vmx_path }}
