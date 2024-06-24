@@ -1,25 +1,12 @@
 ---
-- name: Including Windows activation tasks...
+- name: Configuring KMS & activating Windows... # KMS needs to be accessible or the task will fail
+  ansible.windows.win_shell: "{{ lookup('template', 'Activate-Windows.ps1') }}"
   when: kms_server != {}
-  block:
-    - name: Configuring KMS & activating Windows... # KMS needs to be accessible or the task will fail
-      ansible.windows.win_shell: "{{ lookup('template', 'Activate-Windows.ps1') }}"
-      async: 120
-      poll: 0
-      register: windows_activation
 
 - name: Changing Windows hostname...
   ansible.windows.win_hostname:
     name: "{{ hostname }}"
   register: win_hostname
-
-- name: Waiting until Windows is activated...
-  ansible.builtin.async_status:
-    jid: "{{ windows_activation.ansible_job_id }}"
-  register: windows_activation_status
-  until: windows_activation_status.finished
-  retries: 20
-  when: kms_server != {}
 
 - name: Rebooting...
   ansible.windows.win_reboot:
