@@ -4,3 +4,15 @@ primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | fi
 connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
 connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
 connection_address: "{{ 'DHCP' if connection_mode_dhcp else primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | ansible.utils.ipaddr('address') }}"
+
+######################
+# VMware Workstation #
+######################
+
+# These match with the ones in nova.core.machine_operations role
+get_ip_vmware_workstation_host: host.docker.internal
+get_ip_vmware_workstation_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
+get_ip_vmware_workstation_connection: ssh
+get_ip_vmware_workstation_shell_type: sh
+get_ip_vmware_workstation_python_interpreter: /usr/bin/python3
+get_ip_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx

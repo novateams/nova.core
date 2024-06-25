@@ -9,7 +9,7 @@
   block:
     - name: Checking if {{ inventory_hostname }} exists...
       ansible.builtin.stat:
-        path: "{{ local_vmx_path }}"
+        path: "{{ machine_operations_local_vmx_path }}"
       register: vm_exists
 
     - name: Removing {{ inventory_hostname }} if it exists...
@@ -20,13 +20,13 @@
           register: running_vms
 
         - name: Stopping {{ inventory_hostname }}...
-          ansible.builtin.command: vmrun -T ws stop {{ local_vmx_path }} hard
-          when: local_vmx_path in running_vms.stdout_lines
+          ansible.builtin.command: vmrun -T ws stop {{ machine_operations_local_vmx_path }} hard
+          when: machine_operations_local_vmx_path in running_vms.stdout_lines
 
         - name: Removing VM...
           block:
             - name: Removing {{ inventory_hostname }}...
-              ansible.builtin.command: vmrun -T ws deleteVM {{ local_vmx_path }}
+              ansible.builtin.command: vmrun -T ws deleteVM {{ machine_operations_local_vmx_path }}
 
           # This rescue is required because if user restarted the VMware Workstation and the VM is still running the deleteVM command will incorrectly error with "Insufficient permissions"
           rescue:

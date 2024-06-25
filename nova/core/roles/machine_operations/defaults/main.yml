@@ -69,10 +69,10 @@ machine_operations_vmware_workstation_python_interpreter: /usr/bin/python3
 
 # VM paths
 template_export_folder: /home/{{ lookup('env', 'USER') }}/vmware/templates
-local_vmx_template_path: "{{template_export_folder }}/{{ vm_template }}/{{ vm_template }}.vmx"
+local_vmx_template_path: "{{ template_export_folder }}/{{ vm_template }}/{{ vm_template }}.vmx"
 
 local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware
-local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
+machine_operations_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
 
 # Shared folders
 enable_shared_folder: true

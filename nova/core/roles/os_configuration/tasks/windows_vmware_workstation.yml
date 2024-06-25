@@ -5,11 +5,11 @@
   block:
     - name: Setting correct connection parameters for VMware Workstation host...
       ansible.builtin.set_fact:
-        ansible_host: "{{ machine_operations_vmware_workstation_host }}"
-        ansible_user: "{{ machine_operations_vmware_workstation_user }}"
-        ansible_connection: "{{ machine_operations_vmware_workstation_connection }}"
-        ansible_shell_type: "{{ machine_operations_vmware_workstation_shell_type }}"
-        ansible_python_interpreter: "{{ machine_operations_vmware_workstation_python_interpreter }}"
+        ansible_host: "{{ os_configuration_vmware_workstation_host }}"
+        ansible_user: "{{ os_configuration_vmware_workstation_user }}"
+        ansible_connection: "{{ os_configuration_vmware_workstation_connection }}"
+        ansible_shell_type: "{{ os_configuration_vmware_workstation_shell_type }}"
+        ansible_python_interpreter: "{{ os_configuration_vmware_workstation_python_interpreter }}"
 
     # Using lineinfile to check for file changes because it simpler and faster then reading the file and comparing it with the desired state
     - name: Checking VMTools autopdate state for {{ custom_vm_name | default(vm_name) }}...
