@@ -61,9 +61,7 @@
     - name: Including OS disk expansion role...
       ansible.builtin.include_role:
         name: "{{ os_configuration_expand_os_disk_role_name }}"
-      when:
-        - infra_env == 'vsphere'
-        - os_configuration_expand_os_disk_role_name != {}
+      when: os_configuration_expand_os_disk_role_name != {}
 
     - name: Including nova.core.trusted_certificates role...
       ansible.builtin.include_role:
