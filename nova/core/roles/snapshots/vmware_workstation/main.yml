@@ -1,15 +1,15 @@
 ---
 - name: Setting correct connection parameters for VMware Workstation...
   ansible.builtin.set_fact:
-    ansible_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
-    ansible_connection: ssh
-    ansible_shell_type: sh
-    ansible_python_interpreter: /usr/bin/python3
     ansible_become: false
-    ansible_host: host.docker.internal # The default is the docker host (your laptop)
+    ansible_connection: "{{ snapshots_vmware_workstation_connection }}"
+    ansible_host: "{{ snapshots_vmware_workstation_host }}"
+    ansible_python_interpreter: "{{ snapshots_vmware_workstation_python_interpreter }}"
+    ansible_shell_type: "{{ snapshots_vmware_workstation_shell_type }}"
+    ansible_user: "{{ snapshots_vmware_workstation_user }}"
 
 - name: Listing all snapshots...
-  ansible.builtin.shell: vmrun listSnapshots {{ local_vmx_path }} listSnapshots
+  ansible.builtin.shell: vmrun listSnapshots {{ snapshots_local_vmx_path }} listSnapshots
   register: all_snapshots
 
 - name: Including snapshot task...

@@ -11,7 +11,7 @@ connection_address: "{{ 'DHCP' if connection_mode_dhcp else primary_network.addr
 
 # These match with the ones in nova.core.machine_operations role
 get_ip_vmware_workstation_host: host.docker.internal
-get_ip_vmware_workstation_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
+get_ip_vmware_workstation_user: "{{ lookup('env', 'USER') }}"
 get_ip_vmware_workstation_connection: ssh
 get_ip_vmware_workstation_shell_type: sh
 get_ip_vmware_workstation_python_interpreter: /usr/bin/python3

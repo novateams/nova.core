@@ -61,8 +61,8 @@ template_description: Created on {{ ansible_date_time.iso8601 }}
 ######################
 
 # Connection parameters
-machine_operations_vmware_workstation_host: "{{ ansible_host }}"
-machine_operations_vmware_workstation_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
+machine_operations_vmware_workstation_host: host.docker.internal
+machine_operations_vmware_workstation_user: "{{ lookup('env', 'USER') }}"
 machine_operations_vmware_workstation_connection: ssh
 machine_operations_vmware_workstation_shell_type: sh
 machine_operations_vmware_workstation_python_interpreter: /usr/bin/python3
