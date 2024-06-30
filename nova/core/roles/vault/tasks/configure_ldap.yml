@@ -68,7 +68,8 @@
       X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body:
-      policy: 'path "*" { capabilities = ["create", "read", "update", "patch", "delete", "list", "sudo", ] }'
+      policy: |-
+        path "*" { capabilities = ["create", "read", "update", "patch", "delete", "list", "sudo", ] }
     body_format: json
     validate_certs: "{{ vault_validate_cert }}"
     status_code:
