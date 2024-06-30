@@ -1,9 +1,4 @@
 ---
-- name: Host SSH access check...
-  ansible.builtin.fail:
-    msg: ALLOW_HOST_SSH_ACCESS not true in .makerc-vars, cannot connect to VMware Workstation!
-  when: lookup('env', 'ALLOW_HOST_SSH_ACCESS') != 'true'
-
 - name: Setting correct connection parameters for VMware Workstation host...
   ansible.builtin.set_fact:
     ansible_host: "{{ machine_operations_vmware_workstation_host }}"
@@ -11,6 +6,14 @@
     ansible_connection: "{{ machine_operations_vmware_workstation_connection }}"
     ansible_shell_type: "{{ machine_operations_vmware_workstation_shell_type }}"
     ansible_python_interpreter: "{{ machine_operations_vmware_workstation_python_interpreter }}"
+
+- name: Checking that {{ ansible_host }} is reachable over {{ machine_operations_vmware_workstation_connection }}...
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    timeout: 10
+  delegate_to: localhost
+  become: false
 
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml
