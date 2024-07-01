@@ -1,15 +1,4 @@
 ---
-- name: Setting credentials...
-  ansible.builtin.set_fact:
-    deployer_username: "{{ custom_deployer_username | default(lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'username') if ((lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') != 'DEPRECATED') and (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') != '')) else none) }}"
-    deployer_password: "{{ custom_deployer_password | default(lookup('keepass', (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH')), 'password') if ((lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') != 'DEPRECATED') and (lookup('env', 'KEEPASS_DEPLOYER_CREDENTIALS_PATH') != '')) else none) }}"
-    aws_access_key_id: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'username') if ((lookup('env', 'KEEPASS_AWS_ACCESS_KEY') != 'DEPRECATED') and (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') != '')) else none }}"
-    aws_access_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AWS_ACCESS_KEY')), 'password') if ((lookup('env', 'KEEPASS_AWS_ACCESS_KEY') != 'DEPRECATED') and (lookup('env', 'KEEPASS_AWS_ACCESS_KEY') != '')) else none }}"
-    linode_api_token: "{{ lookup('keepass', (lookup('env', 'KEEPASS_LINODE_API_TOKEN')), 'password') if ((lookup('env', 'KEEPASS_LINODE_API_TOKEN') != 'DEPRECATED') and (lookup('env', 'KEEPASS_LINODE_API_TOKEN') != '')) else none }}"
-    azure_service_principal: "{{ lookup('keepass', (lookup('env', 'KEEPASS_AZURE_SERVICE_PRINCIPAL')), 'password') if ((lookup('env', 'KEEPASS_AZURE_SERVICE_PRINCIPAL') != 'DEPRECATED') and (lookup('env', 'KEEPASS_AZURE_SERVICE_PRINCIPAL') != '')) else none }}"
-    my_ssh_public_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_SSH_KEYPAIR')), 'password') if ((lookup('env', 'KEEPASS_SSH_KEYPAIR') != 'DEPRECATED') and (lookup('env', 'KEEPASS_SSH_KEYPAIR') != '')) else none }}"
-    my_ssh_private_key: "{{ lookup('keepass', (lookup('env', 'KEEPASS_SSH_KEYPAIR')), 'username') if ((lookup('env', 'KEEPASS_SSH_KEYPAIR') != 'DEPRECATED') and (lookup('env', 'KEEPASS_SSH_KEYPAIR') != '')) else none }}"
-
 - name: Including following post-deploy_vars roles...
   ansible.builtin.include_role:
     name: "{{ item }}"
@@ -50,6 +39,6 @@
   when:
     - host_var_present.stat.exists
     - main_id | replace("-", "_") in group_names
-# # Uncommend to debug variables
+# # Uncomment to debug variables
 # - ansible.builtin.debug: msg="{{  }}"
 # - meta: end_play
