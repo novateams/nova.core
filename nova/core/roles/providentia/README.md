@@ -32,31 +32,31 @@ The builtin keycloak is configured with HTTP by default, as Providentia does not
 - name: Installing Providentia...
   ansible.builtin.include_role:
     name: nova.core.providentia
-    vars:
-      providentia_app_fqdn: providentia.example.com
+  vars:
+    providentia_app_fqdn: providentia.example.com
 
 # Installs Providentia with all components at FQDN `providentia.example.com` with pregenerated TLS
 - name: Installing Providentia...
   ansible.builtin.include_role:
     name: nova.core.providentia
-    vars:
-      providentia_app_fqdn: providentia.example.com
-      providentia_builtin_reverse_proxy_tls_mode: pregenerated
-      providentia_builtin_reverse_proxy_tls_pregenerated_cert: "/srv/certs/providentia.example.com_fullchain.crt"
-      providentia_builtin_reverse_proxy_tls_pregenerated_key: "/srv/certs/providentia.example.com_key.crt"
+  vars:
+    providentia_app_fqdn: providentia.example.com
+    providentia_builtin_reverse_proxy_tls_mode: pregenerated
+    providentia_builtin_reverse_proxy_tls_pregenerated_cert: "/srv/certs/providentia.example.com_fullchain.crt"
+    providentia_builtin_reverse_proxy_tls_pregenerated_key: "/srv/certs/providentia.example.com_key.crt"
 
 # Installs Providentia at FQDN `providentia.example.com` with pregenerated TLS and external OpenID Connect provider
 - name: Installing Providentia...
   ansible.builtin.include_role:
     name: nova.core.providentia
-    vars:
-      providentia_app_fqdn: providentia.example.com
-      providentia_builtin_reverse_proxy_tls_mode: pregenerated
-      providentia_builtin_reverse_proxy_tls_pregenerated_cert: "/srv/certs/providentia.example.com_fullchain.crt"
-      providentia_builtin_reverse_proxy_tls_pregenerated_key: "/srv/certs/providentia.example.com_key.crt"
+  vars:
+    providentia_app_fqdn: providentia.example.com
+    providentia_builtin_reverse_proxy_tls_mode: pregenerated
+    providentia_builtin_reverse_proxy_tls_pregenerated_cert: "/srv/certs/providentia.example.com_fullchain.crt"
+    providentia_builtin_reverse_proxy_tls_pregenerated_key: "/srv/certs/providentia.example.com_key.crt"
 
-      providentia_builtin_keycloak: false
-      providentia_oidc_issuer: https://keycloak.example.com/realms/Providentia
-      providentia_oidc_client_id: ProvidentiaLive
-      providentia_oidc_client_secret: 12345
+    providentia_builtin_keycloak: false
+    providentia_oidc_issuer: https://keycloak.example.com/realms/Providentia
+    providentia_oidc_client_id: ProvidentiaLive
+    providentia_oidc_client_secret: 12345
 ```
