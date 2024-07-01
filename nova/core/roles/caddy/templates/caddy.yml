@@ -20,5 +20,5 @@ services:
 
 networks:
   default:
-    name: "{{ docker_network }}"
+    name: "{{ caddy_docker_network }}"
     external: true
