@@ -1,5 +1,5 @@
 ---
-docker_network: local-network
+caddy_docker_network: local-network # Comes from nova.core.docker
 
 # Caddy configuration modes
 caddy_template_caddyfile: false # Set to true to use a custom Caddyfile template
