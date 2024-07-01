@@ -1,9 +1,7 @@
 ---
 # Connection address defaults
-primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default([]) }}"
-connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
-connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
-connection_address: "{{ 'DHCP' if connection_mode_dhcp else primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | ansible.utils.ipaddr('address') }}"
+egress_nic_ipv4: "{{ interfaces | nova.core.addresses('egress_nic_ipv4') | first | ansible.utils.ipaddr('address') }}"
+egress_nic_ipv6: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first | ansible.utils.ipaddr('address') }}"
 
 ######################
 # VMware Workstation #
