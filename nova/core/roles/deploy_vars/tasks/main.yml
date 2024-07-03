@@ -22,23 +22,6 @@
     - vault_address != {}
     - deploy_vars_get_vault_token | bool # | bool is required to pass the variable from the command line
 
-# Checking if a host_var matching the main_id is present
-# If so then including the host vars
-- name: Checking if host_var is present for {{ main_id }}...
-  ansible.builtin.stat:
-    path: "{{ legacy_host_var_path }}/{{ main_id }}.yml"
-  delegate_to: localhost
-  become: false
-  register: host_var_present
-
-- name: DEPRECATED FEATURE
-  ansible.builtin.fail:
-    msg: |
-      Loading instance parent host variables is deprecated.
-      Move the file host_vars/{{ main_id }}.yml to group_vars/{{ main_id | replace("-", "_") }}.yml to avoid this error.
-  when:
-    - host_var_present.stat.exists
-    - main_id | replace("-", "_") in group_names
 # # Uncomment to debug variables
 # - ansible.builtin.debug: msg="{{  }}"
 # - meta: end_play
