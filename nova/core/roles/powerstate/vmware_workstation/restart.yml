@@ -4,8 +4,8 @@
   register: running_vms
 
 - name: Stopping {{ inventory_hostname }}...
-  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ local_vmx_path }} soft
-  when: local_vmx_path in running_vms.stdout_lines
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ powerstate_local_vmx_path }} soft
+  when: powerstate_local_vmx_path in running_vms.stdout_lines
 
 - name: Starting {{ inventory_hostname }}...
-  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ powerstate_local_vmx_path }}
