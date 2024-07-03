@@ -1,3 +1,3 @@
 ---
 - name: Starting {{ inventory_hostname }}...
-  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ local_vmx_path }}
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ powerstate_local_vmx_path }}
