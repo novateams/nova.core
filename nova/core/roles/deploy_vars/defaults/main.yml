@@ -20,8 +20,6 @@ save_secrets_to_vault: false # Set to true to save accounts to vault, required a
 gt_username: gt # Default non-root/Administrator username for deployment
 deploy_vars_post_roles: [] # List of roles to include after credentials facts have been set
 
-legacy_host_var_path: "{{ inventory_dir }}/host_vars"
-
 #########
 # Vault #
 #########
