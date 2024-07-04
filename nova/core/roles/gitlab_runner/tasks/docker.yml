@@ -1,0 +1,20 @@
+---
+- name: Installing gitlab runner on Linux, docker_exec..
+  ansible.builtin.include_tasks:
+    file: docker-install-linux.yml
+  when: "'os_linux' in group_names"
+
+- name: Registering runners on Linux, docker_exec..
+  ansible.builtin.include_tasks:
+    file: docker-register-linux.yml
+  when: "'os_linux' in group_names"
+  loop: "{{ gitlab_runner_docker_runners }}"
+  loop_control:
+    loop_var: runner
+
+- name: Gitlab runner fix concurrent jobs..
+  ansible.builtin.replace:
+    path: "{{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner/config.toml"
+    regexp: "concurrent *= *\\d+"
+    replace: "concurrent = {{ gitlab_runner_docker_concurrent }}"
+  when: "'os_linux' in group_names"

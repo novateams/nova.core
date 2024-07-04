@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+
+/usr/bin/gitlab-runner register \
+--non-interactive \
+--template-config /etc/gitlab-runner/{{ runner.name }}/gitlab-runner-config.template.toml \
+--token "{{ runner.auth_token }}" \
+--description "{{ runner.name }}"

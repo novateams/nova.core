@@ -1,0 +1,4 @@
+[[runners]]
+    url = "{{ runner.gitlab_url | default(gitlab_runner_gitlab_url) }}"
+    executor = "shell"
+    shell = "pwsh"
