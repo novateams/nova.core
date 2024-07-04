@@ -1,0 +1,32 @@
+---
+services:
+  runner-manager:
+    container_name: runner-manager
+    hostname: runner-manager
+    image: "gitlab/gitlab-runner:{{ gitlab_runner_docker_version_tag }}"
+    restart: always
+    volumes:
+      - {{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner:/etc/gitlab-runner
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+      - /var/run/docker.sock:/var/run/docker.sock
+{% for volume in gitlab_runner_docker_extra_volumes | default([]) %}
+      - {{ volume }}
+{% endfor %}
+    shm_size: '256m'
+    extra_hosts: {{ gitlab_runner_docker_extra_hosts }}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65535
+        hard: 65535
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+networks:
+  default:
+    name: "{{ gitlab_runner_docker_network }}"
+    external: true

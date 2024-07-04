@@ -1,0 +1,23 @@
+---
+- name: Installing gitlab runner on Windows, powershell executor..
+  ansible.builtin.include_tasks:
+    file: powershell-install-windows.yml
+  when:
+    - "'os_windows' in group_names"
+
+- name: Registering runners on Windows..
+  ansible.builtin.include_tasks:
+    file: powershell-register-windows.yml
+  when:
+    - "'os_windows' in group_names"
+  loop: "{{ gitlab_runner_shell_runners }}"
+  loop_control:
+    loop_var: runner
+
+- name: Modifying gitlab-runner concurrency configuration..
+  community.windows.win_lineinfile:
+    path: "{{ gitlab_runner_windows_config_folder }}/config.toml"
+    regex: ^concurrent = 1
+    line: concurrent = {{ gitlab_runner_windows_concurrent }}
+  when:
+    - "'os_windows' in group_names"

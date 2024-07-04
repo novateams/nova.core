@@ -1,0 +1,35 @@
+---
+# Global
+gitlab_runner_version: 17.1.0
+
+## Default gitlab instance to register to
+gitlab_runner_gitlab_inventory_hostname: gitlab
+gitlab_runner_gitlab_fqdn: "{{ hostvars[gitlab_inventory_hostname].fqdn }}"
+gitlab_runner_gitlab_url: "https://{{ gitlab_fqdn }}"
+gitlab_runner_gitlab_url_api: "https://{{ gitlab_fqdn }}/api/v4"
+
+## Docker runner defaults
+gitlab_runner_docker_network: local-network
+gitlab_runner_docker_config_folder: /srv/gitlab-runner
+gitlab_runner_docker_version_tag: "{{ gitlab_runner_version }}"
+gitlab_runner_docker_concurrent: 10
+gitlab_runner_docker_executor_name: runner-docker
+gitlab_runner_docker_executor_image: ubuntu:22.04
+gitlab_runner_docker_privileged: false
+gitlab_runner_docker_disable_cache: false
+gitlab_runner_docker_extra_volumes: []
+gitlab_runner_docker_extra_hosts:
+  - "{{ gitlab_runner_gitlab_fqdn }}:{{ hostvars[gitlab_inventory_hostname].primary_ipv4 }}"
+gitlab_runner_docker_executor_volumes:
+  - /cache
+  - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+
+## Windows powershell runner defaults
+gitlab_runner_windows_config_folder: C:\gitlab-runner
+gitlab_runner_windows_runner_version: "{{ gitlab_runner_version }}"
+gitlab_runner_windows_executor_name: runner-windows
+gitlab_runner_windows_concurrent: 10
+
+## Define your runners in here
+gitlab_runner_docker_runners: []
+gitlab_runner_shell_runners: []

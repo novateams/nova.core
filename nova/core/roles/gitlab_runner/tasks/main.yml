@@ -1,0 +1,14 @@
+---
+- name: Install gitlab runner for docker executor..
+  ansible.builtin.include_tasks:
+    file: docker.yml
+  when:
+    - gitlab_runner_docker_runners is defined
+    - gitlab_runner_docker_runners | length > 0
+
+- name: Installing gitlab runner for shell executor..
+  ansible.builtin.include_tasks:
+    file: shell.yml
+  when:
+    - gitlab_runner_shell_runners is defined
+    - gitlab_runner_shell_runners | length > 0

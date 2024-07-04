@@ -1,0 +1,21 @@
+---
+- name: Get gitlab-runner from chocolatey..
+  chocolatey.chocolatey.win_chocolatey:
+    name: gitlab-runner
+    state: present
+    version: "{{ gitlab_runner_windows_runner_version }}"
+
+## This will check if the service is installed or not, installs.
+- name: Run service install script..
+  ansible.windows.win_shell: "{{ lookup('template', 'powershell/Install-Runner.ps1') }}"
+
+- name: Cleanup config.toml..
+  ansible.windows.win_file:
+    path: "{{ gitlab_runner_windows_config_folder }}\\config.toml"
+    state: absent
+
+- name: Starting gitlab-runner service..
+  ansible.windows.win_service:
+    name: gitlab-runner
+    state: started
+    start_mode: auto
