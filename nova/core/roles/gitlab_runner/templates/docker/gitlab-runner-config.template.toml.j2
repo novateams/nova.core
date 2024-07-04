@@ -1,0 +1,16 @@
+[[runners]]
+    url = "{{ runner.gitlab_url | default(gitlab_runner_gitlab_url) }}"
+    executor = "docker"
+
+  [runners.docker]
+    image = "{{ runner.executor_image | default(gitlab_runner_docker_executor_image) }}"
+    privileged = {{ runner.privileged | default(gitlab_runner_docker_privileged) | lower }}
+    disable_cache = {{ runner.disable_cache | default(gitlab_runner_docker_disable_cache) | lower }}
+    extra_hosts = {{ runner.extra_hosts | default(gitlab_runner_docker_extra_hosts) }}
+    volumes = {{ runner.executor_volumes | default(gitlab_runner_docker_executor_volumes) }}
+{% if runner.allowed_privileged_services is defined %}
+    services_privileged = {{ runner.services_privileged | lower }}
+{% endif %}
+{% if runner.allowed_privileged_services is defined %}
+    allowed_privileged_services = {{ runner.allowed_privileged_services }}
+{% endif %}

@@ -1,0 +1,21 @@
+---
+- name: Checking token variable..
+  ansible.builtin.fail:
+    msg: The authentication token is missing or not correct..
+  when: runner.auth_token is not defined or not runner.auth_token | regex_search('glrt-.*')
+
+- name: Creating runner specific folders..
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ gitlab_runner_windows_config_folder }}\\{{ runner.name }}"
+
+- name: Copy Gitlab runner template..
+  ansible.windows.win_template:
+    src: powershell/gitlab-runner-config.template.toml.j2
+    dest: "{{ gitlab_runner_windows_config_folder }}\\{{ runner.name }}\\gitlab-runner-config.template.toml"
+
+- name: Registering GitLab runner..
+  ansible.windows.win_shell: "{{ lookup('template', 'powershell/Register-Runner.ps1') }}"
+  notify: Restarting gitlab-runner service...

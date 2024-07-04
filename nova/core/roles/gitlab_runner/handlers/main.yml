@@ -1,0 +1,5 @@
+---
+- name: Restarting gitlab-runner service...
+  ansible.windows.win_service:
+    name: gitlab-runner
+    state: restarted

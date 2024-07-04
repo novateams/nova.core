@@ -1,0 +1,31 @@
+---
+- name: Creating required folders..
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: true
+  loop:
+    - "{{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner"
+
+- name: Templating config for runner-manager..
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+    lstrip_blocks: true
+  register: gitlab_runner_config
+  loop:
+    - src: docker/docker-compose.yml.j2
+      dest: "{{ gitlab_runner_docker_config_folder }}/docker-compose.yml"
+
+- name: Composing Gitlab Runner..
+  community.docker.docker_compose_v2:
+    project_src: "{{ gitlab_runner_docker_config_folder }}"
+    recreate: "{{ 'always' if gitlab_runner_config.changed else 'auto' }}"
+    state: present
+    wait: true
+
+- name: Cleanup config.toml..
+  ansible.builtin.file:
+    path: "{{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner/config.toml"
+    state: absent

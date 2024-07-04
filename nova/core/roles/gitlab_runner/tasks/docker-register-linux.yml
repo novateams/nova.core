@@ -1,0 +1,36 @@
+---
+- name: Checking token variable..
+  ansible.builtin.fail:
+    msg: The authentication token is missing or not correct..
+  when: runner.auth_token is not defined or not runner.auth_token | regex_search('glrt-.*')
+
+## for future, so we could allow each runner access to a named folder.
+- name: Creating runner specific folders..
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: true
+  loop:
+    - "{{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner/{{ runner.name }}/"
+
+## Each runner needs its own register-script and template, if we want them with separate names etc..
+- name: Templating scripts for {{ runner.name }}..
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+    lstrip_blocks: true
+  register: gitlab_runner_config
+  loop:
+    - src: docker/gitlab-runner-config.template.toml.j2
+      dest: "{{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner/{{ runner.name }}/gitlab-runner-config.template.toml"
+    - src: docker/gitlab-runner-register-script.sh.j2
+      dest: "{{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner/{{ runner.name }}/gitlab-runner-register-script.sh"
+
+## We will alwas run register, this will regenerate the runner config.toml from the template
+## Service restart for the runner process is not needed as per documentation.
+- name: Registering Gitlab Runner..
+  community.docker.docker_container_exec:
+    container: runner-manager
+    command: /usr/bin/bash /etc/gitlab-runner/{{ runner.name }}/gitlab-runner-register-script.sh
+    user: root
