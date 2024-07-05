@@ -49,7 +49,7 @@
       until: domain_join_state.rc == 0
       retries: 3
       delay: 3
-      notify: Rebooting Unix...
+      notify: join_domain_reboot
 
 - name: Creating user home folder automatically...
   ansible.builtin.command: pam-auth-update --enable mkhomedir

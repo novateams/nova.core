@@ -17,7 +17,7 @@
     path: /var/run/reboot-required
   register: reboot_required_file
   changed_when: reboot_required_file.stat.exists # This will only show as changed if the file exists, required to trigger the notify below
-  notify: Rebooting Unix...
+  notify: updates_reboot
   when: debian_family_updates_allow_reboot
 
 - name: Including unattended upgrades tasks...
