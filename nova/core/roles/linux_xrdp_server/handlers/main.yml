@@ -6,5 +6,7 @@
     state: restarted
   when: not xrdp_install.changed # Only restart xrdp service if reboot is not scheduled
 
-- name: Rebooting...
+- name: Rebooting Unix...
   ansible.builtin.reboot:
+  when: ansible_system in ["Linux", "FreeBSD"]
+  listen: linux_xrdp_server_reboot
