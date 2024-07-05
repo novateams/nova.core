@@ -10,7 +10,7 @@
   until: not xrdp_install.failed
   retries: 5
   delay: 3
-  notify: Rebooting...
+  notify: linux_xrdp_server_reboot
 
 - name: Adding xrdp user to ssl-cert group...
   ansible.builtin.user:

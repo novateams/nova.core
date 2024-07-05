@@ -7,3 +7,5 @@
 
 - name: Rebooting Unix...
   ansible.builtin.reboot:
+  when: ansible_system in ["Linux", "FreeBSD"]
+  listen: join_domain_reboot

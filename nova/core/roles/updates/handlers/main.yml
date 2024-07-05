@@ -1,3 +1,5 @@
 ---
 - name: Rebooting Unix...
   ansible.builtin.reboot:
+  when: ansible_system in ["Linux", "FreeBSD"]
+  listen: updates_reboot
