@@ -87,7 +87,7 @@
       retries: 5
       delay: 2
 
-# This is so we can exclude the vault.yml if when needed for only configuring single service
+# This is so we don't need to include vault.yml if using monolith_single_service for only configuring single service
 - name: Checking if Vault credentials already exist...
   ansible.builtin.stat:
     path: /srv/vault/creds/root_token
@@ -114,7 +114,7 @@
         vault_access_token: "{{ deploy_vars_vault_token.login.auth.client_token }}"
         vault_lookup_fragment: "url=https://{{ monolith_vault_fqdn }} token={{ vault_access_token }} "
 
-- name: Including following configuration tasks...
+- name: Including following service configuration tasks...
   ansible.builtin.include_tasks:
     file: "{{ item }}.yml"
   loop:
@@ -122,3 +122,9 @@
     - keycloak
     - providentia
     - nexus
+  when: monolith_single_service is not defined
+
+- name: Including following single service configuration tasks...
+  ansible.builtin.include_tasks:
+    file: "{{ monolith_single_service }}.yml"
+  when: monolith_single_service is defined

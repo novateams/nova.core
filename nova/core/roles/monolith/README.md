@@ -43,6 +43,8 @@ fqdn: "{{ hostname }}.{{ domain }}"
 
 Although there are some variables available to this role, it recommended to only set values for variables defined in the example below. This is a kickstart role and should be used as such. Advanced users can install the individual roles separately for more control.
 
+`-e monolith_single_service=service_name` can be appended to command line to only configure single service after the initial setup.
+
 ## Dependencies
 
 none
