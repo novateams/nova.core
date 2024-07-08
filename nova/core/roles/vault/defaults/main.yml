@@ -80,6 +80,9 @@ vault_code_signing_key_bits: 384
 vault_ldap_engine_name: ldap
 vault_ldap_admin_group_name: vault_admins # This is the AD group that will have full access to Vault
 
+# Policies
+vault_policies: [] # List of policies to create and map to LDAP groups when needed. Refer to README.md for an example
+
 vault_ldap_configuration:
   anonymous_group_search: false
   binddn: "{{ vault_binddn }}"

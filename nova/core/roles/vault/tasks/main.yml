@@ -34,3 +34,10 @@
 - name: Including ldap configuration task...
   ansible.builtin.include_tasks: configure_ldap.yml
   when: vault_configure_ldap
+
+- name: Including policies tasks...
+  ansible.builtin.include_tasks: configure_policies.yml
+  loop: "{{ vault_policies }}"
+  loop_control:
+    loop_var: vault_policy
+  when: vault_policies != []
