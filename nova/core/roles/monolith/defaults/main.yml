@@ -24,8 +24,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://community.chocolatey.org/api/v2/
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: false
         timeToLive: 1440
@@ -46,8 +46,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://registry-1.docker.io/
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -71,8 +71,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://rubygems.org
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -90,8 +90,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://http.kali.org/
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -112,8 +112,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -134,8 +134,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -156,8 +156,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -178,8 +178,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -200,8 +200,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -222,8 +222,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -244,8 +244,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -266,8 +266,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -288,8 +288,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -310,8 +310,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -332,8 +332,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -354,8 +354,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://archive.ubuntu.com/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -376,8 +376,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://ftp.ee.debian.org/debian
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -398,8 +398,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://security.debian.org/debian-security
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -420,8 +420,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: http://ftp.ee.debian.org/debian
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -446,8 +446,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://download.docker.com/linux/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -468,8 +468,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://download.docker.com/linux/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -490,8 +490,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://download.docker.com/linux/ubuntu
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -512,8 +512,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://download.docker.com/linux/debian
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -534,8 +534,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://download.docker.com/linux/debian
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
@@ -556,8 +556,8 @@ monolith_nexus_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://download.docker.com/linux/debian
-        contentMaxAge: 1440
-        metadataMaxAge: 1440
+        contentMaxAge: 15
+        metadataMaxAge: 15
       negativeCache:
         enabled: true
         timeToLive: 1440
