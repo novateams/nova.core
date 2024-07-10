@@ -40,7 +40,7 @@ jobs:
           echo -e "Current Version - $CURRENT_VERSION"
           echo -n -e "${C_RST}"
 
-          if [[ $(echo "$PR_VERSION" | tr -d '.') -le $(echo "$CURRENT_VERSION" | tr -d '.') ]]; then
+          if dpkg --compare-versions $PR_VERSION le $CURRENT_VERSION; then
 
             echo -n -e "${C_RED}"
             echo -e "Pull request version $PR_VERSION is <= than current version $CURRENT_VERSION."
