@@ -24,7 +24,6 @@ jobs:
           VERSION_FILE="nova/core/galaxy.yml"
 
           VERSION=$(cat $VERSION_FILE | grep "version:" | cut -d " " -f 2)
-          CURRENT_TAG=$(git tag --sort=-creatordate | head -n 1)
 
           TAG_NAME="v$VERSION"
           echo "LATEST_TAG=$TAG_NAME" >> $GITHUB_ENV
