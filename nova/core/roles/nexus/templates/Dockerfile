@@ -7,4 +7,3 @@ USER root
 RUN sed -ri 's/(-Djava.net.preferIPv4Stack=).*/\1false/g' /opt/sonatype/nexus/bin/nexus.vmoptions
 
 USER nexus
-

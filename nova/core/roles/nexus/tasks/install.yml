@@ -1,9 +1,10 @@
 ---
 - name: Creating folders for configuration...
   ansible.builtin.file:
-    path: "{{ container_config_folder }}/data"
+    path: "{{ nexus_container_config_folder }}/data"
     owner: 200 # ID of the nexus container user
     group: root # Host machine root group
+    mode: "0755"
     state: directory
 
 - name: Templating Nexus configuration files...
@@ -16,14 +17,14 @@
     loop_var: nexus_config_item
   loop:
     - src: nexus.yml
-      dest: "{{ container_config_folder }}/docker-compose.yml"
+      dest: "{{ nexus_container_config_folder }}/docker-compose.yml"
     - src: Dockerfile
-      dest: "{{ container_config_folder }}/Dockerfile"
+      dest: "{{ nexus_container_config_folder }}/Dockerfile"
   register: template
 
 - name: Composing Nexus on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
-    project_src: "{{ container_config_folder }}"
+    project_src: "{{ nexus_container_config_folder }}"
     state: present
     wait: true
 
