@@ -8,9 +8,8 @@
     name_servers: "{{ dns_servers }}"
 
 - name: Setting NTP time...
-  cisco.ios.ios_ntp:
-    server: "{{ ntp_servers[0] }}"
-    state: present
+  cisco.ios.ios_ntp_global:
+    config: "{{ cisco_ios_ntp_config }}"
 
 - name: Save config
   cisco.ios.ios_command:
