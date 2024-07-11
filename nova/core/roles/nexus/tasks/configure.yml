@@ -11,7 +11,7 @@
 
 - name: Checking for first run password file...
   ansible.builtin.stat:
-    path: "{{ container_config_folder }}/data/admin.password"
+    path: "{{ nexus_container_config_folder }}/data/admin.password"
   register: stat
 
 - name: Default password change block...
@@ -19,7 +19,7 @@
   block:
     - name: Getting default password...
       ansible.builtin.slurp:
-        src: "{{ container_config_folder }}/data/admin.password"
+        src: "{{ nexus_container_config_folder }}/data/admin.password"
       register: password
 
     - name: Changing Nexus default password...
@@ -37,7 +37,7 @@
 
 - name: Increasing HTTP timeout to 10 minutes... # Required for large file/slow connection upload/download
   ansible.builtin.lineinfile:
-    path: "{{ container_config_folder }}/data/etc/nexus.properties"
+    path: "{{ nexus_container_config_folder }}/data/etc/nexus.properties"
     line: jetty.http.timeout=600000
   notify: Restarting Nexus container...
 
@@ -134,7 +134,7 @@
     headers:
       accept: application/json
       Content-Type: application/json
-    body: "{{ realms_to_activate }}"
+    body: "{{ nexus_realms_to_activate }}"
     body_format: json
     force_basic_auth: true
     status_code: 204
