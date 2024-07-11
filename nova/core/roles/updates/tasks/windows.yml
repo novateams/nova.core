@@ -26,7 +26,7 @@
     reboot: true
   register: win_updates
   until: not win_updates.failed
-  retries: 5
+  retries: 3
   delay: 10
 
 - name: Reporting update state... # Useful when WSUS is used
