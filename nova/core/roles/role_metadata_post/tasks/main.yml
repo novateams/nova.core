@@ -1,4 +1,13 @@
 ---
+- name: Missing required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - role_metadata_post_keycloak_realm_name
+      - role_metadata_post_providentia_uri
+      - role_metadata_post_keycloak_uri
+  when: role_metadata_post_keycloak_realm_name == {} or role_metadata_post_providentia_uri == {} or role_metadata_post_keycloak_uri == {}
+
 - name: Including post role metadata to Providentia tasks...
   ansible.builtin.include_tasks: providentia.yml
   when: role_metadata_post_endpoint == "providentia"
