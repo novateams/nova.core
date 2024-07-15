@@ -30,11 +30,6 @@ DOCUMENTATION = """
       description: SSO client id for Providentia.
       type: string
       default: "Providentia"
-    credentials_lookup_env:
-      description: ENV var used to lookup Providentia credentials KeePass path
-      type: string
-      default: KEEPASS_DEPLOYER_CREDENTIALS_PATH
-      required: False
 """
 
 import os, json, socket, aiohttp, asyncio
@@ -95,12 +90,9 @@ class InventoryModule(BaseInventoryPlugin):
     self.inventory.set_variable("all", "providentia_api_version", 3)
 
   async def store_access_token(self):
-    keepass_creds = os.environ.get(self.get_option('credentials_lookup_env'),"").strip()
-    sso_creds = self.fetch_creds(keepass_creds)
+    self._access_token = self.fetch_access_token(self.fetch_creds())
 
-    self._access_token = self.fetch_access_token(sso_creds)
-
-  def fetch_creds(self, creds_path):
+  def fetch_creds(self):
 
     # Feature to allow project specific deployer credentials from Ansible vault
     project_deployer_username = self._options.get(self.project + '_deployer_username')
@@ -115,31 +107,6 @@ class InventoryModule(BaseInventoryPlugin):
       return {
         'username': project_deployer_username,
         'password': project_deployer_password
-      }
-
-    # Feature to get deployer credentials from KeePass
-    elif 'KEEPASS_DEPLOYER_CREDENTIALS_PATH' in os.environ and os.environ['KEEPASS_DEPLOYER_CREDENTIALS_PATH'].strip() != "":
-
-      kp_soc = "/tmp/ansible-keepass.sock"
-      sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-      sock.connect(kp_soc)
-
-      username = {'attr': "username", 'path': creds_path}
-      sock.send(json.dumps(username).encode())
-      username = json.loads(sock.recv(1024).decode())
-
-      password = {'attr': "password", 'path': creds_path}
-      sock.send(json.dumps(password).encode())
-      password = json.loads(sock.recv(1024).decode())
-
-      sock.close()
-
-      if(username['status']=='error' or password['status']=='error'):
-        raise AnsibleParserError('Error retrieving credentials from KeePass')
-
-      return {
-        'username': username['text'],
-        'password': password['text']
       }
 
     # Feature to get deployer credentials from Ansible vault
