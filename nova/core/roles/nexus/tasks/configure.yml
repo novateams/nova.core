@@ -38,6 +38,7 @@
 - name: Increasing HTTP timeout to 10 minutes... # Required for large file/slow connection upload/download
   ansible.builtin.lineinfile:
     path: "{{ nexus_container_config_folder }}/data/etc/nexus.properties"
+    regexp: "^jetty.http.timeout="
     line: jetty.http.timeout=600000
   notify: Restarting Nexus container...
 
