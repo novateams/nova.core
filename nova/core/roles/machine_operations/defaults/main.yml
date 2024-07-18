@@ -89,6 +89,8 @@ vmwarews_custom_params: []
 # AWS defaults #
 ################
 
+aws_access_key: {} # Can be defined in your Ansible Vault
+
 # Temporary ssh key path on your container
 temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_aws_key
 
@@ -134,6 +136,8 @@ aws_security_group_rules:
 ###################
 # Linode defaults #
 ###################
+
+linode_api_token: {} # Can be defined in your Ansible Vault
 
 # The default root password for Linode VM
 machine_operations_linode_vm_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_' + admin_account) }}"
