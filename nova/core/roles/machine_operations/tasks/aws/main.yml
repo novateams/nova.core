@@ -1,16 +1,10 @@
 ---
-- name: Checking for AWS API key...
-  when: aws_access_key is not defined or aws_access_key in [none, '']
-  block:
-    - name: MISSING AWS API KEY
-      ansible.builtin.debug:
-        msg: |
-          KEEPASS_AWS_ACCESS_KEY not defined in .makerc-vars.
-          or
-          aws_access_key_id and aws_access_key are not set in Ansible Vault.
-
-    - name: Stopping play...
-      ansible.builtin.meta: end_host
+- name: Missing required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - aws_access_key
+  when: aws_access_key == {}
 
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml

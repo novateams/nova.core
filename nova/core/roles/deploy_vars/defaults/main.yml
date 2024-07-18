@@ -4,7 +4,7 @@
 ###################
 
 # These are defined here because it's the first role loaded and these defaults will then be used for subsequent roles
-# It's better to define different lookups (vault, keepass etc.) in this role because then they'll be loaded only once
+# It's better to define different lookups (vault,etc.) in this role because then they'll be loaded only once
 
 template: false # Set to yes to include the template role in start.yml
 customization_context: host # Default value, Providentia also can give out type: container
