@@ -1,37 +1,58 @@
 # Role Name
 
-COMING SOON
-A brief description of the role goes here.
+This role is responsible for managing admin and user accounts for different operating systems. Crrently, this role supports the following operating systems:
+
+- CentOS/RHEL
+- Cisco IOS
+- FreeBSD
+- MacOS
+- Opnsense
+- Palo Alto Networks PAN-OS
+- PfSense
+- RouterOS
+- Ubuntu/Debian
+- VyOS
+- Windows (Domain & Local accounts)
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+For most Unix based distributions `sudo` needs to be pre-installed.
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/accounts/defaults/main.yml) file for a list and description of the variables used in this role.
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
-## Example Playbook
+## Example
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yaml
+# Define the admin accounts list in host_vars/group_vars or role variables to create the admin accounts for the OS
+admin_accounts:
+  - username: root # When password is not defined it'll be randomly generated
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+  - username: admin
+    password: Password123
+    ssh_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIB8J
+```
 
-## License
+```yaml
+# Define the user accounts list in host_vars/group_vars or role variables to create the user accounts for the OS
+user_accounts:
+  - username: user1 # When password is not defined it'll be randomly generated
 
-AGPL-3.0-or-later
+  - username: user2
+    password: Password123
+    ssh_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIB8J
+```
 
-## Author Information
+```yaml
+# Define the domain_user_accounts accounts list in host_vars/group_vars or role variables to create the domain user accounts for the Domain Controller
+domain_user_accounts:
+  - username: user1 # When password is not defined it'll be randomly generated
 
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+  - username: user2
+    password: Password123
+```

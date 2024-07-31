@@ -33,6 +33,7 @@
   loop_control:
     label: "{{ item.username }}"
   when: item.username != admin_account # Cannot remove root user
+  changed_when: true
 
 - name: Enabling password requirement for sudo...
   ansible.builtin.raw: |
