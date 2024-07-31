@@ -7,6 +7,7 @@
         fi
     done
   register: home_profiles
+  changed_when: false
 
 - name: Getting profiles not defined in accounts list...
   ansible.builtin.set_fact:
@@ -14,6 +15,7 @@
 
 - name: Rebooting to close any open sessions...
   ansible.builtin.raw: reboot
+  changed_when: true
   when: user_profiles_to_remove != []
 
 - name: Removing following accounts...
@@ -21,3 +23,4 @@
     dscl . -delete "/Users/{{ item }}"
     rm -rf /Users/{{ item }}
   loop: "{{ user_profiles_to_remove }}"
+  changed_when: true

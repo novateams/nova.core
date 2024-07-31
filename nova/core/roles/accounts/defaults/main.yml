@@ -11,7 +11,8 @@ fresh_deploy: false # Checks if the machine has just been created, required for 
 accounts_exclusive_ssh_key: true # If true, only the specified ssh key will be allowed for the account, otherwise the key will be appended to the authorized_keys file
 
 # The default lookup paths are Vault's KV v2 secret engine and a secrets name under that.
-pregenerated_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path | default(environment_name) + '/data/' + secrets_vault_secrets_path | default(project_fullname) + ':' + inventory_hostname + '_' + item.username) }}"
+pregenerated_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path | default(environment_name) +
+  '/data/' + secrets_vault_secrets_path | default(project_fullname) + ':' + inventory_hostname + '_' + item.username) }}"
 random_generated_password: "{{ lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits') }}"
 
 windows_domain_admin_groups:

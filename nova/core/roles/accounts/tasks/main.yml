@@ -36,27 +36,27 @@
       when: ansible_network_os is defined
       block:
         - name: Configure RouterOS accounts...
-          include_tasks: routeros.yml
+          ansible.builtin.include_tasks: routeros.yml
           when: ansible_network_os == 'community.routeros.routeros'
 
         - name: Configure VyOS accounts...
-          include_tasks: vyos.yml
+          ansible.builtin.include_tasks: vyos.yml
           when: ansible_network_os == 'vyos.vyos.vyos'
 
         - name: Configure Cisco-IOS accounts...
-          include_tasks: ios.yml
+          ansible.builtin.include_tasks: ios.yml
           when: ansible_network_os == 'cisco.ios.ios'
 
         - name: Configure pfSense accounts...
-          include_tasks: pfsense.yml
+          ansible.builtin.include_tasks: pfsense.yml
           when: ansible_network_os == 'pfsense'
 
         - name: Configure Opnsense accounts...
-          include_tasks: opnsense.yml
+          ansible.builtin.include_tasks: opnsense.yml
           when: ansible_network_os == 'opnsense'
 
         - name: Configure PanOS accounts...
-          include_tasks: panos.yml
+          ansible.builtin.include_tasks: panos.yml
           when: ansible_network_os == 'panos'
 
     - name: Setting {{ ansible_deployer_username }} as connection user...

@@ -7,12 +7,14 @@
     line: "%admins ALL=(ALL) NOPASSWD: ALL"
     validate: visudo -cf %s
     create: true
+    mode: "0600"
   when: not sudo_requires_password
 
 - name: Enabling password requirement for sudo...
   ansible.builtin.file:
     path: /usr/local/etc/sudoers.d/sudoers
     state: absent
+    mode: "0600"
   when: sudo_requires_password
 
 # Configuring pfSense accounts in localhost to avoid installing required Python modules on the remote host
@@ -20,7 +22,7 @@
   ansible.builtin.fetch:
     dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
     src: /conf/config.xml
-    flat: yes
+    flat: true
 
 - name: Re-creating users and adding them to groups...
   delegate_to: localhost
@@ -117,6 +119,7 @@
 # Otherwise Ansible will start reconnection to fast and will error out with incorrect credentials
 - name: Restarting {{ inventory_hostname }} to apply configuration...
   ansible.builtin.command: shutdown -r now
+  changed_when: true
   async: 0
   poll: 0
 

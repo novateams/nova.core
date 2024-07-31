@@ -36,6 +36,7 @@
     state: present
     create: true
     owner: "{{ item.username }}"
+    mode: "0600"
   loop: "{{ local_accounts_list }}"
   loop_control:
     label: "{{ item.username }}"
