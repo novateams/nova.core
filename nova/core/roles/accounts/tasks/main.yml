@@ -62,7 +62,7 @@
     - name: Setting {{ ansible_deployer_username }} as connection user...
       ansible.builtin.set_fact:
         ansible_user: "{{ ansible_deployer_username }}"
-        ansible_password: "{{ ansible_deployer_password | default(omit) }}" # Updated ansible_deployer_password
+        ansible_password: "{{ ansible_deployer_password }}" # Updated ansible_deployer_password
         ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=no' if (fresh_deploy and infra_env == 'aws') else omit }}" # To avoid SSH MaxAuthTries limit
 
     - name: Including gather_facts role... # Since the connection account changed and we need to gather facts with the new account

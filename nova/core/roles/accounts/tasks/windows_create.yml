@@ -7,20 +7,30 @@
   ansible.builtin.include_tasks: create_domain_groups.yml
   when: ansible_facts.windows_domain_role == "Primary domain controller"
 
-- name: Creating following local accounts...
-  ansible.windows.win_user:
-    name: "{{ item.username }}"
-    password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
-    password_never_expires: true
-    state: present
-    groups_action: add
-    groups: "{{ item.groups | default(windows_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"
-  loop: "{{ local_accounts_list }}"
-  loop_control:
-    label: "{{ item.username }}"
+- name: Configuring local accounts...
   when:
     - ansible_facts.windows_domain_role != "Primary domain controller"
     - ansible_facts.windows_domain_role != "Backup domain controller"
+  block:
+    - name: Creating following local accounts...
+      ansible.windows.win_user:
+        name: "{{ item.username }}"
+        password: "{{ item.password | default(pregenerated_password) }}"
+        password_never_expires: true
+        state: present
+        groups_action: add
+        groups: "{{ item.groups | default(windows_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"
+      loop: "{{ local_accounts_list }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+    - name: Setting correct password for {{ ansible_deployer_username }}...
+      ansible.builtin.set_fact:
+        ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+      loop: "{{ local_accounts_list }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when: item.username == ansible_deployer_username
 
 - name: Checking and creating domain accounts...
   when: ansible_facts.windows_domain_role == "Primary domain controller"
@@ -38,7 +48,7 @@
         display_name: "{{ item.display_name | default(omit) }}"
         email: "{{ item.email | default(omit) }}"
         upn: "{{ item.username }}@{{ ad_domain_name }}"
-        password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
+        password: "{{ item.password | default(pregenerated_password) }}"
         password_never_expires: true
         state: present
         path: "{{ item.ou | default(omit) }}"
@@ -48,6 +58,14 @@
       loop: "{{ domain_accounts_list }}"
       loop_control:
         label: "{{ item.username }}"
+
+    - name: Setting correct password for {{ ansible_deployer_username }}...
+      ansible.builtin.set_fact:
+        ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+      loop: "{{ domain_accounts_list }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when: item.username == ansible_deployer_username
 
 - name: Creating a profiles for...
   community.windows.win_user_profile:

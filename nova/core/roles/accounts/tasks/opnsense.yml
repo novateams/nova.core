@@ -66,7 +66,7 @@
                 - descr: "{{ 'System Administrator' if item.username == admin_account else item.username }}"
                 - scope: "{{ 'system' if item.username == admin_account else 'user' }}"
                 - groupname: admins
-                - password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) | password_hash('sha512') }}"
+                - password: "{{ item.password | default(pregenerated_password) | password_hash('sha512') }}"
                 - authorizedkeys: "{{ (item.ssh_key | b64encode) if item.ssh_key is defined }}"
                 - shell: "{{ '/usr/local/sbin/opnsense-shell' if item.username == admin_account else '/bin/tcsh' }}"
                 - uid: "{{ 0 if item.username == admin_account else 2000 + idx -1 }}"
@@ -86,6 +86,14 @@
       loop_control:
         index_var: idx
         label: "{{ item.username }}"
+
+- name: Setting correct password for {{ ansible_deployer_username }}...
+  ansible.builtin.set_fact:
+    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+  loop: "{{ admin_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username == ansible_deployer_username
 
 - name: Uploading config.xml to {{ inventory_hostname }}...
   ansible.builtin.copy:
