@@ -4,18 +4,26 @@
     if dscl . -list /Users | grep -q "^{{ item.username }}$"; then
 
         echo Setting existing {{ item.username }} user password
-        sysadminctl -resetPasswordFor {{ item.username }} -newPassword {{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }} -adminUser {{ ansible_user }} -adminPassword {{ ansible_password }}
+        sysadminctl -resetPasswordFor {{ item.username }} -newPassword {{ item.password | default(pregenerated_password) }} -adminUser {{ ansible_user }} -adminPassword {{ ansible_password }}
 
     else
 
         echo Creating new {{ item.username }} account
-        sysadminctl -addUser {{ item.username }} -password {{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }} -admin -shell /bin/zsh
+        sysadminctl -addUser {{ item.username }} -password {{ item.password | default(pregenerated_password) }} -admin -shell /bin/zsh
 
     fi
   changed_when: true
   loop: "{{ admin_accounts }}"
   loop_control:
     label: "{{ item.username }}"
+
+- name: Setting correct password for {{ ansible_deployer_username }}...
+  ansible.builtin.set_fact:
+    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+  loop: "{{ admin_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username == ansible_deployer_username
 
 - name: Adding account creation source flag...
   ansible.builtin.raw: |

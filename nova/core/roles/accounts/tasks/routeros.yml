@@ -2,11 +2,19 @@
 - name: Creating following users...
   community.routeros.command:
     commands: # Two lines because first adds missing accounts and the second sets the correct passwords
-      - /user add name={{ item.username }} group=full password={{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}
-      - /user set {{ item.username }} password={{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }} group=full comment=""
+      - /user add name={{ item.username }} group=full password={{ item.password | default(pregenerated_password) }}
+      - /user set {{ item.username }} password={{ item.password | default(pregenerated_password) }} group=full comment=""
   loop: "{{ admin_accounts }}"
   loop_control:
     label: "{{ item.username }}"
+
+- name: Setting correct password for {{ ansible_deployer_username }}...
+  ansible.builtin.set_fact:
+    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+  loop: "{{ admin_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username == ansible_deployer_username
 
 - name: Adding RSA ssh key for following users...
   community.routeros.command:

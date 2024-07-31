@@ -31,7 +31,7 @@
       paloaltonetworks.panos.panos_administrator:
         provider: "{{ panos_connection_params }}"
         admin_username: "{{ item.username }}"
-        admin_password: "{{ item.password | default(random_generated_password if not save_secrets_to_vault else pregenerated_password) }}"
+        admin_password: "{{ item.password | default(pregenerated_password) }}"
         #ssh_public_key: "{{ item.ssh_key | default(omit) }}"
         superuser: true
       loop: "{{ admin_accounts }}"
