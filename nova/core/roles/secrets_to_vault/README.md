@@ -58,4 +58,10 @@ Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/no
       # Predefined secret with a random generated value to save to vault under kv/data/secrets
       - key: secret2
         value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+
+# Define the secrets_to_vault_pre_deploy_secrets in host or group_var to save secrets before the deploy of the host
+secrets_to_vault_pre_deploy_secrets:
+  - key: secret1
+    value: password1
+
 ```
