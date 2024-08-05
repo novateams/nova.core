@@ -34,11 +34,13 @@
 
     - name: Enable unattended upgrades...
       ansible.builtin.lineinfile:
-        path: /etc/apt/apt.conf.d/{{ item.file }}
-        regexp: "{{ item.match }}"
-        line: "{{ item.value }}"
+        path: /etc/apt/apt.conf.d/{{ update_enable.file }}
+        regexp: "{{ update_enable.match }}"
+        line: "{{ update_enable.value }}"
         create: true
         mode: "0644"
+      loop_control:
+        loop_var: update_enable
       loop:
         - file: 20auto-upgrades
           match: .*Update-Package-Lists
@@ -73,10 +75,12 @@
     - name: Disabling unattended upgrades & updates...
       ansible.builtin.lineinfile:
         path: /etc/apt/apt.conf.d/20auto-upgrades
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
+        regexp: "{{ update_disable.regexp }}"
+        line: "{{ update_disable.line }}"
         create: true
         mode: "0644"
+      loop_control:
+        loop_var: update_disable
       loop:
         - regexp: .*Unattended-Upgrade
           line: APT::Periodic::Unattended-Upgrade "0";

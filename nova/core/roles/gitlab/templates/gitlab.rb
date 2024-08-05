@@ -29,10 +29,9 @@ nginx['client_max_body_size'] = '0'
 nginx['redirect_http_to_https'] = false
 nginx['hsts_max_age'] = 0
 nginx['proxy_protocol'] = false
-# nginx['real_ip_trusted_addresses'] = [ '127.0.0.1/8', '0.0.0.0/0', '::1', '::/0' ]
-# nginx['real_ip_trusted_addresses'] = [ '172.0.0.0/8','10.42.0.0/16', '10.17.0.0/16', '10.18.0.0/16', 'fd42::/64', 'fd69::/64' ]
 
-nginx['real_ip_header'] = 'X-Forwarded-For'
+nginx['real_ip_trusted_addresses'] = {{ gitlab_nginx_real_ip_trusted_addresses }}
+nginx['real_ip_header'] = '{{ gitlab_nginx_real_ip_header }}'
 nginx['real_ip_recursive'] = 'on'
 
 ### gitlab smtp https://docs.gitlab.com/omnibus/settings/smtp.html
