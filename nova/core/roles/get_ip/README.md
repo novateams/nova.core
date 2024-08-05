@@ -31,8 +31,8 @@ None
 ```
 
 ```shell
-# Use the alias in Catapult
-ctp-get-ip <inventory_hostname>
+# Use the command in Catapult
+ctp host ip <inventory_hostname>
 ```
 
 ## License
