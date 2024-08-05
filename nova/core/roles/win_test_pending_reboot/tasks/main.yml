@@ -1,0 +1,8 @@
+---
+- name: Installing PendingReboot powershell module...
+  community.windows.win_psmodule:
+    name: PendingReboot
+    state: present
+
+- name: Including win_test_pending_reboot task...
+  ansible.builtin.include_tasks: check_and_reboot.yml
