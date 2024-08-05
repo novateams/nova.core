@@ -18,9 +18,9 @@ None
 ## Example
 
 ```shell
-# Rename single VM from Catapult command line
+# Rename single VM with Catapult command
 # Looks up the current VM name and renames it to the new name
-ctp-rename-vm <inventory_hostname> -e new_vm_name=<new_vm_name>
+ctp vm rename <inventory_hostname> -e new_vm_name=<new_vm_name>
 ```
 
 ```yaml

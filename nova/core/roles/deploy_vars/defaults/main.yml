@@ -8,7 +8,7 @@
 
 template: false # Set to yes to include the template role in start.yml
 customization_context: host # Default value, Providentia also can give out type: container
-manual_fresh_deploy: false # For when running ctp-fresh-deploy alias from CLI
+manual_fresh_deploy: false # For when running passing -e fresh_deploy=true from CLI
 just_create: false # Stops play after vm clone
 fresh_deploy: false # Set to true to run the deploy like the first time
 role_only: false # Includes customization role and then stops, great for developing roles

@@ -20,7 +20,7 @@ None
 
 ```shell
 # Use the existing Catapult CLI alias to only run this role for a specific host.
-ctp-update-os <inventpry_hostname>
+ctp host update <inventpry_hostname>
 ```
 
 ```yml
