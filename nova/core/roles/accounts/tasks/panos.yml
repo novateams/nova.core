@@ -20,7 +20,7 @@
         provider: "{{ panos_connection_params }}"
         force: true
 
-    - name: Setting {{ ansible_deployer_username }} as connection user...
+    - name: Setting {{ accounts_panos_temp_username }} as connection user...
       ansible.builtin.set_fact:
         panos_connection_params:
           ip_address: "{{ ansible_host }}"
@@ -42,6 +42,14 @@
       paloaltonetworks.panos.panos_commit_firewall:
         provider: "{{ panos_connection_params }}"
         force: true
+
+    - name: Setting correct password for {{ ansible_deployer_username }}...
+      ansible.builtin.set_fact:
+        ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+      loop: "{{ admin_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when: item.username == ansible_deployer_username
 
     - name: Setting {{ ansible_deployer_username }} as connection user...
       ansible.builtin.set_fact:
