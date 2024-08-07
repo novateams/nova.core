@@ -1,0 +1,48 @@
+---
+tuoni_install_path: /srv/tuoni # The path where Tuoni will be installed currently cannot be changed
+tuoni_payloads_path: /srv/payloads # The path where Tuoni payloads will be downloaded to
+
+tuoni_users: # The list of users that will be created in Tuoni pass a custom list as a variable to override this default list
+  - username: operator
+    password: operator # Make sure to change this password
+    authorities:
+      - MANAGE_AGENTS
+      - MANAGE_LISTENERS
+      - MANAGE_PAYLOADS
+      - MANAGE_USERS
+      - MODIFY_FILES
+      - SEND_COMMANDS
+      - VIEW_RESOURCES # this default permission, cannot be removed
+
+tuoni_listeners: # The list of listeners that will be created in Tuoni pass a custom list as a variable to override this default list
+  - name: HttpListener
+    plugin: shelldot.listener.agent-reverse-http
+    configuration:
+      port: 80
+      bindToPort: null
+      httpCallbacks:
+        - hosts:
+            - "{{ fqdn }}"
+      getUri: /get
+      postUri: /post
+      stagedUri: /payload
+      stagedUriPayloadId: payloadId
+      fileStorageUri: /files/
+      metadataCookieName: JWT_SESSION
+      metadataPrefix: metaPrefix
+      metadataSuffix: metaSuffix
+      https: false
+      sleep: 5
+      sleepRandom: 5
+
+tuoni_payloads: # The list of payloads that will be created in Tuoni pass a custom list as a variable to override this default list
+  - payloadTemplateId: shelldot.payload.windows-x64
+    configuration:
+      type: EXECUTABLE
+    listenerId: "{{ tuoni_created_listeners.json.values() | selectattr('name', 'equalto', 'HttpListener') | map(attribute='id') | first }}"
+    encrypted: true
+  - payloadTemplateId: shelldot.payload.windows-x64
+    configuration:
+      type: DLL
+    listenerId: "{{ tuoni_created_listeners.json.values() | selectattr('name', 'equalto', 'HttpListener') | map(attribute='id') | first }}"
+    encrypted: true
