@@ -9,6 +9,14 @@
   loop_control:
     label: "{{ item.username }}"
 
+- name: Setting correct password for {{ ansible_deployer_username }}...
+  ansible.builtin.set_fact:
+    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+  loop: "{{ admin_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username == ansible_deployer_username
+
 - name: Adding authorized keys... # vyos.vyos.vyos_user module still doesn't support this.
   vyos.vyos.vyos_config:
     lines:
