@@ -1,0 +1,9 @@
+---
+- name: Including Tuoni installation tasks...
+  ansible.builtin.include_tasks: install.yml
+
+- name: Including Tuoni users tasks...
+  ansible.builtin.include_tasks: users.yml
+
+- name: Including Tuoni listeners tasks...
+  ansible.builtin.include_tasks: listeners.yml
