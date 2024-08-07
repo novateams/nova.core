@@ -20,6 +20,32 @@ save_secrets_to_vault: false # Set to true to save accounts to vault, required a
 gt_username: gt # Default non-root/Administrator username for deployment
 deploy_vars_post_roles: [] # List of roles to include after credentials facts have been set
 
+# Networking
+# Networking defaults when using Providentia or interfaces list that is based on Providentia output
+# To make sure these values can be used as hostvar lookups they also need to be defined in projects all.yml
+
+# IPv4
+connection_nic_ipv4: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') }}"
+connection_nic_ipv4_with_prefix: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first }}"
+connection_nic_ipv4_gw: "{{ interfaces | nova.core.addresses('connection_nic_ipv4_gw') | first | ansible.utils.ipaddr('network') }}"
+connection_nic_ipv4_network: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('network/prefix') }}"
+
+egress_nic_ipv4: "{{ interfaces | nova.core.addresses('egress_nic_ipv4') | first | ansible.utils.ipaddr('address') }}"
+egress_nic_ipv4_with_prefix: "{{ interfaces | nova.core.addresses('egress_nic_ipv4') | first }}"
+egress_nic_ipv4_gw: "{{ interfaces | nova.core.addresses('egress_nic_ipv4_gw') | first | ansible.utils.ipaddr('network') }}"
+egress_nic_ipv4_network: "{{ interfaces | nova.core.addresses('egress_nic_ipv4') | first | ansible.utils.ipaddr('network/prefix') }}"
+
+# IPv6
+connection_nic_ipv6: "{{ interfaces | nova.core.addresses('connection_nic_ipv6') | first | ansible.utils.ipaddr('address') }}"
+connection_nic_ipv6_with_prefix: "{{ interfaces | nova.core.addresses('connection_nic_ipv6') | first }}"
+connection_nic_ipv6_gw: "{{ interfaces | nova.core.addresses('connection_nic_ipv6_gw') | first | ansible.utils.ipaddr('network') }}"
+connection_nic_ipv6_network: "{{ interfaces | nova.core.addresses('connection_nic_ipv6') | first | ansible.utils.ipaddr('network/prefix') }}"
+
+egress_nic_ipv6: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first | ansible.utils.ipaddr('address') }}"
+egress_nic_ipv6_with_prefix: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first }}"
+egress_nic_ipv6_gw: "{{ interfaces | nova.core.addresses('egress_nic_ipv6_gw') | first | ansible.utils.ipaddr('network') }}"
+egress_nic_ipv6_network: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first | ansible.utils.ipaddr('network/prefix') }}"
+
 #########
 # Vault #
 #########
