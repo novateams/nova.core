@@ -210,10 +210,11 @@
         ntp_server_primary: "{{ ntp_servers[0] }}"
         ntp_server_secondary: "{{ ntp_servers[1] }}"
 
-    - name: Commiting PanOS changes...
+    - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:
         provider: "{{ panos_connection_params }}"
         force: true
+      retries: 3
 
     - name: Exiting PanOS console...
       when: fresh_deploy

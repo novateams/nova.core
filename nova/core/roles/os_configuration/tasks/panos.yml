@@ -10,6 +10,8 @@
         timezone: "{{ os_configuration_timezone }}"
         domain: "{{ domain }}"
 
-    - name: Commiting PanOS changes...
+    - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:
         provider: "{{ panos_connection_params }}"
+        force: true
+      retries: 3

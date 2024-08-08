@@ -15,10 +15,11 @@
         superuser: true
         state: present
 
-    - name: Commiting PanOS changes...
+    - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:
         provider: "{{ panos_connection_params }}"
         force: true
+      retries: 3
 
     - name: Setting {{ accounts_panos_temp_username }} as connection user...
       ansible.builtin.set_fact:
@@ -38,10 +39,11 @@
       loop_control:
         label: "{{ item.username }}"
 
-    - name: Commiting PanOS changes...
+    - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:
         provider: "{{ panos_connection_params }}"
         force: true
+      retries: 3
 
     - name: Setting correct password for {{ ansible_deployer_username }}...
       ansible.builtin.set_fact:
@@ -64,7 +66,8 @@
         admin_username: "{{ accounts_panos_temp_username }}"
         state: absent
 
-    - name: Commiting PanOS changes...
+    - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:
         provider: "{{ panos_connection_params }}"
         force: true
+      retries: 3
