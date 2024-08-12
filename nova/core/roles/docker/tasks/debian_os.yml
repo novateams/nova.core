@@ -15,13 +15,16 @@
   block:
     - name: Adding Docker GPG apt key...
       ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/debian/gpg
+        url: "{{ docker_apt_proxy }}/gpg"
         keyring: /etc/apt/trusted.gpg.d/docker.gpg
         state: present
       register: docker_apt_key
       until: not docker_apt_key.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
       retries: 10
       delay: 6
+      vars:
+        # Overriding ansible_distribution to match Debian because Kali does not have it's own Docker repository
+        ansible_distribution: debian
 
     # This is to remove the legacy Docker repository filename that was previously used with this role
     # This task should be removed on 01.09.2024
@@ -47,7 +50,7 @@
   block:
     - name: Adding Docker GPG apt key...
       ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+        url: "{{ docker_apt_proxy }}/gpg"
         keyring: /etc/apt/trusted.gpg.d/docker.gpg
         state: present
       register: docker_apt_key
