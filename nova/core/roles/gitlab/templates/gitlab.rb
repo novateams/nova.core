@@ -5,6 +5,7 @@ gitlab_rails['lfs_enabled'] = true
 
 ### gitlab pages https://docs.gitlab.com/ee/administration/pages/
 {% if gitlab_pages_enabled is sameas true %}
+gitlab_pages['internal_gitlab_server'] = 'http://localhost:8080'
 pages_external_url '{{ gitlab_pages_url }}'
 pages_nginx['enable'] = true
 pages_nginx['listen_port'] = 80
