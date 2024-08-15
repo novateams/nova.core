@@ -5,3 +5,13 @@
     state: started
     restart: true
     container_default_behavior: no_defaults
+  listen: nexus_container_restart
+
+- name: Restarting {{ nexus_proxy_container_name }}...
+  community.docker.docker_container:
+    name: "{{ nexus_proxy_container_name }}"
+    state: started
+    restart: true
+    container_default_behavior: no_defaults
+  listen: nexus_container_restart
+  when: proxy_container_check.exists
