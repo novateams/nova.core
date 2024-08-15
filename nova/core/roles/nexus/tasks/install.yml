@@ -25,6 +25,7 @@
 - name: Composing Nexus on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ nexus_container_config_folder }}"
+    pull: never
     state: present
     wait: true
 

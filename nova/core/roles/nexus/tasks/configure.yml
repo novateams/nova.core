@@ -40,7 +40,7 @@
     path: "{{ nexus_container_config_folder }}/data/etc/nexus.properties"
     regexp: "^jetty.http.timeout="
     line: jetty.http.timeout=600000
-  notify: Restarting Nexus container...
+  notify: nexus_container_restart
 
 - name: Setting anonymous access to - {{ 'ENABLED' if nexus_allow_anonymous_access else 'DISABLED' }}...
   ansible.builtin.uri:
