@@ -22,7 +22,7 @@ collections:
   - name: ansible.posix
     version: 1.5.4
   - name: ansible.utils
-    version: 5.0.0
+    version: 5.1.0
   - name: ansible.windows
     version: 2.4.0
   - name: azure.azcollection
@@ -30,7 +30,7 @@ collections:
   - name: chocolatey.chocolatey
     version: 1.5.1
   - name: cisco.ios
-    version: 9.0.0
+    version: 9.0.1
   - name: cloud.common
     version: 3.0.0
   - name: community.aws
@@ -38,9 +38,9 @@ collections:
   - name: community.crypto
     version: 2.21.1
   - name: community.docker
-    version: 3.11.0
+    version: 3.12.1
   - name: community.general
-    version: 9.2.0
+    version: 9.3.0
   - name: community.hashi_vault
     version: 6.2.0
   - name: community.library_inventory_filtering_v1 # Required for community.docker
@@ -52,7 +52,7 @@ collections:
   - name: community.postgresql
     version: 3.4.1
   - name: community.routeros
-    version: 2.17.0
+    version: 2.18.0
   - name: community.vmware
     version: 4.4.0
   - name: community.windows

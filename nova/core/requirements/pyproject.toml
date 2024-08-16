@@ -6,7 +6,7 @@ authors = ["CCDCOE <techadmin@ccdcoe.org>"]
 
 [tool.poetry.dependencies]
 aiohttp = "*"
-ansible-core = "2.17.2"
+ansible-core = "2.17.3"
 ansible-lint = "*"
 ansible-pylibssh = "*"
 ansible-specdoc = "*"
