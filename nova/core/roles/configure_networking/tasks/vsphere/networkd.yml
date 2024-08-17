@@ -11,7 +11,7 @@
     - name: Cleaning up Debian...
       when: configure_networking_os is search('Debian')
       block:
-        - name: Disabling networking service on Debian...
+        - name: Masking NetworkManager service and cleaning previous networkd configuration on Debian...
           ansible.builtin.uri:
             url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
             method: POST
@@ -20,7 +20,10 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments: -c "rm -f /etc/systemd/network/* && systemctl disable networking"
+                arguments: >
+                  -c "rm -f /etc/systemd/network/* &&
+                  systemctl stop NetworkManager &&
+                  systemctl mask NetworkManager"
                 path: /bin/bash
             status_code: 201
             body_format: json
