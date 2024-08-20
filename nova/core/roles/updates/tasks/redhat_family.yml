@@ -1,10 +1,10 @@
 ---
 - name: Updating all packages...
-  ansible.builtin.yum:
+  ansible.builtin.dnf:
     name: "*"
     update_cache: true
     state: latest # noqa: package-latest - Latest is used in order to perform a full upgrade
 
 - name: Running update cleanup...
-  ansible.builtin.yum:
+  ansible.builtin.dnf:
     autoremove: true
