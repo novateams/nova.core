@@ -1,7 +1,7 @@
 ###
 $ErrorActionPreference = 'Stop'
 
-$AdministratorPassword = "{{ post_sysprep_administrator_password }}"
+$AdministratorPassword = "{{ win_sysprep_administrator_password }}"
 
 #------------------------------------End of variables, Start of Script----------------------------------------------------------------------------------------------------------
 
