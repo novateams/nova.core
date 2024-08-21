@@ -1,2 +1,2 @@
 ---
-post_sysprep_administrator_password: "{{ ansible_password }}"
+win_sysprep_administrator_password: "{{ ansible_password }}" # Password to be set for the Administrator account after sysprep

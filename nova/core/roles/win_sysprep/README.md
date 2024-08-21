@@ -8,7 +8,7 @@ none
 
 ## Role Variables
 
-`post_sysprep_administrator_password` - The password for the Administrator account after `sysprep` is run. Defaults to current `ansible_user`.
+`win_sysprep_administrator_password` - The password for the Administrator account after `sysprep` is run. Defaults to current `ansible_user`.
 
 ## Dependencies
 
@@ -20,5 +20,5 @@ none
 - name: Running sysprep...
   include_role: nova.core.win_sysprep
   vars:
-    post_sysprep_administrator_password: "MyNewPassword"
+    win_sysprep_administrator_password: "MyNewPassword"
 ```

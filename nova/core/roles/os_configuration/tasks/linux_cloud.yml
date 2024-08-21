@@ -79,4 +79,4 @@
   loop:
     - nova.core.linux_xrdp_server
     - nova.core.linux_xrdp_keyboard
-  when: "'os_ubuntu_desktop_20_04' in group_names or 'os_ubuntu_desktop_22_04' in group_names or 'os_kali' in group_names"
+  when: group_names in ['os_ubuntu_desktop_20_04', 'os_ubuntu_desktop_22_04', 'os_ubuntu_desktop_24_04', 'os_kali']
