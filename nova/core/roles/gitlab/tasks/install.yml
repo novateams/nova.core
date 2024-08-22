@@ -23,17 +23,26 @@
       dest: "{{ gitlab_config_folder }}/docker-compose.yml"
     - src: gitlab.rb
       dest: "{{ gitlab_config_folder }}/gitlab.rb"
-  register: gitlab_config
 
+# Using separate retries because currently wait_timeout does not work
+# Leaving wait_timeout for future use
 - name: Composing Gitlab on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ gitlab_config_folder }}"
-    recreate: "{{ 'always' if gitlab_config.changed else 'auto' }}"
     state: present
     wait: true
+    wait_timeout: 600
+  register: gitlab_compose
+  until:
+    - gitlab_compose.containers[0].Health is defined
+    - gitlab_compose.containers[0].Health == 'healthy'
+  retries: 20
+  delay: 30
 
 - name: Increase gitlab ssh MaxAuthTries to 30..
-  ansible.builtin.raw: docker exec -it {{ gitlab_container_name }} bash -c "grep -q '^MaxAuthTries' /assets/sshd_config || echo MaxAuthTries 30 >> '/assets/sshd_config'"
+  ansible.builtin.raw: docker exec -it {{ gitlab_container_name }} bash -c
+    "grep -q '^MaxAuthTries' /assets/sshd_config || echo MaxAuthTries 30 >> '/assets/sshd_config'"
+  changed_when: true
 
 - name: Finding and restarting proxy container..
   when: gitlab_proxy_container_name != {}
