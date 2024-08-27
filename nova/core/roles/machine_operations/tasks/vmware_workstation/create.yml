@@ -45,7 +45,10 @@
 
               # regex_replace is required because urlib considers / as a safe character and doesn't encode it
             - name: Downloading {{ vm_template }} since it's not present or is older than 30 days...
-              ansible.builtin.shell: ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ template_export_folder }}
+              ansible.builtin.command:
+                ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode
+                | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ template_export_folder }}
+              changed_when: true
 
         - name: Setting fresh_deploy fact...
           ansible.builtin.set_fact:
@@ -58,7 +61,8 @@
             recurse: true
 
         - name: Creating {{ custom_vm_name | default(vm_name) }} from {{ vm_template }}...
-          ansible.builtin.shell: ovftool -tt=vmx -n={{ custom_vm_name | default(vm_name) }} {{ local_vmx_template_path }} {{ local_vm_folder }}
+          ansible.builtin.command: ovftool -tt=vmx -n={{ custom_vm_name | default(vm_name) }} {{ local_vmx_template_path }} {{ local_vm_folder }}
+          changed_when: true
 
         - name: Configuring {{ custom_vm_name | default(vm_name) }} virtual machine...
           ansible.builtin.lineinfile:
@@ -122,7 +126,7 @@
         - not role_only
       block:
         - name: Sharing VM folder with host...
-          lineinfile:
+          ansible.builtin.lineinfile:
             path: "{{ machine_operations_local_vmx_path }}"
             regex: "{{ item.regex }}"
             line: "{{ item.line }}"
@@ -162,12 +166,14 @@
         else
             echo "Moving on..."
         fi
+      changed_when: false
       register: vmware_workstation_running
 
     - name: Notifying user to start VMware Workstation...
       when:
         - lookup('env', 'SLACK_WEBHOOK_URL') | length != 0
         - vmware_workstation_running.stdout == "Waiting for VMware..."
+        - lookup('env', 'WAYLAND_DISPLAY') | length != 0 # Not needed for Wayland
       delegate_to: localhost
       block:
         - name: Notifying user to start VMware Workstation via Mattermost...
@@ -192,13 +198,59 @@
         else
             echo "Moving on..."
         fi
+      changed_when: false
       register: vmware_workstation_state
       retries: 90
       delay: 10
       until: vmware_workstation_state.stdout == "Moving on..."
+      when: lookup('env', 'XDG_SESSION_TYPE') != "wayland" # Not needed for Wayland
 
-    - name: Starting {{ inventory_hostname }} and waiting for IP address...
-      ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ machine_operations_local_vmx_path }}
+    - name: Starting {{ inventory_hostname }} and waiting for IP address... # noqa: command-instead-of-shell
+      ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ machine_operations_local_vmx_path }} gui
+      changed_when: true
+      when: lookup('env', 'XDG_SESSION_TYPE') != "wayland" # Does not work with Wayland
+
+    - name: Listing running VMs...
+      ansible.builtin.command: vmrun -T ws list
+      changed_when: true
+      register: running_vms
+
+    - name: Powering on on Wayland...
+      when:
+        - lookup('env', 'XDG_SESSION_TYPE') == "wayland"
+        - machine_operations_local_vmx_path not in running_vms.stdout_lines
+      block:
+        - name: Stopping VMware Workstation GUI...
+          ansible.builtin.shell: |
+            set -o pipefail
+            if [ -z "$(ps -fC vmware --no-headers)" ]; then
+                echo "VMware not running..."
+            else
+                echo "Stopping VMware..."
+                kill $(ps -fC vmware --no-headers | awk '{print $2}')
+            fi
+          args:
+            executable: /bin/bash
+          changed_when: vmware_workstation_running.stdout == "Stopping VMware..."
+          register: vmware_workstation_running
+
+        # Otherwise the file is locked and we can't start the VM
+        - name: Waiting for user to run VMware Workstation GUI in background...
+          ansible.builtin.shell: |
+            if [ -z "$(ps -fC vmware --no-headers)" ]; then
+                echo "Moving on..."
+            else
+                echo "Waiting for VMware to stop..."
+            fi
+          changed_when: false
+          register: vmware_workstation_running
+          retries: 60
+          delay: 5
+          until: vmware_workstation_running.stdout == "Moving on..."
+
+        - name: Starting {{ inventory_hostname }}...
+          ansible.builtin.command: vmrun -T ws start {{ machine_operations_local_vmx_path }} nogui
+          changed_when: true
 
     - name: Getting IP address for {{ inventory_hostname }}...
       ansible.builtin.command: vmrun getGuestIPAddress {{ machine_operations_local_vmx_path }} -wait
@@ -211,7 +263,8 @@
         - vmip.stdout != "unknown"
         - vmip.stdout is ansible.utils.ipv4 # Waiting until IP address is a valid IPv4 address
 
-    - name: Enabling shared folders... # Needs to be enabled here again because otherwise VMWare Workstation disables shared folders for new machines on first run
+    # Needs to be enabled here again because otherwise VMWare Workstation disables shared folders for new machines on first run
+    - name: Enabling shared folders...
       ansible.builtin.command: vmrun enableSharedFolders {{ machine_operations_local_vmx_path }}
       changed_when: true
       when:

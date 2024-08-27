@@ -12,7 +12,7 @@
         ansible_python_interpreter: "{{ os_configuration_vmware_workstation_python_interpreter }}"
 
     # Using lineinfile to check for file changes because it simpler and faster then reading the file and comparing it with the desired state
-    - name: Checking VMTools autopdate state for {{ custom_vm_name | default(vm_name) }}...
+    - name: Checking VMTools auto-update state for {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.lineinfile:
         path: "{{ os_configuration_local_vmx_path }}"
         regex: tools.upgrade.policy.*
@@ -20,24 +20,63 @@
         state: present
       register: vmtools_autoupdate
 
-    - name: Configuring VMTools autoupdate...
+    - name: Configuring VMTools auto-update... # noqa: no-handler
       when: vmtools_autoupdate.changed
       block:
-        - name: Stopping {{ custom_vm_name | default(vm_name) }}...
+        - name: Stopping {{ custom_vm_name | default(vm_name) }}... # noqa: command-instead-of-shell
           ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ os_configuration_local_vmx_path }} soft
+          changed_when: true
 
-        - name: Configuring {{ custom_vm_name | default(vm_name) }} VMTools autoupdate...
+        - name: Configuring {{ custom_vm_name | default(vm_name) }} VMTools auto-update...
           ansible.builtin.lineinfile:
             path: "{{ os_configuration_local_vmx_path }}"
             regex: tools.upgrade.policy.*
             line: tools.upgrade.policy = "upgradeAtPowerCycle"
             state: present
 
-        - name: Starting {{ custom_vm_name | default(vm_name) }}...
+        - name: Starting {{ custom_vm_name | default(vm_name) }}... # noqa: command-instead-of-shell
           ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ os_configuration_local_vmx_path }}
+          changed_when: true
+          when: lookup('env', 'XDG_SESSION_TYPE') != "wayland"
 
-    - name: Waiting for {{ custom_vm_name | default(vm_name) }} IP address...
-      ansible.builtin.shell: vmrun getGuestIPAddress {{ os_configuration_local_vmx_path }}
+        - name: Powering on on Wayland...
+          when: lookup('env', 'XDG_SESSION_TYPE') == "wayland"
+          block:
+            - name: Stopping VMware Workstation GUI...
+              ansible.builtin.shell: |
+                set -o pipefail
+                if [ -z "$(ps -fC vmware --no-headers)" ]; then
+                    echo "VMware not running..."
+                else
+                    echo "Stopping VMware..."
+                    kill $(ps -fC vmware --no-headers | awk '{print $2}')
+                fi
+              args:
+                executable: /bin/bash
+              changed_when: vmware_workstation_running.stdout == "Stopping VMware..."
+              register: vmware_workstation_running
+
+            # Otherwise the file is locked and we can't start the VM
+            - name: Waiting for user to run VMware Workstation GUI in background...
+              ansible.builtin.shell: |
+                if [ -z "$(ps -fC vmware --no-headers)" ]; then
+                    echo "Moving on..."
+                else
+                    echo "Waiting for VMware to stop..."
+                fi
+              changed_when: false
+              register: vmware_workstation_running
+              retries: 60
+              delay: 5
+              until: vmware_workstation_running.stdout == "Moving on..."
+
+            - name: Starting {{ inventory_hostname }}...
+              ansible.builtin.command: vmrun -T ws start {{ machine_operations_local_vmx_path }} nogui
+              changed_when: true
+
+    - name: Getting IP address for {{ inventory_hostname }}...
+      ansible.builtin.command: vmrun getGuestIPAddress {{ machine_operations_local_vmx_path }} -wait
+      changed_when: false
       register: vmip
       retries: 60
       delay: 3
