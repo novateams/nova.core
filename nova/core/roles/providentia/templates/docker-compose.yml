@@ -27,6 +27,9 @@ services:
       - OIDC_CLIENT_ID={{ providentia_oidc_client_id }}
       - OIDC_CLIENT_SECRET={{ providentia_oidc_client_secret }}
       - OIDC_RESOURCE_PREFIX={{ providentia_resource_prefix }}
+      - OIDC_RESOURCE_LOGIN={{ providentia_resource_login }}
+      - OIDC_RESOURCE_SUPERADMIN={{ providentia_resource_superadmin }}
+      - OIDC_RESOURCE_ENV_CREATOR={{ providentia_resource_env_creator }}
       - BASE_URI=https://{{ providentia_app_fqdn }}
       - AUTH_MODE={{ providentia_auth_mode }}
       {% if providentia_sentry_dsn %}
