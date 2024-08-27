@@ -1,3 +1,4 @@
 ---
 - name: Stopping {{ inventory_hostname }}...
-  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws stop {{ powerstate_local_vmx_path }} hard
+  ansible.builtin.command: vmrun -T ws stop {{ powerstate_local_vmx_path }} hard
+  changed_when: true

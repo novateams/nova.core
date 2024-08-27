@@ -1,6 +1,45 @@
 ---
+# Default is the latest snapshot
 - name: Reverting to {{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }} snapshot...
-  ansible.builtin.shell: vmrun revertToSnapshot {{ snapshots_local_vmx_path }} "{{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }}" # Default is the latest snapshot
+  ansible.builtin.command: vmrun revertToSnapshot {{ snapshots_local_vmx_path }} "{{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }}"
+  changed_when: true
 
 - name: Starting {{ inventory_hostname }}...
   ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ snapshots_local_vmx_path }}
+  changed_when: true
+  when: lookup('env', 'XDG_SESSION_TYPE') != "wayland"
+
+- name: Powering on on Wayland...
+  when: lookup('env', 'XDG_SESSION_TYPE') == "wayland"
+  block:
+    - name: Stopping VMware Workstation GUI...
+      ansible.builtin.shell: |
+        set -o pipefail
+        if [ -z "$(ps -fC vmware --no-headers)" ]; then
+            echo "VMware not running..."
+        else
+            echo "Stopping VMware..."
+            kill $(ps -fC vmware --no-headers | awk '{print $2}')
+        fi
+      args:
+        executable: /bin/bash
+      changed_when: vmware_workstation_running.stdout == "Stopping VMware..."
+      register: vmware_workstation_running
+
+    # Otherwise the file is locked and we can't start the VM
+    - name: Waiting for user to run VMware Workstation GUI in background...
+      ansible.builtin.shell: |
+        if [ -z "$(ps -fC vmware --no-headers)" ]; then
+            echo "Moving on..."
+        else
+            echo "Waiting for VMware to stop..."
+        fi
+      changed_when: false
+      register: vmware_workstation_running
+      retries: 60
+      delay: 5
+      until: vmware_workstation_running.stdout == "Moving on..."
+
+    - name: Starting {{ inventory_hostname }}...
+      ansible.builtin.command: vmrun -T ws start {{ machine_operations_local_vmx_path }} nogui
+      changed_when: true
