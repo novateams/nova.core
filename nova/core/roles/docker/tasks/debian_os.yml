@@ -112,7 +112,7 @@
     mode: "0644"
   register: daemon_config
 
-- name: Restarting docker service...
+- name: Restarting docker service... # noqa: no-handler
   ansible.builtin.systemd:
     name: docker.service
     enabled: true
