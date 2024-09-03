@@ -55,7 +55,9 @@
 
     - name: Getting GUID for {{ vault_policy.vault_group_name }} group...
       ansible.builtin.set_fact:
-        vault_group_guid: "{{ vault_all_groups.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_policy.vault_group_name) | map(attribute='key') | first }}"
+        vault_group_guid:
+          "{{ vault_all_groups.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_policy.vault_group_name)
+          | map(attribute='key') | first }}"
 
     - name: Listing all group aliases...
       ansible.builtin.uri:
@@ -72,10 +74,13 @@
 
     - name: Getting GUID for {{ vault_policy.vault_group_name }} group alias...
       ansible.builtin.set_fact:
-        vault_group_alias_guid: "{{ all_group_aliases.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_policy.ldap_group_name) | map(attribute='key') | first }}"
+        vault_group_alias_guid:
+          "{{ all_group_aliases.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_policy.ldap_group_name)
+          | map(attribute='key') | first }}"
       when:
         - all_group_aliases.status != 404 # Means no aliases exist
-        - all_group_aliases.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_policy.ldap_group_name) | map(attribute='key') != [] # Means aliases matching ca_certificate_requesters_group_name does not exists
+        - all_group_aliases.json.data.key_info | dict2items | selectattr('value.name', 'eq', vault_policy.ldap_group_name)
+          | map(attribute='key') != [] # Means aliases matching ca_certificate_requesters_group_name does not exists
 
     - name: Mapping local {{ vault_policy.vault_group_name }} group {{ vault_policy.ldap_group_name }} to LDAP group...
       ansible.builtin.uri:

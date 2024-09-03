@@ -9,13 +9,16 @@ vault_configure: false # Run the initial default configuration for Vault
 vault_configure_ldap: false # Configuring LDAP authentication for Vault
 vault_configuration_uri: "https://{{ fqdn }}" # Defined separately for when configuring multiple Vaults
 vault_config_folder: /srv/vault
-vault_version: 1.17.2 # Default Vault Docker image version
+vault_version: 1.17.5 # Default Vault Docker image version
 vault_container_name: vault
 vault_server_log_level: debug # Debug gives better info about LDAP login failures and their reasons
 vault_validate_cert: true # Validate certificates when connecting to Vault
 
 # Testing environment variables
-vault_auto_unseal: true # Disable for production environments and manually enter the unseal key(s) after container restart. Only works if vault_unseal_shares == 1
+
+# Disable for production environments and manually enter the unseal key(s) after container restart. Only works if vault_unseal_shares == 1
+vault_auto_unseal: true
+
 vault_root_token: {} # Used for testing purposes only, save it in a safe place and use ansible lookup modules to retrieve it
 vault_unseal_key: {} # Used for testing purposes only, save it in a safe place and use it to unseal the Vault after container restart
 

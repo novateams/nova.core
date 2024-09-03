@@ -23,14 +23,14 @@
       ansible.builtin.lineinfile:
         path: "{{ vault_config_folder }}/creds/root_token"
         line: "{{ vault_init.json.root_token }}"
-        create: yes
+        create: true
         mode: "0600"
 
     - name: Saving Vault unseal key(s)...
       ansible.builtin.lineinfile:
         path: "{{ vault_config_folder }}/creds/unseal_key"
         line: "{{ vault_unseal_key_save }}"
-        create: yes
+        create: true
         mode: "0600"
       loop: "{{ vault_init.json.keys_base64 }}"
       loop_control:
@@ -80,6 +80,7 @@
   block:
     - name: Getting Vault root token...
       ansible.builtin.command: cat {{ vault_config_folder }}/creds/root_token
+      changed_when: false
       register: vault_root_token_lookup
 
     - name: Setting root token as fact...
@@ -112,6 +113,7 @@
       block:
         - name: Getting Vault unseal key...
           ansible.builtin.command: cat {{ vault_config_folder }}/creds/unseal_key
+          changed_when: false
           register: vault_unseal_key_lookup
 
         - name: Setting unseal key as fact...

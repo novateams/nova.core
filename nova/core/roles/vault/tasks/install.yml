@@ -5,6 +5,7 @@
     state: directory
     owner: 100
     group: 1000
+    mode: "0755"
   loop_control:
     loop_var: vault_dir
   loop:
@@ -18,6 +19,7 @@
     dest: "{{ vault_config_folder }}/{{ vault_config.dest }}"
     owner: 100
     group: 1000
+    mode: "0644"
     lstrip_blocks: true
   loop_control:
     loop_var: vault_config
@@ -67,6 +69,6 @@
   register: unseal_script
 
 - name: Unsealing Vault...
-  ansible.builtin.shell: "{{ vault_config_folder }}/config/unseal-vault.sh"
+  ansible.builtin.shell: "{{ vault_config_folder }}/config/unseal-vault.sh" # noqa: command-instead-of-shell
   changed_when: true
   when: unseal_script.stat.exists
