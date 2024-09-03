@@ -1,6 +1,6 @@
 ---
-keycloak_version: 24.0.5
-keycloak_config_cli_version: 6.0.0 # https://github.com/adorsys/keycloak-config-cli
+keycloak_version: 25.0.4
+keycloak_config_cli_version: 6.1.4-25 # https://github.com/adorsys/keycloak-config-cli
 keycloak_postgres_version: 15
 keycloak_container_config_folder: /srv/keycloak
 keycloak_docker_network: local-network # Comes from nova.core.docker
