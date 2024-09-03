@@ -14,7 +14,8 @@
 
 - name: Enabling Intermediate CA PKI engine...
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_intermediate_ca_pki_engine_name }}{{ '/tune' if intermediate_ca_pki_engine_status.status == 200 else '' }}"
+    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_intermediate_ca_pki_engine_name
+      }}{{ '/tune' if intermediate_ca_pki_engine_status.status == 200 else '' }}"
     method: POST
     headers:
       X-Vault-Request: true
@@ -158,7 +159,7 @@
       client_flag: false
       code_signing_flag: true
       enforce_hostnames: true
-      key_bits: "{{ vault_code_signing_key_bits}}"
+      key_bits: "{{ vault_code_signing_key_bits }}"
       key_type: "{{ vault_code_signing_key_type }}"
       key_usage: DigitalSignature, KeyAgreement, KeyEncipherment
       max_ttl: 43800h

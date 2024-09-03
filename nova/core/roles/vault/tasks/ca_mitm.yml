@@ -76,7 +76,7 @@
         body:
           csr: "{{ mitm_csr.json.data.csr }}"
           common_name: "{{ vault_mitm_ca_name }}"
-          use_csr_values: yes
+          use_csr_values: true
         body_format: json
         validate_certs: "{{ vault_validate_cert }}"
       register: signed_mitm_ca
