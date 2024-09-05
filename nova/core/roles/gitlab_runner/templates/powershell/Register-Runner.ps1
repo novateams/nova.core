@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $RunnerName = "{{ runner.name }}"
-$GitLabURI = "{{gitlab_runner_gitlab_url }}"
+$GitLabURI = "{{ gitlab_runner_gitlab_url }}"
 $RunnerPath = "{{ gitlab_runner_windows_config_folder }}"
 $RunnerToken = "{{ runner.auth_token }}"
 $Template = "{{ gitlab_runner_windows_config_folder }}\{{ runner.name }}\gitlab-runner-config.template.toml"
