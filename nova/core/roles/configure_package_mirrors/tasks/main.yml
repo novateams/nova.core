@@ -3,32 +3,32 @@
   when: ansible_network_os is not defined
   block:
     - name: Including Windows Chocolatey mirror tasks...
-      include_tasks: choco.yml
+      ansible.builtin.include_tasks: choco.yml
       when: ansible_os_family == "Windows"
 
     - name: Configuring Debian family sources.list
       when: ansible_os_family == "Debian"
       block:
         - name: Including Kali mirror tasks...
-          include_tasks: kali.yml
+          ansible.builtin.include_tasks: kali.yml
           when:
             - ansible_distribution == "Kali"
             - package_mirror_kali_uri != {}
 
         - name: Including Ubuntu mirror tasks...
-          include_tasks: ubuntu.yml
+          ansible.builtin.include_tasks: ubuntu.yml
           when:
             - ansible_distribution == "Ubuntu"
             - package_mirror_ubuntu_uri != {}
 
         - name: Including Debian mirror tasks...
-          include_tasks: debian.yml
+          ansible.builtin.include_tasks: debian.yml
           when:
             - ansible_distribution == "Debian"
             - package_mirror_debian_uri != {}
 
         - name: Including Parrot mirror tasks...
-          include_tasks: parrot.yml
+          ansible.builtin.include_tasks: parrot.yml
           when:
             - ansible_distribution == "Parrot"
             - package_mirror_parrot_uri != {}
