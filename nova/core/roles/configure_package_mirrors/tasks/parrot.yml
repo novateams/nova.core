@@ -9,6 +9,7 @@
     src: /etc/apt/sources.list
     dest: /etc/apt/sources.list_backup
     remote_src: true
+    mode: "0644"
   when: not default_apt_backup_file.stat.exists
 
 - name: Checking if parrot.list (second file) backup exists...
@@ -21,12 +22,14 @@
     src: /etc/apt/sources.list.d/parrot.list
     dest: /etc/apt/sources.list.d/parrot.list_backup
     remote_src: true
+    mode: "0644"
   when: not apt_backup_file.stat.exists
 
 - name: Templating custom parrot-sources.list to {{ inventory_hostname }}...
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
+    mode: "0644"
   register: apt_sources
   loop:
     - src: parrot-sources-1.list
@@ -36,5 +39,5 @@
 
 - name: Running apt update...
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
   when: apt_sources.results[0].changed or apt_sources.results[1].changed
