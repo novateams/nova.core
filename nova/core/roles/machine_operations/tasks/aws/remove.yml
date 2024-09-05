@@ -2,7 +2,7 @@
 - name: NO UNDEPLOY OR IMMUTABLE SET
   ansible.builtin.fail:
     msg: "{{ inventory_hostname }} HAS no_undeploy or immutable SET AND WON'T BE REMOVED"
-  when: immutable or no_undeploy or 'immutable' in group_names or 'no_undeploy' in group_names
+  when: immutable or no_undeploy or 'immutable' in group_names or 'no_undeploy' in group_names or 'custom_no_undeploy' in group_names
 
 - name: Terminating {{ custom_vm_name | default(vm_name) }} EC2 instance...
   amazon.aws.ec2_instance:
