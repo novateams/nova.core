@@ -1,9 +1,10 @@
 ---
 # If other languages are needed then corresponding km-#.ini file is needed and xrdp_keyboard.ini needs to be updated
-- name: Copying keymap(s) to kali...
+- name: Copying keymap(s) to {{ inventory_hostname }}...
   ansible.builtin.copy:
     src: "{{ xrdp_keymap.src }}"
     dest: "{{ xrdp_keymap.dest }}"
+    mode: "0644"
   loop_control:
     loop_var: xrdp_keymap
   loop:
