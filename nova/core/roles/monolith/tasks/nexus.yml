@@ -23,57 +23,5 @@
     secrets_vault_secrets_path: nexus
     nexus_allow_anonymous_access: true
     nexus_configure: true
+    nexus_create_repos: true
     nexus_configure_ldap: true
-    nexus_trusted_ca_to_java: true
-
-# Configuring public proxy repositories
-- name: Listing all repositories...
-  ansible.builtin.uri:
-    url: "https://{{ nexus_fqdn }}/service/rest/v1/repositories"
-    user: "{{ nexus_admin_username }}"
-    password: "{{ nexus_admin_password }}"
-    method: GET
-    headers:
-      accept: application/json
-      Content-Type: application/json
-    body_format: json
-    force_basic_auth: yes
-    status_code: 200
-  register: all_repos
-
-- name: Deleting unmanaged repositories...
-  ansible.builtin.uri:
-    url: "https://{{ nexus_fqdn }}/service/rest/v1/repositories/{{ repo }}"
-    user: "{{ nexus_admin_username }}"
-    password: "{{ nexus_admin_password }}"
-    method: DELETE
-    headers:
-      accept: application/json
-      Content-Type: application/json
-    body_format: json
-    force_basic_auth: yes
-    status_code: 204
-  loop_control:
-    loop_var: repo
-  loop: "{{ all_repos.json | map(attribute='name') }}"
-  when: repo not in monolith_nexus_repositories | map(attribute='repo_body.name')
-
-- name: Configuring repositories...
-  ansible.builtin.uri:
-    url: "{{ monolith_nexus_repo.api_endpoint }}/{{ '' if monolith_nexus_repo.repo_body.name not in all_repos.json | map(attribute='name') else monolith_nexus_repo.repo_body.name }}"
-    user: "{{ nexus_admin_username }}"
-    password: "{{ nexus_admin_password }}"
-    method: "{{ 'POST' if monolith_nexus_repo.repo_body.name not in all_repos.json | map(attribute='name') else 'PUT' }}"
-    headers:
-      accept: application/json
-      Content-Type: application/json
-    body: "{{ monolith_nexus_repo.repo_body }}"
-    body_format: json
-    force_basic_auth: yes
-    status_code:
-      - 201
-      - 204
-  loop: "{{ monolith_nexus_repositories }}"
-  loop_control:
-    label: "{{ monolith_nexus_repo.repo_body.name }}"
-    loop_var: monolith_nexus_repo
