@@ -1,0 +1,51 @@
+---
+- name: Listing all repositories...
+  ansible.builtin.uri:
+    url: "https://{{ nexus_fqdn }}/service/rest/v1/repositories"
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: GET
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body_format: json
+    force_basic_auth: true
+    status_code: 200
+  register: all_repos
+
+# Removing repositories that are not in the nexus_repositories list
+- name: Deleting unmanaged repositories...
+  ansible.builtin.uri:
+    url: "https://{{ nexus_fqdn }}/service/rest/v1/repositories/{{ repo }}"
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: DELETE
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body_format: json
+    force_basic_auth: true
+    status_code: 204
+  loop_control:
+    loop_var: repo
+  loop: "{{ all_repos.json | map(attribute='name') }}"
+  when: repo not in nexus_repositories | map(attribute='repo_body.name')
+
+- name: Configuring following repositories...
+  ansible.builtin.uri:
+    url: "{{ item.api_endpoint }}/{{ '' if item.repo_body.name not in all_repos.json | map(attribute='name') else item.repo_body.name }}"
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: "{{ 'POST' if item.repo_body.name not in all_repos.json | map(attribute='name') else 'PUT' }}"
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body: "{{ item.repo_body }}"
+    body_format: json
+    force_basic_auth: true
+    status_code:
+      - 201
+      - 204
+  loop: "{{ nexus_repositories }}"
+  loop_control:
+    label: "{{ item.repo_body.name }}"
