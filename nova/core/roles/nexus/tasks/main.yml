@@ -6,6 +6,10 @@
   ansible.builtin.include_tasks: configure.yml
   when: nexus_configure
 
+- name: Including Nexus repository creation tasks...
+  ansible.builtin.include_tasks: create_repos.yml
+  when: nexus_create_repos
+
 - name: Including Nexus LDAP configuration tasks...
   ansible.builtin.include_tasks: configure_ldap.yml
   when: nexus_configure_ldap
