@@ -9,7 +9,7 @@ nexus_configure: false # Set to true to also configure Nexus after installation
 nexus_configure_ldap: false # Set to true to also configure LDAP after installation
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
-nexus_version: 3.70.2 # Nexus version to install
+nexus_version: 3.72.0 # Nexus version to install
 
 nexus_realms_to_activate: # List of authentication realms to activate
   - NexusAuthenticatingRealm
