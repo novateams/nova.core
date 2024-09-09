@@ -9,13 +9,13 @@
   retries: 20
   delay: 5
 
-- name: Checking for first run password file...
+- name: Checking if admin password is already changed...
   ansible.builtin.stat:
-    path: "{{ nexus_container_config_folder }}/data/admin.password"
-  register: stat
+    path: "{{ nexus_container_config_folder }}/initial_config_success"
+  register: initial_config_success
 
 - name: Default password change block...
-  when: stat.stat.exists
+  when: not initial_config_success.stat.exists
   block:
     - name: Getting default password...
       ansible.builtin.slurp:
@@ -34,6 +34,12 @@
         body: "{{ nexus_admin_password }}"
         force_basic_auth: true
         status_code: 204
+
+    - name: Creating initial config success file... # Using this because until https://github.com/sonatype/nexus-public/issues/458 is sorted out
+      ansible.builtin.file:
+        path: "{{ nexus_container_config_folder }}/initial_config_success"
+        state: touch
+        mode: "0644"
 
 - name: Increasing HTTP timeout to 10 minutes... # Required for large file/slow connection upload/download
   ansible.builtin.lineinfile:
