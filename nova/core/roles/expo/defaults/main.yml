@@ -101,5 +101,5 @@ expo_sentry_backend_tracing: 1
 
 ### NETWORK ###
 expo_network_name: expo-network
-expo_network_ipv4_subnet: 172.19.0.0/16
+expo_network_ipv6_enabled: true
 expo_network_ipv6_subnet: fd71::/64
