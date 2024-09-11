@@ -1,8 +1,9 @@
 ---
 - name: Create admin users...
   cisco.ios.ios_config:
-    lines: username {{ item.username }} privilege {{ item.cisco_privilege | default(15) }} algorithm-type scrypt secret {{ item.password | default(pregenerated_password)
-      }}
+    lines:
+      username {{ item.username }} privilege {{ item.cisco_privilege | default(15) }} algorithm-type scrypt secret {{ item.password
+      | default(pregenerated_password) }}
   no_log: true
   loop: "{{ admin_accounts }}"
   loop_control:

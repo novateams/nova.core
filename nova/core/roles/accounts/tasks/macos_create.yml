@@ -4,7 +4,8 @@
     if dscl . -list /Users | grep -q "^{{ item.username }}$"; then
 
         echo Setting existing {{ item.username }} user password
-        sysadminctl -resetPasswordFor {{ item.username }} -newPassword {{ item.password | default(pregenerated_password) }} -adminUser {{ ansible_user }} -adminPassword {{ ansible_password }}
+        sysadminctl -resetPasswordFor {{ item.username }} -newPassword {{ item.password
+        | default(pregenerated_password) }} -adminUser {{ ansible_user }} -adminPassword {{ ansible_password }}
 
     else
 

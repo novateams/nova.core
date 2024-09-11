@@ -1,7 +1,8 @@
 ---
 - name: Listing user accounts created with {{ ansible_role_name }}...
-  ansible.windows.win_shell: Get-ChildItem -Path C:\Users -Directory | Where-Object { Test-Path (Join-Path $_.FullName ".created") } | Select-Object -ExpandProperty
-    Name
+  ansible.windows.win_shell:
+    Get-ChildItem -Path C:\Users -Directory | Where-Object { Test-Path (Join-Path $_.FullName ".created") }
+    | Select-Object -ExpandProperty Name
   register: user_profiles
 
 - name: Getting and removing stale local accounts...
