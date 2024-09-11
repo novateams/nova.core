@@ -4,16 +4,17 @@
     ansible_connection: ssh
 
 - name: Cleaning up Vyos logs...
-  ansible.builtin.shell: "{{ logs }}"
+  ansible.builtin.command: "{{ logs }}"
   loop_control:
     loop_var: logs
   loop:
     - rm -rf /config/archive/*
     - rm -rf /var/log/*
     - rm -rf /tmp/*
-    - mkdir /var/log/nginx
+    - mkdir -p /var/log/nginx
     - journalctl --vacuum-time=1seconds
   become: true
+  changed_when: true
 
 - name: Cleaning user history...
   ansible.builtin.file:
