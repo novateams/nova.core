@@ -52,10 +52,12 @@
     service apache2 restart || true
     {{ 'if [ -d "/run/log/journal" ]; then find /run/log/journal -name "*.journal" | xargs rm -f; fi' if ansible_system != 'FreeBSD' }}
   args:
-    executable: "/bin/{{'tcsh' if ansible_system == 'FreeBSD' else 'bash'}}"
+    executable: "/bin/{{  'tcsh' if ansible_system == 'FreeBSD' else 'bash' }}"
+  changed_when: true
 
 - name: Clearing journalctl logs...
   ansible.builtin.shell: journalctl --vacuum-time=1seconds || true
+  changed_when: true
 
 # tcsh automatically writes current history in HISTFILE
 - name: Removing Linux bash history...
@@ -65,8 +67,9 @@
     rm -f /root/.bash_history
     history -c && {{ 'history -w && ' if ansible_system != 'FreeBSD' }}cat /dev/null > /root/.bash_history
   args:
-    executable: "/bin/{{'tcsh' if ansible_system == 'FreeBSD' else 'bash'}}"
-  when: remove_bash_history
+    executable: "/bin/{{  'tcsh' if ansible_system == 'FreeBSD' else 'bash' }}"
+  changed_when: true
+  when: cleanup_remove_bash_history
 
 - name: Rebooting...
   ansible.builtin.reboot:

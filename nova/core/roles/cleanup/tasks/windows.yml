@@ -14,8 +14,8 @@
   ansible.windows.win_service:
     name: wuauserv
     state: stopped
-  register: disable_windows_update_service
-  until: disable_windows_update_service.failed != "false"
+  register: stopping_windows_update_service
+  until: stopping_windows_update_service.failed != "false"
   retries: 5
   delay: 3
 

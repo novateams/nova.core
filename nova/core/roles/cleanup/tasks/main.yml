@@ -1,12 +1,18 @@
 ---
-- name: Windows cleanup...
-  ansible.builtin.include_tasks: windows.yml
-  when: "'os_windows' in group_names"
+- name: Inlcuding non-network OS cleanup tasks...
+  when: ansible_network_os is not defined
+  block:
+    - name: Including Windows cleanup tasks...
+      ansible.builtin.include_tasks: windows.yml
+      when: ansible_system == "Win32NT"
 
-- name: Linux cleanup...
-  ansible.builtin.include_tasks: linux.yml
-  when: "'os_linux' in group_names"
+    - name: Including Linux cleanup tasks...
+      ansible.builtin.include_tasks: linux.yml
+      when: ansible_system == "Linux"
 
-- name: Vyos cleanup...
-  ansible.builtin.include_tasks: vyos.yml
-  when: "'os_vyos' in group_names"
+- name: Including network OS cleanup tasks...
+  when: ansible_network_os is defined
+  block:
+    - name: Including Vyos cleanup tasks...
+      ansible.builtin.include_tasks: vyos.yml
+      when: ansible_network_os == 'vyos.vyos.vyos'
