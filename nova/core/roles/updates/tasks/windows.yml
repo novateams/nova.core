@@ -7,7 +7,6 @@
   register: wuauserv_service
   until: not wuauserv_service.failed
   retries: 3
-  delay: 10
 
 - name: Enabling & starting Update Orchestrator Service...
   ansible.windows.win_service:
@@ -17,18 +16,28 @@
   register: usosvc_service
   until: not usosvc_service.failed
   retries: 3
-  delay: 10
   when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
 
-- name: Installing Windows updates...
-  ansible.windows.win_updates:
-    category_names: "{{ updates_category_names }}"
-    reboot: true
-  register: win_updates
-  until: not win_updates.failed
-  retries: 3
-  delay: 10
+- name: Including Windows updates task...
+  block:
+    - name: Installing Windows updates...
+      ansible.windows.win_updates:
+        category_names: "{{ updates_category_names }}"
+        reboot: true
+      register: win_updates
+      until: not win_updates.failed
+      retries: 2
+
+  # In some cases Windows Update may fail to install updates, so we need to try rescue the situation
+  rescue:
+    - name: Including Windows Update rescue tasks...
+      ansible.builtin.include_tasks: windows_rescue.yml
 
 - name: Reporting update state... # Useful when WSUS is used
   ansible.windows.win_command: wuauclt /reportnow
   changed_when: false
+
+- name: Running interactive scan... # Runs a scan for updates to clean up the GUI
+  ansible.windows.win_command: UsoClient.exe StartInteractiveScan
+  changed_when: false
+  when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
