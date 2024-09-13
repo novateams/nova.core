@@ -31,7 +31,7 @@
       register: vmware_workstation_running
 
     # Otherwise the file is locked and we can't start the VM
-    - name: Waiting for user to run VMware Workstation GUI in background...
+    - name: Please close the VMware Workstation GUI (VMs can keep running in the background)...
       ansible.builtin.shell: |
         if [ -z "$(ps -fC vmware --no-headers)" ]; then
             echo "Moving on..."
