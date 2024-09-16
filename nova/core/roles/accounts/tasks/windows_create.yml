@@ -59,13 +59,16 @@
       loop_control:
         label: "{{ item.username }}"
 
-    - name: Setting correct password for {{ ansible_deployer_username }}...
-      ansible.builtin.set_fact:
-        ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
-      loop: "{{ domain_accounts_list }}"
-      loop_control:
-        label: "{{ item.username }}"
-      when: item.username == ansible_deployer_username
+# To make sure that we are setting the password for the correct account on all domain contollers
+- name: Setting correct password for {{ ansible_deployer_username }}...
+  ansible.builtin.set_fact:
+    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+  loop: "{{ domain_accounts_list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.username == ansible_deployer_username
+    - ansible_facts.windows_domain_role in ["Primary domain controller", "Backup domain controller"]
 
 - name: Creating a profiles for...
   community.windows.win_user_profile:
