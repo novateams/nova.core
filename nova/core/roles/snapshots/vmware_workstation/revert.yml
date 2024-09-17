@@ -1,15 +1,5 @@
 ---
-# Default is the latest snapshot
-- name: Reverting to {{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }} snapshot...
-  ansible.builtin.command: vmrun revertToSnapshot {{ snapshots_local_vmx_path }} "{{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }}"
-  changed_when: true
-
-- name: Starting {{ inventory_hostname }}...
-  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ snapshots_local_vmx_path }}
-  changed_when: true
-  when: lookup('env', 'XDG_SESSION_TYPE') != "wayland"
-
-- name: Powering on on Wayland...
+- name: Closing VMware Workstation GUI for Wayland...
   when: lookup('env', 'XDG_SESSION_TYPE') == "wayland"
   block:
     - name: Stopping VMware Workstation GUI...
@@ -40,6 +30,17 @@
       delay: 5
       until: vmware_workstation_running.stdout == "Moving on..."
 
-    - name: Starting {{ inventory_hostname }}...
-      ansible.builtin.command: vmrun -T ws start {{ machine_operations_local_vmx_path }} nogui
-      changed_when: true
+# Default is the latest snapshot
+- name: Reverting to {{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }} snapshot...
+  ansible.builtin.command: vmrun revertToSnapshot {{ snapshots_local_vmx_path }} "{{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }}"
+  changed_when: true
+
+- name: Starting {{ inventory_hostname }}...
+  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ snapshots_local_vmx_path }}
+  changed_when: true
+  when: lookup('env', 'XDG_SESSION_TYPE') != "wayland"
+
+- name: Starting {{ inventory_hostname }}...
+  ansible.builtin.command: vmrun -T ws start {{ machine_operations_local_vmx_path }} nogui
+  changed_when: true
+  when: lookup('env', 'XDG_SESSION_TYPE') == "wayland"
