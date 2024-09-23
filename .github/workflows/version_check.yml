@@ -41,8 +41,27 @@ jobs:
 
           VERSION_FILE="nova/core/galaxy.yml"
 
-          PR_VERSION=$(cat pr/$VERSION_FILE | grep "version:" | cut -d " " -f 2)
-          CURRENT_VERSION=$(cat main/$VERSION_FILE | grep "version:" | cut -d " " -f 2)
+          if [[ -e "pr/$VERSION_FILE" ]]; then
+
+            PR_VERSION=$(cat pr/$VERSION_FILE | grep "version:" | cut -d " " -f 2)
+
+          else
+
+            echo "pr/$VERSION_FILE does not exist."
+            exit 1
+
+          fi
+
+          if [[ -e "main/$VERSION_FILE" ]]; then
+
+            CURRENT_VERSION=$(cat main/$VERSION_FILE | grep "version:" | cut -d " " -f 2)
+
+          else
+
+            echo "main/$VERSION_FILE does not exist."
+            exit 1
+
+          fi
 
           echo -n -e "${C_YELLOW}"
           echo -e "Pull Request Version - $PR_VERSION"
