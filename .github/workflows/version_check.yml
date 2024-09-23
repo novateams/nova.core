@@ -39,8 +39,10 @@ jobs:
           export C_YELLOW="\x1b[93m"
           export C_RST="\x1b[0m"
 
-          PR_VERSION=$(cat pr/version.yml | grep "version:" | cut -d " " -f 2)
-          CURRENT_VERSION=$(cat main/version.yml | grep "version:" | cut -d " " -f 2)
+          VERSION_FILE="nova/core/galaxy.yml"
+
+          PR_VERSION=$(cat pr/$VERSION_FILE | grep "version:" | cut -d " " -f 2)
+          CURRENT_VERSION=$(cat main/$VERSION_FILE | grep "version:" | cut -d " " -f 2)
 
           echo -n -e "${C_YELLOW}"
           echo -e "Pull Request Version - $PR_VERSION"
