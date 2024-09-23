@@ -23,7 +23,9 @@ If included, the keycloak will be using `keycloak.{{ providentia_app_fqdn }}` as
 
 ## Notes
 
-The builtin keycloak is configured with HTTP by default, as Providentia does not trust self-signed certificates. This can and should be altered in real deployments.
+The builtin Keycloak is _not_ secure by default: it is configured with HTTP (as Providentia does not trust self-signed certificates) by default and very weak passwords. This can and should be altered in real deployments!
+
+By default, the prebuilt image will be pulled from github - setting `providentia_deploy_branch` variable will clone the repository and build the image on host instead.
 
 ## Example
 

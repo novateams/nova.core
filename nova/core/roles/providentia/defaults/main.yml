@@ -1,8 +1,6 @@
 ---
 # host config
 providentia_install_docker: true # whether to install nova.core.docker on host
-providentia_install_dir: /srv/providentia # path where providentia will be installed
-providentia_install_dir_git: /srv/providentia.git # path where git configuration will be stored
 providentia_external_docker_network: false # Set to true if providentia should use an external docker network with the default config below
 providentia_external_docker_network_config:
   networks:
@@ -25,8 +23,15 @@ providentia_builtin_reverse_proxy_tls_pregenerated_cert: # path to TLS cert on h
 providentia_builtin_reverse_proxy_tls_pregenerated_key: # path to TLS key on host
 
 # app config
+# if providentia_deploy_branch is set, the code is cloned from github and image will be built on host
+# the value accepts a gitref and can be used deploy other tags or branches
+# otherwise, the image built in github will be used instead
+providentia_deploy_branch: null
+providentia_image_version: latest
+providentia_install_dir: /srv/providentia # path where providentia will be installed
+providentia_install_dir_git: /srv/providentia.git # path where git configuration will be stored
+
 providentia_app_fqdn: "{{ fqdn }}" # fqdn for deployed instance
-providentia_deploy_branch: main # gitref used for deployment, can be overridden to deploy other tags or branches
 providentia_redis_url: redis://redis:6379/0 # URL for app redis, defaults to builtin
 providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_password }}@postgresql/providentia?pool=5 # full database URL used by the app, defaults to builtin postgres
 providentia_sentry_dsn: # Sentry exception tracking endpoint
