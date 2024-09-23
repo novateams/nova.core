@@ -1,0 +1,43 @@
+---
+- name: Check if previous installation is cloned
+  ansible.builtin.stat:
+    path: /{{ providentia_install_dir }}/CURRENT_VERSION
+  register: providentia_current_version_stat
+
+- name: Stop previous installation
+  community.general.make:
+    chdir: "{{ providentia_install_dir }}"
+    target: stop
+  when: providentia_current_version_stat.stat.exists
+
+- name: Template Providentia configuration
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ providentia_install_dir }}/"
+    lstrip_blocks: true
+  loop:
+    - docker-compose.yml
+    - Makefile
+
+- name: Template builtin keycloak configuration
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "{{ providentia_install_dir }}/"
+    lstrip_blocks: true
+  loop:
+    - initdb_keycloak.sql
+    - keycloak-config.yml
+  when: providentia_builtin_keycloak
+
+- name: Start Providentia containers
+  community.docker.docker_compose_v2:
+    project_src: "{{ providentia_install_dir }}"
+    state: present
+    pull: always
+    remove_orphans: true
+    wait: true
+
+- name: Clear cache
+  ansible.builtin.command: docker compose exec web rails r 'Rails.cache.clear'
+  args:
+    chdir: "{{ providentia_install_dir }}"

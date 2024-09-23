@@ -10,17 +10,20 @@ services:
       {% if providentia_builtin_redis %}
       - "redis"
       {% endif %}
+    {% if providentia_deploy_branch %}
     build:
       context: ../../
       dockerfile: Dockerfile
       target: production
+    {% else %}
+    image: "ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}"
+    {% endif %}
     entrypoint: ["/srv/app/docker-entrypoint.sh"]
     command: ["puma", "-C", "config/puma.production.rb"]
     restart: unless-stopped
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
     environment:
-      - RUBY_YJIT_ENABLE=1
       - DATABASE_URL={{ providentia_db_url }}
       - REDIS_URL={{ providentia_redis_url }}
       - OIDC_ISSUER={{ providentia_oidc_issuer }}
@@ -100,7 +103,7 @@ services:
     restart: unless-stopped
     volumes:
       {% if providentia_builtin_keycloak %}
-      - ./initdb_keycloak.sql:/docker-entrypoint-initdb.d/001-initdb.sql # from repo
+      - ./initdb_keycloak.sql:/docker-entrypoint-initdb.d/001-initdb.sql
       {% endif %}
       - "database_storage:/var/lib/postgresql/data"
     environment:
@@ -112,30 +115,32 @@ services:
 
   {% if providentia_builtin_keycloak %}
   keycloak:
-    image: bitnami/keycloak:22.0.3
+    image: bitnami/keycloak:25.0.4
     depends_on:
-      - postgresql
+      {% if providentia_builtin_database %}
+      - "postgresql"
+      {% endif %}
     environment:
       - KEYCLOAK_PROXY_ADDRESS_FORWARDING=true
       - KEYCLOAK_ADMIN_USER=admin
       - KEYCLOAK_ADMIN_PASSWORD={{ providentia_builtin_keycloak_admin_password }}
-      - KEYCLOAK_DATABASE_PASSWORD={{ providentia_builtin_database_db_password }}
+      - KEYCLOAK_DATABASE_PASSWORD=secret
     labels:
       caddy: "{{ providentia_builtin_keycloak_fqdn }}:80"
       caddy.reverse_proxy: "{% raw %}{{upstreams 8080}}{% endraw %}"
 
   keycloak_config:
-    image: adorsys/keycloak-config-cli:latest-22.0.0
+    image: adorsys/keycloak-config-cli:latest-25
     depends_on:
       - keycloak
     volumes:
-      - ./providentia.yaml:/config/providentia.yaml
+      - ./keycloak-config.yml:/config/providentia.yaml
     environment:
       - KEYCLOAK_URL=http://keycloak:8080/
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD={{ providentia_builtin_keycloak_admin_password }}
       - KEYCLOAK_AVAILABILITYCHECK_ENABLED=true
-      - KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=30s
+      - KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=60s
       - IMPORT_FILES='/config/*'
   {% endif %}
 

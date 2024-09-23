@@ -4,52 +4,8 @@
     name: nova.core.docker
   when: providentia_install_docker
 
-- name: Install host dependencies
-  ansible.builtin.package:
-    name:
-      - git
-      - make
+- include_tasks: clone_and_build.yml
+  when: providentia_deploy_branch
 
-- name: Clone Providentia repo
-  ansible.builtin.git:
-    accept_hostkey: yes
-    repo: https://github.com/ClarifiedSecurity/Providentia.git
-    dest: "{{ providentia_install_dir }}"
-    version: "{{ providentia_deploy_branch }}"
-    force: yes
-    separate_git_dir: "{{ providentia_install_dir_git }}"
-
-- name: Template Providentia configuration
-  ansible.builtin.template:
-    src: "{{ conf.src }}"
-    dest: "{{ providentia_install_dir }}/{{ conf.dest | default(conf.src) }}"
-    lstrip_blocks: true
-  loop_control:
-    loop_var: conf
-  loop:
-    - src: .makerc-vars
-    - src: docker-compose.yml
-      dest: docker/prod/
-
-- name: Replace app URI-s in keycloak config
-  ansible.builtin.replace:
-    path: "{{ providentia_install_dir }}/docker/prod/providentia.yaml"
-    regexp: 'providentia\.localhost'
-    replace: "{{ providentia_app_fqdn }}"
-  when: providentia_builtin_keycloak
-
-- name: Remove old version info
-  ansible.builtin.file:
-    path: "{{ providentia_install_dir }}/CURRENT_VERSION"
-    state: absent
-
-- name: Build Providentia image, start containers, clear cache
-  community.general.make:
-    chdir: "{{ providentia_install_dir }}"
-    target: "{{ build }}"
-  loop_control:
-    loop_var: build
-  loop:
-    - build
-    - start
-    - clear-redis
+- include_tasks: prebuilt_image.yml
+  when: not providentia_deploy_branch
