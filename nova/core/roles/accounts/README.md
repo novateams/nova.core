@@ -1,4 +1,4 @@
-# Role Name
+# accounts
 
 This role is responsible for managing admin and user accounts for different operating systems. Crrently, this role supports the following operating systems:
 
