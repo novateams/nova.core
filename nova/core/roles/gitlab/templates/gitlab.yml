@@ -13,6 +13,7 @@ services:
       - "{{ gitlab_config_folder }}/data:/var/opt/gitlab"
       - "{{ gitlab_config_folder }}/registry:/var/opt/gitlab/gitlab-rails/shared/registry"
       - "{{ gitlab_config_folder }}/temp_configuration:/temp_configuration"
+      - "{{ gitlab_config_folder }}/increase-maxauthtries.sh:/srv/increase-maxauthtries.sh"
       - "/srv/certs:/srv/certs"
       - "/usr/local/share/ca-certificates:/usr/local/share/ca-certificates"
       ### gitlab keeps custom certs in this folder https://docs.gitlab.com/omnibus/settings/ssl.html#troubleshooting
