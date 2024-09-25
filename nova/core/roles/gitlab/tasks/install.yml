@@ -16,13 +16,16 @@
   ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-    mode: "0644"
+    mode: "{{ item.mode | default('0644') }}"
     lstrip_blocks: true
   loop:
     - src: gitlab.yml
       dest: "{{ gitlab_config_folder }}/docker-compose.yml"
     - src: gitlab.rb
       dest: "{{ gitlab_config_folder }}/gitlab.rb"
+    - src: increase-maxauthtries.sh
+      dest: "{{ gitlab_config_folder }}/increase-maxauthtries.sh"
+      mode: "0755"
 
 # Using separate retries because currently wait_timeout does not work
 # Leaving wait_timeout for future use
@@ -39,10 +42,35 @@
   retries: 20
   delay: 30
 
-- name: Increase gitlab ssh MaxAuthTries to 30..
-  ansible.builtin.raw: docker exec -it {{ gitlab_container_name }} bash -c
-    "grep -q '^MaxAuthTries' /assets/sshd_config || echo MaxAuthTries 30 >> '/assets/sshd_config'"
-  changed_when: true
+- name: Increasing GitLab ssh MaxAuthTries to {{ gitlab_ssh_max_auth_tries }}..
+  community.docker.docker_container_exec:
+    container: gitlab
+    command: /srv/increase-maxauthtries.sh
+  register: increase_maxauthtries
+
+# This is required to apply the changes from the increase-maxauthtries.sh script
+# Stop and start are used instead of restart because restart to avoid timeouts on low end machines
+- name: Stopping and starting GitLab container to apply changes..
+  when: increase_maxauthtries.stdout == "added"
+  block:
+    - name: Stopping Gitlab on {{ inventory_hostname }}...
+      community.docker.docker_compose_v2:
+        project_src: "{{ gitlab_config_folder }}"
+        state: stopped
+        wait: true
+
+    - name: Starting Gitlab on {{ inventory_hostname }}...
+      community.docker.docker_compose_v2:
+        project_src: "{{ gitlab_config_folder }}"
+        state: present
+        wait: true
+        wait_timeout: 600
+      register: gitlab_recompose
+      until:
+        - gitlab_recompose.containers[0].Health is defined
+        - gitlab_recompose.containers[0].Health == 'healthy'
+      retries: 20
+      delay: 30
 
 - name: Finding and restarting proxy container..
   when: gitlab_proxy_container_name != {}

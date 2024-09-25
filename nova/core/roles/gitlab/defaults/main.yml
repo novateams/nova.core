@@ -2,6 +2,7 @@
 ### gitlab general
 gitlab_version: "latest"
 gitlab_ssh_port: "10022"
+gitlab_ssh_max_auth_tries: 20 # Increase gitlab ssh MaxAuthTries to avoid connection issues for users with more than 6 keys in their SSH agent
 gitlab_fqdn: "{{ fqdn | default(ansible_fqdn) }}"
 gitlab_url: "https://{{ gitlab_fqdn }}"
 gitlab_url_api: "https://{{ gitlab_fqdn }}/api/v4"
