@@ -3,18 +3,18 @@
   ansible.builtin.include_tasks: mnt-project-create.yml
   loop: "{{ gitlab_projects }}"
   loop_control:
-    loop_var: "project"
+    loop_var: project
 
 - name: Include tasks to add variables to project..
   ansible.builtin.include_tasks: mnt-project-add-variable.yml
   when: project.variables is defined
   loop: "{{ gitlab_projects }}"
   loop_control:
-    loop_var: "project"
+    loop_var: project
 
 - name: Include tasks to add issues..
   ansible.builtin.include_tasks: mnt-project-issues.yml
   when: project.issues is defined
   loop: "{{ gitlab_projects }}"
   loop_control:
-    loop_var: "project"
+    loop_var: project

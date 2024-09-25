@@ -24,9 +24,8 @@
 ## This is to be sure that the search is precise, project name is not unique
 - name: Search for the project using namespace and project name..
   ansible.builtin.set_fact:
-    gl_matched_projects:
-      "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace) |
-      selectattr('name', 'equalto', project.name) }}"
+    gl_matched_projects: "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
+      | selectattr('name', 'equalto', project.name) }}"
 
 - name: Set current existing project ID variable..
   ansible.builtin.set_fact:
@@ -66,12 +65,12 @@
     state: absent
 
 - name: Synchronizing project files to /tmp/..
-  ansible.builtin.synchronize:
+  ansible.posix.synchronize:
     src: "{{ project.source_path }}/"
-    dest: "/tmp/{{ project.namespace }}_{{ project.name }}"
+    dest: /tmp/{{ project.namespace }}_{{ project.name }}
     recursive: true
     rsync_opts:
-      - "--chown=root:root"
+      - --chown=root:root
     use_ssh_args: "yes"
   when:
     - project.source is defined
@@ -81,7 +80,7 @@
 - name: Copying file from template..
   ansible.builtin.template:
     src: "{{ project.source_path }}/{{ item }}"
-    dest: "/tmp/{{ project.namespace }}_{{ project.name }}/{{ item }}"
+    dest: /tmp/{{ project.namespace }}_{{ project.name }}/{{ item }}
     mode: "0600"
   with_items: "{{ project.files_to_template }}"
   when: project.files_to_template is defined

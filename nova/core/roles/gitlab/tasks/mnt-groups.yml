@@ -3,18 +3,18 @@
   ansible.builtin.include_tasks: mnt-group-create.yml
   loop: "{{ gitlab_groups }}"
   loop_control:
-    loop_var: "group"
+    loop_var: group
 
 - name: Include tasks | add variable to group..
   ansible.builtin.include_tasks: mnt-group-add-variable.yml
   when: group.variables is defined
   loop: "{{ gitlab_groups }}"
   loop_control:
-    loop_var: "group"
+    loop_var: group
 
 - name: Include tasks | add deploy token to group..
   ansible.builtin.include_tasks: mnt-group-add-deploy-token.yml
   when: group.deploy_tokens is defined
   loop: "{{ gitlab_groups }}"
   loop_control:
-    loop_var: "group"
+    loop_var: group
