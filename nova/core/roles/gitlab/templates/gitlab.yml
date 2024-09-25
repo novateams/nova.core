@@ -16,8 +16,17 @@ services:
       - "{{ gitlab_config_folder }}/increase-maxauthtries.sh:/srv/increase-maxauthtries.sh"
       - "/srv/certs:/srv/certs"
       - "/usr/local/share/ca-certificates:/usr/local/share/ca-certificates"
-      ### gitlab keeps custom certs in this folder https://docs.gitlab.com/omnibus/settings/ssl.html#troubleshooting
+      # GitLab keeps custom certs in this folder https://docs.gitlab.com/omnibus/settings/ssl.html#troubleshooting
       - "/usr/local/share/ca-certificates:/etc/gitlab/trusted-certs"
+
+    # Overriding the default healthcheck values to allow longer startup times on low end machines
+    # https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/master/docker/Dockerfile#L81-82
+    healthcheck:
+      test: /opt/gitlab/bin/gitlab-healthcheck --fail --max-time 10
+      interval: 60s
+      retries: 10
+      timeout: 30s
+
     shm_size: "1G"
     environment:
       GITLAB_OMNIBUS_CONFIG: "from_file('/omnibus_config.rb')"
