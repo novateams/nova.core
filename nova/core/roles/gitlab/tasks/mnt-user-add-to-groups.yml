@@ -27,8 +27,7 @@
 
 - name: Add user to group..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json | \
-      selectattr('name', 'equalto', group.name))[0].id }}/members"
+    url: "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json | selectattr('name', 'equalto', group.name))[0].id }}/members"
     method: POST
     body_format: json
     headers:
@@ -48,8 +47,7 @@
 
 - name: Modify user group membership..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json
-      | selectattr('name', 'equalto', group.name))[0].id }}/members/{{ gl_user.json[0].id }}"
+    url: "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json | selectattr('name', 'equalto', group.name))[0].id }}/members/{{ gl_user.json[0].id }}"
     method: PUT
     body_format: json
     headers:

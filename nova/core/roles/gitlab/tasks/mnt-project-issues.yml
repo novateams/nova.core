@@ -20,9 +20,8 @@
 ## This is to be sure that the search is precise, project name is not unique
 - name: Search for the project using namespace and project name..
   ansible.builtin.set_fact:
-    gl_matched_projects:
-      "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace) |
-      selectattr('name', 'equalto', project.name) }}"
+    gl_matched_projects: "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
+      | selectattr('name', 'equalto', project.name) }}"
 
 - name: Set current existing project ID variable..
   ansible.builtin.set_fact:
@@ -30,8 +29,8 @@
 
 - name: Create an issue in the project..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/issues?sudo={{ (gl_existing_users.json |
-      selectattr('username', 'equalto', issue.impersonate_username))[0].id }}"
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/issues?sudo={{ (gl_existing_users.json
+      | selectattr('username', 'equalto', issue.impersonate_username))[0].id }}"
     headers:
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     method: POST
@@ -43,6 +42,6 @@
   become: false
   loop: "{{ project.issues }}"
   loop_control:
-    loop_var: "issue"
+    loop_var: issue
   when:
     - gl_project_id != ''

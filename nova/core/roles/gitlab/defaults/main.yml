@@ -2,7 +2,8 @@
 ### gitlab general
 gitlab_version: latest
 gitlab_ssh_port: 10022
-gitlab_ssh_max_auth_tries: 20 # Increase gitlab ssh MaxAuthTries to avoid connection issues for users with more than 6 keys in their SSH agent set to {} to disable
+# Increase gitlab ssh MaxAuthTries to avoid connection issues for users with more than 6 keys in their SSH agent set to {} to disable
+gitlab_ssh_max_auth_tries: 20
 gitlab_fqdn: "{{ fqdn | default(ansible_fqdn) }}"
 gitlab_url: https://{{ gitlab_fqdn }}
 gitlab_url_api: https://{{ gitlab_fqdn }}/api/v4
@@ -10,17 +11,16 @@ gitlab_url_api: https://{{ gitlab_fqdn }}/api/v4
 ### gitlab pages https://docs.gitlab.com/ee/administration/pages/
 gitlab_pages_enabled: false
 gitlab_pages_fqdn: ""
-gitlab_pages_url: "https://{{ gitlab_pages_fqdn }}"
+gitlab_pages_url: https://{{ gitlab_pages_fqdn }}
 
 ### gitlab registry https://docs.gitlab.com/ee/user/packages/
 gitlab_registry_enabled: false
 gitlab_registry_fqdn: ""
-gitlab_registry_url: "https://{{ gitlab_registry_fqdn }}"
+gitlab_registry_url: https://{{ gitlab_registry_fqdn }}
 
 ### These need to be defined in your variables, do not use the defaults
 gitlab_initial_root_personal_passwd: {}
 gitlab_root_personal_token: {}
-
 ### gitlab smtp https://docs.gitlab.com/omnibus/settings/smtp.html
 gitlab_smtp_enabled: false
 gitlab_smtp_tls: false
@@ -32,8 +32,8 @@ gitlab_smtp_domain: false
 gitlab_smtp_username: false
 gitlab_smtp_password: false
 gitlab_smtp_authentication: false ### login or plain
-gitlab_email_from: "gitlab@{{ gitlab_fqdn }}"
-gitlab_email_reply_to: "noreply@{{ gitlab_fqdn }}"
+gitlab_email_from: gitlab@{{ gitlab_fqdn }}
+gitlab_email_reply_to: noreply@{{ gitlab_fqdn }}
 
 # Gitlab LDAP https://docs.gitlab.com/ee/administration/auth/ldap/index.html#basic-configuration-settings
 # Change the values to match your LDAP server(s) configuration
