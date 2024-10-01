@@ -1,4 +1,5 @@
 # The original sources.list is backed up as /etc/apt/sources.list_backup
+
 deb {{ package_mirror_ubuntu_uri.general }} {{ ansible_facts.lsb.codename }} main restricted
 deb {{ package_mirror_ubuntu_uri.general }} {{ ansible_facts.lsb.codename }} universe
 deb {{ package_mirror_ubuntu_uri.general }} {{ ansible_facts.lsb.codename }} multiverse

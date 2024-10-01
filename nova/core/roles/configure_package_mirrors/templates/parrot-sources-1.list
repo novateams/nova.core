@@ -1,2 +1,3 @@
 # The original sources.list is backed up as /etc/apt/sources.list_backup
+
 deb https://{{ nexus_fqdn }}/repository/parrot-lts/ lts main non-free contrib

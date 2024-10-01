@@ -1,4 +1,5 @@
 # The original sources.list is backed up as /etc/apt/sources.list_backup
+
 deb {{ package_mirror_debian_uri.general }} {{ ansible_facts.lsb.codename }} main
 deb-src {{ package_mirror_debian_uri.general }} {{ ansible_facts.lsb.codename }} main
 
