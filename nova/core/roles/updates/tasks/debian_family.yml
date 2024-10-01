@@ -9,7 +9,7 @@
     allow_downgrade: true
   register: apt_updates
   until: not apt_updates.failed
-  retries: 5
+  retries: 3
   delay: 3
 
 - name: Checking if reboot is required...
