@@ -5,7 +5,6 @@
       - cloud-guest-utils # Required for expanding disks
       - htop # Useful for monitoring system resources
       - kitty-terminfo # To pass your terminal settings over ssh
-      - libpam-ssh-agent-auth # Required when using ssh-agent for sudo
       - libuser # Required for Domain Join & local accounts
       - network-manager # Required for NetworkManager
       - python3-apt # Required for Ansible
@@ -13,6 +12,15 @@
       - python3-setuptools # Required for Ansible
     state: present
     update-cache: true
+
+# Universal Debian packages that are not available in Kali
+- name: Installing non-Kali packages for Debian based OS...
+  ansible.builtin.apt:
+    name:
+      - libpam-ssh-agent-auth # Required when using ssh-agent for sudo
+    state: present
+    update-cache: true
+  when: ansible_distribution != 'Kali'
 
 - name: Running apt cleanup...
   ansible.builtin.apt:
