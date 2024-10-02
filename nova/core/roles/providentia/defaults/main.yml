@@ -33,12 +33,17 @@ providentia_install_dir_git: /srv/providentia.git # path where git configuration
 
 providentia_app_fqdn: "{{ fqdn }}" # fqdn for deployed instance
 providentia_redis_url: redis://redis:6379/0 # URL for app redis, defaults to builtin
-providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_password }}@postgresql/providentia?pool=5 # full database URL used by the app, defaults to builtin postgres
+
+# full database URL used by the app, defaults to builtin postgres
+providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_password }}@postgresql/providentia?pool=5
+
 providentia_sentry_dsn: # Sentry exception tracking endpoint
 providentia_sentry_env: production # Sentry production value
 
 # app config (SSO)
-providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/Providentia" # The URL for OpenID Connect endpoint (.well-known should be under this)
+# The URL for OpenID Connect endpoint (.well-known should be under this)
+providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/Providentia"
+
 providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
 providentia_resource_login: User # The role name, which allows _login_ access to Providentia
 providentia_resource_superadmin: Super_Admin # The role name, which allows full administrator access to Providentiua

@@ -25,11 +25,11 @@
 
 - name: Clone Providentia repo
   ansible.builtin.git:
-    accept_hostkey: yes
+    accept_hostkey: true
     repo: https://github.com/ClarifiedSecurity/Providentia.git
     dest: "{{ providentia_install_dir }}"
     version: "{{ providentia_deploy_branch }}"
-    force: yes
+    force: true
     separate_git_dir: "{{ providentia_install_dir_git }}"
 
 - name: Template Providentia configuration
@@ -37,6 +37,7 @@
     src: "{{ conf.src }}"
     dest: "{{ providentia_install_dir }}/{{ conf.dest | default(conf.src) }}"
     lstrip_blocks: true
+    mode: "0644"
   loop_control:
     loop_var: conf
   loop:
