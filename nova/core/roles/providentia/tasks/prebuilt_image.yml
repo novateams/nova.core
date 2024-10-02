@@ -15,6 +15,7 @@
     src: "{{ item }}"
     dest: "{{ providentia_install_dir }}/"
     lstrip_blocks: true
+    mode: "0644"
   loop:
     - docker-compose.yml
     - Makefile
@@ -24,6 +25,7 @@
     src: "{{ item }}"
     dest: "{{ providentia_install_dir }}/"
     lstrip_blocks: true
+    mode: "0644"
   loop:
     - initdb_keycloak.sql
     - keycloak-config.yml
@@ -39,5 +41,6 @@
 
 - name: Clear cache
   ansible.builtin.command: docker compose exec web rails r 'Rails.cache.clear'
+  changed_when: true
   args:
     chdir: "{{ providentia_install_dir }}"
