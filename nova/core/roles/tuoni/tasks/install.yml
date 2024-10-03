@@ -1,11 +1,18 @@
 ---
+- name: Downloading Tuoni installer...
+  ansible.builtin.get_url:
+    url: https://tuoni.sh
+    dest: /tmp/tuoni.sh
+    mode: "0755"
+
 - name: Installing Tuoni...
   ansible.builtin.shell: |
     export SILENT=1
-    curl -L https://tuoni.sh | bash
+    {{ '' if tuoni_update_on_deploy else 'NO_UPDATE=1' }} /tmp/tuoni.sh
     cd /srv/tuoni
-    ./tuoni update
     ./tuoni start
+  changed_when: true
+  become: true
   become_user: "{{ ansible_user }}"
 
 - name: Getting the Tuoni config file from {{ inventory_hostname }}...
@@ -25,7 +32,7 @@
     method: POST
     status_code: 200
     return_content: true
-    force_basic_auth: yes
+    force_basic_auth: true
     validate_certs: false # Because Tuoni uses self-signed certificate with an empty Subject Name
   register: tuoni_api_token
   until: tuoni_api_token.status == 200
