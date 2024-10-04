@@ -92,14 +92,6 @@
         index_var: idx
         label: "{{ item.username }}"
 
-- name: Setting correct password for {{ ansible_deployer_username }}...
-  ansible.builtin.set_fact:
-    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
-  loop: "{{ admin_accounts }}"
-  loop_control:
-    label: "{{ item.username }}"
-  when: item.username == ansible_deployer_username
-
 - name: Uploading config.xml to {{ inventory_hostname }}...
   ansible.builtin.copy:
     src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
