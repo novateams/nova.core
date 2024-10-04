@@ -45,7 +45,9 @@ linked_clone_snapshot_name: LinkedCloneSource # Case sensitive default value
 primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default([]) }}"
 connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
 connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
-connection_address: "{{ 'DHCP' if connection_mode_dhcp else primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='address') | first | ansible.utils.ipaddr('address') }}"
+connection_address:
+  "{{ 'DHCP' if connection_mode_dhcp else primary_network.addresses | selectattr('connection', 'equalto', true)
+  | map(attribute='address') | first | ansible.utils.ipaddr('address') }}"
 
 # Video memory
 video_increase_memory: false
@@ -75,8 +77,10 @@ local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware
 machine_operations_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
 
 # Shared folders
+
+# In VMware Workstation case the ansible_user is the host's username
+host_shared_folder_path: /home/{{ ansible_user }}/Documents/vm_shares/{{ custom_vm_name | default(vm_name) }}
 enable_shared_folder: true
-host_shared_folder_path: /home/{{ ansible_user }}/Documents/vm_shares/{{ custom_vm_name | default(vm_name) }} # In VMware Workstation case the ansible_user is the host's username
 supported_shared_folder_os: # Operating systems that support shared folders between host and guest
   - os_windows
   - os_ubuntu
@@ -140,5 +144,7 @@ aws_security_group_rules:
 linode_api_token: {} # Can be defined in your Ansible Vault
 
 # The default root password for Linode VM
-machine_operations_linode_vm_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_' + admin_account) }}"
+machine_operations_linode_vm_password:
+  "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
+  + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_' + admin_account) }}"
 rebuild: false # Use ctp host rebuild-linode-vm <inventory_hostname> command to rebuild the VM with different size but keeping the data

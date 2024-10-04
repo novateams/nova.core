@@ -74,6 +74,7 @@
 
     - name: Updating CA certificates...
       ansible.builtin.command: trust anchor --store /tmp/{{ item.name }}.crt
+      changed_when: true
       loop: "{{ trusted_certificates_list }}"
       when: trusted_certificates_list != []
 
