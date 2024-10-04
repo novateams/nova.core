@@ -1,6 +1,6 @@
 ---
 - name: Printing {{ inventory_hostname }} IP...
-  debug:
+  ansible.builtin.debug:
     msg: |
       FQDN - {{ fqdn | default('NA') }}
       IPv4 - {{ egress_nic_ipv4 }}

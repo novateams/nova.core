@@ -1,5 +1,7 @@
 ---
-- name: Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper }} over {{ primary_ipv4 }}...
+- name:
+    Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
+    | upper }} over {{ primary_ipv4 }}...
   ansible.builtin.set_fact:
     ansible_host: "{{ primary_ipv4 }}"
     ansible_connection: "{{ default_connection_plugin }}"
