@@ -13,14 +13,26 @@ wait_for_address: 1.1.1.1 # Host to check in Waiting for internet... task
 wait_for_port: 53 # Port to check in Waiting for internet... task
 wait_for_timeout: 300 # How many seconds to wait for wait_for_host
 os_configuration_timezone: UTC # The default timezone to be set where applicable
-os_configuration_wait_for_site: false # Set true to wait for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
+
+# Set true to wait for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
+os_configuration_wait_for_site: false
 os_configuration_wait_for_site_url: https://google.com # URL to wait for
-os_configuration_wait_for_site_retries: 30 # How many times to retry waiting for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
+# How many times to retry waiting for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
+os_configuration_wait_for_site_retries: 30
+
 os_configuration_expand_os_disk_role_name: {} # Define your OS disk expansion role name in your host or group vars to included it with this role
 infra_env: {}
 ntp_servers:
   - "0.pool.ntp.org"
   - "1.pool.ntp.org"
+
+os_configuration_increase_unix_ssh_maxauthtries: true # Set to false to disable increasing SSHD MaxAuthTries for Unix systems
+
+# Since different OS families have different service names the sshd service name is set here
+os_configuration_os_family_service_name:
+  Debian: ssh
+  RedHat: sshd
+  Archlinux: sshd
 
 ###########
 # Windows #

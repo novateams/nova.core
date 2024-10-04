@@ -10,7 +10,9 @@
 
 # Universal
 - name: Updating SSHD MaxAuthTries for Cloud {{ inventory_hostname }}...
-  when: infra_env in ["aws", "linode", "azure"]
+  when:
+    - os_configuration_increase_unix_ssh_maxauthtries
+    - infra_env in ["aws", "linode", "azure"]
   block:
     - name: Setting SSHD MaxAuthTries to 20...
       ansible.builtin.replace:
@@ -19,9 +21,9 @@
         replace: MaxAuthTries 20
       register: maxauthtries
 
-    - name: Restarting SSHD...
+    - name: Restarting SSHD... # noqa: no-handler
       ansible.builtin.systemd:
-        name: sshd
+        name: "{{ os_configuration_os_family_service_name[ansible_os_family] | default('sshd') }}"
         state: restarted
       when: maxauthtries.changed
 
