@@ -23,7 +23,7 @@
   changed_when: regenerate_machine_id.stdout != "done"
   become: true
 
-- name: Rebooting {{ inventory_hostname }}... # This is to avoid ssh connection issues because of the new ssh keys
+- name: Rebooting {{ inventory_hostname }}... # This is to avoid ssh connection issues because of the new ssh keys # noqa: no-handler
   ansible.builtin.reboot:
   when: regenerate_machine_id.changed
   become: true

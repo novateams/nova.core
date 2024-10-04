@@ -93,7 +93,7 @@
   retries: 5
   delay: 3
 
-- name: Restarting required services...
+- name: Restarting required services... # noqa: no-handler
   when: regenerate_machine_id.changed
   block:
     - name: Checking if systemd-journald service exists...
