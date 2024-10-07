@@ -3,6 +3,7 @@ docker_engine_version: {}
 docker_daemon_template: daemon.json
 
 # Docker daemon.json defaults
+docker_data_root: {} # Default is /var/lib/docker but can be changed to a different location
 docker_enable_experimental_features: true
 docker_buildkit: true
 docker_enable_ipv6: true
