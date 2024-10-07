@@ -16,61 +16,61 @@ roles:
 collections:
   - name: https://github.com/ClarifiedSecurity/amazon.aws.git # A temporary fork of the official collection to remove the annoying deprecation warnings
     type: git
-    version: 8.1.0
+    version: latest
   - name: ansible.netcommon
-    version: 7.0.0
+    version: 7.1.0
   - name: ansible.posix
-    version: 1.5.4
+    version: 1.6.0
   - name: ansible.utils
-    version: 5.1.0
+    version: 5.1.1
   - name: ansible.windows
-    version: 2.4.0
+    version: 2.5.0
   - name: azure.azcollection
-    version: 2.6.0
+    version: 2.7.0
   - name: chocolatey.chocolatey
-    version: 1.5.1
+    version: 1.5.3
   - name: cisco.ios
-    version: 9.0.1
+    version: 9.0.2
   - name: cloud.common
     version: 3.0.0
   - name: community.aws
     version: 8.0.0
   - name: community.crypto
-    version: 2.21.1
+    version: 2.22.1
   - name: community.docker
-    version: 3.12.1
+    version: 3.13.0
   - name: community.general
-    version: 9.3.0
+    version: 9.4.0
   - name: community.hashi_vault
     version: 6.2.0
   - name: community.library_inventory_filtering_v1 # Required for community.docker
     version: 1.0.1
   - name: community.mysql
-    version: 3.9.0
+    version: 3.10.3
   - name: community.network
     version: 5.0.3
   - name: community.postgresql
-    version: 3.4.1
+    version: 3.6.1
   - name: community.routeros
-    version: 2.18.0
+    version: 2.19.0
   - name: community.vmware
     version: 4.4.0
   - name: community.windows
-    version: 2.2.0
+    version: 2.3.0
   - name: fortinet.fortios
     version: 2.3.4
   - name: kubernetes.core
     version: 2.4.0
   - name: linode.cloud
-    version: 0.29.0
+    version: 0.30.1
   - name: microsoft.ad
-    version: 1.5.0
+    version: 1.7.1
   - name: microsoft.sql
     version: 2.2.2
   - name: paloaltonetworks.panos
-    version: 2.19.1
+    version: 2.21.1
   - name: vmware.vmware_rest
-    version: 4.0.0
+    version: 4.1.0
   - name: vyos.vyos
     version: 5.0.0
 
