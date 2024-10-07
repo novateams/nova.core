@@ -19,7 +19,7 @@
 
 - name: Create deploy tokens that are not set..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/deploy_tokens"
+    url: "{{ gitlab_url_api }}/groups/{{ (gitlab_group.json | selectattr('name', 'equalto', group.name))[0].id }}/deploy_tokens"
     method: POST
     body_format: json
     body:
