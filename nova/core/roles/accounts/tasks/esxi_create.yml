@@ -1,0 +1,58 @@
+---
+- name: Configuring following ESXi accounts...
+  community.vmware.vmware_local_user_manager:
+    hostname: "{{ ansible_host }}"
+    username: "{{ ansible_user }}"
+    password: "{{ ansible_password }}"
+    local_user_name: "{{ item.username }}"
+    local_user_password: "{{ item.password | default(pregenerated_password) }}"
+    validate_certs: "{{ validate_vmware_certs }}"
+  delegate_to: localhost
+  become: false
+  loop: "{{ local_accounts_list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.username == admin_account # This role is only for ESXi root account
+    - item.password | default(pregenerated_password) != ansible_password # Cannot set the same password as the one currently used
+
+- name: Setting correct ansible_deployer_password for {{ ansible_deployer_username }}...
+  ansible.builtin.set_fact:
+    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
+  loop: "{{ local_accounts_list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username == ansible_deployer_username
+
+- name: Removing authorized_keys file...
+  ansible.builtin.file:
+    path: /etc/ssh/keys-{{ item.username }}/authorized_keys
+    state: absent
+  loop: "{{ local_accounts_list }}"
+  loop_control:
+    label: /etc/ssh/keys-{{ item.username }}/authorized_keys
+  when: item.username == admin_account # This role is only for ESXi root account
+
+- name: Creating authorized_keys file...
+  ansible.builtin.file:
+    path: /etc/ssh/keys-{{ item.username }}/authorized_keys
+    state: touch
+    owner: "{{ item.username }}"
+    group: "{{ item.username }}"
+    mode: "0600"
+  loop: "{{ local_accounts_list }}"
+  loop_control:
+    label: /etc/ssh/keys-{{ item.username }}/authorized_keys
+  when: item.username == admin_account # This role is only for ESXi root account
+
+# Only RSA keys are supported by ESXi
+- name: Adding authorized keys for... # noqa: command-instead-of-shell
+  ansible.builtin.shell: echo "{{ item.ssh_key }}" {{ '>' if item.ssh_key_exclusive
+    | default(accounts_exclusive_ssh_key) else '>>' }} /etc/ssh/keys-{{ item.username }}/authorized_keys
+  changed_when: true
+  loop: "{{ local_accounts_list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.ssh_key is defined
+    - item.username == admin_account # This role is only for ESXi root account
