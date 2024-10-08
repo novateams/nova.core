@@ -71,6 +71,7 @@
   changed_when: true
   when: cleanup_remove_bash_history
 
-- name: Rebooting...
-  ansible.builtin.reboot:
+- name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
+  ansible.builtin.set_fact:
+    reboot_on_finalize: true
   when: cleanup_post_reboot

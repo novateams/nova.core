@@ -1,0 +1,4 @@
+---
+- name: Rebooting...
+  ansible.builtin.reboot:
+  when: reboot_on_finalize
