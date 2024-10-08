@@ -1,4 +1,10 @@
 ---
+- name: Including following configure_networking pre-roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop: "{{ configure_networking_pre_roles }}"
+  when: configure_networking_pre_roles != []
+
 - name: Configuring VM network in vSphere environment...
   ansible.builtin.include_tasks: vsphere/main.yml
   when:
