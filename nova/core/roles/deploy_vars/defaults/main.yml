@@ -80,7 +80,8 @@ vmware_rest_defaults:
   vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username: "{{ nsx_username | default(project_deployer_username) | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
+nsx_deployer_username: "{{ nsx_username | default(project_deployer_username) | default(deployer_username
+  | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
 nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default(omit) }}"
 
 #######
@@ -98,7 +99,11 @@ aws_defaults:
 
 azure_location: westeurope
 azure_defaults:
-  subscription_id: "{{ azure_subscription_id | default(omit) }}" # Current subscription ID from https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade
-  client_id: "{{ azure_client_id | default(omit) }}" # The Service Principal Name's (Service Account used for deployment) ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  tenant: "{{ azure_tenant_id | default(omit) }}" # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
+  # Current subscription ID from https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade
+  subscription_id: "{{ azure_subscription_id | default(omit) }}"
+  # The Service Principal Name's (Service Account used for deployment) ID from
+  # https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
+  client_id: "{{ azure_client_id | default(omit) }}"
+  # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
+  tenant: "{{ azure_tenant_id | default(omit) }}"
   secret: "{{ azure_service_principal | default(omit) }}"
