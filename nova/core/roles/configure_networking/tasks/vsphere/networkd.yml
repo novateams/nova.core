@@ -13,7 +13,8 @@
       block:
         - name: Masking NetworkManager service and cleaning previous networkd configuration on Debian...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+              | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
             method: POST
             headers:
               vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -55,7 +56,8 @@
 
     - name: Preparing interface(s) configuration upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -112,7 +114,8 @@
 
     - name: Preparing links(s) configuration upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -149,14 +152,16 @@
 
     - name: Starting networkd & udev services...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd && systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
+            arguments: -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
+              systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
             path: /bin/bash
         status_code: 201
         body_format: json
@@ -180,7 +185,8 @@
 
     - name: Preparing resolv.conf upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -212,7 +218,8 @@
       block:
         - name: Configuring network interface(s) names on Debian...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+              | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
             method: POST
             headers:
               vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -234,7 +241,8 @@
       block:
         - name: Configuring network interface(s) names on Arch...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+              | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
             method: POST
             headers:
               vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -254,7 +262,8 @@
     - name: Restarting {{ custom_vm_name | default(vm_name) }}...
       vmware.vmware_rest.vcenter_vm_guest_power:
         state: reboot
-        vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"
+        vm: "{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}"
         session_timeout: 1800
       register: vcenter_vm_restart
       until: not vcenter_vm_restart.failed

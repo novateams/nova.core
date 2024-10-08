@@ -1,7 +1,8 @@
 ---
 - name: Waiting for network configuration command to finish for {{ inventory_hostname }}...
   ansible.builtin.uri:
-    url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}/guest/processes/{{ network_config_command.json }}?action=get
+    url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+      | default(vcenter_vm_info.value[0].vm) }}/guest/processes/{{ network_config_command.json }}?action=get
     method: POST
     headers:
       vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
