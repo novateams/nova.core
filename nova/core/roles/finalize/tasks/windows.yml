@@ -53,21 +53,7 @@
       retries: 5
       delay: 3
 
-- name: Printing deprecation message...
-  when: reboot_on_finalize
-  block:
-    - name: DEPRECATED
-      ansible.builtin.debug:
-        msg: reboot_on_finalize IS A DEPRECATED FEATURE, USE HANDLERS INSTEAD
-
-    - name: Sleeping to read...
-      ansible.builtin.wait_for:
-        timeout: 30
-      become: false
-      delegate_to: localhost
-
-# Temp fix for Exchange long reboots when running Elastic Agent
 - name: Rebooting...
   ansible.windows.win_reboot:
-    reboot_timeout: 1200
+    reboot_timeout: 1200 # Fix targets with very long reboot times like Microsoft Exchange
   when: reboot_on_finalize

@@ -6,7 +6,7 @@
     state: restarted
   when: not xrdp_install.changed # Only restart xrdp service if reboot is not scheduled
 
-- name: Rebooting Unix...
-  ansible.builtin.reboot:
-  when: ansible_system in ["Linux", "FreeBSD"]
+- name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
+  ansible.builtin.set_fact:
+    reboot_on_finalize: true
   listen: linux_xrdp_server_reboot

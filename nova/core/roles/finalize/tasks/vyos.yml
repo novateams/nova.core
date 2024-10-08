@@ -1,17 +1,4 @@
 ---
-- name: Printing deprecation message...
-  when: reboot_on_finalize
-  block:
-    - name: DEPRECATED
-      ansible.builtin.debug:
-        msg: reboot_on_finalize IS A DEPRECATED FEATURE, USE HANDLERS INSTEAD
-
-    - name: Sleeping to read...
-      ansible.builtin.wait_for:
-        timeout: 30
-      become: false
-      delegate_to: localhost
-
 - name: Rebooting VyOS...
   when: reboot_on_finalize
   block:

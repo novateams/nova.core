@@ -32,6 +32,7 @@
   retries: 10
   delay: 12
 
-- name: Rebooting...
-  ansible.windows.win_reboot:
+- name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
+  ansible.builtin.set_fact:
+    reboot_on_finalize: true
   when: cleanup_post_reboot

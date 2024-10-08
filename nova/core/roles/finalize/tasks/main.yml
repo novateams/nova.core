@@ -1,4 +1,7 @@
 ---
+- name: Flushing handlers...
+  ansible.builtin.meta: flush_handlers
+
 - name: Including finalize block for non-containers...
   when: customization_context == "host" # Alternative is container that most likely doesn't need this role
   block:
@@ -10,25 +13,28 @@
             name: nova.core.updates
           when: update_system
 
-        - name: Windows deploy finalization...
-          ansible.builtin.include_tasks: windows.yml
-          when: "'os_windows' in group_names"
+        - name: Creation accounts for non-Netowork OS accounts...
+          when: ansible_network_os is not defined
+          block:
+            - name: Including Windows finalization tasks...
+              ansible.builtin.include_tasks: windows.yml
+              when: ansible_system == 'Win32NT'
 
-        - name: Linux deploy finalization...
-          ansible.builtin.include_tasks: linux.yml
-          when: "'os_linux' in group_names"
+            - name: Including Unix finalization tasks...
+              ansible.builtin.include_tasks: unix.yml
+              when: ansible_system in ["FreeBSD", "Linux"]
 
-        - name: Vyos deploy finalization...
-          ansible.builtin.include_tasks: vyos.yml
-          when: "'os_vyos' in group_names"
+        - name: Configuring Network OS accounts...
+          when: ansible_network_os is defined
+          block:
+            - name: Including VyOS finalization tasks...
+              ansible.builtin.include_tasks: vyos.yml
+              when: ansible_network_os == 'vyos.vyos.vyos'
 
         - name: Including cleanup role...
           ansible.builtin.include_role:
             name: nova.core.cleanup
           when: finalize_cleanup_system
-
-- name: Flushing handlers...
-  ansible.builtin.meta: flush_handlers
 
 - name: Including metadata posting role...
   ansible.builtin.include_role:

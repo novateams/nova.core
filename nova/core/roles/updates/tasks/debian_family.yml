@@ -17,7 +17,6 @@
     path: /var/run/reboot-required
   register: reboot_required_file
   changed_when: reboot_required_file.stat.exists # This will only show as changed if the file exists, required to trigger the notify below
-  notify: updates_reboot
   when: debian_family_updates_allow_reboot
 
 - name: Including unattended upgrades tasks...
@@ -86,3 +85,11 @@
           line: APT::Periodic::Unattended-Upgrade "0";
         - regexp: .*Update-Package-Lists
           line: APT::Periodic::Update-Package-Lists "0";
+
+# Rebooting immediately if there's no planned reboot with reboot_on_finalize set
+- name: Rebooting...
+  ansible.builtin.reboot:
+  when:
+    - debian_family_updates_allow_reboot
+    - reboot_required_file.stat.exists
+    - not reboot_on_finalize

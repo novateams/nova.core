@@ -1,3 +1,4 @@
 ---
 - name: Updating MacOS...
   ansible.builtin.raw: softwareupdate -i -a --agree-to-license -R
+  changed_when: true
