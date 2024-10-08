@@ -43,6 +43,7 @@ unix_distro_root_group_map:
   Archlinux: wheel
   AlmaLinux: wheel
   Parrot: sudo
+  VMkernel: root
 
 unix_distro_shell_map:
   FreeBSD: /bin/tcsh
