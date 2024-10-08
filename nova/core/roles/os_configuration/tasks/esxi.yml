@@ -1,0 +1,15 @@
+---
+- name: Configuring ESXi settings...
+  community.vmware.vmware_host_dns:
+    hostname: "{{ ansible_host }}"
+    username: "{{ ansible_user }}"
+    password: "{{ ansible_password }}"
+    type: static
+    host_name: "{{ hostname }}"
+    domain: "{{ domain }}"
+    dns_servers: "{{ dns_servers + dns_servers6 }}"
+    search_domains:
+      - "{{ domain }}"
+  delegate_to: localhost
+  become: false
+  retries: 2
