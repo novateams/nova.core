@@ -53,28 +53,31 @@
     validate_certs: false
   register: tuoni_created_listeners
 
-- name: Creating following payloads folders...
-  ansible.builtin.file:
-    path: "{{ tuoni_payloads_path }}/{{ item.name }}"
-    state: directory
-    owner: root
-    group: "{{ ansible_user }}"
-    recurse: true
-    follow: false
-  loop: "{{ tuoni_listeners }}"
-  loop_control:
-    label: "{{ item.name }}"
-
 - name: Generating payloads...
-  ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/payloads
-    method: POST
-    headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
-    force_basic_auth: true
-    body: "{{ item }}"
-    body_format: json
-    status_code: 200
-    validate_certs: false
-  register: tuoni_created_payloads
-  loop: "{{ tuoni_payloads }}"
+  when: tuoni_payloads != []
+  block:
+    - name: Creating following payloads folders...
+      ansible.builtin.file:
+        path: "{{ tuoni_payloads_path }}/{{ item.name }}"
+        state: directory
+        owner: root
+        group: "{{ ansible_user }}"
+        recurse: true
+        follow: false
+      loop: "{{ tuoni_listeners }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Generating payloads...
+      ansible.builtin.uri:
+        url: https://{{ fqdn }}:8443/api/v1/payloads
+        method: POST
+        headers:
+          Authorization: Bearer {{ tuoni_api_token.content }}
+        force_basic_auth: true
+        body: "{{ item }}"
+        body_format: json
+        status_code: 200
+        validate_certs: false
+      register: tuoni_created_payloads
+      loop: "{{ tuoni_payloads }}"

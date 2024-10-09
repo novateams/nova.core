@@ -7,3 +7,4 @@
 
 - name: Including Tuoni listeners tasks...
   ansible.builtin.include_tasks: listeners.yml
+  when: tuoni_listeners != []
