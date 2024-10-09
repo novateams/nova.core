@@ -105,7 +105,7 @@
       ansible.builtin.systemd:
         name: systemd-journald
         state: restarted
-      when: systemd_journald_service_exists.status.LoadState == "enabled"
+      when: systemd_journald_service_exists.status.LoadState in ["enabled", "loaded"]
 
     - name: Checking if NetworkManager service exists...
       ansible.builtin.systemd:
@@ -116,4 +116,4 @@
       ansible.builtin.systemd:
         name: NetworkManager.service
         state: restarted
-      when: networkmanager_service_exists.status.LoadState == "enabled"
+      when: networkmanager_service_exists.status.LoadState in ["enabled", "loaded"]
