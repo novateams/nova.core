@@ -23,9 +23,9 @@
       dest: "{{ gitlab_config_folder }}/docker-compose.yml"
     - src: gitlab.rb
       dest: "{{ gitlab_config_folder }}/gitlab.rb"
-    - src: increase-maxauthtries.sh
-      dest: "{{ gitlab_config_folder }}/increase-maxauthtries.sh"
-      mode: "0755"
+    - src: sshd_config
+      dest: "{{ gitlab_config_folder }}/sshd_config"
+      mode: "0644"
 
 - name: Composing Gitlab on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
@@ -33,32 +33,6 @@
     state: present
     wait: true
     wait_timeout: 600
-
-- name: Configuring MaxAuthTries for GitLab ssh...
-  when: gitlab_ssh_max_auth_tries != {}
-  block:
-    - name: Setting GitLab ssh MaxAuthTries to {{ gitlab_ssh_max_auth_tries }}..
-      community.docker.docker_container_exec:
-        container: gitlab
-        command: /srv/increase-maxauthtries.sh
-      register: increase_maxauthtries
-
-    # Using stopped and present so the wait_timeout would apply
-    - name: Stopping and starting GitLab to apply MaxAuthTries...
-      when: increase_maxauthtries.stdout == "added"
-      block:
-        - name: Stopping GitLab on {{ inventory_hostname }}...
-          community.docker.docker_compose_v2:
-            project_src: "{{ gitlab_config_folder }}"
-            state: stopped
-            wait: true
-
-        - name: Starting GitLab on {{ inventory_hostname }}...
-          community.docker.docker_compose_v2:
-            project_src: "{{ gitlab_config_folder }}"
-            state: present
-            wait: true
-            wait_timeout: 600
 
 - name: Finding and restarting proxy container..
   when: gitlab_proxy_container_name != {}
