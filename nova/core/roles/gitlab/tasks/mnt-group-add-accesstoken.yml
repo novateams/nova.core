@@ -19,6 +19,7 @@
 
 - name: Calculate the expires_at date for the token
   ansible.builtin.command: "date +'%Y-%m-%d' -d '+365 days'"
+  changed_when: false
   register: date_result
 
 - name: Create access tokens that are not set..
