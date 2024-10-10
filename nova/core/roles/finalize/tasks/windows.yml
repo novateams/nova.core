@@ -53,6 +53,23 @@
       retries: 5
       delay: 3
 
+# Someteimes some security/monitoring software cause really long reboot times
+# By stopping the services we can speed up the process
+- name: Stopping following services...
+  ansible.windows.win_service:
+    name: "{{ item }}"
+    state: stopped
+    force_dependent_services: true
+  register: finalize_windows_service_stop
+  until: not finalize_windows_service_stop.failed
+  loop: "{{ finalize_windows_services_to_stop }}"
+  when:
+    - reboot_on_finalize
+    - finalize_windows_services_to_stop != []
+    - item != ''
+  retries: 5
+  delay: 3
+
 - name: Rebooting...
   ansible.windows.win_reboot:
     reboot_timeout: 1200 # Fix targets with very long reboot times like Microsoft Exchange

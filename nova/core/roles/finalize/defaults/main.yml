@@ -4,3 +4,4 @@ reboot_on_finalize: false
 update_system: false
 finalize_post_roles: [] # List of roles to include as a final step in this role
 finalize_cleanup_system: false # Cleanup system after deployment. Useful for exercises.
+finalize_windows_services_to_stop: [] # List of services to stop before on Windows if reboot_on_finalize is true
