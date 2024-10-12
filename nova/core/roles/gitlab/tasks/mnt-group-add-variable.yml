@@ -1,4 +1,5 @@
 ---
+## todo, review, this lookup gives all groups, not just 1
 - name: Look up namespace (group) id..
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/groups?name={{ group.name }}&with_custom_attributes=true"
@@ -9,7 +10,7 @@
 
 - name: Get existing variables in current group..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/variables"
+    url: "{{ gitlab_url_api }}/groups/{{ (gitlab_group.json | selectattr('name', 'equalto', group.name))[0].id }}/variables"
     method: GET
     body_format: json
     headers:
@@ -19,7 +20,7 @@
 
 - name: Add new variables to group..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/variables"
+    url: "{{ gitlab_url_api }}/groups/{{ (gitlab_group.json | selectattr('name', 'equalto', group.name))[0].id }}/variables"
     method: POST
     body_format: json
     body:
