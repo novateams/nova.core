@@ -1,7 +1,7 @@
 ---
 - name: Get existing GitLab users..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users"
+    url: "{{ gitlab_url_api }}/users?per_page=100"
     method: GET
     headers:
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
