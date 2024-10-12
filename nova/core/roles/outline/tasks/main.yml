@@ -38,7 +38,7 @@
   ansible.builtin.template:
     src: bucket-policy.j2
     dest: "{{ minio_client_container_folder }}/bucket-policy.json"
-    mode: 0600
+    mode: "0600"
   when:
     - minio_client_configuration | bool
     - outline_file_storage_mode == "s3"
@@ -47,16 +47,16 @@
   ansible.builtin.template:
     src: docker-compose-mc.yml.j2
     dest: "{{ minio_client_container_folder }}/docker-compose.yml"
-    mode: 0600
+    mode: "0600"
   when:
     - minio_client_configuration | bool
     - outline_file_storage_mode == "s3"
 
 - name: Composing {{ inventory_hostname }} minio client...
-  ansible.builtin.shell: |
-    cd {{ minio_client_container_folder }}
-    docker compose pull
-    docker compose up -d
+  community.docker.docker_compose_v2:
+    project_src: "{{ minio_client_container_folder }}"
+    state: present
+    wait: true
   when:
     - minio_client_configuration | bool
     - outline_file_storage_mode == "s3"
@@ -66,10 +66,10 @@
   ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ compose_config_folder }}/docker-compose.yml"
-    mode: 0600
+    mode: "0600"
 
-- name: Composing {{ inventory_hostname }}...
-  ansible.builtin.shell: |
-    cd {{ compose_config_folder }}
-    docker compose pull
-    docker compose up -d
+- name: Composing {{ inventory_hostname }} minio client...
+  community.docker.docker_compose_v2:
+    project_src: "{{ compose_config_folder }}"
+    state: present
+    wait: true
