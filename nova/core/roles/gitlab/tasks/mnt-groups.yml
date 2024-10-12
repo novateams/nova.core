@@ -18,3 +18,10 @@
   loop: "{{ gitlab_groups }}"
   loop_control:
     loop_var: group
+
+- name: Include | add access tokens to groups..
+  ansible.builtin.include_tasks: mnt-group-add-accesstoken.yml
+  when: group.access_tokens is defined
+  loop: "{{ gitlab_groups }}"
+  loop_control:
+    loop_var: group
