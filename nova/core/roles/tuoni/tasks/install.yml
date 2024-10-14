@@ -5,6 +5,15 @@
     dest: /tmp/tuoni.sh
     mode: "0755"
 
+- name: Adding /srv/tuoni as a git safe directory...
+  community.general.git_config:
+    name: safe.directory
+    value: /srv/tuoni
+    scope: global
+    add_mode: add
+  become: true
+  become_user: "{{ ansible_user }}"
+
 - name: Installing Tuoni...
   ansible.builtin.shell: |
     export SILENT=1
