@@ -1,19 +1,8 @@
 ---
-# All of the vmware.vmware_rest have retries for stability
-- name: Looking up the VM...
-  vmware.vmware_rest.vcenter_vm_info:
-    filter_names: "{{ custom_vm_name | default(vm_name) }}"
-  register: vcenter_vm_info
-  until: not vcenter_vm_info.failed
-  retries: 5
-  delay: 2
-  delegate_to: localhost
-  become: false
-
 - name: Setting fresh_deploy fact...
   ansible.builtin.set_fact:
     fresh_deploy: true
-  when: vcenter_vm_info.value == []
+  when: vcenter_vm_info.value == [] or deploy_mode == "redeploy"
 
 - name: Checking for the correct deploy mode...
   ansible.builtin.fail:
