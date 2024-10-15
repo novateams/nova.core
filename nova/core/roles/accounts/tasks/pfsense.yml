@@ -105,7 +105,7 @@
     dest: /conf/config.xml
     mode: "0644"
     owner: root
-    group: admins
+    group: wheel
 
 - name: Removing local config.xml file...
   ansible.builtin.file:
