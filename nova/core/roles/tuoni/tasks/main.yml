@@ -1,6 +1,7 @@
 ---
 - name: Including Tuoni installation tasks...
   ansible.builtin.include_tasks: install.yml
+  when: not tuoni_skip_install
 
 - name: Including Tuoni users tasks...
   ansible.builtin.include_tasks: users.yml
