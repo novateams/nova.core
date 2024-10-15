@@ -13,14 +13,20 @@
   ansible.builtin.package:
     name:
       - xrdp
-      - xorgxrdp
+      - xorgxrdp{{ '=' + linux_xrdp_server_xorgxrdp_version if linux_xrdp_server_xorgxrdp_version != {} else none }}
     state: present
     update_cache: true
+    allow_downgrades: true
   register: xrdp_install
   until: not xrdp_install.failed
   retries: 5
   delay: 3
   notify: linux_xrdp_server_reboot
+
+- name: "{{ 'Locking' if linux_xrdp_server_xorgxrdp_version != {} else 'Unlocking' }} version..." # This is to avoid updating Docker with apt upgrade
+  ansible.builtin.dpkg_selections:
+    name: xorgxrdp
+    selection: "{{ 'hold' if linux_xrdp_server_xorgxrdp_version != {} else 'install' }}"
 
 - name: Removing bookworm repo...
   ansible.builtin.apt_repository:
