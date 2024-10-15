@@ -40,6 +40,7 @@
         mode: "0644"
       loop_control:
         loop_var: update_enable
+        label: "{{ update_enable.value }}"
       loop:
         - file: 20auto-upgrades
           match: .*Update-Package-Lists
