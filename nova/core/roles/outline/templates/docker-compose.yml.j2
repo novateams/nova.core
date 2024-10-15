@@ -86,7 +86,7 @@ services:
       - FORCE_HTTPS={{ outline_force_https | default("true") }}
       - ENABLE_UPDATES=false
       - WEB_CONCURRENCY=1
-      - MAXIMUM_IMPORT_SIZE={{ outline_maximum_import_size }}
+      - FILE_STORAGE_IMPORT_MAX_SIZE={{ outline_maximum_import_size }}
       - DEBUG=http
       - DEFAULT_LANGUAGE=en_US
       - RATE_LIMITER_ENABLED={{ outline_rate_limiter_enabled }}
