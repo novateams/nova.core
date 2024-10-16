@@ -8,3 +8,34 @@
   loop: "{{ domain_groups }}"
   loop_control:
     label: "{{ item.name }}"
+  when: item.members is not defined
+
+- name: Configuring following domain groups and replacing members...
+  microsoft.ad.group:
+    name: "{{ item.name }}"
+    scope: "{{ item.scope | default(domainlocal) }}"
+    path: "{{ item.ou }}"
+    description: "{{ item.description | default(omit) }}"
+    members:
+      set: "{{ item.members }}"
+  loop: "{{ domain_groups }}"
+  loop_control:
+    label: "{{ item.name }} > {{ item.members | default(omit) | join(', ') }}"
+  when:
+    - item.members is defined
+    - accounts_domain_groups_members_strategy == 'replace'
+
+- name: Configuring following domain groups and adding members...
+  microsoft.ad.group:
+    name: "{{ item.name }}"
+    scope: "{{ item.scope | default(domainlocal) }}"
+    path: "{{ item.ou }}"
+    description: "{{ item.description | default(omit) }}"
+    members:
+      add: "{{ item.members }}"
+  loop: "{{ domain_groups }}"
+  loop_control:
+    label: "{{ item.name }} >> {{ item.members | default(omit) | join(', ') }}"
+  when:
+    - item.members is defined
+    - accounts_domain_groups_members_strategy == 'add'
