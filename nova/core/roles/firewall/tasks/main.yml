@@ -5,7 +5,6 @@
     dest: /etc/sysctl.d/fw.conf
     mode: "0644"
     lstrip_blocks: true
-  notify: firewall_reboot
 
 - name: Configuring sysctl...
   ansible.posix.sysctl:

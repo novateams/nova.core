@@ -54,12 +54,12 @@
         mode: "0644"
       register: ipv6_rules_result
 
-    - name: Restoring iptables IPv4 rules, if required...
+    - name: Restoring iptables IPv4 rules, if required... # noqa: no-handler
       ansible.builtin.shell: iptables-restore </etc/iptables/rules.v4
       changed_when: true
       when: ipv4_rules_result.changed
 
-    - name: Restoring iptables IPv6 rules, if required...
+    - name: Restoring iptables IPv6 rules, if required... # noqa: no-handler
       ansible.builtin.shell: ip6tables-restore </etc/iptables/rules.v6
       changed_when: true
       when: ipv6_rules_result.changed

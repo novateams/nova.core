@@ -10,8 +10,3 @@
   ansible.builtin.systemd:
     name: docker.service
     state: restarted
-
-- name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
-  ansible.builtin.set_fact:
-    reboot_on_finalize: true
-  listen: firewall_reboot
