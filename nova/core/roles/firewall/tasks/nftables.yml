@@ -24,10 +24,16 @@
   notify: Restarting nftables...
 
 # This is required to make sure automatic Docker IPTables rules get re-populated
-- name: Checking if Docker service exists...
+- name: Checking if Docker service exists... # noqa: no-handler
   ansible.builtin.systemd:
     name: docker.service
   register: docker_service_exists
   changed_when: docker_service_exists.status.LoadState != "not-found"
   notify: Restarting Docker...
   when: nftables_rules.changed
+
+- name: Rebooting Unix...
+  ansible.builtin.reboot:
+  when:
+    - ansible_os_family == "Archlinux" # For some reason nftables does not work without a reboot on Archlinux
+    - firewall_dependencies_install.changed # noqa: no-handler
