@@ -44,10 +44,19 @@ providentia_sentry_env: production # Sentry production value
 # The URL for OpenID Connect endpoint (.well-known should be under this)
 providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/Providentia"
 
-providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
-providentia_resource_login: User # The role name, which allows _login_ access to Providentia
-providentia_resource_superadmin: Super_Admin # The role name, which allows full administrator access to Providentiua
-providentia_resource_env_creator: Environment_Creator # The role name, which allows creating new environments in Providentia
-providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
-providentia_resource_prefix: Providentia_ # The prefix on authorization roles
 providentia_auth_mode: resource_access # One of `resource_access` or `scope`, specifying where in access token the authorization fields are located
+providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
+providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
+providentia_resource_env_creator: Environment_Creator # The role name, which allows creating new environments in Providentia
+
+# Resource groups
+
+# The prefix for authorization roles (groups)
+providentia_resource_prefix: Providentia_
+
+# The suffix of the group name, which allows login access to Providentia eg. Providentia_User
+# This group should be assigned to all users who should have access to Providentia, even Providentia_Super_Admin members
+providentia_resource_login: User
+
+# The suffix of the group name, which allows full administrator access to Providentiua eg. Providentia_Super_Admin
+providentia_resource_superadmin: Super_Admin
