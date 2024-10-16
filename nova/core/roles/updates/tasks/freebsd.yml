@@ -4,4 +4,3 @@
     name: "*"
     state: latest # Latest is used in order to perform a full upgrade
     autoremove: true
-  notify: updates_reboot
