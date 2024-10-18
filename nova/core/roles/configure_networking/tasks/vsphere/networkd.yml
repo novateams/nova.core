@@ -7,7 +7,7 @@
 
 - name: Determining OS...
   ansible.builtin.set_fact:
-    network_customization_os: "{{ 'debian' if ansible_os_family == 'Debian' else 'arch' if ansible_os_family == 'ArchLinux' }}"
+    network_customization_os: "{{ 'debian' if customization_method_distribution == 'Debian' else 'arch' if customization_method_distribution == 'ArchLinux' }}"
   when: vsphere_version == 7
 
 - name: Determining OS...
