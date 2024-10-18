@@ -46,3 +46,5 @@ extra_routes: [] # Configure extra routes per interfaces.
 configure_networking_panos_enable_ipv6: true # Enable IPv6 on configured interfaces
 configure_networking_panos_primary_dns_server: "{{ dns_servers[0] }}"
 configure_networking_panos_secondary_dns_server: "{{ dns_servers6[0] }}"
+
+vsphere_version: 8
