@@ -136,3 +136,8 @@
           - subnet: "{{ docker_network.ipv4_subnet }}"
           - subnet: "{{ docker_network.ipv6_subnet }}"
       when: not docker_network_check.exists
+
+- name: Install docker-compose python package
+  ansible.builtin.pip:
+    name: docker-compose
+  when: docker_use_compose
