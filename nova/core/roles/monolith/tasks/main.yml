@@ -117,7 +117,9 @@
 
 - name: Including following service configuration tasks...
   ansible.builtin.include_tasks:
-    file: "{{ item }}.yml"
+    file: "{{ service }}.yml"
+  loop_control:
+    loop_var: service
   loop:
     - vault
     - keycloak

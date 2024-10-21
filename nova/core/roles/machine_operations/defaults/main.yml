@@ -9,6 +9,7 @@ no_undeploy: false
 role_only: false # Includes customization role and then stops, great for developing roles
 role_only_wp: false # Run the deploy starting from customization_pre_vm_role
 machine_operations_pre_undeploy_roles: [] # Roles to include before undeploying the VM
+machine_operations_reconfigure_vm_on_deploy: true # Tries to reconfigure the VMs CPU/RAM/Disk size on deploy if they are updated
 
 ####################
 # vSphere defaults #
@@ -32,6 +33,12 @@ machine_operations_vsphere_cdrom_config:
   - controller_number: 0 # Unmounting any existing ISO
     unit_number: 0
     type: none
+
+machine_operations_vsphere_disk_config:
+  - size_mb: "{{ os_disk_size }}"
+    controller_type: "{{ vmware_scsi_controller_type }}"
+    controller_number: 0
+    unit_number: 0
 
 # Deployment
 vapp_options: []
