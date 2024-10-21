@@ -16,3 +16,12 @@
 
 - name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
   ansible.builtin.include_tasks: create.yml
+
+- name: Including {{ custom_vm_name | default(vm_name) }} reconfiguration tasks...
+  ansible.builtin.include_tasks: reconfigure.yml
+  when:
+    - not role_only_wp # Not reconfiguring when running from pre_vm_role
+    - not role_only # Not reconfiguring on role only
+    - not fresh_deploy # Not configuring on first deploy
+    - machine_operations_reconfigure_vm_on_deploy
+    - vcenter_vm_info.value != [] # Only reconfigure if VM exists
