@@ -2,6 +2,9 @@
   {% if docker_data_root != {} %}
   "data-root": "{{ docker_data_root }}",
   {% endif %}
+  {% if docker_log_to_journald %}
+  "log-driver": "journald",
+  {% endif %}
   "experimental": {{ docker_enable_experimental_features | lower }},
   "features": {
     "buildkit": {{ docker_buildkit | lower }}
