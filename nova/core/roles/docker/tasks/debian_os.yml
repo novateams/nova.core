@@ -26,13 +26,6 @@
         # Overriding ansible_distribution to match Debian because Kali does not have it's own Docker repository
         ansible_distribution: debian
 
-    # This is to remove the legacy Docker repository filename that was previously used with this role
-    # This task should be removed on 01.09.2024
-    - name: Removing existing legacy Docker repository filename...
-      ansible.builtin.file:
-        path: /etc/apt/sources.list.d/download_docker_com_linux_debian.list
-        state: absent
-
     # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
     - name: Adding Docker repository...
       ansible.builtin.copy:
@@ -57,13 +50,6 @@
       until: not docker_apt_key.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
       retries: 10
       delay: 6
-
-    # This is to remove the legacy Docker repository filename that was previously used with this role
-    # This task should be removed on 01.09.2024
-    - name: Removing existing legacy Docker repository filename...
-      ansible.builtin.file:
-        path: /etc/apt/sources.list.d/download_docker_com_linux_{{ ansible_distribution | lower }}.list
-        state: absent
 
     # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
     - name: Adding Docker repository...
