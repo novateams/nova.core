@@ -8,7 +8,7 @@
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
   register: gitlab_group
 
-- name: Get existing variables in current group..
+- name: Get existing variables in current group - {{ group.name }}...
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/groups/{{ (gitlab_group.json | selectattr('name', 'equalto', group.name))[0].id }}/variables"
     method: GET
@@ -39,9 +39,9 @@
     label: "{{ variable.key }}"
   when: variable.key not in gl_existing_variables.json | map(attribute="key")
 
-- name: Update variables that already present..
+- name: Update variables that already present for group - {{ group.name }}...
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json[0].id }}/variables/{{ variable.key }}"
+    url: "{{ gitlab_url_api }}/groups/{{ (gitlab_group.json | selectattr('name', 'equalto', group.name))[0].id }}/variables/{{ variable.key }}"
     method: PUT
     body_format: json
     body:
@@ -58,5 +58,4 @@
   loop_control:
     loop_var: variable
     label: "{{ variable.key }}"
-  when:
-    - variable.key in gl_existing_variables.json | map(attribute="key")
+  when: variable.key in gl_existing_variables.json | map(attribute="key")
