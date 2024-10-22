@@ -12,7 +12,9 @@
 # This is required configuring Nexus and repositories after the Nexus role is included
 - name: Setting Nexus credentials fact...
   ansible.builtin.set_fact:
-    nexus_admin_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/nexus:' + inventory_hostname + '_nexus_admin_password') }}"
+    nexus_admin_password:
+      "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
+      + '/data/nexus:' + inventory_hostname + '_nexus_admin_password') }}"
     nexus_fqdn: "{{ monolith_nexus_fqdn }}"
 
 - name: Including Nexus role...

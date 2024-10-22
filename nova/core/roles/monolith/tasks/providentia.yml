@@ -20,7 +20,9 @@
     providentia_builtin_reverse_proxy: false
     providentia_app_fqdn: "{{ monolith_providentia_fqdn }}"
     secrets_vault_secrets_path: providentia
-    providentia_builtin_database_db_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_providentia_db_password') }}"
+    providentia_builtin_database_db_password:
+      "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
+      + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_providentia_db_password') }}"
 
     # SSO
     providentia_oidc_issuer: https://{{ monolith_keycloak_fqdn }}/realms/Apps

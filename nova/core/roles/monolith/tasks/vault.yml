@@ -19,6 +19,7 @@
   block:
     - name: Getting Vault root token & unseal key...
       ansible.builtin.command: cat {{ monolith_vault_key }}
+      changed_when: false
       loop_control:
         loop_var: monolith_vault_key
       loop:
@@ -53,7 +54,9 @@
 
     - name: Configuring {{ secrets_vault_engine_path }} KV engine...
       ansible.builtin.uri:
-        url: "https://{{ monolith_vault_fqdn }}/v1/sys/mounts/{{ secrets_vault_engine_path + '/tune' if secrets_vault_engine_path + '/' in all_auth_methods.json.data else secrets_vault_engine_path }}"
+        url:
+          "https://{{ monolith_vault_fqdn }}/v1/sys/mounts/{{ secrets_vault_engine_path + '/tune' if secrets_vault_engine_path
+          + '/' in all_auth_methods.json.data else secrets_vault_engine_path }}"
         method: POST
         headers:
           X-Vault-Request: true
