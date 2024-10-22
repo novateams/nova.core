@@ -34,7 +34,7 @@
   register: gitlab_group
   when: group.name in gl_existing_namespaces.json | map(attribute="name")
 
-- name: Modify existing group..
+- name: Modify existing group - {{ group.name }}..
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/groups/{{ gitlab_group.json.id }}"
     method: PUT
