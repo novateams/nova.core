@@ -190,3 +190,16 @@
           loop_control:
             loop_var: nexus_trusted_ca
             label: "{{ nexus_trusted_ca.nexus_trusted_ca.path }}"
+
+- name: Re-encrypting secrets...
+  ansible.builtin.uri:
+    url: https://{{ nexus_fqdn }}/service/rest/v1/secrets/encryption/re-encrypt
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: PUT
+    body:
+      secretKeyId: "{{ nexus_active_encryption_key_id }}"
+    body_format: json
+    force_basic_auth: true
+    status_code: 202
+  when: not nexus_encryption_file.stat.exists

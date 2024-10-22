@@ -22,6 +22,20 @@
       dest: "{{ nexus_container_config_folder }}/Dockerfile"
   register: template
 
+- name: Checking if Nexus encryption file exists...
+  ansible.builtin.stat:
+    path: "{{ nexus_container_config_folder }}/data/nexus.secrets.json"
+  register: nexus_encryption_file
+
+- name: Templating Nexus encryption file...
+  ansible.builtin.template:
+    src: nexus.secrets.json
+    dest: "{{ nexus_container_config_folder }}/data/nexus.secrets.json"
+    owner: 200 # ID of the nexus container user
+    group: root # Host machine root group
+    mode: "0600"
+  when: not nexus_encryption_file.stat.exists
+
 - name: Composing Nexus on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ nexus_container_config_folder }}"
