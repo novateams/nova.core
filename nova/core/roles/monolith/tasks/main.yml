@@ -98,6 +98,7 @@
   block:
     - name: Getting Vault root token & unseal key...
       ansible.builtin.command: cat /srv/vault/creds/root_token
+      changed_when: false
       register: vault_creds
 
     - name: Generating Hashicorp Vault token for {{ monolith_vault_fqdn }}...

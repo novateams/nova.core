@@ -1,11 +1,23 @@
 ---
 # Required connection and host variables that need to be defined when deploying Monolith on a pre-existing host
-connection_address: {} # IP address or hostname of the host to deploy Monolith on to connect over SSH
-ansible_deployer_username: {} # Username of the user to connect to the host over SSH
-ansible_deployer_password: {} # Password of the user to connect to the host over SSH. Can be set to dummy value if using SSH keys and sudo password is not required
-hostname: {} # Hostname of the host to deploy Monolith on
-domain: {} # Domain of the host to deploy Monolith on
-fqdn: "{{ hostname }}.{{ domain }}" # Fully Qualified Domain Name of the host to deploy Monolith on
+
+# IP address or hostname of the host to deploy Monolith on to connect over SSH
+connection_address: {}
+
+# Username of the user to connect to the host over SSH
+ansible_deployer_username: {}
+
+# Password of the user to connect to the host over SSH. Can be set to dummy value if using SSH keys and sudo password is not required
+ansible_deployer_password: {}
+
+# Hostname of the host to deploy Monolith on
+hostname: {}
+
+# Domain of the host to deploy Monolith on
+domain: {}
+
+# Fully Qualified Domain Name of the host to deploy Monolith on
+fqdn: "{{ hostname }}.{{ domain }}"
 
 # Default addresses for monolith applications
 monolith_providentia_fqdn: providentia.{{ domain }}
