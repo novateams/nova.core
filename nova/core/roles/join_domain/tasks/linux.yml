@@ -42,7 +42,9 @@
 
     - name: Joining {{ hostname }} to {{ ad_domain_name }}...
       ansible.builtin.expect:
-        command: /usr/sbin/realm join --user={{ domain_join_user }} {{ ad_domain_name }} --install=/ --computer-ou {{ computer_ou | default('CN=Computers,' + domain_dn) }}
+        command:
+          /usr/sbin/realm join --user={{ domain_join_user }} {{ ad_domain_name }} --install=/ --computer-ou {{ computer_ou
+          | default('CN=Computers,' + domain_dn) }}
         responses:
           (?i)Password for *: "{{ domain_join_password }}"
       register: domain_join_state
