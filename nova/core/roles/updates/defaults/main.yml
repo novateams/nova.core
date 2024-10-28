@@ -1,12 +1,28 @@
 ---
-# Linux Debian
-debian_family_updates_allow_reboot: true
-debian_family_unattended_upgrades: true
-debian_family_unattended_upgrades_allow_reboot: false
-reboot_on_finalize: false
+################
+# Linux Debian #
+################
 
-# Windows
+# Allow rebooting the system after running this role
+debian_family_updates_allow_reboot: true
+
+# Enabling auto updates for Debian family
+debian_family_unattended_upgrades: true
+
+# Allow autmatically rebooting the system when auto updates are enabled
+debian_family_unattended_upgrades_allow_reboot: false
+
+###########
+# Windows #
+###########
 
 # Which update categories to install
 # https://docs.ansible.com/ansible/latest/collections/ansible/windows/win_updates_module.html#parameter-category_names
 updates_category_names: "*"
+
+########
+# MISC #
+########
+
+# Default value for reboot_on_finalize variable that is used to reboot the system during `nova.core.finalize` role
+reboot_on_finalize: false
