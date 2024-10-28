@@ -1,14 +1,4 @@
 ---
-# Temporarily getting xorgxrdp from bookworm repo until it's available in Kali again:
-# https://pkg.kali.org/pkg/xorgxrdp
-- name: Adding bookworm repo...
-  ansible.builtin.apt_repository:
-    repo: deb http://ftp.be.debian.org/debian/ bookworm main contrib non-free
-    state: present
-    update_cache: true
-    mode: "0644"
-  when: ansible_distribution == "Kali"
-
 - name: Installing xrdp...
   ansible.builtin.package:
     name:
@@ -23,16 +13,10 @@
   delay: 3
   notify: linux_xrdp_server_reboot
 
-- name: "{{ 'Locking' if linux_xrdp_server_xorgxrdp_version != {} else 'Unlocking' }} version..." # This is to avoid updating Docker with apt upgrade
+- name: "{{ 'Locking' if linux_xrdp_server_xorgxrdp_version != {} else 'Unlocking' }} xorgxrdp version..." # This is to avoid updating Docker with apt upgrade
   ansible.builtin.dpkg_selections:
     name: xorgxrdp
     selection: "{{ 'hold' if linux_xrdp_server_xorgxrdp_version != {} else 'install' }}"
-
-- name: Removing bookworm repo...
-  ansible.builtin.apt_repository:
-    repo: deb http://ftp.be.debian.org/debian/ bookworm main contrib non-free
-    state: absent
-  when: ansible_distribution == "Kali"
 
 - name: Adding xrdp user to ssl-cert group...
   ansible.builtin.user:
