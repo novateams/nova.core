@@ -3,7 +3,7 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Templating udev configuration...
+    - name: Templating nmcli configuration files...
       ansible.builtin.template:
         src: "{{ item.src }}"
         dest: "{{ item.dest }}"
@@ -17,7 +17,7 @@
         - src: nmcli.sh
           dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
 
-    - name: Getting file info...
+    - name: Getting configuration files' info...
       ansible.builtin.stat:
         path: "{{ item }}"
       register: file_size
@@ -105,6 +105,7 @@
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
 
+    # Reboot is required for udev rules to take effect
     - name: Restarting {{ custom_vm_name | default(vm_name) }}...
       vmware.vmware_rest.vcenter_vm_guest_power:
         state: reboot
