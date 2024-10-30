@@ -1,7 +1,0 @@
-#{{ ansible_managed }}
-
-[Match]
-MACAddress={{ vmware_tools_information.instance[ 'hw_eth' + ( item.network_number ) | string ]['macaddress'] }}
-
-[Link]
-Name={{ item.other_vars.network_id }}

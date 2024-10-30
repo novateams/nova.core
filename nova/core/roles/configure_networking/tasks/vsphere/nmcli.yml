@@ -3,6 +3,65 @@
   become: false
   delegate_to: localhost
   block:
+    - name: Templating udev configuration...
+      ansible.builtin.template:
+        src: 70-persistent-net.rules
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        mode: "0644"
+        lstrip_blocks: true
+
+    - name: Getting file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+      register: file_size
+
+    # Not running command_run_check.yml here because if that fails the next step will also fail and that is faster then running the check
+    - name: Pre-Creating temp file...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c touch /etc/udev/rules.d/70-persistent-net.rules
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+
+    - name: Preparing file upload...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ file_size.stat.size }}"
+            path: /etc/udev/rules.d/70-persistent-net.rules
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+      register: file_upload_prep
+
+    - name: Uploading file...
+      ansible.builtin.uri:
+        url: "{{ file_upload_prep.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+
     - name: Templating network configuration script...
       ansible.builtin.template:
         src: nmcli.sh
@@ -81,3 +140,14 @@
 
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware_rest.vcenter_vm_guest_power:
+        state: reboot
+        vm: "{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}"
+        session_timeout: 1800
+      register: vcenter_vm_restart
+      until: not vcenter_vm_restart.failed
+      retries: 5
+      delay: 2
