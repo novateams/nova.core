@@ -28,7 +28,8 @@
     # Not running command_run_check.yml here because if that fails the next step will also fail and that is faster then running the check
     - name: Pre-Creating temp file...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
@@ -47,7 +48,8 @@
 
     - name: Preparing file upload...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
@@ -87,7 +89,8 @@
 
     - name: Configuring network...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
