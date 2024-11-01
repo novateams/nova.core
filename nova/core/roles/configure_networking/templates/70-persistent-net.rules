@@ -1,5 +1,6 @@
 # Mapping of network interfaces to ethX based on MAC address
 # This is required for the network interfaces to be persistent across reboots
+# The maximum interfaces name length is 15 characters
 {% for interface in interfaces %}
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ vmware_tools_information.instance[ "hw_eth" + (loop.index - 1) | string ]["macaddress"] }}", NAME="eth{{ loop.index -1 }}-{{ interface.network_id }}"
+SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ vmware_tools_information.instance[ "hw_eth" + (loop.index - 1) | string ]["macaddress"] }}", NAME="eth{{ loop.index -1 }}-{{ interface.network_id[:10] }}"
 {% endfor %}
