@@ -11,7 +11,8 @@ fi
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
 
-    LOCAL_INTERFACE_NAME="eth{{ loop.index -1 }}-{{ interface.network_id }}"
+    # The maximum interfaces name length is 15 characters
+    LOCAL_INTERFACE_NAME="eth{{ loop.index -1 }}-{{ interface.network_id[:10] }}"
     nmcli connection add type ethernet ifname $LOCAL_INTERFACE_NAME con-name $LOCAL_INTERFACE_NAME
 
     # Looping over IP addresses
