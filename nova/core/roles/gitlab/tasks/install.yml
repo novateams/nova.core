@@ -49,3 +49,14 @@
         restart: true
         container_default_behavior: no_defaults
       when: proxy_container_check.exists
+
+# Extra step when the proxy is slow to restart in the previous task
+- name: Waiting until Gitlab is up and running...
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects"
+    method: GET
+    status_code: 200
+  register: gitlab_uri
+  until: gitlab_uri.status == 200
+  retries: 12
+  delay: 5
