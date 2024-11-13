@@ -7,7 +7,7 @@
 
 - name: Check if previous installation is prebuilt
   ansible.builtin.stat:
-    path: /{{ providentia_install_dir }}/docker-compose.yml
+    path: "{{ providentia_install_dir }}/docker-compose.yml"
   register: providentia_prebuilt_compose_file
 
 - name: Stop previous installation
@@ -23,6 +23,17 @@
     state: absent
   when: providentia_prebuilt_compose_file.stat.exists
 
+- name: Check for leftover git dir
+  ansible.builtin.stat:
+    path: "{{ providentia_install_dir_git }}"
+  register: providentia_pre_existing_git_dir
+
+- name: Clear previous git dir
+  ansible.builtin.file:
+    path: "{{ providentia_install_dir_git }}"
+    state: absent
+  when: providentia_pre_existing_git_dir.stat.exists
+
 - name: Clone Providentia repo
   ansible.builtin.git:
     accept_hostkey: true
@@ -31,6 +42,11 @@
     version: "{{ providentia_deploy_branch }}"
     force: true
     separate_git_dir: "{{ providentia_install_dir_git }}"
+
+- name: Test if using newer image with entrypoint set on image
+  ansible.builtin.command: "grep ENTRYPOINT {{ providentia_install_dir }}/Dockerfile"
+  ignore_errors: true
+  register: entrypoint_present
 
 - name: Template Providentia configuration
   ansible.builtin.template:
@@ -44,6 +60,8 @@
     - src: .makerc-vars
     - src: docker-compose.yml
       dest: docker/prod/
+  vars:
+    cmd_and_entrypoint_needed: "{{ entrypoint_present.rc != 0 }}"
 
 - name: Replace app URI-s in keycloak config
   ansible.builtin.replace:
@@ -57,7 +75,7 @@
     path: "{{ providentia_install_dir }}/CURRENT_VERSION"
     state: absent
 
-- name: Build Providentia image, start containers, clear cache
+- name: Build Providentia image, start containers
   community.general.make:
     chdir: "{{ providentia_install_dir }}"
     target: "{{ build }}"
@@ -66,4 +84,3 @@
   loop:
     - build
     - start
-    - clear-redis
