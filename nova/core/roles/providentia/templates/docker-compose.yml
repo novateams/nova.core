@@ -18,12 +18,15 @@ services:
     {% else %}
     image: "ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}"
     {% endif %}
+    {% if cmd_and_entrypoint_needed | default(false) %}
     entrypoint: ["/srv/app/docker-entrypoint.sh"]
     command: ["puma", "-C", "config/puma.production.rb"]
+    {% endif %}
     restart: unless-stopped
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
     environment:
+      - RAILS_ENV=production
       - DATABASE_URL={{ providentia_db_url }}
       - REDIS_URL={{ providentia_redis_url }}
       - OIDC_ISSUER={{ providentia_oidc_issuer }}

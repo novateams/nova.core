@@ -20,6 +20,26 @@
     - docker-compose.yml
     - Makefile
 
+- name: Pull latest containers
+  ansible.builtin.command:
+    cmd: docker compose pull
+  args:
+    chdir: "{{ providentia_install_dir }}"
+
+- name: Get image info
+  community.docker.docker_image_info:
+    name: "ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}"
+  register: providentia_image
+
+- name: Template Providentia configuration (2nd run)
+  ansible.builtin.template:
+    src: docker-compose.yml
+    dest: "{{ providentia_install_dir }}/"
+    lstrip_blocks: true
+    mode: "0644"
+  vars:
+    cmd_and_entrypoint_needed: "{{ not providentia_image.images[0].Config.Entrypoint }}"
+
 - name: Template builtin keycloak configuration
   ansible.builtin.template:
     src: "{{ item }}"
@@ -38,9 +58,3 @@
     pull: always
     remove_orphans: true
     wait: true
-
-- name: Clear cache
-  ansible.builtin.command: docker compose exec web rails r 'Rails.cache.clear'
-  changed_when: true
-  args:
-    chdir: "{{ providentia_install_dir }}"
