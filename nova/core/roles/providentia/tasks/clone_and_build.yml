@@ -32,7 +32,9 @@
   ansible.builtin.file:
     path: "{{ providentia_install_dir_git }}"
     state: absent
-  when: providentia_pre_existing_git_dir.stat.exists
+  when:
+    - providentia_prebuilt_compose_file.stat.exists
+    - providentia_pre_existing_git_dir.stat.exists
 
 - name: Clone Providentia repo
   ansible.builtin.git:
