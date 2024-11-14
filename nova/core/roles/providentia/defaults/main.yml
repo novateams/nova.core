@@ -40,6 +40,10 @@ providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_pa
 providentia_sentry_dsn: # Sentry exception tracking endpoint
 providentia_sentry_env: production # Sentry production value
 
+# app config
+# The secret key base for the Rails app. Will be auto-generated if left blank
+providentia_secret_key_base: "{{ lookup('password', '/dev/null length=96 chars=hexdigits') }}"
+
 # app config (SSO)
 # The URL for OpenID Connect endpoint (.well-known should be under this)
 providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/Providentia"
