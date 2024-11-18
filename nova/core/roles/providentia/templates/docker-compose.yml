@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 ---
 name: providentia
 services:
@@ -23,6 +24,9 @@ services:
     command: ["puma", "-C", "config/puma.production.rb"]
     {% endif %}
     restart: unless-stopped
+    configs:
+      - source: features.yml
+        target: /srv/app/config/features.yml
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
     environment:
@@ -162,3 +166,12 @@ volumes:
 {% if providentia_external_docker_network %}
 {{ providentia_external_docker_network_config | to_nice_yaml }}
 {% endif %}
+
+configs:
+  features.yml:
+    content: |
+      ---
+      production:
+        {% for feat in  providentia_enabled_features %}
+        {{ feat }}: true
+        {% endfor %}
