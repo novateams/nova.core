@@ -22,7 +22,7 @@ providentia_builtin_reverse_proxy_tls_mode: selfsigned # one of `selfsigned` or 
 providentia_builtin_reverse_proxy_tls_pregenerated_cert: # path to TLS cert on host
 providentia_builtin_reverse_proxy_tls_pregenerated_key: # path to TLS key on host
 
-# app config
+# deployment config
 # if providentia_deploy_branch is set, the code is cloned from github and image will be built on host
 # the value accepts a gitref and can be used deploy other tags or branches
 # otherwise, the image built in github will be used instead
@@ -43,6 +43,7 @@ providentia_sentry_env: production # Sentry production value
 # app config
 # The secret key base for the Rails app. Will be auto-generated if left blank
 providentia_secret_key_base: "{{ lookup('password', '/dev/null length=96 chars=hexdigits') }}"
+providentia_enabled_features: []
 
 # app config (SSO)
 # The URL for OpenID Connect endpoint (.well-known should be under this)
