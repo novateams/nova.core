@@ -14,7 +14,7 @@
 
 - name: Getting the API token ...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/auth/login
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/auth/login
     url_username: "{{ tuoni_vars.tuoni.auth.credentials.username }}"
     url_password: "{{ tuoni_vars.tuoni.auth.credentials.password }}"
     method: POST
