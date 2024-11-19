@@ -1,4 +1,5 @@
 ---
+tuoni_install_as_root: false # If set to true the Tuoni installation will be done as root
 tuoni_skip_install: false # If set to true the Tuoni installation will be skipped. Useful when only configuring users, listeners, and payloads
 tuoni_update_on_deploy: true # If set to false not to update exiting Tuoni version on subsequent deploys
 tuoni_install_path: /srv/tuoni # The path where Tuoni will be installed currently cannot be changed
