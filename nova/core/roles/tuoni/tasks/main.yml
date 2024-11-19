@@ -3,20 +3,25 @@
   ansible.builtin.include_tasks: install.yml
   when: not tuoni_skip_install
 
-- name: Getting the Tuoni config file from {{ inventory_hostname }}...
-  ansible.builtin.slurp:
-    src: "{{ tuoni_install_path }}/config/tuoni.yml"
-  register: tuoni_config
+- name: Getting Tuoni default credentials...
+  when:
+    - tuoni_api_username is not defined
+    - tuoni_api_password is not defined
+  block:
+    - name: Getting the Tuoni config file from {{ inventory_hostname }}...
+      ansible.builtin.slurp:
+        src: "{{ tuoni_install_path }}/config/tuoni.yml"
+      register: tuoni_config
 
-- name: Setting Tuoni variables...
-  ansible.builtin.set_fact:
-    tuoni_vars: "{{ tuoni_config.content | b64decode | from_yaml }}"
+    - name: Setting Tuoni variables...
+      ansible.builtin.set_fact:
+        tuoni_vars: "{{ tuoni_config.content | b64decode | from_yaml }}"
 
 - name: Getting the API token ...
   ansible.builtin.uri:
     url: https://{{ tuoni_fqdn }}:8443/api/v1/auth/login
-    url_username: "{{ tuoni_vars.tuoni.auth.credentials.username }}"
-    url_password: "{{ tuoni_vars.tuoni.auth.credentials.password }}"
+    url_username: "{{ tuoni_api_username | default(tuoni_vars.tuoni.auth.credentials.username) }}"
+    url_password: "{{ tuoni_api_password | default(tuoni_vars.tuoni.auth.credentials.password) }}"
     method: POST
     status_code: 200
     return_content: true
