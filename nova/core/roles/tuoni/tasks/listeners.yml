@@ -1,7 +1,7 @@
 ---
 - name: Listing all listeners...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/listeners
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners
     method: GET
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}
@@ -13,7 +13,7 @@
 
 - name: Deleting existing listeners...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/listeners/{{ item.id }}
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners/{{ item.id }}
     method: DELETE
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}
@@ -28,7 +28,7 @@
 
 - name: Creating following listeners...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/listeners
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners
     method: POST
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}
@@ -43,7 +43,7 @@
 
 - name: Re-listing all listeners...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/listeners
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners
     method: GET
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}
@@ -70,7 +70,7 @@
 
     - name: Generating payloads...
       ansible.builtin.uri:
-        url: https://{{ fqdn }}:8443/api/v1/payloads
+        url: https://{{ tuoni_fqdn }}:8443/api/v1/payloads
         method: POST
         headers:
           Authorization: Bearer {{ tuoni_api_token.content }}
