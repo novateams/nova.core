@@ -81,26 +81,33 @@
   loop:
     - dest: /etc/sssd/sssd.conf
       insertafter: ^\[sssd\]
+      regexp: ^default_domain_suffix =.*
       line: default_domain_suffix = {{ ad_domain_name }}
+
+    # Allowing RDP login when ad_gpo_access_control = enforcing
+    - dest: /etc/sssd/sssd.conf
+      insertafter: ^\[domain/{{ ad_domain_name }}\]
+      regexp: ^ad_gpo_map_remote_interactive =.*
+      line: ad_gpo_map_remote_interactive = +xrdp-sesman, +vmtoolsd
 
     - dest: /etc/sssd/sssd.conf
       insertafter: ^\[domain/{{ ad_domain_name }}\]
-      line: ad_gpo_map_remote_interactive = +xrdp-sesman, +vmtoolsd # Allowing RDP login when ad_gpo_access_control = enforcing
-
-    - dest: /etc/sssd/sssd.conf
-      insertafter: ^ad_gpo_map_remote_interactive = .*
+      regexp: ^ad_gpo_access_control =.*
       line: ad_gpo_access_control = enforcing
 
     - dest: /etc/sssd/sssd.conf
-      regexp: ^services = nss
+      insertafter: ^\[sssd\]
+      regexp: ^services =.*
       line: services = nss, pam, sudo
 
     - dest: /etc/sssd/sssd.conf
-      regexp: ^default_shell =
+      insertafter: ^\[sssd\]
+      regexp: ^default_shell =.*
       line: default_shell = /bin/bash
 
+    # Defaults to Domain Admins
     - dest: /etc/sudoers
       regexp: .*{{ ad_domain_name }}.*
-      line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL" # Defaults to Domain Admins
+      line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL"
       insertafter: ^%sudo
   notify: Restarting sssd service...
