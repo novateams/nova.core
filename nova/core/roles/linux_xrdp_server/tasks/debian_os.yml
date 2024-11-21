@@ -13,7 +13,8 @@
   delay: 3
   notify: linux_xrdp_server_reboot
 
-- name: "{{ 'Locking' if linux_xrdp_server_xorgxrdp_version != {} else 'Unlocking' }} xorgxrdp version..." # This is to avoid updating Docker with apt upgrade
+# This is to avoid updating xorgxrdp with apt upgrade when it's versioned
+- name: "{{ 'Locking' if linux_xrdp_server_xorgxrdp_version != {} else 'Unlocking' }} xorgxrdp version..."
   ansible.builtin.dpkg_selections:
     name: xorgxrdp
     selection: "{{ 'hold' if linux_xrdp_server_xorgxrdp_version != {} else 'install' }}"
@@ -24,29 +25,29 @@
     groups: ssl-cert
     append: true
 
-- name: Setting xrdp configuration v1...
+- name: Setting XRDP configuration parameters...
   ansible.builtin.lineinfile:
     dest: "{{ xrdp_config.dest }}"
-    regexp: "{{ xrdp_config.regexp | default(omit) }}"
-    insertafter: "{{ xrdp_config.insertafter | default(omit) }}"
+    regexp: "{{ xrdp_config.regexp }}"
     line: "{{ xrdp_config.line }}"
   loop_control:
     loop_var: xrdp_config
+    label: "{{ xrdp_config.line }}"
   loop:
     - dest: /etc/X11/Xwrapper.config
-      regexp: allowed_users=console
+      regexp: ^allowed_users=.*
       line: allowed_users=anybody
 
     - dest: /etc/xrdp/xrdp.ini
-      regexp: ^max_bpp=
+      regexp: ^max_bpp=.*
       line: max_bpp=15
 
     - dest: /etc/xrdp/xrdp.ini
-      regexp: ^ls_top_window_bg_color=
+      regexp: ^ls_top_window_bg_color=.*
       line: ls_top_window_bg_color=000000 # Sets the XRDP login screen background color to black
 
     - dest: /etc/xrdp/xrdp.ini
-      regexp: ^#ls_background_image=
+      regexp: ^#ls_background_image=.*
       line: ls_background_image= # Enables setting login screen background
   notify: Restarting xrdp service...
 
