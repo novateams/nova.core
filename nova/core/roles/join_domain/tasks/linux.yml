@@ -51,7 +51,7 @@
       until: domain_join_state.rc == 0
       retries: 3
       delay: 3
-      notify: join_domain_reboot
+      notify: "{{ 'join_domain_reboot' if not join_domain_reboot_linux_immediately else omit }}"
 
 - name: Creating user home folder automatically...
   ansible.builtin.command: pam-auth-update --enable mkhomedir
@@ -111,3 +111,7 @@
       line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL"
       insertafter: ^%sudo
   notify: Restarting sssd service...
+
+- name: Rebooting immediately after joining domain...
+  ansible.builtin.reboot:
+  when: join_domain_reboot_linux_immediately
