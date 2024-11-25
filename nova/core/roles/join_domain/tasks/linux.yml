@@ -74,9 +74,10 @@
 - name: Updating domain related config...
   ansible.builtin.lineinfile:
     dest: "{{ item.dest }}"
-    line: "{{ item.line }}"
+    line: "{{ item.line | default(omit) }}"
     regexp: "{{ item.regexp | default(omit) }}"
     insertafter: "{{ item.insertafter | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
     mode: "0600"
   loop:
     - dest: /etc/sssd/sssd.conf
@@ -95,15 +96,10 @@
       regexp: ^ad_gpo_access_control =.*
       line: ad_gpo_access_control = enforcing
 
+    # SSSD manages the services itself
     - dest: /etc/sssd/sssd.conf
-      insertafter: ^\[sssd\]
       regexp: ^services =.*
-      line: services = nss, pam, sudo
-
-    - dest: /etc/sssd/sssd.conf
-      insertafter: ^\[sssd\]
-      regexp: ^default_shell =.*
-      line: default_shell = /bin/bash
+      state: absent
 
     # Defaults to Domain Admins
     - dest: /etc/sudoers
