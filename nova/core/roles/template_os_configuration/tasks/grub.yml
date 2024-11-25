@@ -15,13 +15,16 @@
         line: GRUB_TIMEOUT=3
 
     - name: Applying GRUB configuration...
-      ansible.builtin.shell: update-grub
+      ansible.builtin.command: update-grub
+      changed_when: true
       when: ansible_os_family == "Debian"
 
     - name: Applying GRUB configuration...
-      ansible.builtin.shell: grub2-mkconfig -o /boot/grub2/grub.cfg
+      ansible.builtin.command: grub2-mkconfig -o /boot/grub2/grub.cfg
+      changed_when: true
       when: ansible_os_family == "RedHat"
 
     - name: Applying GRUB configuration...
-      ansible.builtin.shell: grub-mkconfig -o /boot/grub/grub.cfg
+      ansible.builtin.command: grub-mkconfig -o /boot/grub/grub.cfg
+      changed_when: true
       when: ansible_os_family == 'Archlinux'
