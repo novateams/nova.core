@@ -137,6 +137,7 @@ components:
                   role.name.ldap.attribute: [sAMAccountName],
                   role.object.classes: [group],
                   roles.dn: ["{{ mapper.ldap_groups_dn }}"],
+                  roles.ldap.filter: [{{ mapper.roles_ldap_filter | default("") }}],
                   memberof.ldap.attribute: [memberOf],
                   membership.attribute.type: [DN],
                   membership.ldap.attribute: [member],
