@@ -234,7 +234,7 @@ clientScopes:
             multivalued: "true"
             id.token.claim: "true"
             access.token.claim: "true"
-            claim.name: "resource_access.${client_id}.roles"
+            claim.name: {{ client.client_roles_mapper_claim_name | default("resource_access.${client_id}.roles") }}
             jsonType.label: String
             usermodel.clientRoleMapping.clientId: {{ client.client_name }}
     {% endif %}
