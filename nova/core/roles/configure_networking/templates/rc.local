@@ -33,7 +33,7 @@ ifconfig $INTERFACE_{{ interface_loop }}_NAME inet6 {{ extra_ipv6 | ansible.util
 {% endfor %}
 
 echo "This file is re-generated on each startup by /etc/rc.local" > /etc/resolv.conf
-{% if dns_domain %}
+{% if dns_domain != {} %}
 echo "domain {{ dns_domain }}" >> /etc/resolv.conf
 {% endif %}
 {% if dns_search %}

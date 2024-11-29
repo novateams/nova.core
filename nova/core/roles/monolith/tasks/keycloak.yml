@@ -21,5 +21,9 @@
   vars:
     secrets_vault_secrets_path: keycloak
     keycloak_hostname: "{{ monolith_keycloak_fqdn }}"
-    keycloak_admin_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_keycloak_' + keycloak_admin_user | default('admin') + '_password') }}"
-    keycloak_postgres_db_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_keycloak_postgres_db_password') }}"
+    keycloak_admin_password:
+      "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
+      + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_keycloak_' + keycloak_admin_user | default('admin') + '_password') }}"
+    keycloak_postgres_db_password:
+      "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
+      + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_keycloak_postgres_db_password') }}"

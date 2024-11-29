@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 ---
 name: providentia
 services:
@@ -18,12 +19,19 @@ services:
     {% else %}
     image: "ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}"
     {% endif %}
+    {% if cmd_and_entrypoint_needed | default(false) %}
     entrypoint: ["/srv/app/docker-entrypoint.sh"]
     command: ["puma", "-C", "config/puma.production.rb"]
+    {% endif %}
     restart: unless-stopped
+    configs:
+      - source: features.yml
+        target: /srv/app/config/features.yml
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
     environment:
+      - RAILS_ENV=production
+      - SECRET_KEY_BASE={{ providentia_secret_key_base }}
       - DATABASE_URL={{ providentia_db_url }}
       - REDIS_URL={{ providentia_redis_url }}
       - OIDC_ISSUER={{ providentia_oidc_issuer }}
@@ -158,3 +166,12 @@ volumes:
 {% if providentia_external_docker_network %}
 {{ providentia_external_docker_network_config | to_nice_yaml }}
 {% endif %}
+
+configs:
+  features.yml:
+    content: |
+      ---
+      production:
+        {% for feat in  providentia_enabled_features %}
+        {{ feat }}: true
+        {% endfor %}

@@ -3,17 +3,27 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Templating network configuration script...
+    - name: Templating nmcli configuration files...
       ansible.builtin.template:
-        src: nmcli.sh
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         mode: "0644"
         lstrip_blocks: true
+      loop_control:
+        label: "{{ item.src }}"
+      loop:
+        - src: 70-persistent-net.rules
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - src: nmcli.sh
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
 
-    - name: Getting file info...
+    - name: Getting configuration files' info...
       ansible.builtin.stat:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+        path: "{{ item }}"
       register: file_size
+      loop:
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
 
     # Not running command_run_check.yml here because if that fails the next step will also fail and that is faster then running the check
     - name: Pre-Creating temp file...
@@ -26,11 +36,14 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c touch /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+            arguments: -c touch {{ item }}
             path: /bin/bash
         status_code: 201
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
+      loop:
+        - /etc/udev/rules.d/70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
 
     - name: Preparing file upload...
       ansible.builtin.uri:
@@ -44,23 +57,33 @@
           spec:
             attributes:
               overwrite: true
-              size: "{{ file_size.stat.size }}"
-            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+              size: "{{ file_size.results[file_index].stat.size }}"
+            path: "{{ item }}"
         status_code: 201
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       register: file_upload_prep
+      loop_control:
+        index_var: file_index
+      loop:
+        - /etc/udev/rules.d/70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
 
     - name: Uploading file...
       ansible.builtin.uri:
-        url: "{{ file_upload_prep.json }}"
+        url: "{{ file_upload_prep.results[file_upload_index].json }}"
         method: PUT
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+        src: "{{ item }}"
         status_code: 200
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
+      loop_control:
+        index_var: file_upload_index
+      loop:
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
 
     - name: Configuring network...
       ansible.builtin.uri:
@@ -81,3 +104,14 @@
 
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
+
+    # Reboot is required for udev rules to take effect
+    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware_rest.vcenter_vm_guest_power:
+        state: reboot
+        vm: "{{ created_vm_info.value[0].vm | default(vcenter_vm_info.value[0].vm) }}"
+        session_timeout: 1800
+      register: vcenter_vm_restart
+      until: not vcenter_vm_restart.failed
+      retries: 5
+      delay: 2

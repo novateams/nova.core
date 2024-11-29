@@ -13,6 +13,9 @@ $Interface = "Ethernet{{ loop.index -1 }}"
 # Looping over IP addresses
 {% for ip_address in interface.addresses %}
 
+# Disabling DHCP and Router Discovery for the interface
+Set-NetIPInterface -InterfaceAlias $Interface -Dhcp Disabled -RouterDiscovery Disabled
+
 {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
 
 # Excluding IPv4 gateway if it already exists

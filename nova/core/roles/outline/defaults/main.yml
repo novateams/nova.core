@@ -8,7 +8,7 @@ db_container_name: outline_postgres
 storage_container_name: outline-storage
 minio_client_container_name: outline-mc
 
-outline_version: 0.80.2
+outline_version: 0.81.0
 outline_postgres_version: 17
 
 app_container_image: outlinewiki/outline:{{ outline_version }}
@@ -31,7 +31,7 @@ outline_container_remap_uid: false
 outline_container_uid: 1001
 
 ## Use "s3" or "local" file storage mode
-outline_file_storage_mode: s3
+outline_file_storage_mode: local
 
 ## If we use the s3 mode, do we want to use minio client to configure the s3 service
 minio_client_configuration: true

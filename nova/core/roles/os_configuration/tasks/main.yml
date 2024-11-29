@@ -21,6 +21,10 @@
           ansible.builtin.include_tasks: freebsd.yml
           when: ansible_system == "FreeBSD"
 
+        - name: Including ESXi configuration tasks...
+          ansible.builtin.include_tasks: esxi.yml
+          when: ansible_system == "VMkernel"
+
     - name: Configuring Network OS...
       when: ansible_network_os is defined
       block:

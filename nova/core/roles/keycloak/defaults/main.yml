@@ -1,5 +1,5 @@
 ---
-keycloak_version: 25.0.5
+keycloak_version: 26.0.5
 keycloak_config_cli_version: 6.1.4-25 # https://github.com/adorsys/keycloak-config-cli
 keycloak_postgres_version: 15
 keycloak_container_config_folder: /srv/keycloak

@@ -1,7 +1,7 @@
 ---
 - name: Listing all users...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/users
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/users
     method: GET
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}
@@ -10,7 +10,7 @@
 
 - name: Creating following users...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/users
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/users
     method: POST
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}
@@ -28,7 +28,7 @@
 
 - name: Updating following users' password...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}:8443/api/v1/users/{{ item.username }}/password
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/users/{{ item.username }}/password
     method: PUT
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}

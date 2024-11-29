@@ -18,6 +18,7 @@ pregenerated_password:
   | default(environment_name) + '/data/' + secrets_vault_secrets_path | default(project_fullname) + ':' + inventory_hostname + '_' + item.username) }}"
 random_generated_password: "{{ lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits') }}"
 
+# Windows defaults
 windows_domain_admin_groups:
   - Domain Admins
   - Schema Admins
@@ -32,6 +33,12 @@ windows_admin_groups:
 windows_user_groups:
   - Users
 
+# The strategy to use when configuring domain groups with members
+# Only gets used when the domain_groups list has members defined
+# 'replace' will remove all members and add the ones specified in the domain_groups list
+# 'add' will add the members specified in the domain_groups list to the existing members
+accounts_domain_groups_members_strategy: replace
+
 unix_distro_root_group_map:
   Debian: sudo
   CentOS: wheel
@@ -43,6 +50,7 @@ unix_distro_root_group_map:
   Archlinux: wheel
   AlmaLinux: wheel
   Parrot: sudo
+  VMkernel: root
 
 unix_distro_shell_map:
   FreeBSD: /bin/tcsh

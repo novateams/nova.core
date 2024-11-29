@@ -12,14 +12,16 @@
     scope: global
     add_mode: add
   become: true
-  become_user: "{{ ansible_user }}"
+  become_user: "{{ 'root' if tuoni_install_as_root else ansible_user }}"
 
 - name: Installing Tuoni...
   ansible.builtin.shell: |
     export SILENT=1
+    {{ 'export TUONI_USERNAME=' + tuoni_username if tuoni_username != {} else '' }}
+    {{ 'export TUONI_PASSWORD=' + tuoni_password if tuoni_password != {} else '' }}
     {{ '' if tuoni_update_on_deploy else 'NO_UPDATE=1' }} /tmp/tuoni.sh
     cd /srv/tuoni
     ./tuoni start
   changed_when: true
   become: true
-  become_user: "{{ ansible_user }}"
+  become_user: "{{ 'root' if tuoni_install_as_root else ansible_user }}"

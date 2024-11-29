@@ -1,5 +1,7 @@
 ---
 fresh_deploy: false
+dns_domain: {}
+dns_search: []
 dns_servers: []
 dns_servers6: []
 ntp_servers:
@@ -46,3 +48,6 @@ extra_routes: [] # Configure extra routes per interfaces.
 configure_networking_panos_enable_ipv6: true # Enable IPv6 on configured interfaces
 configure_networking_panos_primary_dns_server: "{{ dns_servers[0] }}"
 configure_networking_panos_secondary_dns_server: "{{ dns_servers6[0] }}"
+
+# VMWare ESXi
+configure_networking_esxi_mgmt_interface_name: vmk0 # Default name of the management interface for ESXi that will have the IP address configured

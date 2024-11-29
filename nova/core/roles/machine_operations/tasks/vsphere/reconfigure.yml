@@ -1,0 +1,163 @@
+- name: Reconfiguring existing VM tasks...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Getting {{ custom_vm_name | default(vm_name) }} VM CPU info...
+      vmware.vmware_rest.vcenter_vm_hardware_cpu_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: vsphere_vm_cpu_info
+      retries: 5
+      delay: 2
+
+    - name: Getting {{ custom_vm_name | default(vm_name) }} VM Memory info...
+      vmware.vmware_rest.vcenter_vm_hardware_memory_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: vsphere_vm_memory_info
+      retries: 5
+      delay: 2
+
+    # When Providentia is used hardware_cpu and hardware_ram are always defined
+    # For local inventories both need to be defined in order to reconfigure them
+    - name: Reconfiguring CPU and RAM values...
+      when:
+        - hardware_cpu != none
+        - hardware_ram != none
+      block:
+        - name: Trying to configure {{ custom_vm_name | default(vm_name) }} CPU & RAM values when it's powered on...
+          block:
+            - name: Setting {{ custom_vm_name | default(vm_name) }} CPU count to {{ hardware_cpu }}...
+              vmware.vmware_rest.vcenter_vm_hardware_cpu:
+                vm: "{{ vcenter_vm_info.value[0].vm }}"
+                count: "{{ hardware_cpu }}"
+              when:
+                - hardware_cpu != none
+                - vsphere_vm_cpu_info.value.count != hardware_cpu
+              retries: 2
+              delay: 2
+
+            - name: Setting {{ custom_vm_name | default(vm_name) }} RAM to {{ hardware_ram }}GB...
+              vmware.vmware_rest.vcenter_vm_hardware_memory:
+                vm: "{{ vcenter_vm_info.value[0].vm }}"
+                size_MiB: "{{ hardware_ram * 1024 }}"
+              when:
+                - hardware_ram != none
+                - vsphere_vm_memory_info.value.size_MiB != (hardware_ram * 1024)
+              retries: 2
+              delay: 2
+
+          # There are too many edge cases when the CPU and RAM values reconfiguration might fail
+          # Most of them will work whtn the VM is powered off
+          rescue:
+            - name: Including nova.core.powerstate role...
+              ansible.builtin.include_role:
+                name: nova.core.powerstate
+              vars:
+                shutdown: true
+
+            - name: Trying to configure {{ custom_vm_name | default(vm_name) }} CPU & RAM values when it's powered off...
+              block:
+                - name: Setting {{ custom_vm_name | default(vm_name) }} CPU count to {{ hardware_cpu }}...
+                  vmware.vmware_rest.vcenter_vm_hardware_cpu:
+                    vm: "{{ vcenter_vm_info.value[0].vm }}"
+                    count: "{{ hardware_cpu }}"
+                  when:
+                    - hardware_cpu != none
+                    - vsphere_vm_cpu_info.value.count != hardware_cpu
+                  retries: 2
+                  delay: 2
+
+                - name: Setting {{ custom_vm_name | default(vm_name) }} RAM to {{ hardware_ram }}GB...
+                  vmware.vmware_rest.vcenter_vm_hardware_memory:
+                    vm: "{{ vcenter_vm_info.value[0].vm }}"
+                    size_MiB: "{{ hardware_ram * 1024 }}"
+                  when:
+                    - hardware_ram != none
+                    - vsphere_vm_memory_info.value.size_MiB != (hardware_ram * 1024)
+                  retries: 2
+                  delay: 2
+
+                - name: Including nova.core.powerstate role...
+                  ansible.builtin.include_role:
+                    name: nova.core.powerstate
+                  vars:
+                    poweron: true
+
+              # Powering the VM back on if this block also fails
+              rescue:
+                - name: Including nova.core.powerstate role...
+                  ansible.builtin.include_role:
+                    name: nova.core.powerstate
+                  vars:
+                    poweron: true
+
+                - name: Unable to reconfigure CPU or RAM for {{ custom_vm_name | default(vm_name) }}...
+                  ansible.builtin.fail:
+                    msg: |
+                      Unable to reconfigure CPU or RAM for {{ custom_vm_name | default(vm_name) }}
+                      Please check the errors above
+
+    - name: Expanding OS disk size...
+      when: os_disk_size_gb is defined or hardware_primary_disk_size is defined
+      block:
+        - name: Getting {{ custom_vm_name | default(vm_name) }} VM disk info...
+          community.vmware.vmware_guest_info:
+            datacenter: "{{ datacenter }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            folder: "{{ folder }}"
+            schema: vsphere
+            properties:
+              - config.hardware.device
+          register: vm_disk_info
+          retries: 6
+          delay: 5
+
+        - name: Checking if {{ custom_vm_name | default(vm_name) }} has snapshots...
+          community.vmware.vmware_guest_snapshot_info:
+            datacenter: "{{ datacenter }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            folder: "{{ folder }}"
+          register: snapshot_info
+
+        - name: Setting OS disk size...
+          ansible.builtin.set_fact:
+            os_disk_size: "{{ os_disk_size_gb * 1024 }}"
+          when:
+            - os_disk_size_gb is defined
+            - hardware_primary_disk_size is not defined
+
+        - name: Setting OS disk size...
+          ansible.builtin.set_fact:
+            os_disk_size: "{{ hardware_primary_disk_size * 1024 }}"
+          when: hardware_primary_disk_size is defined
+
+        - name: Setting current disk size as fact...
+          ansible.builtin.set_fact:
+            current_os_disk_size: "{{ (vm_disk_info.instance.config.hardware.device
+              | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk') | map(attribute='capacityInKB') | first / 1024) | int }}"
+
+        - name: Setting {{ custom_vm_name | default(vm_name) }} disk size to {{ (os_disk_size | int / 1024) | int }}GB...
+          community.vmware.vmware_guest:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
+            cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
+            disk: "{{ machine_operations_vsphere_disk_config }}"
+          when:
+            - vm_disk_info.instance.config.hardware.device | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk')
+              | map(attribute='backing.deltaDiskFormat') | first == none # This means that the machine is not a Linked Clone
+            - current_os_disk_size | int < os_disk_size | int
+            - snapshot_info.guest_snapshots == {}
+
+        - name: Skipping disk size expansion for {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.debug:
+            msg: SKIPPING DISK SIZE EXPANSION FOR {{ custom_vm_name | default(vm_name) }} BECAUSE IT HAS SNAPSHOTS!
+          when:
+            - current_os_disk_size | int < os_disk_size | int
+            - snapshot_info.guest_snapshots != {}
+
+        - name: Skipping disk size expansion for {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.debug:
+            msg: SKIPPING DISK SIZE EXPANSION FOR {{ custom_vm_name | default(vm_name) }} BECAUSE IT IS A LINKED CLONE!
+          when:
+            - current_os_disk_size | int < os_disk_size | int
+            - vm_disk_info.instance.config.hardware.device | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk')
+              | map(attribute='backing.deltaDiskFormat') | first != none # This means that the machine is a Linked Clone

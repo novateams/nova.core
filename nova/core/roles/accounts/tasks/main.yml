@@ -28,6 +28,10 @@
           ansible.builtin.include_tasks: unix_create.yml
           when: ansible_system in ["FreeBSD", "Linux"]
 
+        - name: Including ESXi accounts creation tasks...
+          ansible.builtin.include_tasks: esxi_create.yml
+          when: ansible_system == "VMkernel"
+
         - name: Including MacOS accounts creation tasks...
           ansible.builtin.include_tasks: macos_create.yml
           when: ansible_system == "Darwin"

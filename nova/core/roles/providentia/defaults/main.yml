@@ -22,7 +22,7 @@ providentia_builtin_reverse_proxy_tls_mode: selfsigned # one of `selfsigned` or 
 providentia_builtin_reverse_proxy_tls_pregenerated_cert: # path to TLS cert on host
 providentia_builtin_reverse_proxy_tls_pregenerated_key: # path to TLS key on host
 
-# app config
+# deployment config
 # if providentia_deploy_branch is set, the code is cloned from github and image will be built on host
 # the value accepts a gitref and can be used deploy other tags or branches
 # otherwise, the image built in github will be used instead
@@ -40,14 +40,28 @@ providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_pa
 providentia_sentry_dsn: # Sentry exception tracking endpoint
 providentia_sentry_env: production # Sentry production value
 
+# app config
+# The secret key base for the Rails app. Will be auto-generated if left blank
+providentia_secret_key_base: "{{ lookup('password', '/dev/null length=96 chars=hexdigits') }}"
+providentia_enabled_features: []
+
 # app config (SSO)
 # The URL for OpenID Connect endpoint (.well-known should be under this)
 providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/Providentia"
 
-providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
-providentia_resource_login: User # The role name, which allows _login_ access to Providentia
-providentia_resource_superadmin: Super_Admin # The role name, which allows full administrator access to Providentiua
-providentia_resource_env_creator: Environment_Creator # The role name, which allows creating new environments in Providentia
-providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
-providentia_resource_prefix: Providentia_ # The prefix on authorization roles
 providentia_auth_mode: resource_access # One of `resource_access` or `scope`, specifying where in access token the authorization fields are located
+providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
+providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
+providentia_resource_env_creator: Environment_Creator # The role name, which allows creating new environments in Providentia
+
+# Resource groups
+
+# The prefix for authorization roles (groups)
+providentia_resource_prefix: Providentia_
+
+# The suffix of the group name, which allows login access to Providentia eg. Providentia_User
+# This group should be assigned to all users who should have access to Providentia, even Providentia_Super_Admin members
+providentia_resource_login: User
+
+# The suffix of the group name, which allows full administrator access to Providentiua eg. Providentia_Super_Admin
+providentia_resource_superadmin: Super_Admin

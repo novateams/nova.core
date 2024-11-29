@@ -48,8 +48,9 @@
 # For some reason that role is not visible in the UI
 - name: "{{ 'Creating' if 'Administrators from LDAP' not in all_roles.json | map(attribute='description') else 'Updating' }} Administrators role for LDAP..."
   ansible.builtin.uri:
-    url: https://{{ nexus_fqdn }}/service/rest/v1/security/roles/{{ '' if 'Administrators from LDAP' not in all_roles.json | map(attribute='description') else nexus_ldap_administrators_group
-      }}
+    url:
+      https://{{ nexus_fqdn }}/service/rest/v1/security/roles/{{ '' if 'Administrators from LDAP' not in all_roles.json
+      | map(attribute='description') else nexus_ldap_administrators_group }}
     user: "{{ nexus_admin_username }}"
     password: "{{ nexus_admin_password }}"
     method: "{{ 'POST' if 'Administrators from LDAP' not in all_roles.json | map(attribute='description') else 'PUT' }}"

@@ -9,6 +9,8 @@ services:
     restart: unless-stopped
     volumes:
       - "{{ nexus_container_config_folder }}/data:/nexus-data"
+    environment:
+      NEXUS_SECRETS_KEY_FILE: /nexus-data/nexus.secrets.json
     logging:
       driver: json-file
       options:

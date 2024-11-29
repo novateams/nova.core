@@ -1,7 +1,27 @@
 ---
+# All of the vmware.vmware_rest have retries for stability
+- name: Checking if {{ custom_vm_name | default(vm_name) }} already exists...
+  vmware.vmware_rest.vcenter_vm_info:
+    filter_names: "{{ custom_vm_name | default(vm_name) }}"
+  register: vcenter_vm_info
+  until: not vcenter_vm_info.failed
+  retries: 5
+  delay: 2
+  delegate_to: localhost
+  become: false
+
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml
   when: deploy_mode in ['undeploy', 'redeploy']
 
 - name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
   ansible.builtin.include_tasks: create.yml
+
+- name: Including {{ custom_vm_name | default(vm_name) }} reconfiguration tasks...
+  ansible.builtin.include_tasks: reconfigure.yml
+  when:
+    - not role_only_wp # Not reconfiguring when running from pre_vm_role
+    - not role_only # Not reconfiguring on role only
+    - not fresh_deploy # Not configuring on first deploy
+    - machine_operations_reconfigure_vm_on_deploy
+    - vcenter_vm_info.value != [] # Only reconfigure if VM exists

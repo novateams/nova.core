@@ -1,8 +1,12 @@
 ---
+tuoni_install_as_root: false # If set to true the Tuoni installation will be done as root
 tuoni_skip_install: false # If set to true the Tuoni installation will be skipped. Useful when only configuring users, listeners, and payloads
 tuoni_update_on_deploy: true # If set to false not to update exiting Tuoni version on subsequent deploys
 tuoni_install_path: /srv/tuoni # The path where Tuoni will be installed currently cannot be changed
 tuoni_payloads_path: /srv/payloads # The path where Tuoni payloads will be downloaded to
+tuoni_fqdn: "{{ fqdn }}" # The FQDN of the Tuoni server
+tuoni_username: {} # Set custom default (first) user that will be created in Tuoni. If left empty a random username will be tuoni
+tuoni_password: {} # Set custom default (first) user password that will be created in Tuoni. If left empty a random password will be auto-generated
 
 tuoni_users: # The list of users that will be created in Tuoni pass a custom list as a variable to override this default list
   - username: operator
@@ -16,15 +20,18 @@ tuoni_users: # The list of users that will be created in Tuoni pass a custom lis
       - SEND_COMMANDS
       - VIEW_RESOURCES # this default permission, cannot be removed
 
+# The host that will be used for the default reverse HTTP listener
+tuoni_callbock_hosts:
+  - "{{ tuoni_fqdn }}"
+
 tuoni_listeners: # The list of listeners that will be created in Tuoni pass a custom list as a variable to override this default list
-  - name: HttpListener
+  - name: HTTPS-Listener
     plugin: shelldot.listener.agent-reverse-http
     configuration:
-      port: 80
+      port: 443
       bindToPort: null
       httpCallbacks:
-        - hosts:
-            - "{{ fqdn }}"
+        - hosts: "{{ tuoni_callbock_hosts }}"
       getUri: /get
       postUri: /post
       stagedUri: /payload
@@ -33,7 +40,7 @@ tuoni_listeners: # The list of listeners that will be created in Tuoni pass a cu
       metadataCookieName: JWT_SESSION
       metadataPrefix: metaPrefix
       metadataSuffix: metaSuffix
-      https: false
+      https: true
       sleep: 5
       sleepRandom: 5
 
@@ -41,10 +48,10 @@ tuoni_payloads: # The list of payloads that will be created in Tuoni pass a cust
   - payloadTemplateId: shelldot.payload.windows-x64
     configuration:
       type: EXECUTABLE
-    listenerId: "{{ tuoni_created_listeners.json.values() | selectattr('name', 'equalto', 'HttpListener') | map(attribute='id') | first }}"
+    listenerId: "{{ tuoni_created_listeners.json.values() | selectattr('name', 'equalto', 'HTTPS-Listener') | map(attribute='id') | first }}"
     encrypted: true
   - payloadTemplateId: shelldot.payload.windows-x64
     configuration:
       type: DLL
-    listenerId: "{{ tuoni_created_listeners.json.values() | selectattr('name', 'equalto', 'HttpListener') | map(attribute='id') | first }}"
+    listenerId: "{{ tuoni_created_listeners.json.values() | selectattr('name', 'equalto', 'HTTPS-Listener') | map(attribute='id') | first }}"
     encrypted: true

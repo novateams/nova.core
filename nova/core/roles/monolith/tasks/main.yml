@@ -98,6 +98,7 @@
   block:
     - name: Getting Vault root token & unseal key...
       ansible.builtin.command: cat /srv/vault/creds/root_token
+      changed_when: false
       register: vault_creds
 
     - name: Generating Hashicorp Vault token for {{ monolith_vault_fqdn }}...
@@ -116,7 +117,9 @@
 
 - name: Including following service configuration tasks...
   ansible.builtin.include_tasks:
-    file: "{{ item }}.yml"
+    file: "{{ service }}.yml"
+  loop_control:
+    loop_var: service
   loop:
     - vault
     - keycloak

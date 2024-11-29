@@ -9,7 +9,8 @@ nexus_configure: false # Set to true to also configure Nexus after installation
 nexus_configure_ldap: false # Set to true to also configure LDAP after installation
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
-nexus_version: 3.72.0 # Nexus version to install
+nexus_active_encryption_key_id: Primary Encryption Key # Name of the active encryption key that comes with this role
+nexus_version: 3.74.0 # Nexus version to install
 
 nexus_realms_to_activate: # List of authentication realms to activate
   - NexusAuthenticatingRealm
@@ -20,7 +21,8 @@ nexus_realms_to_activate: # List of authentication realms to activate
 nexus_ldap_administrators_group: # sAMAccountName of the pre-created group in LDAP that will be used to grant admin access to Nexus
 nexus_ldap_configuration:
   name: "{{ nexus_ldap_name }}" # Name of the LDAP configuration
-  id: "{{ omit if existing_ldap_servers.json == [] else existing_ldap_servers.json[0].id }}" # This is here to make sure that the configuration is not created twice
+  # This is here to make sure that the configuration is not created twice
+  id: "{{ omit if existing_ldap_servers.json == [] else existing_ldap_servers.json[0].id }}"
   protocol: "{{ nexus_ldap_ptocoal | default('ldaps') }}" # ldap or ldaps
   useTrustStore: true
   host: "{{ nexus_ldap_host }}" # FQDN of the LDAP server
@@ -41,7 +43,8 @@ nexus_ldap_configuration:
   userPasswordAttribute: ""
   ldapGroupsAsRoles: true
   groupType: STATIC
-  groupBaseDn: "{{ nexus_groups_dn_under_searchbase }}" # The relative DN where group objects are found (e.g. ou=Group). This value will have the Search base DN value appended to form the full Group search base DN
+  # The relative DN where group objects are found (e.g. ou=Group). This value will have the Search base DN value appended to form the full Group search base DN
+  groupBaseDn: "{{ nexus_groups_dn_under_searchbase }}"
   groupSubtree: true
   groupObjectClass: group
   groupIdAttribute: sAMAccountName
