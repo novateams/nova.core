@@ -1,4 +1,0 @@
----
-vault_path: "{{ vault_address }}/v1/{{ environment_name }}/data/{{ project_fullname }}"
-admin_key_name: "{{ inventory_hostname }}_{{ item.username }}"
-extra_secrets: []
