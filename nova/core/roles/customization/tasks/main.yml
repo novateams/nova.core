@@ -1,14 +1,4 @@
 ---
-- name: Stopping play if immutable var is true...
-  when: immutable or 'immutable' in group_names
-  block:
-    - name: Warning...
-      ansible.builtin.debug:
-        msg: Stopping play since immutable flag or group is true!
-
-    - name: Stopping play...
-      ansible.builtin.meta: end_host
-
 - name: Checking if {{ customization_role_path }}/{{ role }} role exists...
   ansible.builtin.stat:
     path: "{{ customization_role_path }}/{{ role }}"
