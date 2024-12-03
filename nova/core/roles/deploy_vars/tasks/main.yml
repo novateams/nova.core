@@ -1,4 +1,9 @@
 ---
+- name: IMMUTABLE
+  ansible.builtin.fail:
+    msg: "{{ inventory_hostname }} Has immutable variable or group set and won't be configured"
+  when: immutable or ['immutable', 'custom_immutable'] | intersect(group_names) | length > 0
+
 - name: Including following post-deploy_vars roles...
   ansible.builtin.include_role:
     name: "{{ item }}"
