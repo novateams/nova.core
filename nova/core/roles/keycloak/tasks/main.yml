@@ -54,7 +54,7 @@
   ansible.builtin.fail:
     msg: |
       Keycloak configuration failed. Login to {{ fqdn | default('Keycloak server') }} and check the logs with:
-      docker logs keycloak-config
+      sudo docker logs keycloak-config
   when: keycloak_config_status.container.State.ExitCode != 0
 
 - name: Finding and restarting proxy container...
