@@ -2,27 +2,12 @@
 - name: Including Vault preparation tasks...
   ansible.builtin.include_tasks: prepare_vault.yml
 
-- name: Including prepare & save secrets tasks for pre_deploy_secrets...
+- name: Including save secrets tasks for secrets...
   ansible.builtin.include_tasks: save_secrets.yml
-  when: secrets_to_vault_pre_deploy_secrets != []
-
-- name: Including prepare & save secrets tasks for secrets...
-  ansible.builtin.include_tasks: save_secrets.yml
-  when: secrets != []
-
-- name: Merging all account types to one list...
-  ansible.builtin.set_fact:
-    accounts: "{{ user_accounts + admin_accounts + domain_user_accounts }}"
-  when:
-    - secrets == []
-    - customization_context == "host" # Alternative is container that doesn't need this task because it's running on the host
+  when: secrets != [] or secrets_to_vault_pre_deploy_secrets != []
 
 - name: Including accounts save secrets tasks...
   ansible.builtin.include_tasks: save_account_password.yml
-  loop: "{{ accounts }}"
-  loop_control:
-    loop_var: account
-    label: "{{ account.username }}"
   when:
     - secrets == []
     - customization_context == "host" # Alternative is container that doesn't need this task because it's running on the host
