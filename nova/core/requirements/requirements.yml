@@ -14,45 +14,44 @@ roles:
     version: 3.5.0
 
 collections:
-  - name: https://github.com/ClarifiedSecurity/amazon.aws.git # A temporary fork of the official collection to remove the annoying deprecation warnings
+  # A temporary fork of the official collection to remove the annoying deprecation warnings that come with each run
+  - name: https://github.com/ClarifiedSecurity/amazon.aws.git
     type: git
-    version: latest
+    version: 9.0.0-cs
   - name: ansible.netcommon
     version: 7.1.0
   - name: ansible.posix
-    version: 1.6.0
+    version: 1.6.2
   - name: ansible.utils
     version: 5.1.1
   - name: ansible.windows
     version: 2.5.0
   - name: azure.azcollection
-    version: 2.7.0
+    version: 3.0.0
   - name: chocolatey.chocolatey
     version: 1.5.3
   - name: cisco.ios
-    version: 9.0.2
+    version: 9.0.3
   - name: cloud.common
     version: 3.0.0
   - name: community.aws
-    version: 8.0.0
+    version: 9.0.0
   - name: community.crypto
-    version: 2.22.1
+    version: 2.22.3
   - name: community.docker
-    version: 3.13.0
+    version: 4.0.1
   - name: community.general
-    version: 9.4.0
+    version: 10.0.1
   - name: community.hashi_vault
     version: 6.2.0
-  - name: community.library_inventory_filtering_v1 # Required for community.docker
-    version: 1.0.1
+  - name: community.library_inventory_filtering_v1
+    version: 1.0.2
   - name: community.mysql
-    version: 3.10.3
-  - name: community.network
-    version: 5.0.3
+    version: 3.11.0
   - name: community.postgresql
-    version: 3.6.1
+    version: 3.8.0
   - name: community.routeros
-    version: 2.19.0
+    version: 3.0.0
   - name: community.vmware
     version: 4.4.0
   - name: community.windows
@@ -62,19 +61,16 @@ collections:
   - name: kubernetes.core
     version: 2.4.0
   - name: linode.cloud
-    version: 0.30.1
+    version: 0.32.1
   - name: microsoft.ad
     version: 1.7.1
   - name: microsoft.sql
-    version: 2.2.2
+    version: 2.2.3
   - name: paloaltonetworks.panos
-    version: 2.21.1
+    version: 2.21.3
   - name: vmware.vmware_rest
-    version: 4.1.0
+    version: 4.2.0
   - name: vyos.vyos
     version: 5.0.0
-
-  # A temporary fork of the official collection until https://github.com/vmware/ansible-for-nsxt/pull/509 is merged
-  - name: https://github.com/ClarifiedSecurity/ansible-for-nsxt.git
+  - name: https://github.com/vmware/ansible-for-nsxt.git
     type: git
-    version: latest

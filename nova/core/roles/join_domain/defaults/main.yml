@@ -1,9 +1,22 @@
 ---
-ad_domain_name: "{{ domain }}"
-ad_sudo_group: Domain\ Admins
-broken_trust: false
-domain_dn: DC={{ ad_domain_name.split('.') | join(',DC=') | trim }} # AD domain's DistinguishedName
 domain_join_password: "{{ domain_admin_password }}"
 domain_join_user: "{{ domain_admin_username }}" # Can be different from domain_admin_username with only domain join rights
+
+#########
+# Linux #
+#########
+
+ad_domain_name: "{{ domain }}"
+ad_sudo_group: Domain\ Admins
+domain_dn: DC={{ ad_domain_name.split('.') | join(',DC=') | trim }} # AD domain's DistinguishedName
+
+# Set to true to reboot immediately after joining the domain
+# This is useful when you need to ensure that the machine is in the domain before running other tasks
+join_domain_reboot_linux_immediately: false
+
+###########
+# Windows #
+###########
+
 primary_domain_controller: "{{ dns_servers[0] }}"
 state: domain # Can be domain or workgroup for Windows

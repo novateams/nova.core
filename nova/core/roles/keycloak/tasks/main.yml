@@ -33,7 +33,7 @@
   loop:
     - src: keycloak.yml
       dest: docker-compose.yml
-    - src: config.yml
+    - src: config.j2
       dest: config.yml
 
 - name: Composing Keycloak on {{ inventory_hostname }}...
@@ -41,6 +41,21 @@
     project_src: "{{ keycloak_container_config_folder }}"
     state: present
     wait: true
+
+- name: Waiting until keycloak-config container exits...
+  community.docker.docker_container_info:
+    name: keycloak-config
+  register: keycloak_config_status
+  until: keycloak_config_status.container.State.Running == false
+  retries: 30
+  delay: 2
+
+- name: Keycloak configuration failed...
+  ansible.builtin.fail:
+    msg: |
+      Keycloak configuration failed. Login to {{ fqdn | default('Keycloak server') }} and check the logs with:
+      docker logs keycloak-config
+  when: keycloak_config_status.container.State.ExitCode != 0
 
 - name: Finding and restarting proxy container...
   when:

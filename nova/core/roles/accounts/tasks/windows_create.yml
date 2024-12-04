@@ -102,6 +102,17 @@
     label: "{{ item.username }}"
   when: item.ssh_key is defined
 
+- name: Removing existing authorized_keys file for...
+  ansible.windows.win_file:
+    path: C:\Users\{{ item.username }}\.ssh\authorized_keys
+    state: absent
+  loop: "{{ accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.ssh_key is defined
+    - item.ssh_key_exclusive | default(accounts_exclusive_ssh_key)
+
 - name: Adding ssh public keys for...
   community.windows.win_lineinfile:
     path: C:\Users\{{ item.username }}\.ssh\authorized_keys

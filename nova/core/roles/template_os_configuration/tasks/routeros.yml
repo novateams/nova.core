@@ -63,16 +63,20 @@
   community.routeros.command:
     commands:
       - /user group set full policy="local,telnet,ssh,ftp,reboot,read,write,policy,test,winbox,password,sniff,sensitive,!web,!api,!romon,!dude,!tikapp"
-      - /user group set read policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!password,!web,!sniff,!sensitive,!api,!romon,!dude,!tikapp"
-      - /user group set write policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!password,!web,!sniff,!sensitive,!api,!romon,!dude,!tikapp"
+      - /user group set read policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!
+        password,!web,!sniff,!sensitive,!api,!romon,!dude,!tikapp"
+      - /user group set write policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!
+        password,!web,!sniff,!sensitive,!api,!romon,!dude,!tikapp"
   when: ansible_facts.net_version.startswith('6')
 
 - name: Removing unnecessary default group permissions for RouterOS 7...
   community.routeros.command:
     commands:
       - /user group set full policy="local,telnet,ssh,ftp,reboot,read,write,policy,test,winbox,password,sniff,sensitive,!web,!api,!romon,!rest-api"
-      - /user group set read policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!password,!web,!sniff,!sensitive,!api,!romon,!rest-api"
-      - /user group set write policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!password,!web,!sniff,!sensitive,!api,!romon,!rest-api"
+      - /user group set read policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!
+        password,!web,!sniff,!sensitive,!api,!romon,!rest-api"
+      - /user group set write policy="!local,!telnet,!ssh,!ftp,!reboot,!read,!write,!policy,!test,!winbox,!
+        password,!web,!sniff,!sensitive,!api,!romon,!rest-api"
   when: ansible_facts.net_version.startswith('7')
 
 - name: Disabling or uninstalling unnecessary packages...

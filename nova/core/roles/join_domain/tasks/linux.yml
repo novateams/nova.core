@@ -51,7 +51,7 @@
       until: domain_join_state.rc == 0
       retries: 3
       delay: 3
-      notify: join_domain_reboot
+      notify: "{{ 'join_domain_reboot' if not join_domain_reboot_linux_immediately else omit }}"
 
 - name: Creating user home folder automatically...
   ansible.builtin.command: pam-auth-update --enable mkhomedir
@@ -74,33 +74,40 @@
 - name: Updating domain related config...
   ansible.builtin.lineinfile:
     dest: "{{ item.dest }}"
-    line: "{{ item.line }}"
+    line: "{{ item.line | default(omit) }}"
     regexp: "{{ item.regexp | default(omit) }}"
     insertafter: "{{ item.insertafter | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
     mode: "0600"
   loop:
     - dest: /etc/sssd/sssd.conf
       insertafter: ^\[sssd\]
+      regexp: ^default_domain_suffix =.*
       line: default_domain_suffix = {{ ad_domain_name }}
+
+    # Allowing RDP login when ad_gpo_access_control = enforcing
+    - dest: /etc/sssd/sssd.conf
+      insertafter: ^\[domain/{{ ad_domain_name }}\]
+      regexp: ^ad_gpo_map_remote_interactive =.*
+      line: ad_gpo_map_remote_interactive = +xrdp-sesman, +vmtoolsd
 
     - dest: /etc/sssd/sssd.conf
       insertafter: ^\[domain/{{ ad_domain_name }}\]
-      line: ad_gpo_map_remote_interactive = +xrdp-sesman, +vmtoolsd # Allowing RDP login when ad_gpo_access_control = enforcing
-
-    - dest: /etc/sssd/sssd.conf
-      insertafter: ^ad_gpo_map_remote_interactive = .*
+      regexp: ^ad_gpo_access_control =.*
       line: ad_gpo_access_control = enforcing
 
+    # SSSD manages the services itself
     - dest: /etc/sssd/sssd.conf
-      regexp: ^services = nss
-      line: services = nss, pam, sudo
+      regexp: ^services =.*
+      state: absent
 
-    - dest: /etc/sssd/sssd.conf
-      regexp: ^default_shell =
-      line: default_shell = /bin/bash
-
+    # Defaults to Domain Admins
     - dest: /etc/sudoers
       regexp: .*{{ ad_domain_name }}.*
-      line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL" # Defaults to Domain Admins
+      line: "%{{ ad_sudo_group }}@{{ ad_domain_name }} ALL=(ALL) NOPASSWD: ALL"
       insertafter: ^%sudo
   notify: Restarting sssd service...
+
+- name: Rebooting immediately after joining domain...
+  ansible.builtin.reboot:
+  when: join_domain_reboot_linux_immediately
