@@ -1,6 +1,7 @@
 
 DOCUMENTATION="""
     name: addresses
+    short_description: Lookup a specific IP address from Providentia format interfaces list.
     description: |
         This is filter plugin for getting specific addresses from interfaces list. Interfaces list is a variable that is based on Providentia's API
         The interfaces list can also be built manually when Providentia is not used. Example can be found here: https://github.com/novateams/nova.core/tree/main/nova/core/roles/configure_networking
@@ -65,11 +66,11 @@ DOCUMENTATION="""
 EXAMPLES="""
   - name: Get connection NIC IPv4 addresses
     debug:
-      msg: "{{ interfaces | addresses('connection_nic_ipv4') | first }}"
+      msg: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first }}"
 
   - name: Get connection NIC IPv4 gateway
     debug:
-      msg: "{{ interfaces | addresses('connection_nic_ipv4_gw') | first }}"
+      msg: "{{ interfaces | nova.core.addresses('connection_nic_ipv4_gw') | first }}"
 """
 
 import re
