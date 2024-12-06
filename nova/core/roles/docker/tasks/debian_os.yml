@@ -72,6 +72,7 @@
       - python3-requests
       - python3-setuptools
       - python3-wheel
+      - python3-yaml
     state: present
     allow_downgrade: true
     update_cache: true
