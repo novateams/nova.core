@@ -11,6 +11,7 @@ docker_enable_ip6tables: true
 docker_enable_iptables: true
 docker_bridge_ipv6_range: fd69::/64
 docker_userland_proxy: true
+docker_log_to_journald: false
 
 # List of mirrors to be added to the Docker daemon config. The mirror must be a complete URL including a protocol (http:// or https://)
 docker_registry_mirrors: []
