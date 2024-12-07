@@ -75,10 +75,14 @@ machine_operations_vmware_workstation_connection: ssh
 machine_operations_vmware_workstation_shell_type: sh
 machine_operations_vmware_workstation_python_interpreter: /usr/bin/python3
 
-# VM paths
+# If the local template is older than this interval it will re-downloaded during deploy, default is 30 days
+machine_operations_vmware_workstation_template_update_interval: 2592000
+
+# Set to false to ignore the template update interval and never update the template
+machine_operations_vmware_workstation_template_update: true
+
 template_export_folder: /home/{{ lookup('env', 'USER') }}/vmware/templates
 local_vmx_template_path: "{{ template_export_folder }}/{{ vm_template }}/{{ vm_template }}.vmx"
-
 local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware
 machine_operations_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
 
