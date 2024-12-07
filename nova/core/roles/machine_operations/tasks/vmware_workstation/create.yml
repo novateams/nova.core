@@ -34,7 +34,8 @@
 
         - name: Downloading or updating VM template...
           when:
-            - not vm_template_presence.stat.exists or ((ansible_date_time.epoch | int) - (vm_template_presence.stat.ctime | round) >= 2592000) # 30 days
+            - not vm_template_presence.stat.exists or ((ansible_date_time.epoch | int) - (vm_template_presence.stat.ctime | round)
+              >= machine_operations_vmware_workstation_template_update_interval)
             - not role_only
             - not role_only_wp
           block:
@@ -42,13 +43,15 @@
               ansible.builtin.file:
                 path: "{{ template_export_folder }}/{{ vm_template }}"
                 state: absent
+              when: machine_operations_vmware_workstation_template_update
 
-              # regex_replace is required because urlib considers / as a safe character and doesn't encode it
-            - name: Downloading {{ vm_template }} since it's not present or is older than 30 days...
+            # regex_replace is required because urlib considers / as a safe character and doesn't encode it
+            - name: Downloading {{ vm_template }} since it's not present or is older than the update interval...
               ansible.builtin.command:
                 ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode
                 | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ template_export_folder }}
               changed_when: true
+              when: not vm_template_presence.stat.exists
 
         - name: Setting fresh_deploy fact...
           ansible.builtin.set_fact:
