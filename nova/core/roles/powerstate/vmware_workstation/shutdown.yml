@@ -1,4 +1,4 @@
 ---
-- name: Stopping {{ inventory_hostname }}...
-  ansible.builtin.command: vmrun -T ws stop {{ powerstate_local_vmx_path }} soft
+- name: Shutting down {{ inventory_hostname }}...
+  ansible.builtin.command: vmcli power stop --opType trySoft {{ powerstate_local_vmx_path }}
   changed_when: true

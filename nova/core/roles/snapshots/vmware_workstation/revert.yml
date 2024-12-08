@@ -1,46 +1,45 @@
 ---
-- name: Closing VMware Workstation GUI for Wayland...
-  when: lookup('env', 'XDG_SESSION_TYPE') == "wayland"
+- name: Reverting to snapshot...
+  when: (all_snapshots.stdout | from_yaml).snapshots != []
   block:
-    - name: Stopping VMware Workstation GUI...
-      ansible.builtin.shell: |
-        set -o pipefail
-        if [ -z "$(ps -fC vmware --no-headers)" ]; then
-            echo "VMware not running..."
-        else
-            echo "Stopping VMware..."
-            kill $(ps -fC vmware --no-headers | awk '{print $2}')
-        fi
-      args:
-        executable: /bin/bash
-      changed_when: vmware_workstation_running.stdout == "Stopping VMware..."
-      register: vmware_workstation_running
+    - name: Checking current {{ inventory_hostname }} power state...
+      ansible.builtin.command: vmcli power query {{ snapshots_local_vmx_path }}
+      register: powerstate
 
-    # Otherwise the file is locked and we can't start the VM
-    - name: Please close the VMware Workstation GUI (VMs can keep running in the background)...
-      ansible.builtin.shell: |
-        if [ -z "$(ps -fC vmware --no-headers)" ]; then
-            echo "Moving on..."
-        else
-            echo "Waiting for VMware to stop..."
-        fi
-      changed_when: false
-      register: vmware_workstation_running
+    - name: Shutting down {{ inventory_hostname }}...
+      ansible.builtin.command: vmcli power stop --opType trySoft {{ snapshots_local_vmx_path }}
+      changed_when: true
+      when: (powerstate.stdout | from_yaml).PowerState
+
+    - name: Waiting until {{ inventory_hostname }} is shut down...
+      ansible.builtin.command: vmcli power query {{ snapshots_local_vmx_path }}
+      register: powerstate
+      until:
+        - (powerstate.stdout | from_yaml).PowerState is defined
+        - not (powerstate.stdout | from_yaml).PowerState
       retries: 60
-      delay: 5
-      until: vmware_workstation_running.stdout == "Moving on..."
+      delay: 2
+      changed_when: true
 
-# Default is the latest snapshot
-- name: Reverting to {{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }} snapshot...
-  ansible.builtin.command: vmrun revertToSnapshot {{ snapshots_local_vmx_path }} "{{ snapshot_name | default(all_snapshots.stdout_lines[-1]) }}"
-  changed_when: true
+    # Default is the latest snapshot
+    - name: Reverting to latest snapshot...
+      ansible.builtin.command: vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots[-1].uid }} {{ snapshots_local_vmx_path }}
+      changed_when: true
+      when: snapshot_name is not defined
 
-- name: Starting {{ inventory_hostname }}...
-  ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ snapshots_local_vmx_path }}
-  changed_when: true
-  when: lookup('env', 'XDG_SESSION_TYPE') != "wayland"
+    - name: Reverting to {{ snapshot_name }} snapshot...
+      when: snapshot_name is defined
+      block:
+        - name: Getting the UID of {{ snapshot_name }} snapshot...
+          ansible.builtin.set_fact:
+            snapshot_uid:
+              "{{ (all_snapshots.stdout | from_yaml).snapshots | selectattr('displayName', 'equalto', snapshot_name)
+              | map(attribute='uid') | first }}"
 
-- name: Starting {{ inventory_hostname }}...
-  ansible.builtin.command: vmrun -T ws start {{ machine_operations_local_vmx_path }} nogui
-  changed_when: true
-  when: lookup('env', 'XDG_SESSION_TYPE') == "wayland"
+        - name: Reverting to {{ snapshot_name }} snapshot...
+          ansible.builtin.command: vmcli snapshot revert {{ snapshot_uid }} {{ snapshots_local_vmx_path }}
+          changed_when: true
+
+    - name: Starting {{ inventory_hostname }}...
+      ansible.builtin.command: vmcli power start {{ snapshots_local_vmx_path }}
+      changed_when: true

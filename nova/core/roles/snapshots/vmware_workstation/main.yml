@@ -9,12 +9,12 @@
     ansible_user: "{{ snapshots_vmware_workstation_user }}"
 
 - name: Listing all snapshots...
-  ansible.builtin.shell: vmrun listSnapshots {{ snapshots_local_vmx_path }} listSnapshots
+  ansible.builtin.shell: vmcli snapshot query {{ snapshots_local_vmx_path }}
   register: all_snapshots
 
 - name: Including snapshot task...
   ansible.builtin.include_tasks: snapshot.yml
-  when: snapshot_mode == 'snap' or snapshot_mode == 're-snap'
+  when: snapshot_mode == 'snap' or snapshot_mode == 'clean-snap'
 
 - name: Including revert task...
   ansible.builtin.include_tasks: revert.yml
