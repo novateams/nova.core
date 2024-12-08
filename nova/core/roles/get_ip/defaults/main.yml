@@ -2,15 +2,3 @@
 # Connection address defaults
 egress_nic_ipv4: "{{ interfaces | nova.core.addresses('egress_nic_ipv4') | first | ansible.utils.ipaddr('address') }}"
 egress_nic_ipv6: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first | ansible.utils.ipaddr('address') }}"
-
-######################
-# VMware Workstation #
-######################
-
-# These match with the ones in nova.core.machine_operations role
-get_ip_vmware_workstation_host: host.docker.internal
-get_ip_vmware_workstation_user: "{{ lookup('env', 'USER') }}"
-get_ip_vmware_workstation_connection: ssh
-get_ip_vmware_workstation_shell_type: sh
-get_ip_vmware_workstation_python_interpreter: /usr/bin/python3
-get_ip_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx

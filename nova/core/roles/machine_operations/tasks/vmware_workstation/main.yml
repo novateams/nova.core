@@ -1,13 +1,14 @@
 ---
-- name: Setting correct connection parameters for VMware Workstation host...
+- name: Setting correct connection parameters for VMware Workstation's host...
   ansible.builtin.set_fact:
-    ansible_host: "{{ machine_operations_vmware_workstation_host }}"
-    ansible_user: "{{ machine_operations_vmware_workstation_user }}"
-    ansible_connection: "{{ machine_operations_vmware_workstation_connection }}"
-    ansible_shell_type: "{{ machine_operations_vmware_workstation_shell_type }}"
-    ansible_python_interpreter: "{{ machine_operations_vmware_workstation_python_interpreter }}"
+    ansible_connection: "{{ vmware_workstation.connection }}"
+    ansible_host: "{{ vmware_workstation.host }}"
+    ansible_python_interpreter: "{{ vmware_workstation.python_interpreter }}"
+    ansible_shell_type: "{{ vmware_workstation.shell_type }}"
+    ansible_user: "{{ vmware_workstation.user }}"
+    ansible_password: "{{ vmware_workstation.password | default(omit) }}"
 
-- name: Checking that {{ ansible_host }} is reachable over {{ machine_operations_vmware_workstation_connection }}...
+- name: Checking that {{ ansible_host }} is reachable over {{ vmware_workstation.connection }}...
   ansible.builtin.wait_for:
     host: "{{ ansible_host }}"
     port: 22

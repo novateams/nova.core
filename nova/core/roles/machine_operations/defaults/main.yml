@@ -68,36 +68,28 @@ template_description: Created on {{ ansible_date_time.iso8601 }}
 # VMWare workstation #
 ######################
 
-# Connection parameters
-machine_operations_vmware_workstation_host: host.docker.internal
-machine_operations_vmware_workstation_user: "{{ lookup('env', 'USER') }}"
-machine_operations_vmware_workstation_connection: ssh
-machine_operations_vmware_workstation_shell_type: sh
-machine_operations_vmware_workstation_python_interpreter: /usr/bin/python3
-
 # If the local template is older than this interval it will re-downloaded during deploy, default is 30 days
 machine_operations_vmware_workstation_template_update_interval: 2592000
 
 # Set to false to ignore the template update interval and never update the template
 machine_operations_vmware_workstation_template_update: true
 
-template_export_folder: /home/{{ lookup('env', 'USER') }}/vmware/templates
-local_vmx_template_path: "{{ template_export_folder }}/{{ vm_template }}/{{ vm_template }}.vmx"
-local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware
-machine_operations_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
-
-# Shared folders
+# Path to the folder where the VM templates that get downloaded from the vCenter are stored
+machine_operations_vmware_workstation_template_export_folder: /home/{{ lookup('env', 'USER') }}/vmware/templates
+machine_operations_vmware_workstation_local_vmx_template_path:
+  "{{ machine_operations_vmware_workstation_template_export_folder }}/{{
+  vm_template }}/{{ vm_template }}.vmx"
 
 # In VMware Workstation case the ansible_user is the host's username
-host_shared_folder_path: /home/{{ ansible_user }}/Documents/vm_shares/{{ custom_vm_name | default(vm_name) }}
-enable_shared_folder: true
-supported_shared_folder_os: # Operating systems that support shared folders between host and guest
+machine_operations_vmware_workstation_enable_shared_folder: true
+machine_operations_vmware_workstation_host_shared_folder_path: /home/{{ ansible_user }}/Documents/vm_shares/{{ custom_vm_name | default(vm_name) }}
+machine_operations_vmware_workstation_supported_shared_folder_os: # Operating systems that support shared folders between host and guest
   - os_windows
   - os_ubuntu
   - os_kali
 
 # Custom parameters for VM in vmx file for VMware Workstation
-vmwarews_custom_params: []
+machine_operations_vmware_workstation_custom_params: []
 
 ################
 # AWS defaults #

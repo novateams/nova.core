@@ -3,15 +3,3 @@ start_vm_after_snapshot: true
 start_vm_after_revert: true
 remove_all_snapshots: false
 live_snap: false # Creates a snapshot while the VM is running
-
-######################
-# VMware Workstation #
-######################
-
-# These match with the ones in nova.core.machine_operations role
-snapshots_vmware_workstation_host: host.docker.internal
-snapshots_vmware_workstation_user: "{{ lookup('env', 'USER') }}"
-snapshots_vmware_workstation_connection: ssh
-snapshots_vmware_workstation_shell_type: sh
-snapshots_vmware_workstation_python_interpreter: /usr/bin/python3
-snapshots_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx

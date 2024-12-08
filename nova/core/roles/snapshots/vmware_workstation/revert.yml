@@ -3,16 +3,16 @@
   when: (all_snapshots.stdout | from_yaml).snapshots != []
   block:
     - name: Checking current {{ inventory_hostname }} power state...
-      ansible.builtin.command: vmcli power query {{ snapshots_local_vmx_path }}
+      ansible.builtin.command: vmcli power query {{ vmware_workstation.local_vmx_path }}
       register: powerstate
 
     - name: Shutting down {{ inventory_hostname }}...
-      ansible.builtin.command: vmcli power stop --opType trySoft {{ snapshots_local_vmx_path }}
+      ansible.builtin.command: vmcli power stop --opType trySoft {{ vmware_workstation.local_vmx_path }}
       changed_when: true
       when: (powerstate.stdout | from_yaml).PowerState
 
     - name: Waiting until {{ inventory_hostname }} is shut down...
-      ansible.builtin.command: vmcli power query {{ snapshots_local_vmx_path }}
+      ansible.builtin.command: vmcli power query {{ vmware_workstation.local_vmx_path }}
       register: powerstate
       until:
         - (powerstate.stdout | from_yaml).PowerState is defined
@@ -23,23 +23,18 @@
 
     # Default is the latest snapshot
     - name: Reverting to latest snapshot...
-      ansible.builtin.command: vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots[-1].uid }} {{ snapshots_local_vmx_path }}
+      ansible.builtin.command: vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots[-1].uid }} {{ vmware_workstation.local_vmx_path }}
       changed_when: true
       when: snapshot_name is not defined
 
     - name: Reverting to {{ snapshot_name }} snapshot...
       when: snapshot_name is defined
       block:
-        - name: Getting the UID of {{ snapshot_name }} snapshot...
-          ansible.builtin.set_fact:
-            snapshot_uid:
-              "{{ (all_snapshots.stdout | from_yaml).snapshots | selectattr('displayName', 'equalto', snapshot_name)
-              | map(attribute='uid') | first }}"
-
         - name: Reverting to {{ snapshot_name }} snapshot...
-          ansible.builtin.command: vmcli snapshot revert {{ snapshot_uid }} {{ snapshots_local_vmx_path }}
+          ansible.builtin.command: vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots
+            | selectattr('displayName', 'equalto', snapshot_name) | map(attribute='uid') | first }} {{ vmware_workstation.local_vmx_path }}
           changed_when: true
 
     - name: Starting {{ inventory_hostname }}...
-      ansible.builtin.command: vmcli power start {{ snapshots_local_vmx_path }}
+      ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
       changed_when: true

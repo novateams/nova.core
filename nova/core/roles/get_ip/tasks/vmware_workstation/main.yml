@@ -1,15 +1,15 @@
 ---
 - name: Setting correct connection parameters for VMware Workstation's host...
   ansible.builtin.set_fact:
-    ansible_become: false
-    ansible_connection: "{{ get_ip_vmware_workstation_connection }}"
-    ansible_host: "{{ get_ip_vmware_workstation_host }}"
-    ansible_python_interpreter: "{{ get_ip_vmware_workstation_python_interpreter }}"
-    ansible_shell_type: "{{ get_ip_vmware_workstation_shell_type }}"
-    ansible_user: "{{ get_ip_vmware_workstation_user }}"
+    ansible_connection: "{{ vmware_workstation.connection }}"
+    ansible_host: "{{ vmware_workstation.host }}"
+    ansible_python_interpreter: "{{ vmware_workstation.python_interpreter }}"
+    ansible_shell_type: "{{ vmware_workstation.shell_type }}"
+    ansible_user: "{{ vmware_workstation.user }}"
+    ansible_password: "{{ vmware_workstation.password | default(omit) }}"
 
 - name: Getting IP address for {{ inventory_hostname }}...
-  ansible.builtin.command: vmrun getGuestIPAddress {{ get_ip_local_vmx_path }} -wait
+  ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait
   changed_when: false
   register: vmip
   retries: 60

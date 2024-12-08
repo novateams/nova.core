@@ -4,12 +4,13 @@
     filter: "*_time"
 
 - name: Removing all existing snapshots...
-  ansible.builtin.command: vmcli snapshot delete {{ (all_snapshots.stdout | from_yaml).snapshots[0].uid }} --deleteChildren {{ snapshots_local_vmx_path }}
+  ansible.builtin.command: vmcli snapshot delete {{ (all_snapshots.stdout
+    | from_yaml).snapshots[0].uid }} --deleteChildren {{ vmware_workstation.local_vmx_path }}
   changed_when: true
   when:
     - (all_snapshots.stdout | from_yaml).snapshots != []
     - snapshot_mode == 'clean-snap'
 
 - name: Creating a snapshot...
-  ansible.builtin.command: vmcli snapshot take {{ snapshot_name | default(ansible_date_time.iso8601) }} {{ snapshots_local_vmx_path }}
+  ansible.builtin.command: vmcli snapshot take {{ snapshot_name | default(ansible_date_time.iso8601) }} {{ vmware_workstation.local_vmx_path }}
   changed_when: true
