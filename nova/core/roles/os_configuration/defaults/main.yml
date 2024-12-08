@@ -73,11 +73,3 @@ os_configuration_pfsense_console_menu_password: true # Set to false to disable c
 ######################
 
 os_configuration_vmware_workstation_vmtools_autoupdate: true # Set to false to disable VMware Tools autoupdate
-
-# These match with the ones in nova.core.machine_operations role
-os_configuration_vmware_workstation_host: "{{ ansible_host }}"
-os_configuration_vmware_workstation_user: "{{ lookup('env', 'CONTAINER_USER_NAME') }}"
-os_configuration_vmware_workstation_connection: ssh
-os_configuration_vmware_workstation_shell_type: sh
-os_configuration_vmware_workstation_python_interpreter: /usr/bin/python3
-os_configuration_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx

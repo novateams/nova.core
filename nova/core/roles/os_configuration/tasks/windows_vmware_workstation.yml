@@ -3,18 +3,19 @@
   when: os_configuration_vmware_workstation_vmtools_autoupdate
   become: false
   block:
-    - name: Setting correct connection parameters for VMware Workstation host...
+    - name: Setting correct connection parameters for VMware Workstation's host...
       ansible.builtin.set_fact:
-        ansible_host: "{{ os_configuration_vmware_workstation_host }}"
-        ansible_user: "{{ os_configuration_vmware_workstation_user }}"
-        ansible_connection: "{{ os_configuration_vmware_workstation_connection }}"
-        ansible_shell_type: "{{ os_configuration_vmware_workstation_shell_type }}"
-        ansible_python_interpreter: "{{ os_configuration_vmware_workstation_python_interpreter }}"
+        ansible_connection: "{{ vmware_workstation.connection }}"
+        ansible_host: "{{ vmware_workstation.host }}"
+        ansible_python_interpreter: "{{ vmware_workstation.python_interpreter }}"
+        ansible_shell_type: "{{ vmware_workstation.shell_type }}"
+        ansible_user: "{{ vmware_workstation.user }}"
+        ansible_password: "{{ vmware_workstation.password | default(omit) }}"
 
     # Using lineinfile to check for file changes because it simpler and faster then reading the file and comparing it with the desired state
     - name: Checking VMTools auto-update state for {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.lineinfile:
-        path: "{{ os_configuration_local_vmx_path }}"
+        path: "{{ vmware_workstation.local_vmx_path }}"
         regex: tools.upgrade.policy.*
         line: tools.upgrade.policy = "upgradeAtPowerCycle"
         state: present
@@ -24,15 +25,15 @@
       when: vmtools_autoupdate.changed
       block:
         - name: Upgrading VMTools for {{ custom_vm_name | default(vm_name) }}...
-          ansible.builtin.command: vmcli tools upgrade {{ os_configuration_local_vmx_path }}
+          ansible.builtin.command: vmcli tools upgrade {{ vmware_workstation.local_vmx_path }}
           changed_when: true
 
         - name: Setting VMTools to upgrade on boot for {{ custom_vm_name | default(vm_name) }}...
-          ansible.builtin.command: vmcli configparams setentry tools.upgrade.policy upgradeAtPowerCycle {{ os_configuration_local_vmx_path }}
+          ansible.builtin.command: vmcli configparams setentry tools.upgrade.policy upgradeAtPowerCycle {{ vmware_workstation.local_vmx_path }}
           changed_when: true
 
     - name: Getting IP address for {{ inventory_hostname }}...
-      ansible.builtin.command: vmrun getGuestIPAddress {{ machine_operations_local_vmx_path }} -wait
+      ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait
       changed_when: false
       register: vmip
       retries: 60

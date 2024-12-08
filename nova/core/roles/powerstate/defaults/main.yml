@@ -11,15 +11,3 @@ shutdown_shutting_retries: 5
 shutdown_shutting_delay: 2
 shutdown_waiting_retries: 18
 shutdown_waiting_delay: 10
-
-######################
-# VMware Workstation #
-######################
-
-# These match with the ones in nova.core.machine_operations role
-powerstate_local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
-powerstate_vmware_workstation_connection: ssh
-powerstate_vmware_workstation_host: host.docker.internal
-powerstate_vmware_workstation_python_interpreter: /usr/bin/python3
-powerstate_vmware_workstation_shell_type: sh
-powerstate_vmware_workstation_user: "{{ lookup('env', 'USER') }}"

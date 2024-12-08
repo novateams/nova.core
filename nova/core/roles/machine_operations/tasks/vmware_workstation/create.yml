@@ -4,7 +4,7 @@
   block:
     - name: Checking if the {{ custom_vm_name | default(vm_name) }} already exists...
       ansible.builtin.stat:
-        path: "{{ machine_operations_local_vmx_path }}"
+        path: "{{ vmware_workstation.local_vmx_path }}"
       register: vm_presence
 
     - name: INCORRECT DEPLOY METHOD
@@ -14,9 +14,9 @@
         - not vm_presence.stat.exists
         - role_only or role_only_wp
 
-    - name: Creating {{ template_export_folder }} folder...
+    - name: Creating {{ machine_operations_vmware_workstation_template_export_folder }} folder...
       ansible.builtin.file:
-        path: "{{ template_export_folder }}"
+        path: "{{ machine_operations_vmware_workstation_template_export_folder }}"
         state: directory
         recurse: true
 
@@ -25,7 +25,7 @@
       block:
         - name: Checking if {{ vm_template }} template is already downloaded...
           ansible.builtin.stat:
-            path: "{{ local_vmx_template_path }}"
+            path: "{{ machine_operations_vmware_workstation_local_vmx_template_path }}"
           register: vm_template_presence
 
         - name: Getting the time...
@@ -41,7 +41,7 @@
           block:
             - name: Removing existing {{ vm_template }} template...
               ansible.builtin.file:
-                path: "{{ template_export_folder }}/{{ vm_template }}"
+                path: "{{ machine_operations_vmware_workstation_template_export_folder }}/{{ vm_template }}"
                 state: absent
               when: machine_operations_vmware_workstation_template_update
 
@@ -49,7 +49,7 @@
             - name: Downloading {{ vm_template }} since it's not present or is older than the update interval...
               ansible.builtin.command:
                 ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode
-                | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ template_export_folder }}
+                | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ machine_operations_vmware_workstation_template_export_folder }}
               changed_when: true
               when: not vm_template_presence.stat.exists
 
@@ -59,24 +59,26 @@
 
         - name: Create VM folder if it does not exist
           ansible.builtin.file:
-            path: "{{ local_vm_folder }}"
+            path: "{{ vmware_workstation.local_vm_folder }}"
             state: directory
             recurse: true
 
         - name: Creating {{ custom_vm_name | default(vm_name) }} to vmxt template...
           ansible.builtin.command:
-            vmcli {{ local_vmx_template_path }} vmtemplate create --path {{ local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name
-            | default(vm_name) }}.vmtx --name {{ custom_vm_name | default(vm_name) }}
+            vmcli {{ machine_operations_vmware_workstation_local_vmx_template_path }} vmtemplate create --path {{
+            vmware_workstation.local_vm_folder }}/{{ custom_vm_name
+            | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmtx --name {{ custom_vm_name | default(vm_name) }}
           changed_when: true
 
         - name: Deploying {{ custom_vm_name | default(vm_name) }} VM...
-          ansible.builtin.command: vmcli vmtemplate deploy --path {{ local_vm_folder }}/{{ custom_vm_name
+          ansible.builtin.command:
+            vmcli vmtemplate deploy --path {{ vmware_workstation.local_vm_folder }}/{{ custom_vm_name
             | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmtx
           changed_when: true
 
         - name: Configuring {{ custom_vm_name | default(vm_name) }} virtual machine...
           ansible.builtin.lineinfile:
-            path: "{{ machine_operations_local_vmx_path }}"
+            path: "{{ vmware_workstation.local_vmx_path }}"
             regex: "{{ item.regex }}"
             line: "{{ item.line }}"
             state: present
@@ -105,7 +107,7 @@
 
         - name: Setting compatible Darwin OS type...
           ansible.builtin.lineinfile:
-            path: "{{ machine_operations_local_vmx_path }}"
+            path: "{{ vmware_workstation.local_vmx_path }}"
             regex: "{{ item.regex }}"
             line: "{{ item.line }}"
             state: present
@@ -120,24 +122,24 @@
 
         - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
           ansible.builtin.lineinfile:
-            path: "{{ machine_operations_local_vmx_path }}"
+            path: "{{ vmware_workstation.local_vmx_path }}"
             regex: "{{ item.regex }}"
             line: "{{ item.line }}"
             state: present
           loop_control:
             label: "{{ item.line }}"
-          loop: "{{ vmwarews_custom_params }}"
-          when: vmwarews_custom_params != []
+          loop: "{{ machine_operations_vmware_workstation_custom_params }}"
+          when: machine_operations_vmware_workstation_custom_params != []
 
     - name: Including shared folder tasks...
       when:
-        - enable_shared_folder
-        - supported_shared_folder_os | intersect(group_names) | length > 0
+        - machine_operations_vmware_workstation_enable_shared_folder
+        - machine_operations_vmware_workstation_supported_shared_folder_os | intersect(group_names) | length > 0
         - not role_only
       block:
         - name: Sharing VM folder with host...
           ansible.builtin.lineinfile:
-            path: "{{ machine_operations_local_vmx_path }}"
+            path: "{{ vmware_workstation.local_vmx_path }}"
             regex: "{{ item.regex }}"
             line: "{{ item.line }}"
             state: present
@@ -155,7 +157,7 @@
             - regex: sharedFolder0.writeAccess.*
               line: sharedFolder0.writeAccess = "TRUE"
             - regex: sharedFolder0.hostPath.*
-              line: sharedFolder0.hostPath = "{{ host_shared_folder_path }}"
+              line: sharedFolder0.hostPath = "{{ machine_operations_vmware_workstation_host_shared_folder_path }}"
             - regex: sharedFolder0.guestName.*
               line: sharedFolder0.guestName = "{{ custom_vm_name | default(vm_name) }}"
             - regex: sharedFolder0.expiration.*
@@ -165,16 +167,16 @@
 
         - name: Creating a shared folder on the host...
           ansible.builtin.file:
-            path: "{{ host_shared_folder_path }}"
+            path: "{{ machine_operations_vmware_workstation_host_shared_folder_path }}"
             state: directory
             recurse: true
 
     - name: Starting {{ inventory_hostname }} and waiting for IP address... # noqa: command-instead-of-shell
-      ansible.builtin.command: vmcli power start {{ machine_operations_local_vmx_path }}
+      ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
       changed_when: true
 
     - name: Getting IP address for {{ inventory_hostname }}...
-      ansible.builtin.command: vmrun getGuestIPAddress {{ machine_operations_local_vmx_path }} -wait
+      ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait
       changed_when: false
       register: vmip
       retries: 60
@@ -186,11 +188,11 @@
 
     # Needs to be enabled here again because otherwise VMWare Workstation disables shared folders for new machines on first run
     - name: Enabling shared folders...
-      ansible.builtin.command: vmrun enableSharedFolders {{ machine_operations_local_vmx_path }}
+      ansible.builtin.command: vmrun enableSharedFolders {{ vmware_workstation.local_vmx_path }}
       changed_when: true
       when:
-        - enable_shared_folder
-        - supported_shared_folder_os | intersect(group_names) | length > 0
+        - machine_operations_vmware_workstation_enable_shared_folder
+        - machine_operations_vmware_workstation_supported_shared_folder_os | intersect(group_names) | length > 0
 
     - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
       ansible.builtin.set_fact:

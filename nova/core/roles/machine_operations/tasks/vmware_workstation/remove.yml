@@ -9,7 +9,7 @@
   block:
     - name: Checking if {{ inventory_hostname }} exists...
       ansible.builtin.stat:
-        path: "{{ machine_operations_local_vmx_path }}"
+        path: "{{ vmware_workstation.local_vmx_path }}"
       register: vm_exists
 
     - name: Removing {{ inventory_hostname }} if it exists...
@@ -21,9 +21,9 @@
           register: running_vms
 
         - name: Stopping {{ inventory_hostname }}...
-          ansible.builtin.command: vmrun -T ws stop {{ machine_operations_local_vmx_path }} hard
+          ansible.builtin.command: vmrun -T ws stop {{ vmware_workstation.local_vmx_path }} hard
           changed_when: true
-          when: machine_operations_local_vmx_path in running_vms.stdout_lines
+          when: vmware_workstation.local_vmx_path in running_vms.stdout_lines
 
         - name: Stopping VMware Workstation GUI...
           ansible.builtin.shell: |
@@ -54,12 +54,12 @@
           until: vmware_workstation_running.stdout == "Moving on..."
 
         - name: Removing {{ inventory_hostname }}...
-          ansible.builtin.command: vmrun -T ws deleteVM {{ machine_operations_local_vmx_path }}
+          ansible.builtin.command: vmrun -T ws deleteVM {{ vmware_workstation.local_vmx_path }}
           changed_when: true
 
     - name: Removing {{ inventory_hostname }} folder...
       ansible.builtin.file:
-        path: "{{ local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
+        path: "{{ vmware_workstation.local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
         state: absent
 
     - name: Stopping play...
