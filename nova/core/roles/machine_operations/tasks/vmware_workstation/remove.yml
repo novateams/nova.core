@@ -57,10 +57,10 @@
           ansible.builtin.command: vmrun -T ws deleteVM {{ machine_operations_local_vmx_path }}
           changed_when: true
 
-        - name: Removing {{ inventory_hostname }} folder...
-          ansible.builtin.file:
-            path: "{{ local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
-            state: absent
+    - name: Removing {{ inventory_hostname }} folder...
+      ansible.builtin.file:
+        path: "{{ local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
+        state: absent
 
     - name: Stopping play...
       ansible.builtin.meta: end_host

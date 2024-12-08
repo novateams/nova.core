@@ -63,8 +63,15 @@
             state: directory
             recurse: true
 
-        - name: Creating {{ custom_vm_name | default(vm_name) }} from {{ vm_template }}...
-          ansible.builtin.command: ovftool -tt=vmx -n={{ custom_vm_name | default(vm_name) }} {{ local_vmx_template_path }} {{ local_vm_folder }}
+        - name: Creating {{ custom_vm_name | default(vm_name) }} to vmxt template...
+          ansible.builtin.command:
+            vmcli {{ local_vmx_template_path }} vmtemplate create --path {{ local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name
+            | default(vm_name) }}.vmtx --name {{ custom_vm_name | default(vm_name) }}
+          changed_when: true
+
+        - name: Deploying {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.command: vmcli vmtemplate deploy --path {{ local_vm_folder }}/{{ custom_vm_name
+            | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmtx
           changed_when: true
 
         - name: Configuring {{ custom_vm_name | default(vm_name) }} virtual machine...
@@ -162,98 +169,9 @@
             state: directory
             recurse: true
 
-    - name: Checking if VMware Workstation is running...
-      ansible.builtin.shell: |
-        if [ -z "$(ps -fC vmware --no-headers)" ]; then
-            echo "Waiting for VMware..."
-        else
-            echo "Moving on..."
-        fi
-      changed_when: false
-      register: vmware_workstation_running
-
-    - name: Notifying user to start VMware Workstation...
-      when:
-        - lookup('env', 'SLACK_WEBHOOK_URL') | length != 0
-        - vmware_workstation_running.stdout == "Waiting for VMware..."
-        - lookup('env', 'WAYLAND_DISPLAY') | length != 0 # Not needed for Wayland
-      delegate_to: localhost
-      block:
-        - name: Notifying user to start VMware Workstation via Mattermost...
-          community.general.mattermost:
-            url: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/hooks/')[0] }}"
-            api_key: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/hooks/')[1] }}"
-            text: Please start VMware Workstation on your host
-            channel: "{{ lookup('env', 'SLACK_CHANNEL') }}"
-          when: ('/hooks/' in lookup('env', 'SLACK_WEBHOOK_URL'))
-
-        - name: Notifying user to start VMware Workstation via Slack...
-          community.general.slack:
-            token: "{{ (lookup('env', 'SLACK_WEBHOOK_URL')).split('/services/')[1] }}"
-            msg: Please start VMware Workstation on your host
-            channel: "{{ lookup('env', 'SLACK_CHANNEL') }}"
-          when: ('/services/' in lookup('env', 'SLACK_WEBHOOK_URL'))
-
-    - name: Waiting for user to manually start VMware Workstation...
-      ansible.builtin.shell: |
-        if [ -z "$(ps -fC vmware --no-headers)" ]; then
-            echo "Waiting for VMware..."
-        else
-            echo "Moving on..."
-        fi
-      changed_when: false
-      register: vmware_workstation_state
-      retries: 90
-      delay: 10
-      until: vmware_workstation_state.stdout == "Moving on..."
-      when: lookup('env', 'XDG_SESSION_TYPE') != "wayland" # Not needed for Wayland
-
     - name: Starting {{ inventory_hostname }} and waiting for IP address... # noqa: command-instead-of-shell
-      ansible.builtin.shell: DISPLAY={{ lookup('env', 'DISPLAY') }} vmrun -T ws start {{ machine_operations_local_vmx_path }} gui
+      ansible.builtin.command: vmcli power start {{ machine_operations_local_vmx_path }}
       changed_when: true
-      when: lookup('env', 'XDG_SESSION_TYPE') != "wayland" # Does not work with Wayland
-
-    - name: Listing running VMs...
-      ansible.builtin.command: vmrun -T ws list
-      changed_when: true
-      register: running_vms
-
-    - name: Powering on on Wayland...
-      when:
-        - lookup('env', 'XDG_SESSION_TYPE') == "wayland"
-        - machine_operations_local_vmx_path not in running_vms.stdout_lines
-      block:
-        - name: Stopping VMware Workstation GUI...
-          ansible.builtin.shell: |
-            set -o pipefail
-            if [ -z "$(ps -fC vmware --no-headers)" ]; then
-                echo "VMware not running..."
-            else
-                echo "Stopping VMware..."
-                kill $(ps -fC vmware --no-headers | awk '{print $2}')
-            fi
-          args:
-            executable: /bin/bash
-          changed_when: vmware_workstation_running.stdout == "Stopping VMware..."
-          register: vmware_workstation_running
-
-        # Otherwise the file is locked and we can't start the VM
-        - name: Please close the VMware Workstation GUI (VMs can keep running in the background)...
-          ansible.builtin.shell: |
-            if [ -z "$(ps -fC vmware --no-headers)" ]; then
-                echo "Moving on..."
-            else
-                echo "Waiting for VMware to stop..."
-            fi
-          changed_when: false
-          register: vmware_workstation_running
-          retries: 60
-          delay: 5
-          until: vmware_workstation_running.stdout == "Moving on..."
-
-        - name: Starting {{ inventory_hostname }}...
-          ansible.builtin.command: vmrun -T ws start {{ machine_operations_local_vmx_path }} nogui
-          changed_when: true
 
     - name: Getting IP address for {{ inventory_hostname }}...
       ansible.builtin.command: vmrun getGuestIPAddress {{ machine_operations_local_vmx_path }} -wait

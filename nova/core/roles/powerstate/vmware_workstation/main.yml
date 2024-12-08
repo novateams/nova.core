@@ -16,6 +16,10 @@
   ansible.builtin.include_tasks: restart.yml
   when: restart
 
+- name: Resetting VM...
+  ansible.builtin.include_tasks: reset.yml
+  when: reset
+
 - name: Shutting down VM...
   ansible.builtin.include_tasks: shutdown.yml
   when: shutdown
