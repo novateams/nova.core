@@ -88,8 +88,10 @@ nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | d
 vmware_workstation:
   connection: ssh
   host: host.docker.internal
-  local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware
-  local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ custom_vm_name | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
+  local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('undefined') }}
+  local_vmx_path:
+    /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('undefined') }}/{{ custom_vm_name
+    | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
   python_interpreter: /usr/bin/python3
   shell_type: sh
   user: "{{ lookup('env', 'USER') }}"
