@@ -52,6 +52,7 @@
         password_never_expires: true
         state: present
         path: "{{ item.ou | default(omit) }}"
+        spn: "{{ item.spn | default(omit) }}" # https://docs.ansible.com/ansible/latest/collections/microsoft/ad/user_module.html#parameter-spn
         groups:
           add: "{{ item.groups | default(windows_domain_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"
       register: win_domain_user
