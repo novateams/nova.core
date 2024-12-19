@@ -10,7 +10,7 @@
     path: "{{ post_scripts_folder_on_target }}"
     state: absent
 
-- name: Including Windowos Update disable block...
+- name: Including Windows Update disable block...
   when: disable_windows_update
   block:
     - name: Disabling Windows auto updates...
@@ -53,7 +53,7 @@
       retries: 5
       delay: 3
 
-# Someteimes some security/monitoring software cause really long reboot times
+# Sometimes some security/monitoring software cause really long reboot times
 # By stopping the services we can speed up the process
 - name: Stopping following services...
   ansible.windows.win_service:
