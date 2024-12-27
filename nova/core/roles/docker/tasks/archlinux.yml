@@ -13,7 +13,8 @@
   retries: 6
   delay: 5
 
-- name: Rebooting...
+# Reboot is required immediately after Docker installation
+- name: Rebooting... # noqa: no-handler
   ansible.builtin.reboot:
   when: docker_install.changed
 
