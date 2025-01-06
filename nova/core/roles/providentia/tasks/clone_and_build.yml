@@ -47,6 +47,7 @@
 
 - name: Test if using newer image with entrypoint set on image
   ansible.builtin.command: "grep ENTRYPOINT {{ providentia_install_dir }}/Dockerfile"
+  changed_when: false
   ignore_errors: true
   register: entrypoint_present
 

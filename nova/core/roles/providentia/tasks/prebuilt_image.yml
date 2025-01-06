@@ -21,10 +21,8 @@
     - Makefile
 
 - name: Pull latest containers
-  ansible.builtin.command:
-    cmd: docker compose pull
-  args:
-    chdir: "{{ providentia_install_dir }}"
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ providentia_install_dir }}"
 
 - name: Get image info
   community.docker.docker_image_info:
