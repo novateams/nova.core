@@ -6,7 +6,7 @@
     status_code: 200
   register: uri
   until: uri.status == 200
-  retries: 20
+  retries: 30
   delay: 5
 
 - name: Checking if admin password is already changed...
