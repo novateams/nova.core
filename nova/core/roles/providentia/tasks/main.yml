@@ -7,6 +7,7 @@
 - name: Including clone and build tasks...
   ansible.builtin.include_tasks: clone_and_build.yml
   when: providentia_deploy_branch
+
 - name: Including prebuilt image tasks...
   ansible.builtin.include_tasks: prebuilt_image.yml
   when: not providentia_deploy_branch
@@ -16,7 +17,7 @@
     chdir: "{{ providentia_install_dir }}"
     target: clear-cache
   register: clear_cache_new_target
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Clear cache (old target)
   community.general.make:
