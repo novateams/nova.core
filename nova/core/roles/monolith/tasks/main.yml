@@ -52,7 +52,7 @@
         caddy_server_request_body_size: 10000M
 
 - name: Downloading and trusting self-signed certificate...
-  when: caddy_generate_self_signed_certificate | default(false)
+  when: not fullchain_cert_state.stat.exists or caddy_generate_self_signed_certificate is defined
   block:
     - name: Getting self-signed certificate contents...
       ansible.builtin.slurp:
@@ -131,3 +131,81 @@
   ansible.builtin.include_tasks:
     file: "{{ monolith_single_service }}.yml"
   when: monolith_single_service is defined
+
+# This means that now pre-existing certificate was found before monolith role was executed
+- name: Requesting a certificate for web proxy...
+  when: not fullchain_cert_state.stat.exists or caddy_generate_self_signed_certificate is not defined
+  block:
+    - name: Checking for existing certificate...
+      ansible.builtin.stat:
+        path: /srv/certs/{{ fqdn }}_certificate.crt
+      register: certificate
+
+    - name: Getting info about existing certificate...
+      community.crypto.x509_certificate_info:
+        path: /srv/certs/{{ fqdn }}_certificate.crt
+        valid_at:
+          certificate_valid: +8w
+      register: certificate_is_valid
+      when: certificate.stat.exists
+
+    - name: Requesting new certificate...
+      when: (not certificate.stat.exists or not certificate_is_valid.valid_at.certificate_valid)
+      block:
+        - name: Creating folders for certificates...
+          ansible.builtin.file:
+            path: /srv/certs
+            state: directory
+            mode: "0700"
+
+        - name: Requesting certificate...
+          ansible.builtin.uri:
+            url: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/issue/server_ec
+            method: POST
+            headers:
+              X-Vault-Request: true
+              X-Vault-Token: "{{ root_token }}"
+            body:
+              name: "{{ fqdn }}"
+              common_name: "{{ fqdn }}"
+              alt_names: "{{ monolith_providentia_fqdn }},{{ monolith_nexus_fqdn }},{{ monolith_keycloak_fqdn }},{{ monolith_vault_fqdn }}"
+            body_format: json
+            validate_certs: true
+          register: cert_req
+
+        - name: Saving certificates to target...
+          ansible.builtin.copy:
+            content: "{{ cert_file.content }}"
+            dest: "{{ cert_file.dest }}"
+            mode: "0600"
+          loop:
+            - content: "{{ cert_req.json.data.certificate }}"
+              dest: /srv/certs/{{ fqdn }}_certificate.crt
+            - content: "{{ cert_req.json.data.issuing_ca }}"
+              dest: /srv/certs/{{ fqdn }}_issuing_ca.crt
+            - content: "{{ cert_req.json.data.private_key }}"
+              dest: /srv/certs/{{ fqdn }}_key.crt
+          loop_control:
+            loop_var: cert_file
+            label: "{{ cert_file.dest }}"
+
+        - name: Creating a certificate & issuing CA combination file...
+          ansible.builtin.shell: |
+            cat "/srv/certs/{{ fqdn }}_certificate.crt" > "/srv/certs/{{ fqdn }}_fullchain.crt"
+            echo "" >> "/srv/certs/{{ fqdn }}_fullchain.crt"
+            cat "/srv/certs/{{ fqdn }}_issuing_ca.crt" >> "/srv/certs/{{ fqdn }}_fullchain.crt"
+          changed_when: true
+
+        - name: Creating a private & public key combination file...
+          ansible.builtin.shell: |
+            cat "/srv/certs/{{ fqdn }}_fullchain.crt" > "/srv/certs/{{ fqdn }}_combined.crt"
+            echo "" >> "/srv/certs/{{ fqdn }}_combined.crt"
+            cat "/srv/certs/{{ fqdn }}_key.crt" >> "/srv/certs/{{ fqdn }}_combined.crt"
+          changed_when: true
+
+        - name: Restarting Caddy...
+          community.docker.docker_container:
+            name: caddy
+            state: started
+            restart: true
+            container_default_behavior: no_defaults

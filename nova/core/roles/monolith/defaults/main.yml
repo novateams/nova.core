@@ -1,6 +1,9 @@
 ---
 # Required connection and host variables that need to be defined when deploying Monolith on a pre-existing host
 
+# The name of the project that Monolith is being deployed for
+project_fullname: {}
+
 # IP address or hostname of the host to deploy Monolith on to connect over SSH
 connection_address: {}
 
