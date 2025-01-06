@@ -33,7 +33,7 @@ polling = "*"
 prettytable = "*"
 psycopg2-binary = "*"
 pyopenssl = "*"
-python = "3.11.9"
+python = "3.12.8"
 pyvmomi = "*"
 pywinrm = "*"
 redis = "*"
@@ -93,8 +93,6 @@ azure-nspkg = "*"
 azure-storage-blob = "*"
 msgraph-sdk = "*"
 xmltodict = "*"
-
-[tool.poetry.dev-dependencies]
 
 [build-system]
 requires = ["poetry>=0.12"]
