@@ -21,6 +21,7 @@
       policy: "{{ vault_policy.policy_content }}"
     body_format: json
     status_code:
+      - 200
       - 204
 
 - name: Creating {{ vault_policy.vault_group_name }} group...
