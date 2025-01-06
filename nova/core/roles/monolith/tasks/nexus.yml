@@ -4,6 +4,7 @@
     name: nova.core.secrets_to_vault
   vars:
     secrets_vault_address: "https://{{ monolith_vault_fqdn }}"
+    secrets_vault_engine_path: monolith
     secrets_vault_secrets_path: nexus
     secrets:
       - key: "{{ inventory_hostname }}_nexus_admin_password"
@@ -12,9 +13,8 @@
 # This is required configuring Nexus and repositories after the Nexus role is included
 - name: Setting Nexus credentials fact...
   ansible.builtin.set_fact:
-    nexus_admin_password:
-      "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
-      + '/data/nexus:' + inventory_hostname + '_nexus_admin_password') }}"
+    nexus_admin_password: "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment
+      + 'secret=monolith/data/nexus:' + inventory_hostname + '_nexus_admin_password') }}"
     nexus_fqdn: "{{ monolith_nexus_fqdn }}"
 
 - name: Including Nexus role...
@@ -22,8 +22,10 @@
     name: nova.core.nexus
     public: true
   vars:
-    secrets_vault_secrets_path: nexus
     nexus_allow_anonymous_access: true
+    nexus_configure_ldap: true
     nexus_configure: true
     nexus_create_repos: true
-    nexus_configure_ldap: true
+    nexus_proxy_container_name: caddy
+    secrets_vault_engine_path: monolith
+    secrets_vault_secrets_path: nexus

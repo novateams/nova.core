@@ -12,17 +12,47 @@
       hostname: "{{ hostname }}"
       domain: "{{ domain }}"
       fqdn: "{{ fqdn }}"
+      project_fullname: "{{ project_fullname }}"
   loop: "{{ vars_to_check | dict2items }}"
   loop_control:
     loop_var: monolith_missing_var
   when: monolith_missing_var.value == {}
+
+- name: Checking if {{ monolith_vault_fqdn }} DNS resolves...
+  ansible.builtin.wait_for:
+    host: "{{ monolith_vault_fqdn }}"
+    port: 22
+    state: present
+    timeout: 5
+  delegate_to: localhost
+  become: false
 
 - name: Checking if /srv/certs/{{ fqdn }}_fullchain.crt exists...
   ansible.builtin.stat:
     path: /srv/certs/{{ fqdn }}_fullchain.crt
   register: fullchain_cert_state
 
-- name: Generating self-signed certificats with Caddy...
+- name: Generating self-signed certificates with Caddy...
   ansible.builtin.set_fact:
     caddy_generate_self_signed_certificate: true
   when: not fullchain_cert_state.stat.exists
+
+- name: Adding following hosts file entries for {{ fqdn }}...
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "{{ hosts_entry.regexp }}"
+    line: "{{ hosts_entry.line }}"
+    state: present
+    mode: "0644"
+  loop_control:
+    loop_var: hosts_entry
+    label: "{{ hosts_entry.line }}"
+  loop:
+    - regexp: .*{{ monolith_vault_fqdn }}$
+      line: "{{ connection_address }} {{ monolith_vault_fqdn }}"
+    - regexp: .*{{ monolith_keycloak_fqdn }}$
+      line: "{{ connection_address }} {{ monolith_keycloak_fqdn }}"
+    - regexp: .*{{ monolith_providentia_fqdn }}$
+      line: "{{ connection_address }} {{ monolith_providentia_fqdn }}"
+    - regexp: .*{{ monolith_nexus_fqdn }}$
+      line: "{{ connection_address }} {{ monolith_nexus_fqdn }}"

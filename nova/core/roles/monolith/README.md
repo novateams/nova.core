@@ -39,6 +39,7 @@ hostname: # This is the hostname that will be set for the host
 domain: # This is the domain that will be set for the host
 ad_domain_name: "{{ domain }}"
 fqdn: "{{ hostname }}.{{ domain }}"
+project_fullname: # This is the full name of the project
 ```
 
 Although there are some variables available to this role, it recommended to only set values for variables defined in the example below. This is a kickstart role and should be used as such. Advanced users can install the individual roles separately for more control.
@@ -116,6 +117,37 @@ dependencies:
       vault_ldaps_url: ldaps://dc1.example.com # This is the LDAP server that will be used for Vault
       vault_userdn: OU=Users,DC=example,DC=com # This is the search base for users in LDAP
       vault_ldap_admin_group_name: vault-admins # This is the LDAP group that will have admin access to Vault
+
+      vault_create_root_ca: true # Create a self-signed root CA
+      vault_create_intermediate_ca: true # Create an intermediate CA (signed by the root CA)
+
+      vault_root_ca_pki_engine_name: RootCA
+      vault_root_ca_name: "{{ project_fullname | upper }} RootCA"
+      vault_root_ca_ou: "{{ project_fullname | upper }}"
+      vault_root_ca_org: "{{ project_fullname | upper }} Project"
+      vault_root_ca_country: EU
+      vault_root_ca_key_type: ec
+      vault_root_ca_key_bits: 384
+      vault_root_ca_crl_distribution_points: https://{{ monolith_vault_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/crl/pem
+      vault_root_ca_issuing_certificates: https://{{ monolith_vault_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/ca/pem
+
+      vault_intermediate_ca_pki_engine_name: IntermediateCA
+      vault_intermediate_ca_name: "{{ project_fullname | upper }} IntermediateCA"
+      vault_intermediate_ca_ou: "{{ project_fullname | upper }}"
+      vault_intermediate_ca_org: "{{ project_fullname | upper }} Project"
+      vault_intermediate_ca_country: EU
+      vault_intermediate_ca_key_type: ec
+      vault_intermediate_ca_key_bits: 384
+      vault_intermediate_ca_crl_distribution_points: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/crl/pem
+      vault_intermediate_ca_issuing_certificates: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/ca/pem
+
+      vault_server_rsa_ou: "{{ project_fullname | upper }}"
+      vault_server_rsa_organization: "{{ project_fullname | upper }} Project"
+      vault_server_rsa_country: EU
+
+      vault_server_ec_ou: "{{ project_fullname | upper }}"
+      vault_server_ec_organization: "{{ project_fullname | upper }} Project"
+      vault_server_ec_country: EU
 
       #########
       # Nexus #
