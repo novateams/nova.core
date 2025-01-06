@@ -73,6 +73,7 @@
     body_format: json
     validate_certs: "{{ vault_validate_cert }}"
     status_code:
+      - 200
       - 204
 
 - name: Re-listing all auth methods...

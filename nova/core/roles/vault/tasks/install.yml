@@ -52,7 +52,7 @@
         container_default_behavior: no_defaults
       when: proxy_container_check.exists
 
-- name: Waiting until Vault is up...
+- name: Waiting until {{ vault_configuration_uri }} is up...
   ansible.builtin.uri:
     url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
     method: GET
