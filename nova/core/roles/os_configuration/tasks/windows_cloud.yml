@@ -1,14 +1,8 @@
 ---
 - name: Setting the following Windows Server Core registry values...
   ansible.windows.win_regedit:
-    path: "{{ item.path }}"
-    name: "{{ item.name }}"
-    data: "{{ item.data }}"
-    type: "{{ item.type }}"
-  loop:
-    - path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon # Setting the shell to PowerShell.exe
-      name: Shell
-      data: PowerShell.exe -NoExit
-      type: string
-
-  when: ansible_facts.os_installation_type == 'Server Core'
+    path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon # Setting the shell to PowerShell.exe
+    name: Shell
+    data: PowerShell.exe -NoExit
+    type: string
+  when: ansible_os_installation_type == 'Server Core'
