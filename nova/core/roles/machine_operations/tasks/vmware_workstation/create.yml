@@ -51,7 +51,6 @@
                 ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode
                 | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ machine_operations_vmware_workstation_template_export_folder }}
               changed_when: true
-              when: not vm_template_presence.stat.exists
 
         - name: Setting fresh_deploy fact...
           ansible.builtin.set_fact:
