@@ -52,3 +52,6 @@ configure_networking_panos_secondary_dns_server: "{{ dns_servers6[0] }}"
 
 # VMWare ESXi
 configure_networking_esxi_mgmt_interface_name: vmk0 # Default name of the management interface for ESXi that will have the IP address configured
+
+# Proxmox
+configure_networking_proxmox_mgmt_interface_name: vmbr0 # Usually the first bridge interface of the node is the management interface

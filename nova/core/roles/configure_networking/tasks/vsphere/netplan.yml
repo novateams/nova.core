@@ -44,7 +44,7 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "rm /etc/netplan/*"
+            arguments: -c "rm -rf /etc/netplan/*"
             path: /bin/bash
         status_code: 201
         body_format: json

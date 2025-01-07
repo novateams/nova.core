@@ -1,0 +1,86 @@
+---
+- name: Configuring networking on Windows VM...
+  become: false
+  delegate_to: localhost
+  block:
+    # Waiting until QEMU agent is not responding
+    - name: Waiting for final sysprep reboot...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/info"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+        status_code: 500
+      retries: 100
+      delay: 3
+      until: sysprep_reboot.json.data == none
+      register: sysprep_reboot
+      when: fresh_deploy
+
+    - name: Waiting until agent is running...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/info"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      retries: 30
+      delay: 10
+      register: agent_running
+      until: not agent_running.failed
+
+    - name: Templating network configuration script...
+      ansible.builtin.template:
+        src: Configure-Network.ps1
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1
+        mode: "0644"
+        lstrip_blocks: true
+
+    - name: Getting network configuration file contents...
+      ansible.builtin.slurp:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1
+      register: file_contents
+
+    - name: Writing PowerShell configuration script to {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          content: "{{ file_contents.content | b64decode }}"
+          file: C:\Windows\Temp\Configure-Network.ps1
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_write
+      until: not network_config_write.failed
+      retries: 30
+      delay: 10
+
+    - name: Configuring network...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          command:
+            - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+            - -ExecutionPolicy
+            - Bypass
+            - -NoProfile
+            - -WindowStyle
+            - Hidden
+            - -File
+            - "C:\\Windows\\Temp\\Configure-Network.ps1"
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml

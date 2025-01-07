@@ -1,0 +1,20 @@
+---
+- name: Verifying that the previous command was successful...
+  ansible.builtin.uri:
+    url:
+      "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid
+      }}/agent/exec-status?pid={{ network_config_command.json.data.pid }}"
+    headers:
+      Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+    method: GET
+    validate_certs: "{{ proxmox_validate_certs }}"
+  register: network_config_command_status
+
+- name: ERROR
+  ansible.builtin.fail:
+    msg: |
+      Network configuration command failed for {{ custom_vm_name | default(vm_name) }}:
+      {{ network_config_command_status.json.data | to_nice_yaml }}
+  when:
+    - network_config_command_status.json.data.exitcode is defined
+    - network_config_command_status.json.data.exitcode != 0
