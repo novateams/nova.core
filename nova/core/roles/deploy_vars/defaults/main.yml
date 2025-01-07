@@ -23,7 +23,7 @@ immutable: false # Set to true to stop running any role on the host or group
 ansible_become_password: "{{ ansible_password | default(omit) }}" # Defaulting to ansible_password when password is required for sudo
 
 # Networking
-# Networking defaults when using Providentia or interfaces list that is based on Providentia output
+# Networking defaults when using Providentia or interfaces list that is based on Providentia API output
 # To make sure these values can be used as hostvar lookups they also need to be defined in projects all.yml
 
 # IPv4
@@ -120,4 +120,20 @@ azure_defaults:
   client_id: "{{ azure_client_id | default(omit) }}"
   # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
   tenant: "{{ azure_tenant_id | default(omit) }}"
-  secret: "{{ azure_service_principal | default(omit) }}"
+  secret: "{{ azure_service_principal_secret | default(omit) }}"
+
+###########
+# Proxmox #
+###########
+
+proxmox_defaults:
+  api_host: "{{ proxmox_api_host | default(omit) }}"
+  api_user: "{{ proxmox_api_user | default(omit) }}"
+  api_token_id: "{{ proxmox_api_token_id | default(omit) }}"
+  api_token_secret: "{{ proxmox_api_token_secret | default(omit) }}"
+
+proxmox_validate_certs: true
+proxmox_api_url: https://{{ proxmox_defaults.api_host }}:8006/api2/json
+
+# How long to wait for a Proxmox operation (like clone, powerstate and snapshots) to complete
+proxmox_machine_operations_operation_timeout: 600
