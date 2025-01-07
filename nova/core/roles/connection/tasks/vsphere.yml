@@ -1,13 +1,4 @@
 ---
-- name: Checking for Network...
-  ansible.builtin.fail:
-    msg: |
-      Missing networking configuration for {{ inventory_hostname }}!!!
-      Check that you have the following configuration set:
-        * {{ inventory_hostname }} machine has at least network interface defined
-        * {{ inventory_hostname }} machine interface has the connection flag set to true
-  when: primary_network == []
-
 - name: Including DHCP detection tasks block...
   when: connection_mode_dhcp
   block:
@@ -36,14 +27,11 @@
 - name: Setting address for connection...
   when: not connection_mode_dhcp
   block:
-    - name: Setting {{ connection_address }} IP for connection... # This address usually comes from Providentia API
+    # custom_connection_ip is for rare edge cases when connection IP must be overridden manually
+    # connection_address usually comes from Providentia API
+    - name: Setting {{ custom_connection_ip | default(connection_address) }} IP for connection...
       ansible.builtin.set_fact:
-        ansible_host: "{{ connection_address }}"
-
-    - name: Setting custom {{ custom_connection_ip }} IP for connection... # This is for edge cases when connection IP must be overridden manually
-      ansible.builtin.set_fact:
-        ansible_host: "{{ custom_connection_ip }}"
-      when: custom_connection_ip is defined
+        ansible_host: "{{ custom_connection_ip | default(connection_address) }}"
 
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
