@@ -70,6 +70,7 @@ opnsense_gateways:
 {% if ip_address.gateway != none %}
   {% if ip_address.mode == "ipv4_static" %}
   - gateway_item:
+      uuid: "{{ lookup('password', '/dev/null length=32') | ansible.builtin.to_uuid }}"
       _:
         - disabled: "0"
         - name: WANGWv4
@@ -96,6 +97,7 @@ opnsense_gateways:
   {% endif %}
   {% if ip_address.mode == "ipv6_static" %}
   - gateway_item:
+      uuid: "{{ lookup('password', '/dev/null length=32') | ansible.builtin.to_uuid }}"
       _:
         - disabled: "0"
         - name: WANGWv6
