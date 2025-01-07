@@ -151,3 +151,24 @@ machine_operations_linode_vm_password:
   "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
   + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_' + admin_account) }}"
 rebuild: false # Use ctp host rebuild-linode-vm <inventory_hostname> command to rebuild the VM with different size but keeping the data
+###########
+# Proxmox #
+###########
+
+# List of hotplug devices to enable on the VM
+machine_operations_proxmox_hotplug:
+  - cpu
+  - disk
+  - memory
+  - network
+  - usb
+
+# Proxmox VM default disk
+machine_operations_proxmox_os_disk: scsi0
+
+# Proxmox VMID calculation
+# This is to make sure that the VM ID is unique otherwise it mass deploy will run into race conditions
+machine_operations_proxmox_vmid: "{{ custom_vm_name | default(vm_name) | hash('sha256') | int(base=16) % 1000000000 }}"
+
+# Start VM on boot
+machine_operations_proxmox_vm_start_on_boot: true

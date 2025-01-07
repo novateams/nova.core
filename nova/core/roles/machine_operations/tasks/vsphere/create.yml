@@ -6,7 +6,8 @@
 
 - name: Checking for the correct deploy mode...
   ansible.builtin.fail:
-    msg: Machine doesn't exist, use deploy or redeploy first!
+    msg: |
+      Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
   when:
     - fresh_deploy
     - role_only or role_only_wp or single_role is defined

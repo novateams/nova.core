@@ -1,0 +1,26 @@
+---
+- name: Missing required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - proxmox_api_user
+      - proxmox_api_token_id
+      - proxmox_api_token_secret
+  when: proxmox_api_user is not defined or proxmox_api_token_id is not defined or proxmox_api_token_secret is not defined
+
+- name: Checking if {{ custom_vm_name | default(vm_name) }} exists...
+  community.general.proxmox_vm_info:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+  delegate_to: localhost
+  become: false
+  register: proxmox_vm_exists
+  until: proxmox_vm_exists is not failed
+  retries: 24
+  delay: 5
+
+- name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
+  ansible.builtin.include_tasks: remove.yml
+  when: deploy_mode in ['undeploy', 'redeploy']
+
+- name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
+  ansible.builtin.include_tasks: create.yml
