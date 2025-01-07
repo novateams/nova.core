@@ -1,0 +1,53 @@
+---
+- name: Listing {{ custom_vm_name | default(vm_name) }} unreferenced disks...
+  community.general.proxmox_storage_contents_info:
+    storage: "{{ proxmox_storage }}"
+    node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
+    vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+  retries: 12
+  delay: 5
+  register: proxmox_unreferenced_disks
+
+- name: Removing unreferenced disks...
+  when: proxmox_unreferenced_disks.proxmox_storage_content != []
+  block:
+    - name: Removing following {{ custom_vm_name | default(vm_name) }} unreferenced disks...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_exists.proxmox_vms[0].node
+          | default(proxmox_node) }}/storage/{{ proxmox_storage }}/content/{{ disk.volid }}"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: DELETE
+        validate_certs: "{{ proxmox_validate_certs }}"
+      loop_control:
+        loop_var: disk
+        label: "{{ disk.volid }}"
+      loop: "{{ proxmox_unreferenced_disks.proxmox_storage_content }}"
+      retries: 12
+      delay: 5
+
+    - name: Re-listing {{ custom_vm_name | default(vm_name) }} unreferenced disks...
+      community.general.proxmox_storage_contents_info:
+        storage: "{{ proxmox_storage }}"
+        node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+      retries: 12
+      delay: 5
+      register: proxmox_relisted_disks
+
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
+    - name: TIMED OUT REMOVING UNREFERENCED DISKS
+      ansible.builtin.fail:
+        msg:
+          Timeout {{ proxmox_machine_operations_operation_timeout }}s reached when trying to remove unreferenced disks for {{ custom_vm_name
+          | default(vm_name) }}
+      when: proxmox_disk_cleanup_start_time.ansible_facts.ansible_date_time.epoch | int
+        + proxmox_machine_operations_operation_timeout < ansible_date_time.epoch | int
+
+    # Under high load the disk cleanup can fail without reporting back an error so looping until the disks are removed
+    - name: Re-including disk_cleanup tasks...
+      ansible.builtin.include_tasks: disk_cleanup.yml
+      when: proxmox_relisted_disks.proxmox_storage_content != []

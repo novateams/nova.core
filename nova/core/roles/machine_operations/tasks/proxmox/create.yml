@@ -1,0 +1,134 @@
+---
+- name: Setting fresh_deploy fact...
+  ansible.builtin.set_fact:
+    fresh_deploy: true
+  when: proxmox_vm_exists.proxmox_vms == [] or deploy_mode == "redeploy"
+
+- name: Checking for the correct deploy mode...
+  ansible.builtin.fail:
+    msg: |
+      "{{ custom_vm_name | default(vm_name) }} Virtual Machine doesn't exist, use the deploy command first!"
+  when:
+    - fresh_deploy
+    - role_only or role_only_wp or single_role is defined
+
+- name: Cloning and configuring VM...
+  delegate_to: localhost
+  become: false
+  when:
+    - not role_only
+    - not role_only_wp
+    - single_role is not defined
+  block:
+    - name: Looking up template and cloning the VM...
+      when: fresh_deploy
+      block:
+        - name: Looking up {{ vm_template }} info...
+          community.general.proxmox_vm_info:
+            name: "{{ vm_template }}"
+          register: proxmox_vm_template
+          until: proxmox_vm_template is not failed
+          retries: 24
+          delay: 5
+
+        - name: MISSING TEMPLATE
+          ansible.builtin.fail:
+            msg: |
+              Error following template not found:
+                vm_template: {{ vm_template }}
+          when: proxmox_vm_template.proxmox_vms == []
+
+        # Cloning needs to happen on the same node where the template is located
+        # After that the target node is used to move the VM to the correct node
+        - name: Cloning {{ custom_vm_name | default(vm_name) }} VM...
+          block:
+            - name: Getting the time...
+              ansible.builtin.setup:
+                filter: "*_time"
+
+            - name: Cloning {{ custom_vm_name | default(vm_name) }} VM...
+              community.general.proxmox_kvm:
+                clone: "{{ vm_template }}"
+                description: "{{ vm_description }}"
+                full: "{{ false if linked_clone_status else true }}"
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                newid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+                node: "{{ proxmox_vm_template.proxmox_vms[0].node }}"
+                storage: "{{ proxmox_storage if not linked_clone_status else omit }}"
+                target: "{{ proxmox_node }}"
+                timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+
+          # Using rescue to remove disks left over from failed cloning attempts
+          rescue:
+            - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
+              community.general.proxmox_kvm:
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+                state: absent
+                force: true
+                timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+
+            - name: Getting the time...
+              ansible.builtin.setup:
+                filter: "*_time"
+              register: proxmox_disk_cleanup_start_time
+
+            - name: Including disk_cleanup tasks...
+              ansible.builtin.include_tasks: disk_cleanup.yml
+
+            - name: FAILED CLONING ATTEMPT
+              ansible.builtin.fail:
+                msg: |
+                  Cloning {{ custom_vm_name | default(vm_name) }} failed.
+                  Check the errors above for this host and try again.
+
+    - name: Resizing {{ custom_vm_name | default(vm_name) }} VM disk...
+      community.general.proxmox_disk:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+        disk: "{{ machine_operations_proxmox_os_disk }}"
+        size: "{{ hardware_primary_disk_size }}G"
+        state: resized
+      retries: 12
+      delay: 5
+
+    - name: Updating {{ custom_vm_name | default(vm_name) }} VM configuration...
+      community.general.proxmox_kvm:
+        autostart: true
+        cores: "{{ omit if not hardware_cpu else hardware_cpu }}"
+        hotplug: "{{ machine_operations_proxmox_hotplug | join(',') }}"
+        memory: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+        node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
+        onboot: "{{ machine_operations_proxmox_vm_start_on_boot }}"
+        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+        update: true
+
+    - name: Attaching following networks interfaces...
+      community.general.proxmox_nic:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+        interface: "net{{ idx }}"
+        bridge: "{{ nic.cloud_id }}"
+        mtu: "{{ nic.mtu | default(1) }}"
+      loop_control:
+        loop_var: nic
+        index_var: idx
+        label: "{{ nic.cloud_id }}"
+      loop: "{{ interfaces }}"
+
+    - name: Migrating {{ custom_vm_name | default(vm_name) }} VM to {{ proxmox_node }} node...
+      community.general.proxmox_kvm:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        node: "{{ proxmox_node }}"
+        migrate: true
+
+    - name: Starting {{ custom_vm_name | default(vm_name) }} VM... # noqa: no-handler
+      community.general.proxmox_kvm:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+        state: started
+        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+      retries: 6
+      delay: 5
