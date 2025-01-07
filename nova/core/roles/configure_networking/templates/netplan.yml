@@ -8,7 +8,7 @@ network:
     {{ interface.network_id | replace(" ", "-") }}:
       set-name: {{ interface.network_id | replace(" ", "-") }}
       match:
-        macaddress: {{ vmware_tools_information.instance[ "hw_eth" + ( loop.index - 1) | string ]["macaddress"] }}
+        macaddress: {{ configure_networking_mac_addresses[loop.index - 1] }}
       {% if interface.addresses[0].mode == "ipv4_dhcp" %}
       dhcp4: true
       {% elif interface.addresses[0].mode == "ipv6_dhcp" %}

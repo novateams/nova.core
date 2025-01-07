@@ -17,7 +17,7 @@ source /opt/vyatta/etc/functions/script-template
 # find /sys/class/net -mindepth 1 -maxdepth 1 ! -name lo -printf "%P: " -execdir cat {}/address \;
 
 {% for interface in interfaces %}
-MAC_ADDRESS="{{ vmware_tools_information.instance[ 'hw_eth' + ( loop.index - 1 ) | string ]['macaddress'] }}"
+MAC_ADDRESS="{{ configure_networking_mac_addresses[loop.index - 1] }}"
 INTERFACE_NAME=$( ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . | ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs)
 set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
 
