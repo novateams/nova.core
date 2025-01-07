@@ -1,0 +1,28 @@
+---
+- name: Including DHCP detection tasks block...
+  when: connection_mode_dhcp
+  delegate_to: localhost
+  become: false
+  block:
+    - name: DHCP UNSUPPORTED
+      ansible.builtin.fail:
+        msg: |
+          DHCP connection mode is currently not supported for Proxmox.
+          Please use static IP address for connection.
+
+- name: Setting address for connection...
+  when: not connection_mode_dhcp
+  block:
+    # custom_connection_ip is for rare edge cases when connection IP must be overridden manually
+    # connection_address usually comes from Providentia API
+    - name: Setting {{ custom_connection_ip | default(connection_address) }} IP for connection...
+      ansible.builtin.set_fact:
+        ansible_host: "{{ custom_connection_ip | default(connection_address) }}"
+
+- name:
+    Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
+    | upper }} over {{ connection_address }}...
+  ansible.builtin.set_fact:
+    ansible_connection: "{{ default_connection_plugin }}"
+    ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
+    ansible_password: "{{ omit if connection_no_password else template_password if fresh_deploy else ansible_deployer_password }}"

@@ -19,6 +19,10 @@
   ansible.builtin.include_tasks: linode.yml
   when: infra_env == 'linode'
 
+- name: Configuring connection in Proxmox environment...
+  ansible.builtin.include_tasks: proxmox.yml
+  when: infra_env == 'proxmox'
+
 - name: Configuring connection for external or pre-existing machine...
   ansible.builtin.include_tasks: external.yml
   when: infra_env == 'external'
