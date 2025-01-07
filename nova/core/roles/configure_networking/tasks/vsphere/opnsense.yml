@@ -96,6 +96,7 @@
         pretty_print: true
         add_children:
           - rule:
+              uuid: "{{ lookup('password', '/dev/null length=32') | ansible.builtin.to_uuid }}"
               _:
                 - type: pass
                 - ipprotocol: inet46
