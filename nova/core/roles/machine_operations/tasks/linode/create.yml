@@ -17,7 +17,7 @@
 - name: Setting fresh_deploy as fact...
   ansible.builtin.set_fact:
     fresh_deploy: true
-  when: linode_vm.changed
+  when: linode_vm.actions != []
 
 - name: Setting primary IPs as fact...
   ansible.builtin.set_fact:
