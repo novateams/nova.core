@@ -1,28 +1,36 @@
 ---
-- name: Waiting for VMware tools to become available...
-  community.vmware.vmware_guest_tools_wait:
-    name: "{{ custom_vm_name | default(vm_name) }}"
-  delegate_to: localhost
-  register: vmware_tools_information
-
-- name: Getting REST API token...
-  ansible.builtin.uri:
-    url: https://{{ vcenter_hostname }}/api/session
-    method: POST
-    user: "{{ vmware_defaults.username }}"
-    password: "{{ vmware_defaults.password }}"
-    force_basic_auth: true
-    status_code: 201
-    body_format: json
-    validate_certs: "{{ vmware_defaults.validate_certs }}"
-  no_log: true
-  register: vcenter_session_api_key
-  become: false
-  delegate_to: localhost
-
 - name: Configuring network for supported connection modes...
   when: connection_mode in supported_connection_modes
+  become: false
+  delegate_to: localhost
   block:
+    - name: Waiting for VMware tools to become available...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vmware_tools_information
+
+    - name: Getting {{ custom_vm_name | default(vm_name) }} VM info...
+      community.vmware.vmware_vm_info:
+        vm_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_info
+
+    - name: Creating a list of MAC addresses...
+      ansible.builtin.set_fact:
+        configure_networking_mac_addresses: "{{ vm_info.virtual_machines[0].mac_address }}"
+
+    - name: Getting REST API token...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/session
+        method: POST
+        user: "{{ vmware_defaults.username }}"
+        password: "{{ vmware_defaults.password }}"
+        force_basic_auth: true
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+      no_log: true
+      register: vcenter_session_api_key
+
     - name: Including {{ customization_method }} network configuration tasks...
       ansible.builtin.include_tasks: "{{ customization_method }}.yml"
 
@@ -39,8 +47,3 @@
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       no_log: true
-      become: false
-      delegate_to: localhost
-
-- name: Flushing handlers...
-  ansible.builtin.meta: flush_handlers

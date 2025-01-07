@@ -1,5 +1,5 @@
 [Match]
-MACAddress={{ vmware_tools_information.instance[ 'hw_eth' + ( interface_index ) | string ]['macaddress'] }}
+MACAddress={{ configure_networking_mac_addresses[interface_index] }}
 
 [Link]
 Name={{ item.network_id }}
