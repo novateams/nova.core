@@ -1,0 +1,19 @@
+---
+- name: Configuring VM network on Proxmox...
+  when: connection_mode in supported_connection_modes
+  become: false
+  delegate_to: localhost
+  block:
+    # Retrying until the host is available, might take some time depending on the OS.
+    - name: Getting {{ custom_vm_name | default(vm_name) }} network configuration...
+      community.general.proxmox_vm_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        config: current
+        network: true
+      register: proxmox_vm_info
+      until: not proxmox_vm_info.failed
+      retries: 18
+      delay: 10
+
+    - name: Including {{ customization_method }} network configuration tasks...
+      ansible.builtin.include_tasks: "{{ customization_method }}.yml"
