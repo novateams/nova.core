@@ -1,0 +1,22 @@
+---
+- name: Including the shutdown wait tasks block...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Looking up the VM...
+      vmware.vmware_rest.vcenter_vm_info:
+        filter_names: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+      until: not vcenter_vm_info.failed
+      retries: 5
+      delay: 2
+
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
+      vmware.vmware_rest.vcenter_vm_guest_power_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: poweroff_status
+      until:
+        - poweroff_status.value.state is defined
+        - poweroff_status.value.state == "NOT_RUNNING"
+      retries: 60
+      delay: 10
