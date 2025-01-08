@@ -1,0 +1,30 @@
+---
+- name: Including the shutdown wait tasks block...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Listing all VMs on Proxmox...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_node }}/qemu"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: all_proxmox_node_vms
+
+    - name: Getting {{ custom_vm_name | default(vm_name) }} VM ID...
+      ansible.builtin.set_fact:
+        proxmox_vm_id: "{{ all_proxmox_node_vms.json.data | selectattr('name', 'equalto', custom_vm_name | default(vm_name)) | map(attribute='vmid') | first }}"
+
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is stopped
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_node }}/qemu/{{ proxmox_vm_id }}/status/current"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: proxmox_vm_current_status
+      until:
+        - proxmox_vm_current_status.json.data.status == 'stopped'
+      retries: 60
+      delay: 10
