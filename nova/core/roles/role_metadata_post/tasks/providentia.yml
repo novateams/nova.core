@@ -20,7 +20,8 @@
 
     - name: Clearing existing metadata for {{ inventory_hostname }}...
       ansible.builtin.uri:
-        url: "{{ role_metadata_post_providentia_uri }}/api/v3/{{ providentia_project_name | default(project_fullname) }}/hosts/{{ main_id }}/instances/{{ inventory_hostname }}"
+        url: "{{ role_metadata_post_providentia_uri }}/api/v3/{{ providentia_project_name | default(project_fullname)
+          }}/hosts/{{ main_id }}/instances/{{ inventory_hostname }}"
         method: PUT
         headers:
           accept: application/json
@@ -33,7 +34,8 @@
 
     - name: Uploading metadata for {{ inventory_hostname }}...
       ansible.builtin.uri:
-        url: "{{ role_metadata_post_providentia_uri }}/api/v3/{{ providentia_project_name | default(project_fullname) }}/hosts/{{ main_id }}/instances/{{ inventory_hostname }}"
+        url: "{{ role_metadata_post_providentia_uri }}/api/v3/{{ providentia_project_name | default(project_fullname)
+          }}/hosts/{{ main_id }}/instances/{{ inventory_hostname }}"
         method: PATCH
         headers:
           accept: application/json
