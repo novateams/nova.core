@@ -1,55 +1,52 @@
 ---
-# Package Installation
-- name: Installing universal Unix packages...
-  ansible.builtin.package:
-    name:
-      - curl # Useful for downloading files & interacting with web services
-      - file # Useful for file management & editing over SSH
-      - jq # Useful for parsing JSON
-      - mc # Useful for file management & editing over SSH
-      - nano # Useful for editing files over SSH
-      - python3 # Required for Ansible
-      - sudo # Required for Ansible
-      - tcpdump # Useful for network troubleshooting
-      - vim # Useful for editing files over SSH
-      - wget # Useful for downloading files
-    state: present
-    update_cache: "{{ true if ansible_os_family == 'Debian' else omit }}"
+- name: Installing Packages...
+  # Proxmox is Debian but we don't want to run these tasks on Proxmox
+  # customization_method comes from Operating System group_var
+  when: customization_method == "proxmox"
+  block:
+    - name: Installing universal Unix packages...
+      ansible.builtin.package:
+        name:
+          - curl # Useful for downloading files & interacting with web services
+          - file # Useful for file management & editing over SSH
+          - jq # Useful for parsing JSON
+          - nano # Useful for editing files over SSH
+          - python3 # Required for Ansible
+          - sudo # Required for Ansible
+          - tcpdump # Useful for network troubleshooting
+          - vim # Useful for editing files over SSH
+          - wget # Useful for downloading files
+        state: present
+        update_cache: "{{ true if ansible_os_family == 'Debian' else omit }}"
 
-- name: Installing universal Linux packages...
-  ansible.builtin.package:
-    name:
-      - acl
-      - acpid
-      - bash-completion # Useful for auto-completion
-      - ca-certificates # Required for managing trusted certificates
-      - dbus
-      - dnsutils
-      - ethtool
-      - man
-      - net-tools # Useful for network troubleshooting
-      - nftables
-      - perl
-      - traceroute # Useful for network troubleshooting
-    state: present
-    update_cache: "{{ true if ansible_os_family == 'Debian' else omit }}"
-  when: ansible_system == "Linux"
+    - name: Installing universal Linux packages...
+      ansible.builtin.package:
+        name:
+          - acl # Required for managing file permissions
+          - ca-certificates # Required for managing trusted certificates
+          - dnsutils # DNS query tools
+          - man # Required for reading manual pages
+          - net-tools # Useful for network troubleshooting
+          - traceroute # Useful for network troubleshooting
+        state: present
+        update_cache: "{{ true if ansible_os_family == 'Debian' else omit }}"
+      when: ansible_system == "Linux"
 
-- name: Include Ubuntu specific configuration...
-  ansible.builtin.include_tasks: ubuntu.yml
-  when: ansible_distribution == "Ubuntu"
+    - name: Include Ubuntu specific configuration...
+      ansible.builtin.include_tasks: ubuntu.yml
+      when: ansible_distribution == "Ubuntu"
 
-- name: Include Archlinux specific configuration...
-  ansible.builtin.include_tasks: arch.yml
-  when: ansible_os_family == "Archlinux"
+    - name: Include Archlinux specific configuration...
+      ansible.builtin.include_tasks: arch.yml
+      when: ansible_os_family == "Archlinux"
 
-- name: Include Debian based OS specific configuration...
-  ansible.builtin.include_tasks: debian_family.yml
-  when: ansible_os_family == "Debian"
+    - name: Include Debian based OS specific configuration...
+      ansible.builtin.include_tasks: debian_family.yml
+      when: ansible_os_family == "Debian"
 
-- name: Include Debian based OS specific configuration...
-  ansible.builtin.include_tasks: redhat_family.yml
-  when: ansible_os_family == "RedHat"
+    - name: Include Debian based OS specific configuration...
+      ansible.builtin.include_tasks: redhat_family.yml
+      when: ansible_os_family == "RedHat"
 
 # SSHD Configuration
 - name: Increasing SSHD MaxAuthTries to 20... # This to avoid erros when someone has more that 6 SSH keys in their agent

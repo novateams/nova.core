@@ -16,7 +16,7 @@
 - name: Flush handlers...
   ansible.builtin.meta: flush_handlers
 
-- name: Configuring non Network OS...
+- name: Configuring non-Network OS...
   when:
     - ansible_network_os is not defined
   block:
@@ -26,7 +26,8 @@
 
     - name: Including Unix configuration tasks...
       ansible.builtin.include_tasks: unix.yml
-      when: ansible_system in ["Linux", "FreeBSD"]
+      when:
+        - ansible_system in ["Linux", "FreeBSD"]
 
 - name: Configure RouterOS machine
   ansible.builtin.include_tasks: routeros.yml
@@ -34,7 +35,7 @@
     - ansible_network_os is defined
     - ansible_network_os == "community.routeros.routeros"
 
-- name: Configure Opnsense machine
+- name: Configure OPNsense machine
   ansible.builtin.include_tasks: opnsense.yml
   when:
     - ansible_network_os is defined
