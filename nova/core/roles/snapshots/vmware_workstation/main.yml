@@ -10,7 +10,8 @@
     ansible_password: "{{ vmware_workstation.password | default(omit) }}"
 
 - name: Listing all snapshots...
-  ansible.builtin.shell: vmcli snapshot query {{ vmware_workstation.local_vmx_path }}
+  ansible.builtin.command: vmcli snapshot query {{ vmware_workstation.local_vmx_path }}
+  changed_when: false
   register: all_snapshots
 
 - name: Including snapshot task...

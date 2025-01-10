@@ -1,0 +1,42 @@
+---
+- name: Getting snapshot & VM info...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Getting {{ custom_vm_name | default(vm_name) }} info...
+      community.general.proxmox_vm_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: proxmox_vm_info
+
+    - name: ERROR
+      ansible.builtin.fail:
+        msg: |
+          {{ custom_vm_name | default(vm_name) }} VM not found!
+      when: proxmox_vm_info.proxmox_vms == []
+
+    - name: Listing all snapshots...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/snapshot"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: snapshot_info
+      retries: 6
+      delay: 5
+
+- name: Including snapshot task...
+  ansible.builtin.include_tasks: snapshot.yml
+  when: snapshot_mode == 'clean-snap' or snapshot_mode == 're-snap' or snapshot_mode == 'snap'
+
+- name: Including revert task...
+  ansible.builtin.include_tasks: revert.yml
+  when: snapshot_mode == 'revert'
+
+- name: Including snapshot rename task...
+  ansible.builtin.include_tasks: rename.yml
+  when: snapshot_mode == 'rename'
+
+- name: Including snapshot remove task...
+  ansible.builtin.include_tasks: remove.yml
+  when: snapshot_mode == 'remove'

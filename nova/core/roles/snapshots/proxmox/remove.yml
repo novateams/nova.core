@@ -1,0 +1,24 @@
+---
+- name: Deleting snapshots...
+  delegate_to: localhost
+  become: false
+  block:
+    # If not snapshot_name is provided, remove the latest snapshot
+    - name: Removing {{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }} snapshot...
+      community.general.proxmox_snap:
+        hostname: "{{ custom_vm_name | default(vm_name) }}"
+        snapname: "{{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }}"
+        state: absent
+      when:
+        - not remove_all_snapshots | bool
+        - (snapshot_info.json.data | map(attribute='name'))[0] != 'current'
+
+    - name: Removing following snapshots...
+      community.general.proxmox_snap:
+        hostname: "{{ custom_vm_name | default(vm_name) }}"
+        snapname: "{{ snapshot_name }}"
+        state: absent
+      loop_control:
+        loop_var: snapshot_name
+      loop: "{{ (snapshot_info.json.data | map(attribute='name'))[:-1] }}"
+      when: remove_all_snapshots | bool

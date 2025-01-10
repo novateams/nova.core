@@ -1,0 +1,28 @@
+---
+- name: Including snapshot tasks...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Removing the latest snapshot snapshot...
+      community.general.proxmox_snap:
+        hostname: "{{ custom_vm_name | default(vm_name) }}"
+        snapname: "{{ (snapshot_info.json.data | map(attribute='name'))[0] }}"
+        state: absent
+      when:
+        - snapshot_mode == 're-snap'
+        - (snapshot_info.json.data | map(attribute='name'))[0] != 'current'
+
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
+    - name: Creating a snapshot for {{ custom_vm_name | default(vm_name) }}...
+      community.general.proxmox_snap:
+        hostname: "{{ custom_vm_name | default(vm_name) }}"
+        state: present
+        # Using Snapshot- prefix and regex_replace tp make sure the default snapshot name fit's the Proxmox naming convention
+        snapname: "{{ snapshot_name | default('Snapshot-' + ansible_date_time.iso8601) | regex_replace(':', '-') }}"
+        description: Created at {{ ansible_date_time.iso8601 | regex_replace(':', '-') }} by {{ project_deployer_username | default(deployer_username) }}
+        retention: "{{ 1 if snapshot_mode == 'clean-snap' else omit }}"
+        vmstate: "{{ true if live_snap else false }}" # Memory dump
+        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
