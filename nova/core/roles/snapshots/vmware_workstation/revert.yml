@@ -4,6 +4,7 @@
   block:
     - name: Checking current {{ inventory_hostname }} power state...
       ansible.builtin.command: vmcli power query {{ vmware_workstation.local_vmx_path }}
+      changed_when: false
       register: powerstate
 
     - name: Shutting down {{ inventory_hostname }}...

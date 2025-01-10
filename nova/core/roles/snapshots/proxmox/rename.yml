@@ -1,0 +1,5 @@
+---
+- name: FEATURE NOT AVAILABLE
+  ansible.builtin.fail:
+    msg: |
+      Renaming snapshots is not possible on Proxmox.

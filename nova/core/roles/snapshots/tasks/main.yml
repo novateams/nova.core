@@ -17,3 +17,7 @@
     - name: Including Linode snapshot/revert tasks...
       ansible.builtin.include_tasks: linode/main.yml
       when: infra_env == 'linode'
+
+    - name: Including Proxmox snapshot/revert tasks...
+      ansible.builtin.include_tasks: proxmox/main.yml
+      when: infra_env == 'proxmox'

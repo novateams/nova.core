@@ -1,0 +1,21 @@
+---
+- name: Reverting to {{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }} snapshot...
+  community.general.proxmox_snap:
+    hostname: "{{ custom_vm_name | default(vm_name) }}"
+    state: rollback
+    snapname: "{{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }}"
+  delegate_to: localhost
+  become: false
+  when: (snapshot_info.json.data | map(attribute='name'))[0] != 'current'
+
+- name: ERROR
+  ansible.builtin.fail:
+    msg: "{{ custom_vm_name | default(vm_name) }} doesn't have any snapshots!"
+  when: (snapshot_info.json.data | map(attribute='name'))[0] == 'current'
+
+- name: Including powerstate role...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true
+  when: start_vm_after_revert | bool # Because CLI detects extra var as string
