@@ -23,16 +23,6 @@
   ansible.builtin.include_tasks: external.yml
   when: infra_env == 'external'
 
-# Setting it here, because in group_vars or host_vars the play gets really slow
-# Must be done after the connection tasks when ansible_password is defined
-# Needs to be ansible_deployer_password because accounts role changes connection credentials after changing passwords
-- name: Setting become password...
-  ansible.builtin.set_fact:
-    ansible_become_password: "{{ defined_become_password | default(ansible_deployer_password) }}"
-  when:
-    - infra_env != 'my_host'
-    - sudo_requires_password
-
 # Setting PanOS connection parameters here because the correct ansible_host is calculated no matter what infra_env is used
 - name: Setting connection parameters for PanOS {{ inventory_hostname }}...
   ansible.builtin.set_fact:
