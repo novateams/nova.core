@@ -1,0 +1,37 @@
+---
+- name: Getting {{ custom_vm_name | default(vm_name) }} info...
+  community.general.proxmox_vm_info:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+  register: proxmox_vm_info
+  delegate_to: localhost
+  become: false
+
+- name: ERROR
+  ansible.builtin.fail:
+    msg: |
+      {{ custom_vm_name | default(vm_name) }} VM not found!
+  when: proxmox_vm_info.proxmox_vms == []
+
+- name: Including {{ custom_vm_name | default(vm_name) }} poweron tasks...
+  ansible.builtin.include_tasks: poweron.yml
+  when: poweron
+
+- name: Including {{ custom_vm_name | default(vm_name) }} reset tasks...
+  ansible.builtin.include_tasks: reset.yml
+  when: reset
+
+- name: Including {{ custom_vm_name | default(vm_name) }} restart tasks...
+  ansible.builtin.include_tasks: restart.yml
+  when: restart
+
+- name: Including {{ custom_vm_name | default(vm_name) }} suspend tasks...
+  ansible.builtin.include_tasks: suspend.yml
+  when: suspend
+
+- name: Including {{ custom_vm_name | default(vm_name) }} shutdown tasks...
+  ansible.builtin.include_tasks: shutdown.yml
+  when: shutdown
+
+- name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
+  ansible.builtin.include_tasks: poweroff.yml
+  when: poweroff
