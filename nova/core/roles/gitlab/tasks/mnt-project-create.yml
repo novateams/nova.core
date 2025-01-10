@@ -24,7 +24,8 @@
 ## This is to be sure that the search is precise, project name is not unique
 - name: Search for the project using namespace and project name..
   ansible.builtin.set_fact:
-    gl_matched_projects: "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
+    gl_matched_projects:
+      "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
       | selectattr('name', 'equalto', project.name) }}"
 
 - name: Set current existing project ID variable..
@@ -61,13 +62,20 @@
 
 - name: Cleanup tmp for project files sync..
   ansible.builtin.file:
-    path: /tmp/{{ project.namespace }}_{{ project.name }}
+    path: /tmp/src_{{ project.namespace }}_{{ project.name }}
     state: absent
+  delegate_to: localhost
+
+- name: Cleanup tmp for project files sync..
+  ansible.builtin.file:
+    path: /tmp/upl_{{ project.namespace }}_{{ project.name }}
+    state: absent
+  delegate_to: localhost
 
 - name: Synchronizing project files to /tmp/..
   ansible.posix.synchronize:
     src: "{{ project.source_path }}/"
-    dest: /tmp/{{ project.namespace }}_{{ project.name }}
+    dest: /tmp/upl_{{ project.namespace }}_{{ project.name }}
     recursive: true
     rsync_opts:
       - --chown=root:root
@@ -76,25 +84,60 @@
     - project.source is defined
     - project.source_path is defined
     - project.source == "files"
+  delegate_to: localhost
 
-- name: Copying file from template..
+- name: Block - remote repo..
+  when:
+    - project.source is defined
+    - project.source_url is defined
+    - project.source == "repository"
+  block:
+    - name: Archive the repository to local dir..
+      ansible.builtin.git:
+        repo: "{{ project.source_url }}"
+        dest: /tmp/src_{{ project.namespace }}_{{ project.name }}
+        archive: /tmp/{{ project.name }}.tar
+        version: "{{ project.source_version | default('HEAD') }}"
+      delegate_to: localhost
+      changed_when: false
+      become: false
+
+    - name: Create dir for untar..
+      ansible.builtin.file:
+        path: /tmp/upl_{{ project.namespace }}_{{ project.name }}
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+
+    - name: Untar the repository to a directory..
+      ansible.builtin.unarchive:
+        src: /tmp/{{ project.name }}.tar
+        dest: /tmp/upl_{{ project.namespace }}_{{ project.name }}
+      changed_when: false
+      delegate_to: localhost
+
+- name: Adding templateable files to the project..
   ansible.builtin.template:
     src: "{{ project.source_path }}/{{ item }}"
-    dest: /tmp/{{ project.namespace }}_{{ project.name }}/{{ item }}
+    dest: /tmp/upl_{{ project.namespace }}_{{ project.name }}/{{ item }}
     mode: "0600"
   with_items: "{{ project.files_to_template }}"
   when: project.files_to_template is defined
+  delegate_to: localhost
 
-- name: Commit project to gitlab..
+- name: Commit project to target gitlab..
   ansible.builtin.shell: |
     token={{ gitlab_root_personal_token }}
     git config --global user.name "{{ gitlab_git_user_name }}"
     git config --global user.email "{{ gitlab_git_user_email }}"
-    cd /tmp/{{ project.namespace }}_{{ project.name }}
-    git init
+    cd /tmp/upl_{{ project.namespace }}_{{ project.name }}
+    git init --initial-branch=main
     git remote add origin https://gitlab-ci-token:${token}@{{ gitlab_fqdn }}/{{ project.namespace }}/{{ project.name }}.git
     git add .
-    git commit -m "Initial commit"
-    git push --set-upstream origin master
+    git commit -m "{{ project.commit_message | default('Initial commit') }}"
+    git push --set-upstream origin main
     echo yo
   changed_when: false
+  delegate_to: localhost
+  when:
+    - project.source is defined
