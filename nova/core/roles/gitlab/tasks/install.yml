@@ -3,7 +3,6 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    recurse: true
   loop:
     - "{{ gitlab_config_folder }}"
     - "{{ gitlab_config_folder }}/etc"
