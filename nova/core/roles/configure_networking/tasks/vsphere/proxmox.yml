@@ -1,0 +1,108 @@
+---
+- name: Configuring MGMT IP with pvesh...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Templating network configuration script...
+      ansible.builtin.template:
+        src: proxmox.sh
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_configure_network.sh
+        lstrip_blocks: true
+        mode: "0644"
+
+    - name: Getting file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_configure_network.sh
+      register: file_size
+
+    - name: Preparing file upload...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ file_size.stat.size }}"
+            path: /tmp/configure_network.sh
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      register: file_upload_prep
+
+    - name: Uploading file...
+      ansible.builtin.uri:
+        url: "{{ file_upload_prep.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_configure_network.sh
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Templating resolv.conf configuration script...
+      ansible.builtin.template:
+        src: resolv.conf
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        lstrip_blocks: true
+        mode: "0644"
+
+    - name: Getting resolv.conf file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+      register: resolv_file_size
+
+    - name: Preparing resolv.conf upload...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ resolv_file_size.stat.size }}"
+            path: /etc/resolv.conf
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      register: resolv_file_upload_prep
+
+    - name: Uploading resolv.conf...
+      ansible.builtin.uri:
+        url: "{{ resolv_file_upload_prep.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+
+    - name: Configuring network...
+      ansible.builtin.uri:
+        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: /tmp/configure_network.sh
+            path: /bin/sh
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml

@@ -25,6 +25,7 @@
           ansible.builtin.include_tasks: debian.yml
           when:
             - ansible_distribution == "Debian"
+            - customization_method != "proxmox"
             - package_mirror_debian_uri != {}
 
         - name: Including Parrot mirror tasks...

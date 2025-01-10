@@ -24,7 +24,7 @@ ansible_become_password: "{{ ansible_password | default(omit) }}" # Defaulting t
 
 # Networking
 # Networking defaults when using Providentia or interfaces list that is based on Providentia API output
-# To make sure these values can be used as hostvar lookups they also need to be defined in projects all.yml
+# To make sure these values can be used as hostvar lookups they also need to be defined in projects group_vars all.yml file
 
 # IPv4
 connection_nic_ipv4: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') }}"
@@ -47,6 +47,12 @@ egress_nic_ipv6: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first
 egress_nic_ipv6_with_prefix: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first }}"
 egress_nic_ipv6_gw: "{{ interfaces | nova.core.addresses('egress_nic_ipv6_gw') | first | ansible.utils.ipaddr('network') }}"
 egress_nic_ipv6_network: "{{ interfaces | nova.core.addresses('egress_nic_ipv6') | first | ansible.utils.ipaddr('network/prefix') }}"
+
+# MGMT
+mgmt_ipv4: "{{ interfaces | nova.core.addresses('mgmt_ipv4') | first | ansible.utils.ipaddr('address') }}"
+mgmt_ipv4_with_prefix: "{{ interfaces | nova.core.addresses('mgmt_ipv4') | first }}"
+mgmt_ipv6: "{{ interfaces | nova.core.addresses('mgmt_ipv6') | first | ansible.utils.ipaddr('address') }}"
+mgmt_ipv6_with_prefix: "{{ interfaces | nova.core.addresses('mgmt_ipv6') | first }}"
 
 #########
 # Vault #
@@ -82,9 +88,8 @@ vmware_rest_defaults:
   vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username:
-  "{{ nsx_username | default(project_deployer_username) | default(deployer_username
-  | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
+nsx_deployer_username: "{{ nsx_username | default(project_deployer_username)
+  | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
 nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default(omit) }}"
 
 vmware_workstation:
