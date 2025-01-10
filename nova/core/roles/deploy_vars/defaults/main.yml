@@ -20,6 +20,7 @@ save_secrets_to_vault: false # Set to true to save accounts to vault, required a
 gt_username: gt # Default non-root/Administrator username for deployment
 deploy_vars_post_roles: [] # List of roles to include after credentials facts have been set
 immutable: false # Set to true to stop running any role on the host or group
+ansible_become_password: "{{ ansible_password | default(omit) }}" # Defaulting to ansible_password when password is required for sudo
 
 # Networking
 # Networking defaults when using Providentia or interfaces list that is based on Providentia output
@@ -81,7 +82,8 @@ vmware_rest_defaults:
   vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username: "{{ nsx_username | default(project_deployer_username) | default(deployer_username
+nsx_deployer_username:
+  "{{ nsx_username | default(project_deployer_username) | default(deployer_username
   | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
 nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default(omit) }}"
 
