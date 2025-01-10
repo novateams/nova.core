@@ -1,0 +1,16 @@
+---
+- name: Starting following Proxmox services...
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+  loop:
+    - pve-cluster
+    - pvedaemon
+    - pveproxy
+    - pvestatd
+  listen: starting_proxmox_services
+
+- name: Regenerating Proxmox certificates...
+  ansible.builtin.command: pvecm updatecerts --force
+  changed_when: true
+  listen: starting_proxmox_services

@@ -1,9 +1,11 @@
 ---
+- name: Including Proxmox configuration tasks...
+  ansible.builtin.include_tasks: proxmox.yml
+  when: customization_method == "proxmox"
+
 - name: Including Linux in Cloud configuration tasks...
   ansible.builtin.include_tasks: linux_cloud.yml
-  when:
-    - ansible_system == "Linux"
-    - infra_env in ["aws", "linode", "azure"]
+  when: infra_env in ["aws", "linode", "azure"]
 
 - name: Adding temp hostname... # This is so that sudo will not hang due to unknown hostname
   ansible.builtin.lineinfile:
