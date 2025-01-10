@@ -7,3 +7,4 @@
     rebooted: true
     state: present
   delegate_to: localhost
+  become: false
