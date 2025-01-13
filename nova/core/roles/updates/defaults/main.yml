@@ -9,8 +9,11 @@ debian_family_updates_allow_reboot: true
 # Enabling auto updates for Debian family
 debian_family_unattended_upgrades: true
 
-# Allow autmatically rebooting the system when auto updates are enabled
+# Allow automatically rebooting the system when auto updates are enabled
 debian_family_unattended_upgrades_allow_reboot: false
+
+# Upgrade method for Debian family
+updates_debian_family_upgrade_method: dist
 
 ###########
 # Windows #
