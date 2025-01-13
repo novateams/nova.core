@@ -5,7 +5,7 @@
     state: present
     autoclean: true
     autoremove: true
-    upgrade: safe
+    upgrade: "{{ updates_debian_family_upgrade_method }}"
     allow_downgrade: true
   register: apt_updates
   until: not apt_updates.failed
