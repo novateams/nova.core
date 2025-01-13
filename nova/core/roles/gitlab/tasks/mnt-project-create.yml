@@ -7,7 +7,7 @@
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
   register: gl_existing_projects
 
-- name: Look ip existing GitLab groups..
+- name: Look up existing GitLab groups..
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/groups"
     method: GET
@@ -21,12 +21,16 @@
   ansible.builtin.set_fact:
     gl_namespace_id: "{{ (gl_existing_namespaces.json | selectattr('name', 'equalto', project.namespace) | first).id }}"
 
-## This is to be sure that the search is precise, project name is not unique
-- name: Search for the project using namespace and project name..
+- name: Set project path variable if not already defined..
+  ansible.builtin.set_fact:
+    gl_project_path: "{{ project.name | replace(' ', '-') | lower if project.path is not defined else project.path }}"
+
+## This is to be sure that the search is precise, project path is not unique
+- name: Search for the project using namespace and project path..
   ansible.builtin.set_fact:
     gl_matched_projects:
       "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
-      | selectattr('name', 'equalto', project.name) }}"
+      | selectattr('path', 'equalto', gl_project_path) }}"
 
 - name: Set current existing project ID variable..
   ansible.builtin.set_fact:
@@ -52,92 +56,135 @@
     body_format: json
     body:
       name: "{{ project.name }}"
+      path: "{{ gl_project_path }}"
       namespace_id: "{{ gl_namespace_id }}"
       description: "{{ project.description | default(project.name) }}"
       visibility: "{{ project.visibility | default('public') }}"
       initialize_with_readme: false
     status_code: [200, 201]
-  when:
-    - gl_project_id == ''
+  register: result
+  retries: 10
+  delay: 5
+  until: result is not failed
 
-- name: Cleanup tmp for project files sync..
-  ansible.builtin.file:
-    path: /tmp/src_{{ project.namespace }}_{{ project.name }}
-    state: absent
-  delegate_to: localhost
-
-- name: Cleanup tmp for project files sync..
-  ansible.builtin.file:
-    path: /tmp/upl_{{ project.namespace }}_{{ project.name }}
-    state: absent
-  delegate_to: localhost
-
-- name: Synchronizing project files to /tmp/..
-  ansible.posix.synchronize:
-    src: "{{ project.source_path }}/"
-    dest: /tmp/upl_{{ project.namespace }}_{{ project.name }}
-    recursive: true
-    rsync_opts:
-      - --chown=root:root
-    use_ssh_args: "yes"
+- name: Block - sync from role files..
   when:
     - project.source is defined
-    - project.source_path is defined
     - project.source == "files"
-  delegate_to: localhost
+    - project.source_path is defined
+  block:
+    - name: Make temporary dir..
+      ansible.builtin.file:
+        state: directory
+        path: "/tmp/repo_{{ inventory_hostname }}_{{ gl_project_path }}/"
+        mode: "0755"
+      become: false
 
-- name: Block - remote repo..
+    - name: Synchronizing project files to target gitlab /tmp dir..
+      ansible.posix.synchronize:
+        src: "{{ project.source_path }}/"
+        dest: "/tmp/repo_{{ inventory_hostname }}_{{ gl_project_path }}"
+        recursive: true
+        rsync_opts:
+          - --chown=root:root
+        use_ssh_args: "yes"
+      delegate_to: localhost
+      become: false
+
+    - name: Template overrides to repo..
+      ansible.builtin.template:
+        src: "{{ template_item.src }}"
+        dest: "/tmp/repo_{{ inventory_hostname }}_{{ gl_project_path }}/{{ template_item.path }}"
+        mode: "0644"
+      loop: "{{ query('ansible.builtin.filetree', ansible_parent_role_paths[0] + '/templates/' + project.local_templates_path) }}"
+      loop_control:
+        loop_var: template_item
+        label: "{{ template_item.path }}"
+      when:
+        - project.local_templates_path is defined
+        - "'src' in template_item"
+
+- name: Block - sync from a remote repository..
   when:
     - project.source is defined
-    - project.source_url is defined
     - project.source == "repository"
+    - project.source_url is defined
   block:
-    - name: Archive the repository to local dir..
+    - name: Make temporary dir
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: "repo-{{ gl_project_path }}"
+      register: gl_tmpdir
+      delegate_to: localhost
+      become: false
+
+    - name: Clone the {{ project.name }} repository to local dir..
       ansible.builtin.git:
         repo: "{{ project.source_url }}"
-        dest: /tmp/src_{{ project.namespace }}_{{ project.name }}
-        archive: /tmp/{{ project.name }}.tar
-        version: "{{ project.source_version | default('HEAD') }}"
+        dest: "{{ gl_tmpdir.path }}"
+        version: "{{ project.version | default('HEAD') }}"
+        depth: 1
       delegate_to: localhost
       changed_when: false
       become: false
 
-    - name: Create dir for untar..
+    - name: Remove the .git directory from the tmpdir..
       ansible.builtin.file:
-        path: /tmp/upl_{{ project.namespace }}_{{ project.name }}
-        state: directory
-        mode: "0755"
+        path: "{{ gl_tmpdir.path }}/.git"
+        state: absent
       delegate_to: localhost
+      become: false
 
-    - name: Untar the repository to a directory..
-      ansible.builtin.unarchive:
-        src: /tmp/{{ project.name }}.tar
-        dest: /tmp/upl_{{ project.namespace }}_{{ project.name }}
-      changed_when: false
+    - name: Template overrides to repo..
+      ansible.builtin.template:
+        src: "{{ template_item.src }}"
+        dest: "{{ gl_tmpdir.path }}/{{ project.pushable_subdir | default('') }}/{{ template_item.path }}"
+        mode: "0644"
       delegate_to: localhost
+      loop: "{{ query('ansible.builtin.filetree', ansible_parent_role_paths[0] + '/templates/' + project.local_templates_path) }}"
+      loop_control:
+        loop_var: template_item
+        label: "{{ template_item.path }}"
+      when:
+        - project.local_templates_path is defined
+        - "'src' in template_item"
 
-- name: Adding templateable files to the project..
-  ansible.builtin.template:
-    src: "{{ project.source_path }}/{{ item }}"
-    dest: /tmp/upl_{{ project.namespace }}_{{ project.name }}/{{ item }}
-    mode: "0600"
-  with_items: "{{ project.files_to_template }}"
-  when: project.files_to_template is defined
-  delegate_to: localhost
+    - name: Sync project files from catapult to target gitlab /tmp dir..
+      ansible.posix.synchronize:
+        src: "{{ gl_tmpdir.path }}/{{ project.pushable_subdir | default('') }}/"
+        dest: "/tmp/repo_{{ inventory_hostname }}_{{ gl_project_path }}"
+        recursive: true
+        rsync_opts:
+          - --chown=root:root
+        use_ssh_args: "yes"
+      delegate_to: localhost
+      become: false
+
+    - name: Cleanup {{ gl_tmpdir.path }} tmp folder..
+      ansible.builtin.file:
+        path: "{{ gl_tmpdir.path }}"
+        state: absent
+      delegate_to: localhost
+      become: false
 
 - name: Commit project to target gitlab..
   ansible.builtin.shell: |
+    set -ex
     token={{ gitlab_root_personal_token }}
-    git config --global user.name "{{ gitlab_git_user_name }}"
-    git config --global user.email "{{ gitlab_git_user_email }}"
-    cd /tmp/upl_{{ project.namespace }}_{{ project.name }}
+    cd /tmp/repo_{{ inventory_hostname }}_{{ gl_project_path }}/
     git init --initial-branch=main
-    git remote add origin https://gitlab-ci-token:${token}@{{ gitlab_fqdn }}/{{ project.namespace }}/{{ project.name }}.git
+    git config user.name "{{ gitlab_git_user_name }}"
+    git config user.email "{{ gitlab_git_user_email }}"
+    git remote add origin https://gitlab-ci-token:${token}@{{ gitlab_fqdn }}/{{ project.namespace }}/{{ gl_project_path }}.git
     git add .
     git commit -m "{{ project.commit_message | default('Initial commit') }}"
     git push --set-upstream origin main
     echo yo
   changed_when: false
-  delegate_to: localhost
   when:
     - project.source is defined
+
+- name: Cleanup tmp folder on target gitlab..
+  ansible.builtin.file:
+    path: "/tmp/repo_{{ inventory_hostname }}_{{ gl_project_path }}/"
+    state: absent
