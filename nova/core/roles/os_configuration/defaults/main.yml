@@ -42,6 +42,13 @@ kms_server: {}
 extra_activation_command: {} # Extra PowerShell command to be ran before Windows/Office activation, usually not needed
 post_scripts_folder_on_target: c:\tmp
 
+#########
+# Linux #
+#########
+
+# Reboot Linux after hostname change
+os_configuration_linux_reboot_after_hostname_change: false
+
 #############
 # Cisco IOS #
 #############
