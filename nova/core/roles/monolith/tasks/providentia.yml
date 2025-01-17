@@ -4,6 +4,7 @@
     name: nova.core.secrets_to_vault
   vars:
     secrets_vault_address: "https://{{ monolith_vault_fqdn }}"
+    secrets_vault_engine_path: monolith
     secrets_vault_secrets_path: providentia
     secrets:
       - key: "{{ inventory_hostname }}_providentia_db_password"
