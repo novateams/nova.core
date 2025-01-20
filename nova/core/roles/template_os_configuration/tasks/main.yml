@@ -63,7 +63,9 @@
     name: nova.core.powerstate
   vars:
     shutdown: true
-  when: not sysprep # Because sysprep will shut down the machine when it's done
+  # Because sysprep will shut down the machine when it's done
+  # On Proxmox the clean-snap does not shut down the VM, so we need another task
+  when: not sysprep or infra_env == "proxmox"
 
 - name: Including snapshots role...
   ansible.builtin.include_role:
