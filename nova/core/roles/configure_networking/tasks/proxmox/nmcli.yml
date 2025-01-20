@@ -1,0 +1,75 @@
+---
+- name: Creating a list of MAC addresses...
+  ansible.builtin.set_fact:
+    # Skipping the first MAC address as it is the loopback interface.
+    configure_networking_mac_addresses: "{{ (proxmox_vm_info.proxmox_vms[0].network | map(attribute='hardware-address') | list)[1:] }}"
+
+- name: Configuring nmcli networking...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Templating nmcli configuration files...
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0644"
+        lstrip_blocks: true
+      loop_control:
+        label: "{{ item.src }}"
+      loop:
+        - src: 70-persistent-net.rules
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - src: nmcli.sh
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+
+    - name: Getting network configuration file contents...
+      ansible.builtin.slurp:
+        path: "{{ item }}"
+      loop:
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+      register: file_contents
+
+    - name: Writing following nmcli configuration files to {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          content: "{{ file_contents.results[file_index].content | b64decode }}"
+          file: "{{ item }}"
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      loop_control:
+        index_var: file_index
+      loop:
+        - /etc/udev/rules.d/70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+
+    - name: Configuring network...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          command:
+            - /bin/bash
+            - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
+      community.general.proxmox_kvm:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: restarted
+        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+      retries: 6
+      delay: 5
