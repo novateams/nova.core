@@ -9,29 +9,32 @@ set -e # exit when any command fails
 
     # Looping over IP addresses
     {% for ip_address in interface.addresses %}
+        {% if not ip_address.pool_id | regex_search("mgmt-.*") %}
 
-        {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) and (ip_address.pool_id != 'mgmt') %}
+            {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
 
-            # Adding IPv4 addresses with GW for interface
-            networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}} {{ ip_address.gateway }}
+                # Adding IPv4 addresses with GW for interface
+                networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}} {{ ip_address.gateway }}
 
-        {% elif (ip_address.mode == 'ipv4_static') and (ip_address.gateway == none) and (ip_address.pool_id != 'mgmt') %}
+            {% elif (ip_address.mode == 'ipv4_static') and (ip_address.gateway == none) %}
 
-            # Adding IPv4 addresses without GW for interface
-            networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}}
+                # Adding IPv4 addresses without GW for interface
+                networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}}
 
-        {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway != none) and (ip_address.pool_id != 'mgmt') %}
+            {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway != none) %}
 
-            # Adding IPv6 addresses with GW for interface
-            networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }} {{ ip_address.gateway }}
+                # Adding IPv6 addresses with GW for interface
+                networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }} {{ ip_address.gateway }}
 
-        {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway == none) and (ip_address.pool_id != 'mgmt') %}
+            {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway == none) %}
 
-            # Adding IPv6 addresses without GW for interface
-            networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }}
+                # Adding IPv6 addresses without GW for interface
+                networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }}
+
+            {% endif %}
 
         # Configuring MGMT interface
-        {% elif (ip_address.pool_id == 'mgmt') %}
+        {% elif ip_address.pool_id | regex_search("mgmt-.*") %}
 
             # Removing MGMT interface if it exists
             if [[ $(networksetup -listallnetworkservices | grep "MGMT") ]]; then
@@ -40,14 +43,14 @@ set -e # exit when any command fails
 
             fi
 
-            {% if (ip_address.mode == 'ipv6_static') and (ip_address.pool_id == 'mgmt') %}
+            {% if ip_address.mode == 'ipv6_static' %}
 
                 # Creating MGMT interface, disabling IPv4 address for it and adding IPv6 address
                 networksetup -createnetworkservice MGMT $LOCAL_INTERFACE_NAME
                 networksetup -setv4off MGMT
                 networksetup -setv6manual MGMT {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }}
 
-            {% elif (ip_address.mode == 'ipv4_static') and (ip_address.pool_id == 'mgmt') %}
+            {% elif ip_address.mode == 'ipv4_static' %}
 
                 # Creating MGMT interface, disabling IPv6 address for it and adding IPv6 address
                 networksetup -createnetworkservice MGMT $LOCAL_INTERFACE_NAME
@@ -57,7 +60,6 @@ set -e # exit when any command fails
             {% endif %}
 
         {% endif %}
-
     {% endfor %}
 
     # Setting DNS servers
