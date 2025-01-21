@@ -31,6 +31,7 @@
   until: tuoni_api_token.status == 200
   retries: 10
   delay: 6
+  when: tuoni_users != [] or tuoni_listeners != []
 
 - name: Including Tuoni users tasks...
   ansible.builtin.include_tasks: users.yml
