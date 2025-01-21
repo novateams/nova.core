@@ -6,6 +6,9 @@
       ansible.windows.win_shell: |
         Get-AppxPackage Microsoft.OneDriveSync* | Remove-AppPackage
         Get-AppxPackage Microsoft.BingSearch* | Remove-AppPackage
+        Get-AppxPackage Microsoft.Copilot* | Remove-AppPackage
+        Get-AppxPackage Microsoft.WidgetsPlatformRuntime* | Remove-AppPackage
+        Get-AppxPackage MicrosoftWindows.Client.WebExperience* | Remove-AppPackage
 
     - name: Rebooting...
       ansible.windows.win_reboot:
