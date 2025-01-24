@@ -7,7 +7,8 @@
 no_undeploy: false
 role_only: false # Includes customization role and then stops, great for developing roles
 role_only_wp: false # Run the deploy starting from customization_pre_vm_role
-machine_operations_pre_roles: [] # Roles to include as first step in this one
+machine_operations_pre_roles: [] # Extra roles to include as first step in this one
+machine_operations_post_roles: [] # Extra roles to include as last step in this one
 machine_operations_reconfigure_vm_on_deploy: true # Tries to reconfigure the VMs CPU/RAM/Disk size on deploy if they are updated
 
 ####################
