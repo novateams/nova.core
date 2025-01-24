@@ -31,7 +31,7 @@ Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/no
 - `nexus_ldap_search_base`
 - `nexus_bind_user_dn`
 - `nexus_bind_user_password`
-- `nexus_group_dn_under_under_searchbase`
+- `nexus_groups_dn_under_searchbase`
 - `nexus_nexus_ldap_administrators_group`
 
 Alternatively the whole `nexus_ldap_configuration` block can be defined as a single variable to configure LDAP. See [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/nexus/defaults/main.yml) for the full list of variables.
@@ -53,7 +53,7 @@ Alternatively the whole `nexus_ldap_configuration` block can be defined as a sin
   ansible.builtin.include_role:
     name: nova.core.nexus
   vars:
-    configure: true
+    nexus_configure: true
     nexus_admin_password: # lookup to a predefined password that will be applied to the admin user on first run
 
 # Installs Nexus and runs initial configuration on it and configures LDAP.
@@ -61,14 +61,14 @@ Alternatively the whole `nexus_ldap_configuration` block can be defined as a sin
   ansible.builtin.include_role:
     name: nova.core.nexus
   vars:
-    configure: true
+    nexus_configure: true
     nexus_admin_password: # lookup to a predefined password that will be applied to the admin user on first run
-    configure_ldap: true
-    ldap_name: example.com
-    ldap_host: dc1.example.com
-    ldap_search_base: OU=ORG,DC=example,DC=com
-    bind_user_dn: CN=svc_nexus,OU=Service Accounts,OU=ORG,DC=example,DC=com
-    group_dn_under_under_searchbase: OU=Nexus,OU=Resources
-    bind_dn_password: # lookup to a predefined password for the svc_nexus user
+    nexus_configure_ldap: true
+    nexus_ldap_name: example.com
+    nexus_ldap_host: dc1.example.com
+    nexus_ldap_search_base: OU=ORG,DC=example,DC=com
+    nexus_bind_user_dn: CN=svc_nexus,OU=Service Accounts,OU=ORG,DC=example,DC=com
+    nexus_groups_dn_under_searchbase: OU=Nexus,OU=Resources
+    nexus_bind_dn_password: # lookup to a predefined password for the svc_nexus user
     nexus_ldap_administrators_group: Nexus Admins
 ```
