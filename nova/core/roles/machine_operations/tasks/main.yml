@@ -1,6 +1,4 @@
 ---
-# This is an extra feature to include additional roles before vm deletions
-# Can be useful for some specific cases where some extra tasks like license de-registration, etc. are needed before machine undeploy
 - name: Including following machine_operations pre-roles...
   ansible.builtin.include_role:
     name: "{{ item }}"
@@ -46,6 +44,12 @@
     - name: Including external environment tasks...
       ansible.builtin.include_tasks: external/main.yml
       when: infra_env == 'external'
+
+- name: Including following machine_operations post-roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop: "{{ machine_operations_post_roles }}"
+  when: machine_operations_post_roles != []
 
 - name: Stopping play...
   ansible.builtin.meta: end_host

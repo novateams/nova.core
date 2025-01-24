@@ -10,4 +10,13 @@
   when:
     - customization_context == "host"
     - fresh_deploy or reconfigure_network
-    - infra_env == 'vsphere'
+  block:
+    - name: Configuring VM network in vSphere environment...
+      ansible.builtin.include_tasks: vsphere/main.yml
+      when: infra_env == 'vsphere'
+
+- name: Including following configure_networking post-roles...
+  ansible.builtin.include_role:
+    name: "{{ item }}"
+  loop: "{{ configure_networking_post_roles }}"
+  when: configure_networking_post_roles != []
