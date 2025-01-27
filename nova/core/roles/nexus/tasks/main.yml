@@ -1,4 +1,11 @@
 ---
+- name: MISSING VARIABLES
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required but are not defined:
+        - nexus_admin_password
+  when: nexus_admin_password is not defined
+
 - name: Including Nexus installation tasks...
   ansible.builtin.include_tasks: install.yml
 

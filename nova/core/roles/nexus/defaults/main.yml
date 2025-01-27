@@ -4,13 +4,19 @@ nexus_proxy_container_name: {} # Name of the proxy container to restart after co
 
 nexus_container_config_folder: /srv/nexus # Path where Nexus application data is stored
 nexus_fqdn: "{{ fqdn | default(ansible_fqdn) }}" # FQDN of the Nexus server, usually comes from Providentia or all.yml
-nexus_admin_username: admin # Built-in Nexus admin user
 nexus_configure: false # Set to true to also configure Nexus after installation
 nexus_configure_ldap: false # Set to true to also configure LDAP after installation
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
 nexus_active_encryption_key_id: Primary Encryption Key # Name of the active encryption key that comes with this role
 nexus_version: 3.76.1 # Nexus version to install
+
+# Default is the built-in Nexus admin user. If set to a different value than admin, the role will create the user.
+nexus_admin_username: admin
+
+# The value of the password that will be set for the built-in admin user.
+# This value is ONLY used if the nexus_admin_username value is something other than admin.
+nexus_builtin_admin_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=32') }}"
 
 nexus_realms_to_activate: # List of authentication realms to activate
   - NexusAuthenticatingRealm
@@ -26,7 +32,7 @@ nexus_ldap_configuration:
   protocol: "{{ nexus_ldap_ptocoal | default('ldaps') }}" # ldap or ldaps
   useTrustStore: true
   host: "{{ nexus_ldap_host }}" # FQDN of the LDAP server
-  port: "{{ nexus_ldap_port | default(636) }}" # Usually 389 for ldap and 636 for ldaps
+  port: "{{ nexus_ldap_port | default(636) }}" # Usually 389 for LDAP and 636 for LDAPs
   searchBase: "{{ nexus_ldap_search_base }}" # Base DistinguishedName (DN) where to look for users and groups
   authScheme: SIMPLE
   authRealm: ""
