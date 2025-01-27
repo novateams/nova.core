@@ -22,16 +22,37 @@
         src: "{{ nexus_container_config_folder }}/data/admin.password"
       register: password
 
+    - name: Creating a new {{ nexus_admin_username }} admin user...
+      ansible.builtin.uri:
+        url: https://{{ nexus_fqdn }}/service/rest/v1/security/users
+        user: admin
+        password: "{{ password.content | b64decode }}"
+        method: POST
+        body:
+          userId: "{{ nexus_admin_username }}"
+          firstName: "{{ nexus_admin_username }}"
+          lastName: "{{ nexus_admin_username }}"
+          emailAddress: "{{ nexus_admin_username }}@example.com"
+          password: "{{ nexus_admin_password }}"
+          status: active
+          roles:
+            - nx-admin
+        body_format: json
+        force_basic_auth: true
+        status_code: 200
+      when: nexus_admin_username != "admin"
+
     - name: Changing Nexus default password...
       ansible.builtin.uri:
         url: https://{{ nexus_fqdn }}/service/rest/v1/security/users/admin/change-password
-        user: "{{ nexus_admin_username }}"
+        user: admin
         password: "{{ password.content | b64decode }}"
         method: PUT
         headers:
           accept: application/json
           Content-Type: text/plain
-        body: "{{ nexus_admin_password }}"
+        # Setting the admin password to random if the username is not admin
+        body: "{{ nexus_admin_password if nexus_admin_username == 'admin' else nexus_builtin_admin_password }}"
         force_basic_auth: true
         status_code: 204
 
