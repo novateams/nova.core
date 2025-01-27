@@ -1,3 +1,4 @@
+---
 - name: Stopping Windows Update service...
   ansible.windows.win_service:
     name: wuauserv

@@ -1,7 +1,7 @@
 ---
 - name: Setting connection to ssh...
   ansible.builtin.set_fact:
-    ansible_connection: ssh
+    ansible_connection: ansible.builtin.ssh
 
 - name: Cleaning up Vyos logs...
   ansible.builtin.command: "{{ logs }}"
@@ -34,6 +34,6 @@
   ansible.builtin.reboot:
   become: true
 
-- name: Setting connection back to paramiko...
+- name: Setting connection back to network_cli...
   ansible.builtin.set_fact:
     ansible_connection: ansible.netcommon.network_cli
