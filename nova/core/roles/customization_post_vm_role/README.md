@@ -1,37 +1,19 @@
-# Role Name
+# customization_post_vm_role
 
-COMING SOON
-A brief description of the role goes here.
+This role is used run extra post-customization tasks on a system once the `customization` role has been finished. It's useful for running additional tasks for a specific group of systems that need to be customized in a specific way. It can be used to include extra roles and tasks and use `when:` statements to run them only on specific systems.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/customization_post_vm_role/defaults/main.yml) file for a list and description of the variables used in this role.
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
 ## Example Playbook
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-## License
-
-AGPL-3.0-or-later
-
-## Author Information
-
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Define a `post_vm_role` role in under your project's `customization_post_vm_role_path` directory defined in this role defaults and the post_vm_role will be picked up by the `start.yml` playbook automatically.

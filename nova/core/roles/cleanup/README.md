@@ -1,37 +1,25 @@
-# Role Name
+# cleanup
 
-COMING SOON
-A brief description of the role goes here.
+This role is used to run OS cleanup tasks on a system as one of the final steps in a playbook. It's mostly used for Lab and Exercise environments where you don't want to leave any traces of the Ansible playbook behind for the students or participants to see.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/cleanup/defaults/main.yml) file for a list and description of the variables used in this role.
+
+The `cleanup` role can be included in start.yml playbook by the `finalize` role. If `finalize_cleanup_system: true` is set in host or group vars, the cleanup role will be executed at the end of the playbook.
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
-## Example Playbook
+## Example
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-## License
-
-AGPL-3.0-or-later
-
-## Author Information
-
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yml
+- name: Including cleanup role...
+  ansible.builtin.include_role:
+    name: nova.core.cleanup
+```

@@ -1,6 +1,6 @@
-# Role Name
+# snapshots
 
-This is a role for creating and managing snapshots of virtual machines. Currently supported environments are: `vSphere` & `VMware Workstation`.
+This is a role for creating and managing snapshots of virtual machines. Currently supported environments are: `vSphere`, `VMware Workstation` & `Proxmox VE`.
 
 ## Requirements
 
