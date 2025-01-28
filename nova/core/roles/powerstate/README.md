@@ -1,37 +1,55 @@
-# Role Name
+# powerstate
 
-COMING SOON
-A brief description of the role goes here.
+This role can be used to manage the powerstate of a Virtual Machine. It can be used to power on-off, reset, susepend or reboot a VM.
 
 ## Requirements
 
-COMING SOON
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+none
 
 ## Role Variables
 
-COMING SOON
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/powerstate/defaults/main.yml) file for a list and description of the variables used in this role.
 
 ## Dependencies
 
-COMING SOON
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+none
 
 ## Example Playbook
 
-COMING SOON
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yml
+- name: Shutting down the VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    shutdown: true # This will try a graceful shutdown
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+- name: Powering on the VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true
 
-## License
+- name: Rebooting the VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    restart: true
 
-AGPL-3.0-or-later
+- name: Suspending the VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    suspend: true
 
-## Author Information
+- name: Resetting the VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    reset: true
 
-COMING SOON
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+- name: Powering off the VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweroff: true # This will force a power off
+```
