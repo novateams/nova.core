@@ -149,19 +149,19 @@ frozenlist = ">=1.1.0"
 
 [[package]]
 name = "ansible-compat"
-version = "24.10.0"
+version = "25.1.1"
 description = "Ansible compatibility goodies"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "ansible_compat-24.10.0-py3-none-any.whl", hash = "sha256:0415bcd82f7d84e5b344c03439154c1f16576809dc3a523b81178354c86ae5a1"},
-    {file = "ansible_compat-24.10.0.tar.gz", hash = "sha256:0ad873e0dae8b2de79bc33ced813d6c92c716c4d7b82f9a4693e1fd57f43776e"},
+    {file = "ansible_compat-25.1.1-py3-none-any.whl", hash = "sha256:76147025c82c92433feb8317d3fa513026f557dc1b64abd0b2565ffa09a57725"},
+    {file = "ansible_compat-25.1.1.tar.gz", hash = "sha256:b4e4609bb9b91588758be4d26ff25ff46d7ce83e6b8f2cc58cf77d736ec1f1ab"},
 ]
 
 [package.dependencies]
-ansible-core = ">=2.14"
+ansible-core = ">=2.16"
 jsonschema = ">=4.6.0"
 packaging = "*"
 PyYAML = "*"
@@ -169,19 +169,19 @@ subprocess-tee = ">=0.4.1"
 
 [package.extras]
 docs = ["argparse-manpage", "black", "mkdocs-ansible (>=24.3.1)"]
-test = ["coverage", "pip", "pytest (>=7.2.0)", "pytest-mock", "pytest-plus (>=0.6.1)", "uv (>=0.4.30)"]
+test = ["coverage", "pip", "pytest (>=7.2.0)", "pytest-instafail", "pytest-mock", "pytest-plus (>=0.6.1)", "uv (>=0.4.30)"]
 
 [[package]]
 name = "ansible-core"
-version = "2.18.1"
+version = "2.18.2"
 description = "Radically simple IT automation"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "ansible_core-2.18.1-py3-none-any.whl", hash = "sha256:4a312e416e09c7271188d6b8e2b1062fc6834fefd6a1814d0e02fb8aadb3e1ba"},
-    {file = "ansible_core-2.18.1.tar.gz", hash = "sha256:14cac1f92bbdae881cb0616eddeb17925e8cb507e486087975e724533d9de74f"},
+    {file = "ansible_core-2.18.2-py3-none-any.whl", hash = "sha256:c337512d740d9d9606846e1b1620eaaeadccb6dc2e864ce92cb485a8fc1f57f4"},
+    {file = "ansible_core-2.18.2.tar.gz", hash = "sha256:725b047d35942304eb322eb934b98cc5442ac3f49d33827d97171c238c4b69b9"},
 ]
 
 [package.dependencies]
@@ -193,19 +193,19 @@ resolvelib = ">=0.5.3,<1.1.0"
 
 [[package]]
 name = "ansible-lint"
-version = "25.1.0"
+version = "25.1.1"
 description = "Checks playbooks for practices and behavior that could potentially be improved"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "ansible_lint-25.1.0-py3-none-any.whl", hash = "sha256:9553b2aee124999b2005140bf27619793910454fcf2381e25ceb5b21f7384eed"},
-    {file = "ansible_lint-25.1.0.tar.gz", hash = "sha256:e4d657578a8354832a84a1d5a2b9225a78b9c5fefa8880506b7fa0347d6b5f7e"},
+    {file = "ansible_lint-25.1.1-py3-none-any.whl", hash = "sha256:a417c04a94640302f73ad5b96ba3f09a77b24861fd5441d04245549cf3dc2ac9"},
+    {file = "ansible_lint-25.1.1.tar.gz", hash = "sha256:52ded593ba69831bf8f2882fea9118f96657f115e75904cac9afe1ea931bf0ab"},
 ]
 
 [package.dependencies]
-ansible-compat = ">=24.10.0"
+ansible-compat = ">=25.1.0"
 ansible-core = ">=2.16.0"
 black = ">=24.3.0"
 filelock = ">=3.8.2"
@@ -412,15 +412,15 @@ test = ["coverage", "mypy", "pexpect", "ruff", "wheel"]
 
 [[package]]
 name = "attrs"
-version = "24.3.0"
+version = "25.1.0"
 description = "Classes Without Boilerplate"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "attrs-24.3.0-py3-none-any.whl", hash = "sha256:ac96cd038792094f438ad1f6ff80837353805ac950cd2aa0e0625ef19850c308"},
-    {file = "attrs-24.3.0.tar.gz", hash = "sha256:8f5c07333d543103541ba7be0e2ce16eeee8130cb0b3f9238ab904ce1e85baff"},
+    {file = "attrs-25.1.0-py3-none-any.whl", hash = "sha256:c75a69e28a550a7e93789579c22aa26b0f5b83b75dc4e08fe092980051e1090a"},
+    {file = "attrs-25.1.0.tar.gz", hash = "sha256:1c97078a80c814273a76b2a298a932eb681c87415c11dee0a6921de7f1b02c3e"},
 ]
 
 [package.extras]
@@ -1495,19 +1495,19 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.36.5"
+version = "1.36.7"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "boto3-1.36.5-py3-none-any.whl", hash = "sha256:a404ad5ec94ff40c176215a991bf62f0db5514a93a3dd361b7b2ab9660f811f4"},
-    {file = "boto3-1.36.5.tar.gz", hash = "sha256:58a6b7c3d5145b3ac04d4b6caa76223b8ef88004b4237444e553041e29581a11"},
+    {file = "boto3-1.36.7-py3-none-any.whl", hash = "sha256:ab501f75557863e2d2c9fa731e4fe25c45f35e0d92ea0ee11a4eaa63929d3ede"},
+    {file = "boto3-1.36.7.tar.gz", hash = "sha256:ae98634efa7b47ced1b0d7342e2940b32639eee913f33ab406590b8ed55ee94b"},
 ]
 
 [package.dependencies]
-botocore = ">=1.36.5,<1.37.0"
+botocore = ">=1.36.7,<1.37.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.11.0,<0.12.0"
 
@@ -1516,15 +1516,15 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.36.5"
+version = "1.36.7"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "botocore-1.36.5-py3-none-any.whl", hash = "sha256:6d9f70afa9bf9d21407089dc22b8cc8ec6fa44866d4660858c062c74fc8555eb"},
-    {file = "botocore-1.36.5.tar.gz", hash = "sha256:234ed3d29a8954c37a551c933453bf14c6ae44a69a4f273ffef377a2612ca6a6"},
+    {file = "botocore-1.36.7-py3-none-any.whl", hash = "sha256:a6c6772d777af2957ac9975207fac1ccc4ce101408b85e9b5e3c5ba0bb949102"},
+    {file = "botocore-1.36.7.tar.gz", hash = "sha256:9abc64bde5e7d8f814ea91d6fc0a8142511fc96427c19fe9209677c20a0c9e6e"},
 ]
 
 [package.dependencies]
@@ -1827,22 +1827,22 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "deprecated"
-version = "1.2.15"
+version = "1.2.18"
 description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "Deprecated-1.2.15-py2.py3-none-any.whl", hash = "sha256:353bc4a8ac4bfc96800ddab349d89c25dec1079f65fd53acdcc1e0b975b21320"},
-    {file = "deprecated-1.2.15.tar.gz", hash = "sha256:683e561a90de76239796e6b6feac66b99030d2dd3fcf61ef996330f14bbb9b0d"},
+    {file = "Deprecated-1.2.18-py2.py3-none-any.whl", hash = "sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec"},
+    {file = "deprecated-1.2.18.tar.gz", hash = "sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d"},
 ]
 
 [package.dependencies]
 wrapt = ">=1.10,<2"
 
 [package.extras]
-dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "jinja2 (>=3.0.3,<3.1.0)", "setuptools", "sphinx (<2)", "tox"]
+dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "setuptools", "tox"]
 
 [[package]]
 name = "distro"
@@ -3812,15 +3812,15 @@ ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==23.2.1)", "requests (>=2.31.0)"
 
 [[package]]
 name = "referencing"
-version = "0.36.1"
+version = "0.36.2"
 description = "JSON Referencing + Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "platform_system == \"Windows\" or platform_system == \"Darwin\" or platform_system != \"Windows\" and platform_system != \"Darwin\""
 files = [
-    {file = "referencing-0.36.1-py3-none-any.whl", hash = "sha256:363d9c65f080d0d70bc41c721dce3c7f3e77fc09f269cd5c8813da18069a6794"},
-    {file = "referencing-0.36.1.tar.gz", hash = "sha256:ca2e6492769e3602957e9b831b94211599d2aade9477f5d44110d2530cf9aade"},
+    {file = "referencing-0.36.2-py3-none-any.whl", hash = "sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0"},
+    {file = "referencing-0.36.2.tar.gz", hash = "sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa"},
 ]
 
 [package.dependencies]
@@ -4632,4 +4632,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.12.8"
-content-hash = "2c66a5505a16c6d9893061c94c145d6be547b8de74a95a2ed60a857a313275ac"
+content-hash = "6a9554d90a39e25b90b8a7b1aaee36f25328ce76687133f0309c68feeb6a0c69"
