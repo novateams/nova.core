@@ -52,7 +52,7 @@
         caddy_server_request_body_size: 10000M
 
 - name: Downloading and trusting self-signed certificate...
-  when: not fullchain_cert_state.stat.exists or caddy_generate_self_signed_certificate is defined
+  when: caddy_generate_self_signed_certificate is defined
   block:
     - name: Getting self-signed certificate contents...
       ansible.builtin.slurp:
@@ -134,7 +134,9 @@
 
 # This means that now pre-existing certificate was found before monolith role was executed
 - name: Requesting a certificate for web proxy...
-  when: not fullchain_cert_state.stat.exists or caddy_generate_self_signed_certificate is not defined
+  when:
+    - not fullchain_cert_state.stat.exists
+    - caddy_generate_self_signed_certificate is not defined
   block:
     - name: Checking for existing certificate...
       ansible.builtin.stat:
