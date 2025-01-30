@@ -1,9 +1,9 @@
-# Currently supported runner types
+# gitlab_runner
 
 - Docker exec runners, installed on linux (docker needs to be installed beforehand).
 - PowerShell runners, installed on windows.
 
-# Registration now uses authentication tokens
+## Registration now uses authentication tokens
 
 Introduced in GitLab 15.10, runner registration flow is now moving towards authentication tokens only, previously used registration tokens will be deprecated in Gitlab 18.x.
 
@@ -11,7 +11,7 @@ This means you need acquire an access token from gitlab, before installing and r
 
 Define your auth token in a runner specific `auth_token` variable.
 
-```
+```yml
 gitlab_runner_docker_runners:
   - name: docker_01
     auth_token: glrt-TOKEN
@@ -19,7 +19,7 @@ gitlab_runner_docker_runners:
     executor_image: ubuntu:22.04
 ```
 
-# Usage
+## Usage
 
 The minimal set of variables to install and register your runner.
 
@@ -29,7 +29,7 @@ The minimal set of variables to install and register your runner.
 
 An example of a Docker-in-Docker runner for builing container images.
 
-```
+```yml
 gitlab_runner_docker_runners:
   - name: dind_01
     auth_token: glrt-TOKEN
@@ -51,6 +51,6 @@ gitlab_runner_docker_runners:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
 ```
 
-#
+##
 
 Tags, locked, paused, run_untagged etc runner options are no longer set through gitlab-runner registration, and are now configured only in Gitlab.
