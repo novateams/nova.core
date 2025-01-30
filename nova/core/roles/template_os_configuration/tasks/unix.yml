@@ -2,8 +2,9 @@
 - name: Installing Packages...
   # Proxmox is Debian but we don't want to run these tasks on Proxmox
   # customization_method comes from Operating System group_var
-  when: customization_method == "proxmox"
+  when: customization_method != "proxmox"
   block:
+    # These packages are also available on BSD systems
     - name: Installing universal Unix packages...
       ansible.builtin.package:
         name:
@@ -19,6 +20,7 @@
         state: present
         update_cache: "{{ true if ansible_os_family == 'Debian' else omit }}"
 
+    # These packages are only available on Linux systems
     - name: Installing universal Linux packages...
       ansible.builtin.package:
         name:
