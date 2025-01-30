@@ -1,4 +1,4 @@
-# Providentia
+# providentia
 
 This is a role for installing [Providentia](https://github.com/ClarifiedSecurity/Providentia) in Docker on a Ubuntu/Debian host.
 
