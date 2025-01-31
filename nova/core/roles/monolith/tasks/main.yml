@@ -47,7 +47,7 @@
         caddy_server_certificate_key_path: /srv/certs/{{ fqdn }}_key.crt
         caddy_server_listen_addresses:
           - docker-proxy.{{ domain }}
-        caddy_server_reverse_proxy_rewrite: "* /repository/docker-proxy/{uri}"
+        caddy_server_reverse_proxy_rewrite: "* /repository/docker-proxy{uri}"
         caddy_server_reverse_proxy_to_address: http://nexus:8081
         caddy_server_request_body_size: 10000M
 
