@@ -4,6 +4,7 @@ set -e # exit when any command fails
 
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
+{% if interface.addresses != [] %}
 
     LOCAL_INTERFACE_NAME=$(networksetup -listallhardwareports | grep "Hardware Port:" | cut -d ":" -f2 | tr -d ' ' | awk 'NR=={{ loop.index }}')
 
@@ -70,4 +71,5 @@ set -e # exit when any command fails
     sleep 5 # Otherwise it'll happen to fast and IPv6 won't work. It's still faster then doing a reboot.
     networksetup -setnetworkserviceenabled $LOCAL_INTERFACE_NAME on
 
+{% endif %}
 {% endfor %}

@@ -10,6 +10,7 @@ fi
 
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
+{% if interface.addresses != [] %}
 
     # The maximum interfaces name length is 15 characters
     LOCAL_INTERFACE_NAME="eth{{ loop.index -1 }}-{{ interface.network_id[:10] }}"
@@ -70,6 +71,7 @@ fi
 
     {% endif %}
 
+{% endif %}
 {% endfor %}
 
 nmcli networking off && nmcli networking on

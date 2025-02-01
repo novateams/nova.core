@@ -15,6 +15,7 @@ Name={{ item.network_id }}
 Description={{ item.network_id }}
 DHCP=no
 IPv6AcceptRouterAdvertisements=no
+{% if item.addresses != [] %}
 {% for ip_address in item.addresses %}
 {% if ip_address.mode == 'ipv4_static' %}
 Address={{ ip_address.address }}
@@ -23,6 +24,7 @@ Address={{ ip_address.address }}
 Address={{ ip_address.address }}
 {% endif %}
 {% endfor %}
+{% endif %}
 
 {# Network option #}
 {% for param in (additional_network_params[item.network_id]['networkd_extra_network_params'] | default([])) %}
@@ -32,6 +34,7 @@ Address={{ ip_address.address }}
 {% endfor %}
 
 {# Route #}
+{% if item.addresses != [] %}
 {% for ip_address in item.addresses %}
 {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
 [Route]
@@ -44,6 +47,7 @@ Destination=::/0
 Gateway={{ ip_address.gateway }}
 {% endif %}
 {% endfor %}
+{% endif %}
 
 {# Extra sections #}
 {% for section in (additional_network_params[item.network_id]['networkd_extra_sections'] | default([])) %}

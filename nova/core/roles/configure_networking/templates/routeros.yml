@@ -1,6 +1,7 @@
 ---
 router_os_networking_commands:
 {% for interface in interfaces %}
+{% if interface.addresses != [] %}
 {% set interface_loop_index = loop.index %}
 {% for ip_address in interface.addresses %}
 {% if (ip_address.mode == 'ipv4_static') %}
@@ -16,4 +17,5 @@ router_os_networking_commands:
 - /ipv6 route add gateway={{ ip_address.gateway }}
 {% endif %}
 {% endfor %}
+{% endif %}
 {% endfor %}

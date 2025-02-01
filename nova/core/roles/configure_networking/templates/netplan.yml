@@ -9,6 +9,7 @@ network:
       set-name: {{ interface.network_id | replace(" ", "-") }}
       match:
         macaddress: {{ configure_networking_mac_addresses[loop.index - 1] }}
+      {% if interface.addresses != [] %}
       {% if interface.addresses[0].mode == "ipv4_dhcp" %}
       dhcp4: true
       {% elif interface.addresses[0].mode == "ipv6_dhcp" %}
@@ -79,5 +80,6 @@ network:
           {% endif %}
         search:
           - {{ domain }}
+      {% endif %}
       {% endif %}
   {% endfor %}

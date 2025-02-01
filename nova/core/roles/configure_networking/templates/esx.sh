@@ -7,6 +7,7 @@ set -e # exit when any command fails
 
 # Looping over Providentia interfaces to find the connection interface
 {% for interface in interfaces %}
+{% if interface.addresses != [] %}
 {% if interface.connection %}
 
     MGMT_INTERFACE_NAME={{ configure_networking_esxi_mgmt_interface_name }}
@@ -54,5 +55,6 @@ set -e # exit when any command fails
 
     {% endfor %}
 
+{% endif %}
 {% endif %}
 {% endfor %}
