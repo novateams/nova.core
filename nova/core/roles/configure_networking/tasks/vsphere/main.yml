@@ -9,14 +9,10 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
       register: vmware_tools_information
 
-    - name: Getting {{ custom_vm_name | default(vm_name) }} VM info...
-      community.vmware.vmware_vm_info:
-        vm_name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vm_info
-
     - name: Creating a list of MAC addresses...
       ansible.builtin.set_fact:
-        configure_networking_mac_addresses: "{{ vm_info.virtual_machines[0].mac_address }}"
+        configure_networking_mac_addresses: "{{ vmware_tools_information.instance | dict2items
+          | selectattr('key', 'match', '^hw_eth[0-9]+$') | map(attribute='value.macaddress') | list }}"
 
     - name: Getting REST API token...
       ansible.builtin.uri:
