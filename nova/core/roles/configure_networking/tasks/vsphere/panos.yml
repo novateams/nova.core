@@ -91,7 +91,8 @@
             - name: Configuring OOB MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ip-address {{ interfaces | nova.core.addresses('mgmt_ipv4')
+                string_send:
+                  set deviceconfig system ip-address {{ interfaces | nova.core.addresses('mgmt_ipv4')
                   | first | ansible.utils.ipaddr('address') }} netmask {{ interfaces | nova.core.addresses('mgmt_ipv4')
                   | first | ansible.utils.ipaddr('netmask') }}
               when: interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
@@ -191,6 +192,7 @@
       loop_control:
         index_var: idx
         label: "{{ item.network_id }}"
+      when: item.addresses != []
 
     # Using templates task for IPv6 because paloaltonetworks.panos.panos_ipv6_address does not support list of addresses
     - name: Templating PanOS IPv6 adding tasks...
@@ -212,9 +214,9 @@
       paloaltonetworks.panos.panos_mgtconfig:
         provider: "{{ panos_connection_params }}"
         dns_server_primary: "{{ dns_servers[0] }}"
-        dns_server_secondary: "{{ dns_servers6[0] }}"
+        dns_server_secondary: "{{ dns_servers6[0] | default(dns_servers[0]) }}"
         ntp_server_primary: "{{ ntp_servers[0] }}"
-        ntp_server_secondary: "{{ ntp_servers[1] }}"
+        ntp_server_secondary: "{{ ntp_servers[1] | default(ntp_servers[0]) }}"
 
     - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:

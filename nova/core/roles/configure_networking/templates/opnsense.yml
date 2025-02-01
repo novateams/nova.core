@@ -26,6 +26,7 @@
 
 opnsense_interfaces:
 {% for interface in interfaces %}
+{% if interface.addresses != [] %}
   {% if interface.egress %}
   - wan:
   {% elif interface.connection %}
@@ -61,10 +62,13 @@ opnsense_interfaces:
         - subnetv6: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
         {% endif %}
         {% endfor %}
+
+{% endif %}
 {% endfor %}
 
 opnsense_gateways:
 {% for interface in interfaces %}
+{% if interface.addresses != [] %}
 {% if interface.egress %}
 {% for ip_address in interface.addresses %}
 {% if ip_address.gateway != none %}
@@ -124,5 +128,6 @@ opnsense_gateways:
   {% endif %}
 {% endif %}
 {% endfor %}
+{% endif %}
 {% endif %}
 {% endfor %}

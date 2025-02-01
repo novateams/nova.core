@@ -17,35 +17,38 @@ source /opt/vyatta/etc/functions/script-template
 # find /sys/class/net -mindepth 1 -maxdepth 1 ! -name lo -printf "%P: " -execdir cat {}/address \;
 
 {% for interface in interfaces %}
-MAC_ADDRESS="{{ configure_networking_mac_addresses[loop.index - 1] }}"
-INTERFACE_NAME=$( ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . | ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs)
-set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
+    {% if interface.addresses != [] %}
 
-{% for ip_address in interface.addresses %}
+        MAC_ADDRESS="{{ configure_networking_mac_addresses[loop.index - 1] }}"
+        INTERFACE_NAME=$( ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . | ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs)
+        set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
 
-{% if ip_address.mode == 'ipv4_static' %}
-set interface ethernet $INTERFACE_NAME address {{ ip_address.address }}
-{% endif %}
+        {% for ip_address in interface.addresses %}
 
-{% if ip_address.mode == 'ipv6_static' %}
-set interface ethernet $INTERFACE_NAME address {{ ip_address.address }}
-{% endif %}
+            {% if ip_address.mode == 'ipv4_static' %}
+            set interface ethernet $INTERFACE_NAME address {{ ip_address.address }}
+            {% endif %}
 
-{% if (ip_address.mode == 'ipv4_static') and (no_gateway is not defined) and (ip_address.gateway != none) %}
-set protocols static route 0.0.0.0/0 next-hop {{ ip_address.gateway }}
-{% endif %}
+            {% if ip_address.mode == 'ipv6_static' %}
+            set interface ethernet $INTERFACE_NAME address {{ ip_address.address }}
+            {% endif %}
 
-{% if (ip_address.mode == 'ipv6_static') and (no_gateway is not defined) and (ip_address.gateway != none) %}
-set protocols static route6 ::/0 next-hop {{ ip_address.gateway }}
-{% endif %}
+            {% if (ip_address.mode == 'ipv4_static') and (no_gateway is not defined) and (ip_address.gateway != none) %}
+            set protocols static route 0.0.0.0/0 next-hop {{ ip_address.gateway }}
+            {% endif %}
 
-{% endfor %}
+            {% if (ip_address.mode == 'ipv6_static') and (no_gateway is not defined) and (ip_address.gateway != none) %}
+            set protocols static route6 ::/0 next-hop {{ ip_address.gateway }}
+            {% endif %}
+
+        {% endfor %}
+    {% endif %}
 {% endfor %}
 
 {% if dns_server_combined != [] %}
-{% for dns_server in dns_server_combined %}
-set system name-server {{ dns_server }}
-{% endfor %}
+    {% for dns_server in dns_server_combined %}
+    set system name-server {{ dns_server }}
+    {% endfor %}
 {% endif %}
 
 set service ssh disable-host-validation

@@ -1,5 +1,6 @@
 ---
 {% for interface in interfaces[1:] %}
+{% if interface.addresses != [] %}
 {% set interface_loop = loop.index %}
 {% for address in interface.addresses %}
 {% if address.mode == "ipv6_static" %}
@@ -10,4 +11,5 @@
     address: {{ address.address }}
 {% endif %}
 {% endfor %}
+{% endif%}
 {% endfor %}
