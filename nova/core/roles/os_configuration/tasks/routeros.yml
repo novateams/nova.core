@@ -1,17 +1,39 @@
 ---
 - name: Setting hostname...
   community.routeros.command:
-    commands: /system identity set name="{{ hostname }}"
+    commands:
+      - /system identity set name={{ hostname }}
 
-- name: Setting NTP servers...
+# Setting NTP servers for RouterOS when NTP server is a DNS name
+- name: Setting NTP servers for RouterOS 6...
   community.routeros.command:
-    commands: /system ntp client set enabled=yes primary-ntp={{ ntp_servers[0] }} secondary-ntp={{ ntp_servers[1] }}
+    commands:
+      - /system ntp client set enabled=yes server-dns-names={{ ntp_servers[0] }} primary-ntp=0.0.0.0 secondary-ntp=0.0.0.0
+  when:
+    - ansible_net_version.startswith('6')
+    - not ntp_servers[0] | ansible.utils.ipaddr
 
-- name: Generatating new system ID for license...
+# Setting NTP servers for RouterOS when NTP server is an IP address
+- name: Setting NTP servers for RouterOS 6... # noqa: literal-compare
+  community.routeros.command:
+    commands:
+      - /system ntp client set enabled=yes server-dns-names="" primary-ntp={{
+        ntp_servers[0] }} secondary-ntp={{ ntp_servers[1] | default(ntp_servers[0]) }}
+  when:
+    - ansible_net_version.startswith('6')
+    - ntp_servers[0] | ansible.utils.ipaddr != false
+
+- name: Setting NTP servers for RouterOS 7...
+  community.routeros.command:
+    commands:
+      - /system ntp client set enabled=yes servers={{ ntp_servers | join(",") }}
+  when: ansible_net_version.startswith('7')
+
+- name: Generating new system ID for license...
   community.routeros.command:
     commands: :exec {/system license generate-new-id}
 
-- name: RouterOS missing licence warning...
+- name: RouterOS missing license warning...
   when:
     - routeros_license_account == {}
     - routeros_license_password == {}
