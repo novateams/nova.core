@@ -1,12 +1,22 @@
 #!/bin/bash
 
+# Logging script output
+exec > /tmp/network.log 2>&1
+
 set -e # exit when any command fails
+
+# Detecting any added network interfaces
+networksetup -detectnewhardware
 
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
 {% if interface.addresses != [] %}
 
-    LOCAL_INTERFACE_NAME=$(networksetup -listallhardwareports | grep "Hardware Port:" | cut -d ":" -f2 | tr -d ' ' | awk 'NR=={{ loop.index }}')
+    {% if interfaces | length == 1 %}
+    LOCAL_INTERFACE_NAME="Ethernet"
+    {% else %}
+    LOCAL_INTERFACE_NAME="Ethernet {{ loop.index + 1 }}"
+    {% endif %}
 
     # Looping over IP addresses
     {% for ip_address in interface.addresses %}
@@ -15,22 +25,22 @@ set -e # exit when any command fails
             {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
 
                 # Adding IPv4 addresses with GW for interface
-                networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}} {{ ip_address.gateway }}
+                networksetup -setmanual "$LOCAL_INTERFACE_NAME" {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}} {{ ip_address.gateway }}
 
             {% elif (ip_address.mode == 'ipv4_static') and (ip_address.gateway == none) %}
 
                 # Adding IPv4 addresses without GW for interface
-                networksetup -setmanual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}}
+                networksetup -setmanual "$LOCAL_INTERFACE_NAME" {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}}
 
             {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway != none) %}
 
                 # Adding IPv6 addresses with GW for interface
-                networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }} {{ ip_address.gateway }}
+                networksetup -setv6manual "$LOCAL_INTERFACE_NAME" {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }} {{ ip_address.gateway }}
 
             {% elif (ip_address.mode == 'ipv6_static') and (ip_address.gateway == none) %}
 
                 # Adding IPv6 addresses without GW for interface
-                networksetup -setv6manual $LOCAL_INTERFACE_NAME {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }}
+                networksetup -setv6manual "$LOCAL_INTERFACE_NAME" {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }}
 
             {% endif %}
 
@@ -47,14 +57,14 @@ set -e # exit when any command fails
             {% if ip_address.mode == 'ipv6_static' %}
 
                 # Creating MGMT interface, disabling IPv4 address for it and adding IPv6 address
-                networksetup -createnetworkservice MGMT $LOCAL_INTERFACE_NAME
+                networksetup -createnetworkservice MGMT "$LOCAL_INTERFACE_NAME"
                 networksetup -setv4off MGMT
                 networksetup -setv6manual MGMT {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('prefix') }}
 
             {% elif ip_address.mode == 'ipv4_static' %}
 
                 # Creating MGMT interface, disabling IPv6 address for it and adding IPv6 address
-                networksetup -createnetworkservice MGMT $LOCAL_INTERFACE_NAME
+                networksetup -createnetworkservice MGMT "$LOCAL_INTERFACE_NAME"
                 networksetup -setv6off MGMT
                 networksetup -setmanual MGMT {{ ip_address.address | ansible.utils.ipaddr('address') }} {{ ip_address.address | ansible.utils.ipaddr('netmask')}}
 
@@ -64,12 +74,12 @@ set -e # exit when any command fails
     {% endfor %}
 
     # Setting DNS servers
-    networksetup -setdnsservers $LOCAL_INTERFACE_NAME {{ dns_server_combined | join(' ') }}
+    networksetup -setdnsservers "$LOCAL_INTERFACE_NAME" {{ dns_server_combined | join(' ') }}
 
     # Disabling and enabling interface to apply changes
-    networksetup -setnetworkserviceenabled $LOCAL_INTERFACE_NAME off
+    networksetup -setnetworkserviceenabled "$LOCAL_INTERFACE_NAME" off
     sleep 5 # Otherwise it'll happen to fast and IPv6 won't work. It's still faster then doing a reboot.
-    networksetup -setnetworkserviceenabled $LOCAL_INTERFACE_NAME on
+    networksetup -setnetworkserviceenabled "$LOCAL_INTERFACE_NAME" on
 
 {% endif %}
 {% endfor %}
