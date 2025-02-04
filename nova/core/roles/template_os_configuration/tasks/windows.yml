@@ -221,3 +221,27 @@
 - name: Removing any existing autologins...
   community.windows.win_auto_logon:
     state: absent
+
+# SSHD Configuration
+# This to avoid errors when someone has more that 6 SSH keys in their agent
+- name: Increasing SSHD MaxAuthTries to {{ template_os_configuration_increase_maxauthtries_value }}...
+  community.windows.win_lineinfile:
+    path: C:\ProgramData\ssh\sshd_config
+    regexp: .*MaxAuthTries.*
+    line: MaxAuthTries {{ template_os_configuration_increase_maxauthtries_value }}
+  when: template_os_configuration_increase_maxauthtries
+
+# This will allow each user to use their own SSH key under $HOME/.ssh/authorized_keys
+- name: Commenting out Match Group administrators and AuthorizedKeysFile...
+  community.windows.win_lineinfile:
+    path: C:\ProgramData\ssh\sshd_config
+    regex: "{{ sshd_config_item.regexp }}"
+    line: "{{ sshd_config_item.line }}"
+  loop_control:
+    loop_var: sshd_config_item
+  loop:
+    - regexp: ^.*Match Group administrators$
+      line: "#Match Group administrators"
+
+    - regexp: ^.*AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys$
+      line: "        #AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys"

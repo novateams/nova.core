@@ -2,7 +2,7 @@
 - name: Including vSphere specific configuration tasks...
   when: infra_env == "vsphere"
   block:
-    # Configuring Opnsense in localhost to avoid installing required Python modules on the remote host
+    # Configuring OPNsense in localhost to avoid installing required Python modules on the remote host
     - name: Downloading config.xml from {{ inventory_hostname }}...
       ansible.builtin.fetch:
         dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
@@ -41,3 +41,13 @@
         regexp: ^auth.*
         line: auth       sufficient       pam_permit.so
       when: ("os_opnsense_25_1" in group_names)
+
+# SSHD Configuration
+# This to avoid errors when someone has more that 6 SSH keys in their agent
+- name: Increasing SSHD MaxAuthTries to {{ template_os_configuration_increase_maxauthtries_value }}...
+  ansible.builtin.lineinfile:
+    path: /usr/local/etc/inc/plugins.inc.d/openssh.inc
+    regexp: .*$sshconf .= "MaxAuthTries.*
+    insertafter: .*UseDNS.*
+    line: '    $sshconf .= "MaxAuthTries {{ template_os_configuration_increase_maxauthtries_value }}\n"; # To avoid errors with more than 6 SSH keys'
+  when: template_os_configuration_increase_maxauthtries
