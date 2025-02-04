@@ -29,17 +29,21 @@
       when:
         - ansible_system in ["Linux", "FreeBSD"]
 
-- name: Configure RouterOS machine
-  ansible.builtin.include_tasks: routeros.yml
+- name: Configuring Network OS...
   when:
     - ansible_network_os is defined
-    - ansible_network_os == "community.routeros.routeros"
+  block:
+    - name: Configure RouterOS machine
+      ansible.builtin.include_tasks: routeros.yml
+      when: ansible_network_os == "community.routeros.routeros"
 
-- name: Configure OPNsense machine
-  ansible.builtin.include_tasks: opnsense.yml
-  when:
-    - ansible_network_os is defined
-    - ansible_network_os == "opnsense"
+    - name: Configure OPNsense machine
+      ansible.builtin.include_tasks: opnsense.yml
+      when: ansible_network_os == "opnsense"
+
+    - name: Configure Pfsense machine
+      ansible.builtin.include_tasks: pfsense.yml
+      when: ansible_network_os == "pfsense"
 
 - name: Including following role...
   ansible.builtin.include_role:
