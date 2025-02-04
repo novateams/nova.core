@@ -1,6 +1,7 @@
 ---
 - name: Checking if reboot is required...
   ansible.windows.win_shell: Test-PendingReboot -SkipConfigurationManagerClientCheck | Select-Object -ExpandProperty IsRebootPending
+  changed_when: false
   register: pending_reboot
 
 - name: Running reboot recheck tasks...
