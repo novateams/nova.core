@@ -1,0 +1,10 @@
+---
+# SSHD Configuration
+# This to avoid errors when someone has more that 6 SSH keys in their agent
+- name: Increasing SSHD MaxAuthTries to {{ template_os_configuration_increase_maxauthtries_value }}...
+  ansible.builtin.lineinfile:
+    path: /etc/sshd
+    regexp: .*$sshconf .= "MaxAuthTries.*
+    insertafter: .*X11Forwarding.*
+    line: '$sshconf .= "MaxAuthTries {{ template_os_configuration_increase_maxauthtries_value }}\n"; # To avoid errors with more than 6 SSH keys'
+  when: template_os_configuration_increase_maxauthtries

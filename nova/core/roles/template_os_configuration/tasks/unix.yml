@@ -51,11 +51,13 @@
       when: ansible_os_family == "RedHat"
 
 # SSHD Configuration
-- name: Increasing SSHD MaxAuthTries to 20... # This to avoid errors when someone has more that 6 SSH keys in their agent
+# This to avoid errors when someone has more that 6 SSH keys in their agent
+- name: Increasing SSHD MaxAuthTries to {{ template_os_configuration_increase_maxauthtries_value }}...
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: .*MaxAuthTries.*
-    line: MaxAuthTries 20
+    line: MaxAuthTries {{ template_os_configuration_increase_maxauthtries_value }}
+  when: template_os_configuration_increase_maxauthtries
 
 - name: Including GRUB configuration tasks...
   ansible.builtin.include_tasks: grub.yml
