@@ -9,6 +9,7 @@
       ansible.builtin.package:
         name:
           - curl # Useful for downloading files & interacting with web services
+          - dbus # Required for DBus (for an example hostname change)
           - file # Useful for file management & editing over SSH
           - jq # Useful for parsing JSON
           - nano # Useful for editing files over SSH
