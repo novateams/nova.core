@@ -29,7 +29,7 @@ nexus_ldap_configuration:
   name: "{{ nexus_ldap_name }}" # Name of the LDAP configuration
   # This is here to make sure that the configuration is not created twice
   id: "{{ omit if existing_ldap_servers.json == [] else existing_ldap_servers.json[0].id }}"
-  protocol: "{{ nexus_ldap_ptocoal | default('ldaps') }}" # ldap or ldaps
+  protocol: "{{ nexus_ldap_protocol | default('ldaps') }}" # ldap or LDAPs
   useTrustStore: true
   host: "{{ nexus_ldap_host }}" # FQDN of the LDAP server
   port: "{{ nexus_ldap_port | default(636) }}" # Usually 389 for LDAP and 636 for LDAPs
