@@ -122,7 +122,7 @@
       ansible.builtin.git:
         repo: "{{ project.source_url }}"
         dest: "{{ gl_tmpdir.path }}"
-        version: "{{ project.version | default('HEAD') }}"
+        version: "{{ project.source_version | default('HEAD') }}"
         depth: 1
       delegate_to: localhost
       changed_when: false
