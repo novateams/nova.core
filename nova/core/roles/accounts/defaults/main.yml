@@ -8,6 +8,8 @@ sudo_requires_password: true
 use_ssh_agent_for_sudo: false
 accounts_remove_stale: true # Compares the accounts list with the users on the system created by this role and removes any that are not in the accounts list
 fresh_deploy: false # Checks if the machine has just been created, required for setting correct connection parameters for AWS machines
+accounts_pre_roles: [] # Extra roles to include as first step in this one
+accounts_post_roles: [] # Extra roles to include as last step in this one
 
 # If true, only the specified ssh key will be allowed for the account, otherwise the key will be appended to the authorized_keys file
 accounts_exclusive_ssh_key: true
