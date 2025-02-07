@@ -1,4 +1,12 @@
 ---
+- name: Including following accounts pre-roles...
+  ansible.builtin.include_role:
+    name: "{{ account_pre_role }}"
+  loop: "{{ accounts_pre_roles }}"
+  loop_control:
+    loop_var: account_pre_role
+  when: accounts_pre_roles != []
+
 - name: Including accounts configuration tasks block for non-containers...
   when:
     - customization_context == "host" # Alternative is container that doesn't need this role
@@ -92,3 +100,11 @@
         - name: Including MacOS accounts removal tasks...
           ansible.builtin.include_tasks: macos_remove.yml
           when: ansible_system == "Darwin"
+
+- name: Including following accounts post-roles...
+  ansible.builtin.include_role:
+    name: "{{ account_post_role }}"
+  loop: "{{ accounts_post_roles }}"
+  loop_control:
+    loop_var: account_post_role
+  when: accounts_post_roles != []

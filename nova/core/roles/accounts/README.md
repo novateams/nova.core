@@ -1,6 +1,6 @@
 # accounts
 
-This role is responsible for managing admin and user accounts for different operating systems. Crrently, this role supports the following operating systems:
+This role is responsible for managing admin and user accounts for different operating systems. Currently, this role supports the following operating systems:
 
 - CentOS/RHEL
 - Cisco IOS
