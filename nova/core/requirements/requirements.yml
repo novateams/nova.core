@@ -17,7 +17,7 @@ collections:
   # A temporary fork of the official collection to remove the annoying deprecation warnings that come with each run
   - name: https://github.com/ClarifiedSecurity/amazon.aws.git
     type: git
-    version: 9.1.1-cs
+    version: 9.2.0-cs
   - name: ansible.netcommon
     version: 7.1.0
   - name: ansible.posix
@@ -25,13 +25,13 @@ collections:
   - name: ansible.utils
     version: 5.1.1
   - name: ansible.windows
-    version: 2.6.0
+    version: 2.7.0
   - name: azure.azcollection
     version: 3.1.0
   - name: chocolatey.chocolatey
     version: 1.5.3
   - name: cisco.ios
-    version: 9.1.0
+    version: 9.1.1
   - name: cloud.common
     version: 3.0.0
   - name: community.aws
@@ -39,9 +39,9 @@ collections:
   - name: community.crypto
     version: 2.24.0
   - name: community.docker
-    version: 4.3.0
+    version: 4.3.1
   - name: community.general
-    version: 10.2.0
+    version: 10.3.0
   - name: community.hashi_vault
     version: 6.2.0
   - name: community.library_inventory_filtering_v1
@@ -49,9 +49,9 @@ collections:
   - name: community.mysql
     version: 3.12.0
   - name: community.postgresql
-    version: 3.10.0
+    version: 3.10.2
   - name: community.routeros
-    version: 3.2.0
+    version: 3.3.0
   - name: community.vmware
     version: 4.4.0
   - name: community.windows
@@ -67,7 +67,7 @@ collections:
   - name: microsoft.sql
     version: 2.2.3
   - name: paloaltonetworks.panos
-    version: 2.21.3
+    version: 2.21.4
   - name: vmware.vmware_rest
     version: 4.5.0
   - name: vyos.vyos
