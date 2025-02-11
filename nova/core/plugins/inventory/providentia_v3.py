@@ -123,7 +123,14 @@ class InventoryModule(BaseInventoryPlugin):
   async def fetch_environment(self):
     event = await self.fetch_from_providentia('')
     for key,value in event['result'].items():
-      self.inventory.set_variable("all", key, value)
+        # Replacing nondescriptive keys with more descriptive ones
+        if key == 'name':
+          key = 'providentia_project_display_name'
+        if key == 'id':
+          key = 'providentia_project_id'
+        if key == 'description':
+          key = 'providentia_project_description'
+        self.inventory.set_variable("all", key, value)
 
   async def fetch_groups(self):
     groups = await self.fetch_from_providentia('tags')
@@ -146,11 +153,8 @@ class InventoryModule(BaseInventoryPlugin):
   async def fetch_hosts(self):
     hosts = await self.fetch_from_providentia('inventory')
 
-    # List of keys that should be excluded from host variables to avoid endless recursion and overwriting
-    excluded_keys = ["id", "instances"]
-
-    # Creating a new dictionary with filtered parent vars using first host as a template since all of the host have the same keys
-    filtered_parent_vars = {key: value for key, value in hosts['result'][0].items() if key not in excluded_keys}
+    # List of Providentia keys that should be excluded from being added as variables
+    excluded_keys = ["instances"]
 
     # Add hosts to inventory
     for host in hosts['result']:
@@ -160,12 +164,18 @@ class InventoryModule(BaseInventoryPlugin):
 
         self.inventory.set_variable(host_instance_id, "main_id", host['id'])
 
-        for var_name in filtered_parent_vars:
-          if var_name in host:
-            self.inventory.set_variable(host_instance_id, var_name, host[var_name])
+        for key, value in host.items():
+          if key not in excluded_keys:
+            # tags is a reserved variable in Ansible, so don't use it
+            # Same info is already in the group_names variable in Ansible
+            if key != 'tags':
+              self.inventory.set_variable(host_instance_id, key, value)
 
         for key, value in host_instance.items():
-          self.inventory.set_variable(host_instance_id, key, value)
+          # tags is a reserved variable in Ansible, so don't use it
+          # Same info is already in the group_names variable in Ansible
+          if key != 'tags':
+            self.inventory.set_variable(host_instance_id, key, value)
 
         for group in host.get('tags', []):
           self.inventory.add_child(group, host_instance_id)
