@@ -27,6 +27,11 @@
       no_log: true
       register: vcenter_session_api_key
 
+    - name: Select vCenter compatible interfaces...
+      ansible.builtin.set_fact:
+        vcenter_interfaces: "{{ interfaces | rejectattr('cloud_id','equalto', '') }}"
+      loop: "{{ interfaces }}"
+
     - name: Including {{ customization_method }} network configuration tasks...
       ansible.builtin.include_tasks: "{{ customization_method }}.yml"
 

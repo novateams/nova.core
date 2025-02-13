@@ -34,7 +34,7 @@
         dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
         lstrip_blocks: true
         mode: "0644"
-      loop: "{{ interfaces }}"
+      loop: "{{ vcenter_interfaces }}"
       loop_control:
         index_var: interface_index
         label: "{{ item.network_id }}"
@@ -43,7 +43,7 @@
       ansible.builtin.stat:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.network_networkd
       register: network_file_size
-      loop: "{{ interfaces }}"
+      loop: "{{ vcenter_interfaces }}"
       loop_control:
         index_var: interface_index
         label: "{{ item.network_id }}"
@@ -92,7 +92,7 @@
         dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
         lstrip_blocks: true
         mode: "0644"
-      loop: "{{ interfaces }}"
+      loop: "{{ vcenter_interfaces }}"
       loop_control:
         index_var: interface_index
         label: "{{ item.network_id }}"
@@ -101,7 +101,7 @@
       ansible.builtin.stat:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ 10 + interface_index }}-{{ item.network_id }}.link_networkd
       register: link_file_size
-      loop: "{{ interfaces }}"
+      loop: "{{ vcenter_interfaces }}"
       loop_control:
         index_var: interface_index
         label: "{{ item.network_id }}"

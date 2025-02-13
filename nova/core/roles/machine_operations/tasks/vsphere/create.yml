@@ -213,7 +213,7 @@
     - name: Creating a list of extra NICs...
       ansible.builtin.set_fact:
         extra_network_interfaces: "{{ extra_network_interfaces + [merged] }}"
-      loop: "{{ interfaces[1:] }}"
+      loop: "{{ interfaces[1:] | rejectattr('cloud_id', 'equalto', '') }}"
       loop_control:
         label: "{{ item.cloud_id }}"
       vars:
