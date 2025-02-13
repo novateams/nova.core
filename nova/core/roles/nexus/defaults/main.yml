@@ -138,8 +138,10 @@ nexus_default_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://http.kali.org/
-        contentMaxAge: 15
-        metadataMaxAge: 15
+        # 0 Means always check for updates
+        # Otherwise will often experience Mirror sync in progress error
+        contentMaxAge: 0
+        metadataMaxAge: 0
       negativeCache:
         enabled: true
         timeToLive: 1440
