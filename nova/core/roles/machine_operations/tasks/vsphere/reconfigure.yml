@@ -1,3 +1,4 @@
+---
 - name: Reconfiguring existing VM tasks...
   delegate_to: localhost
   become: false
