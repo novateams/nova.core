@@ -1,8 +1,10 @@
 ---
 - name: Including following configure_networking pre-roles...
   ansible.builtin.include_role:
-    name: "{{ item }}"
+    name: "{{ networking_pre_role }}"
   loop: "{{ configure_networking_pre_roles }}"
+  loop_control:
+    loop_var: networking_pre_role
   when: configure_networking_pre_roles != []
 
 - name: Configuring VM network...
@@ -20,6 +22,8 @@
 
 - name: Including following configure_networking post-roles...
   ansible.builtin.include_role:
-    name: "{{ item }}"
+    name: "{{ networking_post_role }}"
   loop: "{{ configure_networking_post_roles }}"
+  loop_control:
+    loop_var: networking_post_role
   when: configure_networking_post_roles != []
