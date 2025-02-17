@@ -22,4 +22,5 @@
 - name: Running apt update... # noqa: no-handler
   ansible.builtin.apt:
     update_cache: true
+  retries: 2
   when: apt_sources.changed
