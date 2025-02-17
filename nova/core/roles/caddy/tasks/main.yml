@@ -16,10 +16,14 @@
     state: present
     wait: true
 
-- name: Formatting and reloading Caddyfile...
+- name: Formatting Caddyfile...
   community.docker.docker_container_exec:
     container: caddy
-    command: "{{ item }}"
-  loop:
-    - caddy fmt --overwrite /etc/caddy/Caddyfile
-    - caddy reload -c /etc/caddy/Caddyfile
+    command: caddy fmt --overwrite /etc/caddy/Caddyfile
+
+# This is mostly for when certificates are updated
+- name: Restarting Caddy for {{ inventory_hostname }}...
+  community.docker.docker_compose_v2:
+    project_src: "{{ caddy_config_folder }}"
+    state: restarted
+    wait: true
