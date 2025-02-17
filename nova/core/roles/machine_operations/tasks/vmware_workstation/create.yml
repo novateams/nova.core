@@ -170,6 +170,16 @@
             state: directory
             recurse: true
 
+    - name: Setting {{ inventory_hostname }} CPU value to {{ hardware_cpu }}...
+      ansible.builtin.command: vmcli ConfigParams SetEntry numvcpus {{ hardware_cpu }} {{ vmware_workstation.local_vmx_path }}
+      when: hardware_cpu != none
+      changed_when: true
+
+    - name: Setting {{ inventory_hostname }} RAM value to {{ hardware_ram }}GB...
+      ansible.builtin.command: vmcli ConfigParams SetEntry memsize {{ hardware_ram * 1024 }} {{ vmware_workstation.local_vmx_path }}
+      when: hardware_ram != none
+      changed_when: true
+
     - name: Starting {{ inventory_hostname }} and waiting for IP address... # noqa: command-instead-of-shell
       ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
       changed_when: true
