@@ -49,12 +49,12 @@
             dest: "{{ temp_ssh_key_path }}"
             mode: "600"
 
-    - name: Creating AWS security group for {{ custom_vm_name | default(vm_name) }}...
-      amazon.aws.ec2_security_group:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        description: Security group for {{ custom_vm_name | default(vm_name) }}
-        rules: "{{ aws_security_group_rules }}"
-        state: present
+        - name: Creating AWS security group for {{ custom_vm_name | default(vm_name) }}...
+          amazon.aws.ec2_security_group:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            description: Security group for {{ custom_vm_name | default(vm_name) }}
+            rules: "{{ aws_security_group_rules }}"
+            state: present
 
     - name: Launching {{ hostname }} EC2 instance...
       amazon.aws.ec2_instance:
@@ -63,13 +63,11 @@
         vpc_subnet_id: "{{ ec2_subnet_id | default(omit) }}"
         instance_type: "{{ aws_vm_size | default('t3.micro') }}"
         security_group: "{{ aws_security_group | default(custom_vm_name) | default(vm_name) }}"
-        network:
-          assign_public_ip: true
         image_id: "{{ all_images[-1].image_id }}"
       register: created_ec2_instance
       until: created_ec2_instance.instances[0].public_ip_address is defined
-      retries: 60
-      delay: 1
+      retries: 10
+      delay: 3
 
     - name: Setting primary IPv4 as fact...
       ansible.builtin.set_fact:
