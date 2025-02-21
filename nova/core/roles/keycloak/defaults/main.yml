@@ -1,7 +1,7 @@
 ---
 # The Keycloak version and the Keycloak Config CLI version should be compatible
-keycloak_version: 26.0.5
-keycloak_config_cli_version: 6.2.1-26.0.5 # https://github.com/adorsys/keycloak-config-cli
+keycloak_version: 26.1.0
+keycloak_config_cli_version: 6.4.0-26.1.0 # https://github.com/adorsys/keycloak-config-cli
 
 keycloak_postgres_version: 15
 keycloak_container_config_folder: /srv/keycloak
