@@ -101,8 +101,12 @@ aws_access_key: {} # Can be defined in your Ansible Vault
 # Temporary ssh key path on your container
 temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_aws_key
 
+# Will create a matching security group for host when deployed
+# Set to false when pre-created custom security group is used
+machine_operations_create_aws_security_group: true
+
 # AWS security group rules
-aws_security_group_rules:
+machine_operations_aws_security_group_rules:
   - proto: TCP
     to_port: 22
     from_port: 22
@@ -114,13 +118,25 @@ aws_security_group_rules:
     from_port: 80
     cidr_ip:
       - "0.0.0.0/0"
-    rule_desc: Internet IPv4 HTTP
+    rule_desc: Internet IPv4 TCP HTTP
+  - proto: UDP
+    to_port: 80
+    from_port: 80
+    cidr_ip:
+      - "0.0.0.0/0"
+    rule_desc: Internet IPv4 UDP HTTP
   - proto: TCP
     to_port: 443
     from_port: 443
     cidr_ip:
       - "0.0.0.0/0"
-    rule_desc: Internet IPv4 HTTPS
+    rule_desc: Internet IPv4 TCP HTTPS
+  - proto: UDP
+    to_port: 443
+    from_port: 443
+    cidr_ip:
+      - "0.0.0.0/0"
+    rule_desc: Internet IPv4 UDP HTTPS
   - proto: TCP
     to_port: 22
     from_port: 22
@@ -132,13 +148,25 @@ aws_security_group_rules:
     from_port: 80
     cidr_ipv6:
       - ::/0
-    rule_desc: Internet IPv6 HTTP
+    rule_desc: Internet IPv6 TCP HTTP
+  - proto: UDP
+    to_port: 80
+    from_port: 80
+    cidr_ipv6:
+      - ::/0
+    rule_desc: Internet IPv6 UDP HTTP
   - proto: TCP
     to_port: 443
     from_port: 443
     cidr_ipv6:
       - ::/0
     rule_desc: Internet IPv6 HTTPS
+  - proto: UDP
+    to_port: 443
+    from_port: 443
+    cidr_ipv6:
+      - ::/0
+    rule_desc: Internet IPv6 UDP HTTPS
 
 ###################
 # Linode defaults #

@@ -1,5 +1,5 @@
 ---
-- name: Templating config to machine...
+- name: Templating sysctl config...
   ansible.builtin.template:
     src: "{{ firewall_config_file }}"
     dest: /etc/sysctl.d/fw.conf
