@@ -6,6 +6,14 @@
       - aws_access_key
   when: aws_access_key == {}
 
+- name: Checking if {{ custom_vm_name | default(vm_name) }} already exists...
+  amazon.aws.ec2_instance_info:
+    filters:
+      tag:Name: "{{ custom_vm_name | default(vm_name) }}"
+  register: ec2_instance_info
+  delegate_to: localhost
+  become: false
+
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml
   when: deploy_mode in ['undeploy', 'redeploy']
