@@ -14,3 +14,15 @@
   ansible.builtin.command: pvecm updatecerts --force
   changed_when: true
   listen: starting_proxmox_services
+
+- name: Restarting systemd-timesyncd.service...
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: restarted
+  listen: restart_systemd_timesyncd 
+
+- name: Restarting chronyd.service...
+  ansible.builtin.systemd:
+    name: chronyd
+    state: restarted
+  listen: restart_chronyd
