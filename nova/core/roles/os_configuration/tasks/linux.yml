@@ -81,6 +81,57 @@
     lstrip_blocks: true
   when: resolv_conf_dns_servers != []
 
+- name: Set NTP server for Debian and Archlinux like OS...
+  when: 
+    - ntp_servers != []
+    - ansible_os_family in [ "Debian", "Archlinux" ]
+  block:
+    - name: Check if timesyncd.conf file exists...
+      ansible.builtin.stat:
+        path: /etc/systemd/timesyncd.conf
+      register: timesyncd_conf_exists
+
+    - name: Modify NTP option in timesyncd.conf...
+      ansible.builtin.lineinfile:
+        dest: /etc/systemd/timesyncd.conf
+        line: "{{ item.line }}"
+        regexp: "{{ item.regexp }}"
+        state: present
+      loop:
+        - line: NTP={{ ntp_servers | join(' ') }}
+          regexp: "^[#]?NTP="
+      when: timesyncd_conf_exists.stat.exists
+      notify: restart_systemd_timesyncd
+
+- name: Set NTP server for ReadHat like OS...
+  when: 
+    - ntp_servers != []
+    - ansible_os_family in [ "RedHat" ]
+  block:
+    - name: Check if chrony.conf file exists...
+      ansible.builtin.stat:
+        path: /etc/chrony.conf
+      register: chrony_conf_exists
+
+    - name: Remove pool(s) from chrony.conf...
+      ansible.builtin.lineinfile:
+        dest: /etc/chrony.conf
+        state: absent
+        regexp: "^pool "
+      when: chrony_conf_exists.stat.exists
+
+    - name: Modify NTP pool(s) option in chrony.conf...
+      ansible.builtin.lineinfile:
+        dest: /etc/chrony.conf
+        line: pool {{ item }} iburst
+        insertafter: "^# Please "
+        state: present
+        firstmatch: true
+      loop:
+        "{{ ntp_servers }}"
+      when: chrony_conf_exists.stat.exists
+      notify: restart_chronyd
+
 - name: Waiting until {{ wait_for_address }} is reachable...
   ansible.builtin.wait_for:
     host: "{{ wait_for_address }}"
