@@ -82,7 +82,7 @@
   when: resolv_conf_dns_servers != []
 
 - name: Set NTP server for Debian and Archlinux like OS...
-  when: 
+  when:
     - ntp_servers != []
     - ansible_os_family in [ "Debian", "Archlinux" ]
   block:
@@ -104,7 +104,7 @@
       notify: restart_systemd_timesyncd
 
 - name: Set NTP server for ReadHat like OS...
-  when: 
+  when:
     - ntp_servers != []
     - ansible_os_family in [ "RedHat" ]
   block:
@@ -127,8 +127,7 @@
         insertafter: "^# Please "
         state: present
         firstmatch: true
-      loop:
-        "{{ ntp_servers }}"
+      loop: "{{ ntp_servers }}"
       when: chrony_conf_exists.stat.exists
       notify: restart_chronyd
 
