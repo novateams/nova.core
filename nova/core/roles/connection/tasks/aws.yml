@@ -1,9 +1,9 @@
 ---
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
-    | upper }} over {{ connection_address }}...
+    | upper }} over {{ connection_address_custom | default(connection_address) }}...
   ansible.builtin.set_fact:
-    ansible_host: "{{ connection_address }}"
+    ansible_host: "{{ connection_address_custom | default(connection_address) }}"
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ aws_template_username | default(template_username) if fresh_deploy else ansible_deployer_username }}"
     ansible_password: "{{ omit if (connection_no_password or fresh_deploy) else ansible_deployer_password }}"

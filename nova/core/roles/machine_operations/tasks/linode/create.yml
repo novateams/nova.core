@@ -19,7 +19,8 @@
     fresh_deploy: true
   when: linode_vm.actions != []
 
-- name: Setting primary IPs as fact...
+- name: Setting IP address facts for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
+    connection_address: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
     primary_ipv4: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
     primary_ipv6: "{{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}"
