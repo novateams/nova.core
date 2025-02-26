@@ -1,7 +1,7 @@
 ---
 - name: Including variables validation task...
   when:
-    - connection_address is not defined
+    - connection_address is not defined or connection_address_custom is not defined
     - ansible_deployer_username is not defined
   block:
     - name: Missins connection variables...
@@ -9,13 +9,15 @@
         msg: |
           Cannot proceed with the connection to {{ inventory_hostname }}
           Check that the following variables have values set:
-            * connection_address
+            * connection_address or connection_address_custom
             * ansible_deployer_username
             * ansible_deployer_password (optional when using SSH keys)
 
-- name: Connecting as {{ ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper }} over {{ connection_address }}...
+- name:
+    Connecting as {{ ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper }} over {{
+    connection_address_custom | default(connection_address) }}...
   ansible.builtin.set_fact:
-    ansible_host: "{{ connection_address }}"
+    ansible_host: "{{ connection_address_custom | default(connection_address) }}"
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ ansible_deployer_username }}"
     ansible_password: "{{ omit if connection_no_password else ansible_deployer_password }}"
