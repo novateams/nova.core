@@ -26,6 +26,26 @@
     label: "{{ item.username }}"
   when: item.username not in tuoni_existing_users.json | map(attribute='username')
 
+- name: Configuring following users' permissions...
+  ansible.builtin.uri:
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/users/{{ item.username }}
+    method: PUT
+    headers:
+      Authorization: Bearer {{ tuoni_api_token.content }}
+    force_basic_auth: true
+    body_format: json
+    status_code:
+      - 200 # OK
+      - 201 # Created
+    validate_certs: false # Because Tuoni uses self-signed certificate with an empty Subject Name
+    body:
+      enabled: true
+      authorities: "{{ item.authorities }}"
+  loop: "{{ tuoni_users }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username in tuoni_existing_users.json | map(attribute='username')
+
 - name: Updating following users' password...
   ansible.builtin.uri:
     url: https://{{ tuoni_fqdn }}:8443/api/v1/users/{{ item.username }}/password
