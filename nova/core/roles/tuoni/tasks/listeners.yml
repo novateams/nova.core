@@ -29,8 +29,8 @@
 
 - name: Updating following listeners...
   ansible.builtin.uri:
-    url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners/{{ tuoni_existing_listeners.json.values() | selectattr('name', 'equalto', item.name) | map(attribute='id')
-      | first }}
+    url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners/{{ tuoni_existing_listeners.json.values()
+      | selectattr('name', 'equalto', item.name) | map(attribute='id') | first }}
     method: PATCH
     headers:
       Authorization: Bearer {{ tuoni_api_token.content }}
