@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Comparing PR version with main...
         env:
-          PR_VERSION_URL: "https://raw.githubusercontent.com/${{ github.event.pull_request.head.repo.full_name }}/${{ github.event.pull_request.head.ref }}/version.yml"
+          PR_VERSION_URL: "https://raw.githubusercontent.com/${{ github.event.pull_request.head.repo.full_name }}/${{ github.event.pull_request.head.ref }}/nova/core/galaxy.yml"
         run: |
 
           export C_RED="\x1b[91m"
