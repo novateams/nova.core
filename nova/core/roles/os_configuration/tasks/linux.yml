@@ -37,20 +37,8 @@
   when: ansible_os_family != 'RedHat'
 
 - name: Setting the default locale...
-  block:
-    - name: Setting the default locale...
-      ansible.builtin.command: localectl set-locale LANG={{ os_configuration_locale }} LANGUAGE={{ os_configuration_locale }}
-      changed_when: true
-
-  rescue:
-    # For latest Debian and Kali Linux versions the localectl command is broken
-    # Using lineinfile as a workaround until it's fixed
-    - name: Setting the default locale (rescue)...
-      ansible.builtin.lineinfile:
-        path: /etc/locale.conf
-        regexp: ^LANG=
-        line: LANG={{ os_configuration_locale }}
-        mode: "0644"
+  ansible.builtin.command: localectl set-locale LANG={{ os_configuration_locale }} LANGUAGE={{ os_configuration_locale }}
+  changed_when: true
 
 - name: Enabling SSH forwarding for sudo...
   ansible.builtin.lineinfile:
