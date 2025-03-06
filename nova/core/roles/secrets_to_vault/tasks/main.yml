@@ -2,9 +2,17 @@
 - name: Including Vault preparation tasks...
   ansible.builtin.include_tasks: prepare_vault.yml
 
+# This usually get's defined in group_vars or host_vars
+- name: Including save pre secrets tasks for secrets...
+  ansible.builtin.include_tasks: save_pre_secrets.yml
+  when:
+    - secrets_to_vault_pre_deploy_secrets != []
+    - secrets == []
+
+# This usually get's passed as a variable to the role
 - name: Including save secrets tasks for secrets...
   ansible.builtin.include_tasks: save_secrets.yml
-  when: secrets != [] or secrets_to_vault_pre_deploy_secrets != []
+  when: secrets != []
 
 - name: Including accounts save secrets tasks...
   ansible.builtin.include_tasks: save_account_password.yml
