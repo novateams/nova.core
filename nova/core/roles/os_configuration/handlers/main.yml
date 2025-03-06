@@ -19,7 +19,7 @@
   ansible.builtin.systemd:
     name: systemd-timesyncd
     state: restarted
-  listen: restart_systemd_timesyncd 
+  listen: restart_systemd_timesyncd
 
 - name: Restarting chronyd.service...
   ansible.builtin.systemd:
