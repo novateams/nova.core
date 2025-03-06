@@ -91,12 +91,14 @@
         path: /etc/systemd/timesyncd.conf
       register: timesyncd_conf_exists
 
-    - name: Modify NTP option in timesyncd.conf...
+    - name: Setting following NTP servers in timesyncd.conf...
       ansible.builtin.lineinfile:
         dest: /etc/systemd/timesyncd.conf
         line: "{{ item.line }}"
         regexp: "{{ item.regexp }}"
         state: present
+      loop_control:
+        label: "{{ item.line }}"
       loop:
         - line: NTP={{ ntp_servers | join(' ') }}
           regexp: "^[#]?NTP="
@@ -120,13 +122,15 @@
         regexp: "^pool "
       when: chrony_conf_exists.stat.exists
 
-    - name: Modify NTP pool(s) option in chrony.conf...
+    - name: Setting following NTP servers in chrony.conf...
       ansible.builtin.lineinfile:
         dest: /etc/chrony.conf
         line: pool {{ item }} iburst
         insertafter: "^# Please "
         state: present
         firstmatch: true
+      loop_control:
+        label: "{{ item }}"
       loop: "{{ ntp_servers }}"
       when: chrony_conf_exists.stat.exists
       notify: restart_chronyd
