@@ -203,7 +203,7 @@
       block:
         - name: Getting CA file(s) content...
           ansible.builtin.command: cat "{{ nexus_trusted_ca.path }}"
-          changed_when: true
+          changed_when: false
           loop: "{{ trusted_cas.files }}"
           loop_control:
             loop_var: nexus_trusted_ca

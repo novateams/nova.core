@@ -7,20 +7,14 @@
     mode: "0755"
     state: directory
 
-- name: Templating Nexus configuration files...
+- name: Templating Nexus configuration file(s)...
   ansible.builtin.template:
-    src: "{{ nexus_config_item.src }}"
-    dest: "{{ nexus_config_item.dest }}"
+    src: nexus.yml
+    dest: "{{ nexus_container_config_folder }}/docker-compose.yml"
     mode: "0644"
     lstrip_blocks: true
   loop_control:
     loop_var: nexus_config_item
-  loop:
-    - src: nexus.yml
-      dest: "{{ nexus_container_config_folder }}/docker-compose.yml"
-    - src: Dockerfile
-      dest: "{{ nexus_container_config_folder }}/Dockerfile"
-  register: template
 
 - name: Checking if Nexus encryption file exists...
   ansible.builtin.stat:
@@ -39,14 +33,14 @@
 - name: Composing Nexus on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ nexus_container_config_folder }}"
-    pull: never
     state: present
     wait: true
+  register: nexus_compose
 
 - name: Finding and restarting proxy container...
   when:
     - nexus_proxy_container_name != {}
-    - template.changed
+    - nexus_compose.changed
   block:
     - name: Checking if {{ nexus_proxy_container_name }} exists...
       community.docker.docker_container_info:
