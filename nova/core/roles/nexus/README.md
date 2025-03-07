@@ -8,7 +8,6 @@ This is a role for installing and configuring [Nexus Repository Manager 3](https
 
 ## Requirements
 
-- Tested on Ubuntu 22.04 but should work on any Debian based system.
 - Requires an external reverse proxy (nginx, traefik, haproxy, caddy etc.) in front of Nexus to handle GUI access and TLS termination.
 
 ## Role Variables

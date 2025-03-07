@@ -1,9 +1,7 @@
 ---
 services:
   nexus:
-    build:
-      dockerfile: Dockerfile
-    image: locally-built-nexus3:{{ nexus_version }}
+    image: sonatype/nexus3:{{ nexus_version }}
     container_name: nexus
     hostname: nexus
     restart: unless-stopped

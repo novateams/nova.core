@@ -17,7 +17,7 @@ none
 ## Example
 
 ```yaml
-- name: Including connection role
-  include_role:
+- name: Including docker role...
+  ansible.builtin.include_role:
     name: nova.core.docker
 ```
