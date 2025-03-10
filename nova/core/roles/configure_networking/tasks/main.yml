@@ -1,8 +1,10 @@
 ---
 - name: Including following configure_networking pre-roles...
   ansible.builtin.include_role:
-    name: "{{ item }}"
+    name: "{{ networking_pre_role }}"
   loop: "{{ configure_networking_pre_roles }}"
+  loop_control:
+    loop_var: networking_pre_role
   when: configure_networking_pre_roles != []
 
 - name: Configuring VM network...
@@ -10,6 +12,15 @@
     - customization_context == "host"
     - fresh_deploy or reconfigure_network
   block:
+    - name: Saving the original interfaces list...
+      ansible.builtin.set_fact:
+        original_interfaces: "{{ interfaces }}"
+
+    # This is done so the role does not try configure interfaces that do not exists in the hypervisor
+    - name: Removing non-existing networks from the interfaces list...
+      ansible.builtin.set_fact:
+        interfaces: "{{ interfaces | rejectattr('cloud_id', 'in', ['', none]) }}"
+
     - name: Configuring VM network in vSphere environment...
       ansible.builtin.include_tasks: vsphere/main.yml
       when: infra_env == 'vsphere'
@@ -18,8 +29,15 @@
       ansible.builtin.include_tasks: proxmox/main.yml
       when: infra_env == 'proxmox'
 
+    # This is to restore the original interfaces list so it can be used in later roles
+    - name: Restoring the original interfaces list...
+      ansible.builtin.set_fact:
+        interfaces: "{{ original_interfaces }}"
+
 - name: Including following configure_networking post-roles...
   ansible.builtin.include_role:
-    name: "{{ item }}"
+    name: "{{ networking_post_role }}"
   loop: "{{ configure_networking_post_roles }}"
+  loop_control:
+    loop_var: networking_post_role
   when: configure_networking_post_roles != []

@@ -20,23 +20,11 @@
       retries: 60
       delay: 5
 
-    - name: Setting {{ detect_dhcp.instance.guest.ipAddress }} IP for connection from DHCP...
-      ansible.builtin.set_fact:
-        ansible_host: "{{ detect_dhcp.instance.guest.ipAddress }}"
-
-- name: Setting address for connection...
-  when: not connection_mode_dhcp
-  block:
-    # custom_connection_ip is for rare edge cases when connection IP must be overridden manually
-    # connection_address usually comes from Providentia API
-    - name: Setting {{ custom_connection_ip | default(connection_address) }} IP for connection...
-      ansible.builtin.set_fact:
-        ansible_host: "{{ custom_connection_ip | default(connection_address) }}"
-
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
-    | upper }} over {{ connection_address }}...
+    | upper }} over {{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}...
   ansible.builtin.set_fact:
+    ansible_host: "{{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}"
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
     ansible_password: "{{ omit if connection_no_password else template_password if fresh_deploy else ansible_deployer_password }}"

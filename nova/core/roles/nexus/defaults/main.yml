@@ -9,7 +9,7 @@ nexus_configure_ldap: false # Set to true to also configure LDAP after installat
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
 nexus_active_encryption_key_id: Primary Encryption Key # Name of the active encryption key that comes with this role
-nexus_version: 3.77.1 # Nexus version to install
+nexus_version: 3.77.2 # Nexus version to install
 
 # Default is the built-in Nexus admin user. If set to a different value than admin, the role will create the user.
 nexus_admin_username: admin
@@ -138,8 +138,10 @@ nexus_default_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://http.kali.org/
-        contentMaxAge: 15
-        metadataMaxAge: 15
+        # 0 Means always check for updates
+        # Otherwise will often experience Mirror sync in progress error
+        contentMaxAge: 0
+        metadataMaxAge: 0
       negativeCache:
         enabled: true
         timeToLive: 1440

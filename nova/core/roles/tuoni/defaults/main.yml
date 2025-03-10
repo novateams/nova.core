@@ -20,6 +20,7 @@ tuoni_users: # The list of users that will be created in Tuoni pass a custom lis
       - MANAGE_LISTENERS
       - MANAGE_PAYLOADS
       - MANAGE_USERS
+      - MANAGE_DISCOVERY
       - MODIFY_FILES
       - SEND_COMMANDS
       - VIEW_RESOURCES # this default permission, cannot be removed

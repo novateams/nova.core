@@ -41,6 +41,7 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
+      retries: 3
       loop:
         - /etc/udev/rules.d/70-persistent-net.rules
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
@@ -63,6 +64,7 @@
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       register: file_upload_prep
+      retries: 3
       loop_control:
         index_var: file_index
       loop:
@@ -79,6 +81,7 @@
         status_code: 200
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
+      retries: 3
       loop_control:
         index_var: file_upload_index
       loop:

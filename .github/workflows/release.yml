@@ -1,5 +1,7 @@
 ---
 name: Creating new tag & release
+permissions:
+  contents: write
 
 on:
   push:
