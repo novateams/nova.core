@@ -56,6 +56,25 @@
         force_basic_auth: true
         status_code: 204
 
+    - name: Accepting EULA...
+      ansible.builtin.uri:
+        url: https://{{ nexus_fqdn }}/service/rest/v1/system/eula
+        user: "{{ nexus_admin_username }}"
+        password: "{{ nexus_admin_password }}"
+        method: POST
+        headers:
+          accept: application/json
+          Content-Type: application/json
+        body:
+          accepted: true
+          disclaimer:
+            Use of Sonatype Nexus Repository - Community Edition is governed by the End User License Agreement at
+            https://links.sonatype.com/products/nxrm/ce-eula. By returning the value from ‘accepted:false’ to ‘accepted:true’,
+            you acknowledge that you have read and agree to the End User License Agreement at https://links.sonatype.com/products/nxrm/ce-eula.
+        body_format: json
+        force_basic_auth: true
+        status_code: 204
+
     - name: Creating initial config success file... # Using this because until https://github.com/sonatype/nexus-public/issues/458 is sorted out
       ansible.builtin.file:
         path: "{{ nexus_container_config_folder }}/initial_config_success"
@@ -68,24 +87,6 @@
     regexp: "^jetty.http.timeout="
     line: jetty.http.timeout=600000
   notify: nexus_container_restart
-
-- name: Accepting EULA...
-  ansible.builtin.uri:
-    url: https://{{ nexus_fqdn }}/service/rest/v1/system/eula
-    user: "{{ nexus_admin_username }}"
-    password: "{{ nexus_admin_password }}"
-    method: POST
-    headers:
-      accept: application/json
-      Content-Type: application/json
-    body:
-      accepted: true
-      disclaimer: Use of Sonatype Nexus Repository - Community Edition is governed by the End User License Agreement at
-        https://links.sonatype.com/products/nxrm/ce-eula. By returning the value from ‘accepted:false’ to ‘accepted:true’,
-        you acknowledge that you have read and agree to the End User License Agreement at https://links.sonatype.com/products/nxrm/ce-eula.
-    body_format: json
-    force_basic_auth: true
-    status_code: 204
 
 - name: Setting anonymous access to - {{ 'ENABLED' if nexus_allow_anonymous_access else 'DISABLED' }}...
   ansible.builtin.uri:
