@@ -88,6 +88,7 @@ expo_kafka_enabled: false
 expo_kafka_external: false
 expo_kafka_username: expo
 expo_kafka_password: ""
+expo_kafka_ksql_enabled: false
 expo_kafka_ksql_username: ksql
 expo_kafka_ksql_password: ""
 
