@@ -32,6 +32,7 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
+      retries: 3
       register: file_upload_prep
 
     - name: Removing existing netplan configuration file(s)...
@@ -49,6 +50,7 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
+      retries: 3
       register: network_config_command
 
     - name: Including command run check task...
@@ -64,6 +66,7 @@
         status_code: 200
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
+      retries: 3
 
     - name: Configuring network...
       ansible.builtin.uri:
@@ -81,6 +84,7 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
+      retries: 3
       register: network_config_command
 
     - name: Including command run check task...
