@@ -10,48 +10,8 @@
     path: "{{ post_scripts_folder_on_target }}"
     state: absent
 
-- name: Including Windows Update disable block...
-  when: disable_windows_update
-  block:
-    - name: Disabling Windows auto updates...
-      ansible.windows.win_regedit:
-        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU
-        name: NoAutoUpdate
-        data: 1
-        type: dword
-
-    - name: Disabling prefetch...
-      ansible.windows.win_service:
-        name: SysMain
-        start_mode: disabled
-        state: stopped
-
-    - name: Disabling Windows Update service...
-      ansible.windows.win_service:
-        name: wuauserv
-        start_mode: disabled
-        state: stopped
-      register: disable_windows_update_service
-      until: not disable_windows_update_service.failed
-      retries: 5
-      delay: 3
-
-    # Greater than Windows 8.1 & Server 2012 R2
-    - name: Disabling Update Orchestrator Service...
-      ansible.windows.win_service:
-        name: UsoSvc
-        start_mode: disabled
-        state: stopped
-      when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>')
-
-    # Removing Windows Update cache using rd because Powershell (win_file module) can't do it in some cases although it's possible manually
-    # The issue is most likely related to long paths
-    - name: Removing C:\Windows\SoftwareDistribution...
-      ansible.windows.win_shell: if ((Test-Path "C:\Windows\SoftwareDistribution") -eq $true) {cmd /c rd C:\Windows\SoftwareDistribution /S /Q}
-      register: remove_win_update_cache
-      until: not remove_win_update_cache.failed
-      retries: 5
-      delay: 3
+- name: Including Windows Update tasks...
+  ansible.builtin.include_tasks: windows_update.yml
 
 # Sometimes some security/monitoring software cause really long reboot times
 # By stopping the services we can speed up the process
