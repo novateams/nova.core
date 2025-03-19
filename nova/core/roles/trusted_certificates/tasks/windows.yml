@@ -1,4 +1,9 @@
 ---
+- name: Creating {{ post_scripts_folder_on_target }} folder...
+  ansible.windows.win_file:
+    path: "{{ post_scripts_folder_on_target }}"
+    state: directory
+
 - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
   ansible.windows.win_copy:
     src: "{{ item.src }}"

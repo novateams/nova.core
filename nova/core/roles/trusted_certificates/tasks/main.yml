@@ -1,19 +1,22 @@
 ---
-- name: Creating {{ post_scripts_folder_on_target }} folder...
-  ansible.windows.win_file:
-    path: "{{ post_scripts_folder_on_target }}"
-    state: directory
-  when: "'os_windows' in group_names"
+- name: Including non-network OS update tasks...
+  when: ansible_network_os is not defined
+  block:
+    - name: Including Windows trusted certificates tasks...
+      ansible.builtin.include_tasks: windows.yml
+      when: ansible_system == "Win32NT"
 
-# Installing trusted certificates from file upload or uri
-- name: Including Windows trusted certificates tasks...
-  ansible.builtin.include_tasks: windows.yml
-  when: "'os_windows' in group_names"
+    - name: Including {{ ansible_system }} trusted certificates tasks...
+      ansible.builtin.include_tasks: unix.yml
+      when: ansible_system in ['Linux', 'FreeBSD']
 
-- name: Including Linux trusted certificates tasks...
-  ansible.builtin.include_tasks: linux.yml
-  when: "'os_linux' in group_names"
+- name: Including network OS update tasks...
+  when: ansible_network_os is defined
+  block:
+    - name: Including VyOS trusted certificates tasks...
+      ansible.builtin.include_tasks: vyos.yml
+      when: ansible_network_os == "vyos.vyos.vyos"
 
-- name: Including VyOS trusted certificates tasks...
-  ansible.builtin.include_tasks: vyos.yml
-  when: "'os_vyos' in group_names"
+    - name: Including OPNsense/PfSense trusted certificates tasks...
+      ansible.builtin.include_tasks: sense.yml
+      when: ansible_network_os in ['opnsense', 'pfsense']

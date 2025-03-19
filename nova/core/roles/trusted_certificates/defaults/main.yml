@@ -3,3 +3,9 @@ trusted_certificates_list: [] # List of trusted certificates with name and src t
 trusted_certificates_to_jks: false # Set to true if you want to install trusted certificates to JKS
 trusted_certificates_jks_truststore_name: "{{ fqdn }}" # Name of the JKS truststore file that will be created on Linux hosts
 trusted_certificates_validate_certs: true # Set to false if you want to skip certificate validation when downloading trusted certificates from HTTPS sources
+
+unix_os_family_trusted_certificates_paths:
+  Debian: /usr/local/share/ca-certificates
+  RedHat: /etc/pki/ca-trust/source/anchors
+  Archlinux: /etc/ca-certificates/trust-source/anchors
+  FreeBSD: /usr/local/share/certs
