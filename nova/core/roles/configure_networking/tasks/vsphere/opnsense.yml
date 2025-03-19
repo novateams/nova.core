@@ -89,6 +89,14 @@
           - dnsserver: "{{ item }}"
       loop: "{{ dns_server_combined }}"
 
+    - name: Enabling {{ inventory_hostname }} configured DNS servers...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system
+        pretty_print: true
+        add_children:
+          - dnslocalhost: remote
+
     - name: Adding a wan management rule for {{ inventory_hostname }}...
       community.general.xml:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
