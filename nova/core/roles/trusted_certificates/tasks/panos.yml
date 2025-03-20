@@ -1,0 +1,67 @@
+---
+- name: Configuring PanOS...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Saving current panos_connection_params...
+      ansible.builtin.set_fact:
+        panos_connection_params_backup: "{{ panos_connection_params }}"
+      when: ansible_host is ansible.utils.ipv6
+
+    # paloaltonetworks.panos.panos_import module is broken when ansible_host is an IPv6 address
+    # Adding [] around the address fixes the issue https://github.com/PaloAltoNetworks/pan-os-ansible/issues/607
+    - name: Adding [] around {{ ansible_host }}...
+      ansible.builtin.set_fact:
+        panos_connection_params:
+          ip_address: "[{{ ansible_host }}]"
+          username: "{{ ansible_deployer_username }}"
+          password: "{{ ansible_deployer_password }}"
+      when: ansible_host is ansible.utils.ipv6
+
+    - name: Importing following trusted certificates to PanOS...
+      paloaltonetworks.panos.panos_import:
+        provider: "{{ panos_connection_params }}"
+        category: certificate
+        certificate_name: "{{ item.name }}"
+        format: pem
+        filename: "{{ item.src }}"
+      loop: "{{ trusted_certificates_list }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: not item.src.startswith('http')
+
+    - name: Downloading trusted certificates(s) to localhost...
+      ansible.builtin.get_url:
+        url: "{{ item.src }}"
+        dest: "/tmp/{{ item.name }}.crt"
+        mode: "0644"
+        timeout: 60
+        validate_certs: "{{ trusted_certificates_validate_certs }}"
+      delegate_to: localhost
+      become: false
+      loop: "{{ trusted_certificates_list }}"
+      when: item.src.startswith('http')
+      register: download_trusted_certificates
+
+    - name: Importing following trusted certificates to PanOS...
+      paloaltonetworks.panos.panos_import:
+        provider: "{{ panos_connection_params }}"
+        category: certificate
+        certificate_name: "{{ item.item.name }}"
+        format: pem
+        filename: "{{ item.invocation.module_args.dest }}"
+      loop: "{{ download_trusted_certificates.results }}"
+      loop_control:
+        label: "{{ item.invocation.module_args.dest | default('') }}"
+      when: item.invocation is defined
+
+    - name: Restoring panos_connection_params...
+      ansible.builtin.set_fact:
+        panos_connection_params: "{{ panos_connection_params_backup }}"
+      when: ansible_host is ansible.utils.ipv6
+
+    - name: Committing PanOS changes...
+      paloaltonetworks.panos.panos_commit_firewall:
+        provider: "{{ panos_connection_params }}"
+        force: true
+      retries: 3

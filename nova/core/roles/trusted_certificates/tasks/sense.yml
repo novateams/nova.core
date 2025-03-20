@@ -1,5 +1,5 @@
 ---
-- name: Creating {{ unix_os_family_trusted_certificates_paths[ansible_os_family] }} folder...
+- name: Creating folder - {{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}...
   ansible.builtin.file:
     path: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}"
     state: directory
@@ -26,4 +26,3 @@
 - name: Updating CA certificates...
   ansible.builtin.command: certctl rehash
   changed_when: true
-  when: trusted_certificates_list != []
