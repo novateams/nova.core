@@ -1,5 +1,5 @@
 ---
-- name: Creating {{ post_scripts_folder_on_target }} folder...
+- name: Creating folder {{ post_scripts_folder_on_target }}...
   ansible.windows.win_file:
     path: "{{ post_scripts_folder_on_target }}"
     state: directory
@@ -31,7 +31,7 @@
     label: "{{ item.name }}"
   when: item.src.startswith('http')
 
-- name: Importing trusted certificates(s) to {{ inventory_hostname }} trusted root store...
+- name: Importing trusted certificates(s) to root store for {{ inventory_hostname }}...
   ansible.windows.win_certificate_store:
     path: "{{ post_scripts_folder_on_target }}/{{ item.name }}.cer"
     key_storage: machine

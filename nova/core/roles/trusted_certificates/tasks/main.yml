@@ -1,17 +1,21 @@
 ---
 - name: Including non-network OS update tasks...
-  when: ansible_network_os is not defined
+  when:
+    - ansible_network_os is not defined
+    - trusted_certificates_list != []
   block:
     - name: Including Windows trusted certificates tasks...
       ansible.builtin.include_tasks: windows.yml
       when: ansible_system == "Win32NT"
 
-    - name: Including {{ ansible_system }} trusted certificates tasks...
+    - name: Including trusted certificates tasks for {{ ansible_system }}...
       ansible.builtin.include_tasks: unix.yml
       when: ansible_system in ['Linux', 'FreeBSD']
 
 - name: Including network OS update tasks...
-  when: ansible_network_os is defined
+  when:
+    - ansible_network_os is defined
+    - trusted_certificates_list != []
   block:
     - name: Including VyOS trusted certificates tasks...
       ansible.builtin.include_tasks: vyos.yml
@@ -20,3 +24,7 @@
     - name: Including OPNsense/PfSense trusted certificates tasks...
       ansible.builtin.include_tasks: sense.yml
       when: ansible_network_os in ['opnsense', 'pfsense']
+
+    - name: Including PanOS trusted certificates tasks...
+      ansible.builtin.include_tasks: panos.yml
+      when: ansible_network_os == 'panos'
