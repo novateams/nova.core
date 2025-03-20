@@ -19,7 +19,7 @@
           - vim # Useful for editing files over SSH
           - wget # Useful for downloading files
         state: present
-        update_cache: "{{ true if ansible_os_family == 'Debian' else omit }}"
+        update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
 
     # These packages are only available on Linux systems
     - name: Installing universal Linux packages...
@@ -32,7 +32,7 @@
           - net-tools # Useful for network troubleshooting
           - traceroute # Useful for network troubleshooting
         state: present
-        update_cache: "{{ true if ansible_os_family == 'Debian' else omit }}"
+        update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
       when: ansible_system == "Linux"
 
     - name: Include Ubuntu specific configuration...
