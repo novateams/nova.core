@@ -1,2 +1,3 @@
-.githooks
-.vscode
+/.githooks
+/.vscode
+/.ansible
