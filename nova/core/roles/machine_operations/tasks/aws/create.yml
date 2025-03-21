@@ -15,16 +15,17 @@
     - name: Including fresh deploy tasks...
       when: fresh_deploy
       block:
+        # Removal is required if for some reason the temp key already exists
+        - name: Removing existing ssh temp key for {{ custom_vm_name | default(vm_name) }}...
+          amazon.aws.ec2_key:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            state: absent
+
         - name: Creating a temp ssh key for {{ custom_vm_name | default(vm_name) }}...
           amazon.aws.ec2_key:
             name: "{{ custom_vm_name | default(vm_name) }}"
-          register: aws_temp_private_key
-
-        - name: Saving {{ hostname }} temp private key to file...
-          ansible.builtin.copy:
-            content: "{{ aws_temp_private_key.key.private_key }}"
-            dest: "{{ temp_ssh_key_path }}"
-            mode: "600"
+            key_type: ed25519
+            file_name: "{{ temp_ssh_key_path }}"
 
     - name: Configuring AWS EC2 instance for {{ inventory_hostname }}...
       when:
@@ -67,16 +68,12 @@
           retries: 10
           delay: 3
 
-        - name: Removing existing ssh temp key for {{ custom_vm_name | default(vm_name) }}... # If for some reason it was present from previous deploy
-          amazon.aws.ec2_key:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            state: absent
-
-        - name: Removing created ssh temp key for {{ custom_vm_name | default(vm_name) }}...
+        # If for some reason it was present from previous deploy
+        - name: Removing existing ssh temp key for {{ custom_vm_name | default(vm_name) }}...
           amazon.aws.ec2_key:
             name: "{{ custom_vm_name | default(vm_name) }}"
             state: absent
 
 - name: Setting connection_address...
   ansible.builtin.set_fact:
-    connection_address: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[0].public_ip_address) }}"
+    connection_address: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
