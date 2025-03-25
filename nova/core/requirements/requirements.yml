@@ -41,17 +41,17 @@ collections:
   - name: community.docker
     version: 4.5.2
   - name: community.general
-    version: 10.5.0
+    version: 10.6.0
   - name: community.hashi_vault
     version: 6.2.0
   - name: community.library_inventory_filtering_v1
-    version: 1.1.0
+    version: 1.1.1
   - name: community.mysql
     version: 3.13.0
   - name: community.postgresql
     version: 3.14.0
   - name: community.routeros
-    version: 3.5.0
+    version: 3.6.0
   - name: community.vmware
     version: 4.4.0
   - name: community.windows
@@ -61,7 +61,7 @@ collections:
   - name: kubernetes.core
     version: 5.1.0
   - name: linode.cloud
-    version: 0.37.0
+    version: 0.37.1
   - name: microsoft.ad
     version: 1.8.1
   - name: microsoft.sql
