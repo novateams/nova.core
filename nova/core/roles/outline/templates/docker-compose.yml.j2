@@ -27,6 +27,13 @@ services:
       - POSTGRES_USER={{ postgres_user }}
       - POSTGRES_PASSWORD={{ postgres_password }}
       - POSTGRES_DB={{ postgres_db }}
+    command: >
+      postgres
+      -c max_connections=100
+      -c shared_buffers=2GB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=256MB
+      -c work_mem=8MB
 
   {{ redis_container_name }}:
     container_name: "{{ redis_container_name }}"
@@ -53,6 +60,8 @@ services:
       - "{{ outline_local_file_storage_folder }}:/var/lib/outline/data"
 {% endif %}
     environment:
+      - DATABASE_CONNECTION_POOL_MIN=5
+      - DATABASE_CONNECTION_POOL_MAX=25
       - NODE_ENV={{ node_env }}
       - NODE_EXTRA_CA_CERTS={{ node_extra_ca_certs }}
       - NODE_TLS_REJECT_UNAUTHORIZED={{ node_tls_reject_unauthorized }}
