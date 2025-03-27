@@ -105,68 +105,18 @@ temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostna
 # Set to false when pre-created custom security group is used
 machine_operations_create_aws_security_group: true
 
-# AWS security group rules
+# AWS security group rules, default is allow all
+# Use the following link to create custom rules:
+# https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_security_group_module.html
 machine_operations_aws_security_group_rules:
-  - proto: TCP
-    to_port: 22
-    from_port: 22
+  - proto: all
     cidr_ip:
       - "0.0.0.0/0"
-    rule_desc: Internet IPv4 SSH
-  - proto: TCP
-    to_port: 80
-    from_port: 80
-    cidr_ip:
-      - "0.0.0.0/0"
-    rule_desc: Internet IPv4 TCP HTTP
-  - proto: UDP
-    to_port: 80
-    from_port: 80
-    cidr_ip:
-      - "0.0.0.0/0"
-    rule_desc: Internet IPv4 UDP HTTP
-  - proto: TCP
-    to_port: 443
-    from_port: 443
-    cidr_ip:
-      - "0.0.0.0/0"
-    rule_desc: Internet IPv4 TCP HTTPS
-  - proto: UDP
-    to_port: 443
-    from_port: 443
-    cidr_ip:
-      - "0.0.0.0/0"
-    rule_desc: Internet IPv4 UDP HTTPS
-  - proto: TCP
-    to_port: 22
-    from_port: 22
+    rule_desc: Allow all IPv4 traffic
+  - proto: all
     cidr_ipv6:
       - ::/0
-    rule_desc: Internet IPv6 SSH
-  - proto: TCP
-    to_port: 80
-    from_port: 80
-    cidr_ipv6:
-      - ::/0
-    rule_desc: Internet IPv6 TCP HTTP
-  - proto: UDP
-    to_port: 80
-    from_port: 80
-    cidr_ipv6:
-      - ::/0
-    rule_desc: Internet IPv6 UDP HTTP
-  - proto: TCP
-    to_port: 443
-    from_port: 443
-    cidr_ipv6:
-      - ::/0
-    rule_desc: Internet IPv6 HTTPS
-  - proto: UDP
-    to_port: 443
-    from_port: 443
-    cidr_ipv6:
-      - ::/0
-    rule_desc: Internet IPv6 UDP HTTPS
+    rule_desc: Allow all IPv6 traffic
 
 ###################
 # Linode defaults #
