@@ -1,13 +1,17 @@
-
 DOCUMENTATION="""
     name: addresses
     short_description: Lookup a specific IP address from Providentia format interfaces list.
     description: |
         This is filter plugin for getting specific addresses from interfaces list. Interfaces list is a variable that is based on Providentia's API
-        The interfaces list can also be built manually when Providentia is not used. Example can be found here: https://github.com/novateams/nova.core/tree/main/nova/core/roles/configure_networking
-        For most cases the filter will print out a list with one item so | first can be used to get the value.
+        The interfaces list can also be built manually when Providentia is not used. Example can be found here: https://github.com/novateams/nova.core/tree/main/nova/core/roles/configure_networking#example
+        For most cases the filter will print out a list with one item so "| first" can be used to get the value.
         For multiple egress NICs or addresses the list will have multiple items, so the result can be looped through or mapped.
     options:
+        connection_address:
+            description:
+                - Gets the address used for connection to the host.
+            required: true
+            type: str
         connection_nic_ipv4:
             description:
                 - Gets all connection NIC IPv4 addresses.
@@ -83,6 +87,7 @@ class FilterModule(object):
 
     def addresses(self, interfaces, parameter):
         filter_functions = {
+            'connection_address': self.get_connection_address(interfaces),
             'connection_nic_ipv4': self.get_addresses_by_mode(interfaces, 'connection', 'ipv4_static'),
             'connection_nic_ipv4_gw': self.get_gateways_by_mode(interfaces, 'connection', 'ipv4_static'),
             'connection_nic_ipv6': self.get_addresses_by_mode(interfaces, 'connection', 'ipv6_static'),
@@ -125,6 +130,15 @@ class FilterModule(object):
                 if self.validate_mgmt_address(address, mode) and re.match(r'^mgmt-.*', address['pool_id']):
                     address_val = address['address']
                     addresses.append(address_val if address_val else 'null')  # Append 'null' if address is an empty string
+        return addresses
+
+    def get_connection_address(self, interfaces):
+        addresses = []
+        for interface in interfaces:
+            for address in interface.get('addresses', []):
+                if address.get('connection') is True:
+                    address_val = address.get('address')
+                    addresses.append(address_val if address_val else 'null')
         return addresses
 
     def validate_address(self, address, mode):

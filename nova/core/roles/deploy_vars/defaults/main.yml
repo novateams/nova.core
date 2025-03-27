@@ -26,6 +26,8 @@ ansible_become_password: "{{ ansible_password | default(omit) }}" # Defaulting t
 # Networking defaults when using Providentia or interfaces list that is based on Providentia API output
 # To make sure these values can be used as hostvar lookups they also need to be defined in projects group_vars all.yml file
 
+connection_address: "{{ interfaces | nova.core.addresses('connection_address') | first | ansible.utils.ipaddr('address') }}"
+
 # IPv4
 connection_nic_ipv4: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') }}"
 connection_nic_ipv4_with_prefix: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first }}"
