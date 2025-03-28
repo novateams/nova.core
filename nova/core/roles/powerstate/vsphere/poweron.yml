@@ -20,5 +20,5 @@
       until:
         - poweron_status.value.state is defined
         - poweron_status.value.state == "RUNNING"
-      retries: 18
-      delay: 10
+      retries: "{{ powerstate_poweron_retries }}"
+      delay: "{{ powerstate_poweron_delay }}"

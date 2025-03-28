@@ -11,3 +11,9 @@ shutdown_shutting_retries: 5
 shutdown_shutting_delay: 2
 shutdown_waiting_retries: 18
 shutdown_waiting_delay: 10
+
+powerstate_poweron_retries: 18
+powerstate_poweron_delay: 10
+
+powerstate_vmtools_retries: 18
+powerstate_vmtools_delay: 10
