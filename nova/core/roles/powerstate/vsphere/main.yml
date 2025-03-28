@@ -23,8 +23,8 @@
       until:
         - vm_tools.value.run_state is defined
         - vm_tools.value.run_state == "RUNNING"
-      retries: 18
-      delay: 10
+      retries: "{{ powerstate_vmtools_retries }}"
+      delay: "{{ powerstate_vmtools_delay }}"
       when:
         - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
         - vcenter_vm_info.value[0].power_state != "SUSPENDED"

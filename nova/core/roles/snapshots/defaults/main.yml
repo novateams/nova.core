@@ -3,3 +3,7 @@ start_vm_after_snapshot: true
 start_vm_after_revert: true
 remove_all_snapshots: false
 live_snap: false # Creates a snapshot while the VM is running
+
+# How many times to retry to wait for VMTools to be running
+snapshots_vmtools_retries: 10
+snapshots_vmtools_delay: 5
