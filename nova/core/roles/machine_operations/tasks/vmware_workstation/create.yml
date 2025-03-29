@@ -182,7 +182,8 @@
 
     - name: Starting {{ inventory_hostname }} and waiting for IP address... # noqa: command-instead-of-shell
       ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
-      changed_when: true
+      register: vm_start
+      changed_when: vm_start.stdout != 'VMX is already running.'
 
     - name: Getting IP address for {{ inventory_hostname }}...
       ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait

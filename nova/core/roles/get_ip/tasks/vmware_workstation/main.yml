@@ -10,6 +10,7 @@
 
 - name: Getting IP address for {{ inventory_hostname }}...
   ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait
+  become: false
   changed_when: false
   register: vmip
   retries: 60
