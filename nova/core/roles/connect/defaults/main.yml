@@ -3,3 +3,6 @@ connect_connection_method: ssh
 
 # Set to false if you don't want to forward your SSH agent. It can be unsafe for multi-user or untrusted systems.
 connect_connection_method_ssh_forward_agent: true
+
+# Default user to connect to the remote host
+connect_user: "{{ ansible_user }}"

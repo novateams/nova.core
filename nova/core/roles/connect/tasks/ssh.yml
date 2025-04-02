@@ -2,7 +2,7 @@
 # Can be picked up manually with ssh $(cat /tmp/ansible_connect)
 - name: Saving connection info to /tmp/ansible_connect
   ansible.builtin.copy:
-    content: -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ ansible_user }}@{{ ansible_host }} {{ '-A'
+    content: -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ connect_user }}@{{ ansible_host }} {{ '-A'
       if connect_connection_method_ssh_forward_agent else '' }}
     dest: /tmp/ansible_connect
     mode: "0600"
