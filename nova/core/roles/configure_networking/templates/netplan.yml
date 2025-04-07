@@ -65,7 +65,7 @@ network:
           via: "{{ route.via }}"
       {% endfor %}
       {% endif %}
-      {% if (interface.connection) and (dns_server_combined != []) %}
+      {% if ((interface.connection) or (interface.egress)) and (dns_server_combined != []) %}
       nameservers:
         addresses:
           {% if (dns_servers != []) and (interface.addresses | map(attribute='mode') | regex_search(".*ipv4.*")) %}
