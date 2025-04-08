@@ -4,7 +4,7 @@
     path: "{{ post_scripts_folder_on_target }}"
     state: directory
   when:
-    - ansible_network_os is not defined
+    - ansible_system is defined
     - ansible_system == "Win32NT"
 
 - name: Including {{ single_role }} role...
