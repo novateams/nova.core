@@ -1,12 +1,29 @@
 ---
-- name: Including start VM tasks...
-  ansible.builtin.include_tasks: poweron.yml
-  when: poweron
+- name: Delegating powerstate to localhost...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Powering on {{ custom_vm_name | default(vm_name) }}...
+      linode.cloud.instance:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ custom_vm_name | default(vm_name) }}"
+        booted: true
+        state: present
+      when: poweron
 
-- name: Including restart VM tasks...
-  ansible.builtin.include_tasks: restart.yml
-  when: restart or reset
+    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
+      linode.cloud.instance:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ custom_vm_name | default(vm_name) }}"
+        booted: true
+        rebooted: true
+        state: present
+      when: restart or reset
 
-- name: Including shutdown VM tasks...
-  ansible.builtin.include_tasks: shutdown.yml
-  when: shutdown or poweroff
+    - name: Shutting down {{ custom_vm_name | default(vm_name) }}...
+      linode.cloud.instance:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ custom_vm_name | default(vm_name) }}"
+        booted: false
+        state: present
+      when: shutdown or poweroff
