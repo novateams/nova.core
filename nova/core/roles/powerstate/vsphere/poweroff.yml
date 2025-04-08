@@ -4,18 +4,11 @@
   become: false
   block:
     - name: Powering off {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware_rest.vcenter_vm_power:
-        state: stop
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: vcenter_vm_stop
-      until: not vcenter_vm_stop.failed
-      retries: 5
-      delay: 2
-
-    - name: Waiting for {{ custom_vm_name | default(vm_name) }} poweroff...
-      vmware.vmware_rest.vcenter_vm_guest_power_info:
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: poweroff_status
-      until: poweroff_status.value.state == "NOT_RUNNING"
-      retries: 18
-      delay: 10
+      vmware.vmware.vm_powerstate:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        hostname: "{{ vmware_defaults.hostname }}"
+        username: "{{ vmware_defaults.username }}"
+        password: "{{ vmware_defaults.password }}"
+        datacenter: "{{ datacenter }}"
+        state: powered-off
+        force: true

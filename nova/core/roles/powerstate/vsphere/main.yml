@@ -23,12 +23,16 @@
       until:
         - vm_tools.value.run_state is defined
         - vm_tools.value.run_state == "RUNNING"
-      retries: "{{ powerstate_vmtools_retries }}"
-      delay: "{{ powerstate_vmtools_delay }}"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) / 5 }}"
+      delay: 5
       when:
         - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
         - vcenter_vm_info.value[0].power_state != "SUSPENDED"
         - not reset and not poweroff
+
+    - name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
+      ansible.builtin.include_tasks: poweroff.yml
+      when: poweroff
 
     - name: Including {{ custom_vm_name | default(vm_name) }} poweron tasks...
       ansible.builtin.include_tasks: poweron.yml
@@ -44,18 +48,8 @@
 
     - name: Including {{ custom_vm_name | default(vm_name) }} suspend tasks...
       ansible.builtin.include_tasks: suspend.yml
-      when:
-        - suspend
-        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+      when: suspend
 
     - name: Including {{ custom_vm_name | default(vm_name) }} shutdown tasks...
       ansible.builtin.include_tasks: shutdown.yml
-      when:
-        - shutdown
-        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
-
-    - name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
-      ansible.builtin.include_tasks: poweroff.yml
-      when:
-        - poweroff
-        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+      when: shutdown
