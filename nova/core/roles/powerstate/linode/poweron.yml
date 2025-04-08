@@ -1,8 +1,0 @@
----
-- name: Powering on {{ custom_vm_name | default(vm_name) }}...
-  linode.cloud.instance:
-    api_token: "{{ linode_api_token }}"
-    label: "{{ custom_vm_name | default(vm_name) }}"
-    booted: true
-    state: present
-  delegate_to: localhost

@@ -1,4 +1,0 @@
----
-- name: Restarting {{ inventory_hostname }}...
-  ansible.builtin.command: vmcli power reset --opType trySoft {{ vmware_workstation.local_vmx_path }}
-  changed_when: true

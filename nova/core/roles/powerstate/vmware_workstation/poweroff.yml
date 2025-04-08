@@ -1,4 +1,0 @@
----
-- name: Stopping {{ inventory_hostname }}...
-  ansible.builtin.command: vmcli power stop --opType hard {{ vmware_workstation.local_vmx_path }}
-  changed_when: true

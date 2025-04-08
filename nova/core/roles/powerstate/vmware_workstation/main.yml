@@ -8,22 +8,27 @@
     ansible_user: "{{ vmware_workstation.user }}"
     ansible_password: "{{ vmware_workstation.password | default(omit) }}"
 
-- name: Starting VM...
-  ansible.builtin.include_tasks: poweron.yml
+- name: Stopping {{ inventory_hostname }}...
+  ansible.builtin.command: vmcli power stop --opType hard {{ vmware_workstation.local_vmx_path }}
+  changed_when: true
+  when: poweroff
+
+- name: Starting {{ inventory_hostname }}...
+  ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
+  changed_when: true
   when: poweron
 
-- name: Restarting VM...
-  ansible.builtin.include_tasks: restart.yml
-  when: restart
-
-- name: Resetting VM...
-  ansible.builtin.include_tasks: reset.yml
+- name: Resetting {{ inventory_hostname }}...
+  ansible.builtin.command: vmcli power reset --opType hard {{ vmware_workstation.local_vmx_path }}
+  changed_when: true
   when: reset
 
-- name: Shutting down VM...
-  ansible.builtin.include_tasks: shutdown.yml
-  when: shutdown
+- name: Restarting {{ inventory_hostname }}...
+  ansible.builtin.command: vmcli power reset --opType trySoft {{ vmware_workstation.local_vmx_path }}
+  changed_when: true
+  when: restart
 
-- name: Powering off VM...
-  ansible.builtin.include_tasks: poweroff.yml
-  when: poweroff
+- name: Shutting down {{ inventory_hostname }}...
+  ansible.builtin.command: vmcli power stop --opType trySoft {{ vmware_workstation.local_vmx_path }}
+  changed_when: true
+  when: shutdown
