@@ -3,14 +3,13 @@
   become: false
   block:
     - name: Suspending {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware_rest.vcenter_vm_guest_power:
-        state: standby
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: vcenter_vm_suspend
-      until: not vcenter_vm_suspend.failed
-      retries: "{{ suspend_shutting_retries }}"
-      delay: "{{ suspend_shutting_delay }}"
-      when: vcenter_vm_info.value[0].power_state != "POWERED_OFF"
+      vmware.vmware.vm_powerstate:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        hostname: "{{ vmware_defaults.hostname }}"
+        username: "{{ vmware_defaults.username }}"
+        password: "{{ vmware_defaults.password }}"
+        datacenter: "{{ datacenter }}"
+        state: suspended
 
     - name: Waiting for {{ custom_vm_name | default(vm_name) }} to suspend...
       vmware.vmware_rest.vcenter_vm_guest_power_info:
@@ -19,5 +18,5 @@
       until:
         - suspend_status.value.state is defined
         - suspend_status.value.state == "NOT_RUNNING"
-      retries: "{{ suspend_waiting_retries }}"
-      delay: "{{ suspend_waiting_delay }}"
+      retries: "{{ (powerstate_shutdown_timeout if powerstate_poweron_timeout >= 5 else 5) / 5 }}"
+      delay: 5

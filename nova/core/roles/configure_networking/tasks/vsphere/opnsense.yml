@@ -161,7 +161,7 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
         state: absent
 
-    # This is required fo Vmware console correct interfaces and for Opnsense web interface to work
+    # This is required fo Vmware console correct interfaces and for OPNSense web interface to work
     - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
       ansible.builtin.include_role:
         name: nova.core.powerstate
