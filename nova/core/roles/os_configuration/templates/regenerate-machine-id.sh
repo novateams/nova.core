@@ -7,7 +7,7 @@ if [[ -z $(grep -r {{ hostname }} /etc/ssh/) ]]; then
 
     echo "Regenerating SSH host keys and machine-id"
 
-    # Reming existing SSH host keys
+    # Removing existing SSH host keys
     rm /etc/ssh/ssh_host_* -v
 
     # Regenerate SSH host keys and machine-id

@@ -41,6 +41,7 @@ os_configuration_os_family_service_name:
 kms_server: {}
 extra_activation_command: {} # Extra PowerShell command to be ran before Windows/Office activation, usually not needed
 post_scripts_folder_on_target: c:\tmp
+os_configuration_regenerate_windows_host_keys: true # Set to false to skip regenerating Windows SSH host keys
 
 #########
 # Linux #
