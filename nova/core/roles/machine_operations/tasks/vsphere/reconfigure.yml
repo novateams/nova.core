@@ -3,19 +3,10 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Getting {{ custom_vm_name | default(vm_name) }} VM CPU info...
-      vmware.vmware_rest.vcenter_vm_hardware_cpu_info:
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: vsphere_vm_cpu_info
-      retries: 5
-      delay: 2
-
-    - name: Getting {{ custom_vm_name | default(vm_name) }} VM Memory info...
-      vmware.vmware_rest.vcenter_vm_hardware_memory_info:
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: vsphere_vm_memory_info
-      retries: 5
-      delay: 2
+    - name: Getting {{ custom_vm_name | default(vm_name) }} VM CPU & RAM info...
+      vmware.vmware.vm_resource_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vsphere_vm_info
 
     # When Providentia is used hardware_cpu and hardware_ram are always defined
     # For local inventories both need to be defined in order to reconfigure them
@@ -30,9 +21,7 @@
               vmware.vmware_rest.vcenter_vm_hardware_cpu:
                 vm: "{{ vcenter_vm_info.value[0].vm }}"
                 count: "{{ hardware_cpu }}"
-              when:
-                - hardware_cpu != none
-                - vsphere_vm_cpu_info.value.count != hardware_cpu
+              when: vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
               retries: 2
               delay: 2
 
@@ -40,14 +29,12 @@
               vmware.vmware_rest.vcenter_vm_hardware_memory:
                 vm: "{{ vcenter_vm_info.value[0].vm }}"
                 size_MiB: "{{ hardware_ram * 1024 }}"
-              when:
-                - hardware_ram != none
-                - vsphere_vm_memory_info.value.size_MiB != (hardware_ram * 1024)
+              when: vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
               retries: 2
               delay: 2
 
           # There are too many edge cases when the CPU and RAM values reconfiguration might fail
-          # Most of them will work whtn the VM is powered off
+          # Most of them will work when the VM is powered off
           rescue:
             - name: Including nova.core.powerstate role...
               ansible.builtin.include_role:
@@ -61,9 +48,7 @@
                   vmware.vmware_rest.vcenter_vm_hardware_cpu:
                     vm: "{{ vcenter_vm_info.value[0].vm }}"
                     count: "{{ hardware_cpu }}"
-                  when:
-                    - hardware_cpu != none
-                    - vsphere_vm_cpu_info.value.count != hardware_cpu
+                  when: vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
                   retries: 2
                   delay: 2
 
@@ -71,9 +56,7 @@
                   vmware.vmware_rest.vcenter_vm_hardware_memory:
                     vm: "{{ vcenter_vm_info.value[0].vm }}"
                     size_MiB: "{{ hardware_ram * 1024 }}"
-                  when:
-                    - hardware_ram != none
-                    - vsphere_vm_memory_info.value.size_MiB != (hardware_ram * 1024)
+                  when: vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
                   retries: 2
                   delay: 2
 
