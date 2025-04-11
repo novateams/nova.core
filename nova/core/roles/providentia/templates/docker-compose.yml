@@ -27,6 +27,8 @@ services:
     configs:
       - source: features.yml
         target: /srv/app/config/features.yml
+        uid: "1000"
+        gid: "1000"
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
     environment:
