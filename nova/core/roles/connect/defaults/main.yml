@@ -6,3 +6,6 @@ connect_connection_method_ssh_forward_agent: true
 
 # Default user to connect to the remote host
 connect_user: "{{ ansible_user }}"
+
+# Use username and password for SSH authentication instead of SSH keys.
+connect_connection_method_ssh_preferred_authentication_password: false
