@@ -4,6 +4,7 @@
   block:
     - name: Gathering RouterOS facts...
       community.routeros.facts:
+      retries: 3
       when: ansible_network_os == 'community.routeros.routeros'
 
     - name: Gathering VyOS facts...
