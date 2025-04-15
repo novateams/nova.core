@@ -41,6 +41,7 @@ requests = "*"
 requests-credssp = "*"
 requests-oauthlib = "*"
 scp = "*"
+setuptools = "*"
 yq = "*"
 
 # Azure https://raw.githubusercontent.com/ansible-collections/azure/dev/requirements-azure.txt
