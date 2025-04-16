@@ -126,7 +126,7 @@
             - name: Configuring MGMT interface IPv6 gateway for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ipv6-default-gateway {{ primary_network_ipv6_gw }}
+                string_send: set deviceconfig system ipv6-default-gateway {{ connection_nic_ipv6_gw }}
 
             - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
