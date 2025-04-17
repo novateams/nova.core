@@ -1,5 +1,8 @@
 ---
-disable_windows_update: false
+# Auto Updates
+disable_windows_update: false # DEPRECATED: Use disable_auto_updates instead
+disable_auto_updates: false # Disable automatic updates on Windows, Unix
+
 reboot_on_finalize: false
 update_system: false
 finalize_post_roles: [] # List of roles to include as a final step in this role

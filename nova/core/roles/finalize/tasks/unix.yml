@@ -1,4 +1,31 @@
 ---
+- name: Disabling auto-updates...
+  ansible.builtin.lineinfile:
+    path: "{{ auto_update_disable.path }}"
+    regexp: "{{ auto_update_disable.regexp }}"
+    line: "{{ auto_update_disable.line }}"
+    create: true
+    mode: "0644"
+  loop_control:
+    loop_var: auto_update_disable
+    label: "{{ auto_update_disable.line }}"
+  loop:
+    - path: /etc/apt/apt.conf.d/20auto-upgrades
+      regexp: .*Unattended-Upgrade
+      line: APT::Periodic::Unattended-Upgrade "0";
+
+    - path: /etc/apt/apt.conf.d/20auto-upgrades
+      regexp: .*Update-Package-Lists
+      line: APT::Periodic::Update-Package-Lists "0";
+
+    - path: /etc/apt/apt.conf.d/10periodic
+      regexp: .*APT::Periodic::Update-Package-Lists
+      line: APT::Periodic::Update-Package-Lists "0";
+  when:
+    - disable_auto_updates
+    - ansible_os_family is defined
+    - ansible_os_family == 'Debian'
+
 - name: Rebooting...
   ansible.builtin.reboot:
   when: reboot_on_finalize
