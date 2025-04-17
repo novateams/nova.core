@@ -22,7 +22,7 @@ outline_oidc_client_secret:
 outline_oidc_auth_uri: https://keycloak.example.net/auth/realms/EXAMPLE/protocol/openid-connect/auth
 outline_oidc_token_uri: https://keycloak.example.net/auth/realms/EXAMPLE/protocol/openid-connect/token
 outline_oidc_userinfo_uri: https://keycloak.example.net/auth/realms/EXAMPLE/protocol/openid-connect/userinfo
-
+outline_oidc_logout_uri: https://keycloak.example.net/auth/realms/EXAMPLE/protocol/openid-connect/logout
 ## Outline landing page visual effect only
 outline_oidc_display_name: "OIDC provider"
 ```

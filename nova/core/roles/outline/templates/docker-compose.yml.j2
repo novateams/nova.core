@@ -89,6 +89,7 @@ services:
       - OIDC_AUTH_URI={{ outline_oidc_auth_uri }}
       - OIDC_TOKEN_URI={{ outline_oidc_token_uri }}
       - OIDC_USERINFO_URI={{ outline_oidc_userinfo_uri }}
+      - OIDC_LOGOUT_URI={{ outline_oidc_logout_uri | default("") }}
       - OIDC_USERNAME_CLAIM={{ outline_oidc_username_claim }}
       - OIDC_DISPLAY_NAME={{ outline_oidc_display_name }}
       - OIDC_SCOPES={{ outline_oidc_scopes | join(' ') }}
