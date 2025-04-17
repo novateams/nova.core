@@ -1,6 +1,19 @@
 ---
-- name: Disabling Windows Update...
+- name: DEPRECATED VARIABLE
   when: disable_windows_update
+  block:
+    - name: DEPRECATED VARIABLE
+      ansible.builtin.debug:
+        msg: disable_windows_update IS DEPRECATED. USE disable_auto_updates INSTEAD.
+
+    - name: Sleeping for 30 seconds to allow for the message above to be read...
+      ansible.builtin.wait_for:
+        timeout: 30
+      become: false
+      delegate_to: localhost
+
+- name: Disabling Windows Update...
+  when: disable_windows_update or disable_auto_updates
   block:
     - name: Setting following Windows Update disable registry values...
       ansible.windows.win_regedit:
@@ -63,7 +76,9 @@
       delay: 3
 
 - name: Removing Windows Update disable registry values...
-  when: not disable_windows_update
+  when:
+    - not disable_windows_update
+    - not disable_auto_updates
   block:
     - name: Checking if WindowsUpdateDisableCustomValue exists...
       ansible.windows.win_reg_stat:
