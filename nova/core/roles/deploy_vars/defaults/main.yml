@@ -112,7 +112,7 @@ vmware_workstation:
 #######
 
 aws_defaults:
-  region: "{{ aws_reqion | default('eu-north-1') }}" # Default is Stockholm
+  region: "{{ aws_region | default('eu-north-1') }}" # Default is Stockholm
   aws_access_key: "{{ aws_access_key_id | default(omit) }}"
   aws_secret_key: "{{ aws_access_key | default(omit) }}"
 
