@@ -61,6 +61,9 @@ nexus_ldap_configuration:
 
 nexus_repositories: "{{ nexus_default_repositories + nexus_extra_repositories }}" # List of repositories to create when nexus_create_repos is set to true
 nexus_extra_repositories: [] # List of extra repositories to be created in addition to the nexus_default_repositories list
+
+# The default-cleanup-policy does not actually exist in Nexus.
+# It can be manually created and will then be automatically used by the repositories
 nexus_default_repositories:
   # Chocolatey proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/nuget/proxy
@@ -83,6 +86,9 @@ nexus_default_repositories:
       nugetProxy:
         queryCacheItemMaxAge: 3600
         nugetVersion: V2
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Docker proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
@@ -108,6 +114,9 @@ nexus_default_repositories:
       dockerProxy:
         indexType: HUB
         indexUrl: https://index.docker.io/
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Rubygems proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/rubygems/proxy
@@ -127,6 +136,9 @@ nexus_default_repositories:
       httpClient:
         blocked: false
         autoBlock: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Kali apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -151,6 +163,9 @@ nexus_default_repositories:
       apt:
         distribution: main
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu noble-backports apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -173,6 +188,9 @@ nexus_default_repositories:
       apt:
         distribution: noble-backports
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu noble-security apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -195,6 +213,9 @@ nexus_default_repositories:
       apt:
         distribution: noble-security
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu noble-updates apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -217,6 +238,9 @@ nexus_default_repositories:
       apt:
         distribution: noble-updates
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu noble apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -239,6 +263,9 @@ nexus_default_repositories:
       apt:
         distribution: noble
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu jammy-backports apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -261,6 +288,9 @@ nexus_default_repositories:
       apt:
         distribution: jammy-backports
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu jammy-security apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -283,6 +313,9 @@ nexus_default_repositories:
       apt:
         distribution: jammy-security
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu jammy-updates apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -305,6 +338,9 @@ nexus_default_repositories:
       apt:
         distribution: jammy-updates
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu jammy apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -327,6 +363,9 @@ nexus_default_repositories:
       apt:
         distribution: jammy
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu focal-backports apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -349,6 +388,9 @@ nexus_default_repositories:
       apt:
         distribution: focal-backports
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu focal-security apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -371,6 +413,9 @@ nexus_default_repositories:
       apt:
         distribution: focal-security
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu focal-updates apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -393,6 +438,9 @@ nexus_default_repositories:
       apt:
         distribution: focal-updates
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu focal apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -415,6 +463,9 @@ nexus_default_repositories:
       apt:
         distribution: focal
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bullseye apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -437,6 +488,9 @@ nexus_default_repositories:
       apt:
         distribution: bullseye
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bullseye-security apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -459,6 +513,9 @@ nexus_default_repositories:
       apt:
         distribution: bullseye-security
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bullseye-updates apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -481,6 +538,9 @@ nexus_default_repositories:
       apt:
         distribution: bullseye-updates
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bookworm apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -503,6 +563,9 @@ nexus_default_repositories:
       apt:
         distribution: bookworm
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bookworm-security apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -525,6 +588,9 @@ nexus_default_repositories:
       apt:
         distribution: bookworm-security
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bookworm-updates apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -547,6 +613,9 @@ nexus_default_repositories:
       apt:
         distribution: bookworm-updates
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   ####################
   # Docker apt proxy #
@@ -573,6 +642,9 @@ nexus_default_repositories:
       apt:
         distribution: noble
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu jammy docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -595,6 +667,9 @@ nexus_default_repositories:
       apt:
         distribution: jammy
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Ubuntu focal docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -617,6 +692,9 @@ nexus_default_repositories:
       apt:
         distribution: focal
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Kali docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -639,6 +717,9 @@ nexus_default_repositories:
       apt:
         distribution: bookworm
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bookworm docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -661,6 +742,9 @@ nexus_default_repositories:
       apt:
         distribution: bookworm
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
 
   # Debian bullseye docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -683,3 +767,6 @@ nexus_default_repositories:
       apt:
         distribution: bullseye
         flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
