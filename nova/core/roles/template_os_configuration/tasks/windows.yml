@@ -219,7 +219,7 @@
     - "@FirewallAPI.dll,-32752" # Network Discovery
 
 - name: Removing any existing autologins...
-  community.windows.win_auto_logon:
+  ansible.windows.win_auto_logon:
     state: absent
 
 # SSHD Configuration
