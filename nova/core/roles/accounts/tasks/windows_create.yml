@@ -72,7 +72,7 @@
     - ansible_facts.windows_domain_role in ["Primary domain controller", "Backup domain controller"]
 
 - name: Creating a profiles for...
-  community.windows.win_user_profile:
+  ansible.windows.win_user_profile:
     username: "{{ item.username }}"
     name: "{{ item.username }}"
     state: present
