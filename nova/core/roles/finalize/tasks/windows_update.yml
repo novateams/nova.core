@@ -17,12 +17,13 @@
   block:
     - name: Setting following Windows Update disable registry values...
       ansible.windows.win_regedit:
-        path: "{{ item.path }}"
-        name: "{{ item.name }}"
-        data: "{{ item.data }}"
-        type: "{{ item.type }}"
+        path: "{{ ws_update_disable_reg_item.path }}"
+        name: "{{ ws_update_disable_reg_item.name }}"
+        data: "{{ ws_update_disable_reg_item.data }}"
+        type: "{{ ws_update_disable_reg_item.type }}"
       loop_control:
-        label: Setting {{ item.name }} to {{ item.data }}
+        label: Setting {{ ws_update_disable_reg_item.name }} to {{ ws_update_disable_reg_item.data }}
+        loop_var: ws_update_disable_reg_item
       loop:
         # Wsus config
         - name: SetDisableUXWUAccess
@@ -91,11 +92,12 @@
       block:
         - name: Removing following Windows Update disable registry values...
           ansible.windows.win_regedit:
-            path: "{{ item.path }}"
-            name: "{{ item.name }}"
+            path: "{{ ws_update_enable_reg_item.path }}"
+            name: "{{ ws_update_enable_reg_item.name }}"
             state: absent
           loop_control:
-            label: Removing {{ item.name }}...
+            label: Removing {{ ws_update_enable_reg_item.name }}...
+            loop_var: ws_update_enable_reg_item
           loop:
             # Wsus config
             - name: SetDisableUXWUAccess
