@@ -18,5 +18,5 @@
       until:
         - poweroff_status.value.state is defined
         - poweroff_status.value.state == "NOT_RUNNING"
-      retries: 60
+      retries: 90
       delay: 10

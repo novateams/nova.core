@@ -26,5 +26,5 @@
       register: proxmox_vm_current_status
       until:
         - proxmox_vm_current_status.json.data.status == 'stopped'
-      retries: 60
+      retries: 90
       delay: 10
