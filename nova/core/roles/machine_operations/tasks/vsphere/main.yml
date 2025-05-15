@@ -1,4 +1,15 @@
 ---
+- name: Missing required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - vcenter_hostname
+      - vcenter_username or project_deployer_username or deployer_username
+      - vcenter_password or project_deployer_password or deployer_password
+  when: vmware_defaults.hostname | regex_search('.*__omit_place_holder__*')
+    or vmware_defaults.username | regex_search('.*__omit_place_holder__*')
+    or vmware_defaults.password | regex_search('.*__omit_place_holder__*')
+
 # All of the vmware.vmware_rest have retries for stability
 - name: Checking if {{ custom_vm_name | default(vm_name) }} already exists...
   vmware.vmware_rest.vcenter_vm_info:
