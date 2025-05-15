@@ -1,0 +1,138 @@
+---
+# Root CA
+- name: Checking if the Root CA PKI engine already exists...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_root_ca.vault_root_ca_pki_engine_name }}/tune"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_root_token }}"
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 400 # This means that the engine doesn't exist
+  register: root_ca_pki_engine_status
+
+- name: Getting the time...
+  ansible.builtin.setup:
+    filter: "*_time"
+
+- name: Enabling Root CA PKI engine...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_root_ca.vault_root_ca_pki_engine_name }}{{
+      '/tune' if root_ca_pki_engine_status.status == 200 else '' }}"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      type: pki
+      description: ""
+      config:
+        options: null
+        default_lease_ttl: "{{ vault_y2038_hours_left }}h" # Y2038-safe
+        max_lease_ttl: "{{ vault_y2038_hours_left }}h"
+        force_no_cache: false
+      local: false
+      seal_wrap: false
+      external_entropy_access: false
+      options: null
+    status_code: 204
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+
+- name: Listing all {{ vault_root_ca.vault_root_ca_pki_engine_name }} issuers...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca.vault_root_ca_pki_engine_name }}/issuers"
+    method: LIST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 404 # This means that not issuers exist
+  register: root_ca_issuers
+
+  # Using openssl module to create the Root CA because Vault API doesn't support setting extended key usage
+- name: Creating a new Root CA...
+  when: root_ca_issuers.status == 404
+  block:
+    - name: Creating {{ vault_root_ca.vault_root_ca_name }} private key...
+      community.crypto.openssl_privatekey_pipe:
+        type: "{{ vault_root_ca.vault_root_ca_key_type | upper | default('ECC') }}"
+        curve: "{{ vault_root_ca.vault_root_ca_key_curve | default('secp384r1') }}"
+        size: "{{ vault_root_ca.vault_root_ca_key_bits | default('384') }}"
+      register: root_ca_private_key
+
+    - name: Creating {{ vault_root_ca.vault_root_ca_name }} CSR...
+      community.crypto.openssl_csr_pipe:
+        privatekey_content: "{{ root_ca_private_key.privatekey }}"
+        common_name: "{{ vault_root_ca.vault_root_ca_name }}"
+        country_name: "{{ vault_root_ca.vault_root_ca_country | default('') }}"
+        organization_name: "{{ vault_root_ca.vault_root_ca_org | default('') }}"
+        organizational_unit_name: "{{ vault_root_ca.vault_root_ca_ou | default('') }}"
+        key_usage: "{{ vault_root_ca.vault_root_ca_key_usage | default(['digitalSignature', 'Certificate Sign', 'cRLSign']) }}"
+        key_usage_critical: true
+        basic_constraints: "{{ ['CA:TRUE'] if vault_root_ca.vault_root_ca_path_length is not defined
+          else ['CA:TRUE', 'pathlen:' + vault_root_ca.vault_root_ca_path_length | string] }}"
+        extended_key_usage: "{{ vault_root_ca.vault_root_ca_extended_key_usage | default([]) }}"
+      register: root_ca_csr
+
+    - name: Creating {{ vault_root_ca.vault_root_ca_name }} CA...
+      community.crypto.x509_certificate_pipe:
+        provider: selfsigned
+        privatekey_content: "{{ root_ca_private_key.privatekey }}"
+        csr_content: "{{ root_ca_csr.csr }}"
+        selfsigned_not_before: "{{ vault_root_ca.vault_root_ca_not_before_date | default(omit) }}"
+      register: root_ca
+
+    - name: Uploading {{ vault_root_ca.vault_root_ca_name }} CA to Vault...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca.vault_root_ca_pki_engine_name }}/config/ca"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          pem_bundle: "{{ root_ca_private_key.privatekey + root_ca.certificate }}"
+        body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
+
+# CRL
+- name: Configuring {{ vault_root_ca.vault_root_ca_pki_engine_name }} CRL...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca.vault_root_ca_pki_engine_name }}/config/crl"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      ocsp_disable: true
+      auto_rebuild: true
+      auto_rebuild_grace_period: 4320h # 180 days
+      enable_delta: false
+      expiry: 8760h # 1 year
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 204
+
+# URIs
+- name: Configuring URIs...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca.vault_root_ca_pki_engine_name }}/config/urls"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      crl_distribution_points: "{{ vault_root_ca.vault_root_ca_crl_distribution_points
+        | default('http://' + vault_crl_fqdn + '/v1/' + vault_root_ca.vault_root_ca_pki_engine_name + '/crl/pem') }}"
+      issuing_certificates: "{{ vault_root_ca.vault_root_ca_issuing_certificates
+        | default('http://' + vault_aia_fqdn + '/v1/' + vault_root_ca.vault_root_ca_pki_engine_name + '/ca/pem') }}"
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 204

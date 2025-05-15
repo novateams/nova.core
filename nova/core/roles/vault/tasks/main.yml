@@ -1,4 +1,13 @@
 ---
+- name: Missing required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - fqdn
+
+      Check the nova.core.vault role defaults for an example on how to define the variables.
+  when: fqdn == {}
+
 - name: Installing Vault...
   ansible.builtin.include_tasks: install.yml
 
@@ -19,17 +28,53 @@
   retries: 60
   delay: 5
 
-- name: Including {{ vault_root_ca_pki_engine_name }} creation tasks...
+- name: Including LEGACY {{ vault_root_ca_pki_engine_name }} creation tasks...
   ansible.builtin.include_tasks: ca_root.yml
-  when: vault_create_root_ca
+  when:
+    - vault_create_root_ca
+    - vault_root_ca_pki_engine_name is defined
 
-- name: Including {{ vault_intermediate_ca_pki_engine_name }} creation tasks...
+- name: Including creation tasks for following Root CAs...
+  ansible.builtin.include_tasks: ca_roots.yml
+  loop: "{{ vault_root_cas }}"
+  loop_control:
+    loop_var: vault_root_ca
+    label: "{{ vault_root_ca.vault_root_ca_pki_engine_name }}"
+  when:
+    - vault_create_root_ca
+    - vault_root_ca_pki_engine_name is not defined
+
+- name: Including LEGACY {{ vault_intermediate_ca_pki_engine_name }} creation tasks...
   ansible.builtin.include_tasks: ca_intermediate.yml
-  when: vault_create_intermediate_ca
+  when:
+    - vault_create_intermediate_ca
+    - vault_intermediate_ca_pki_engine_name is defined
 
-- name: Including {{ vault_mitm_ca_pki_engine_name }} creation tasks...
+- name: Including creation tasks for following Intermediate CAs...
+  ansible.builtin.include_tasks: ca_intermediates.yml
+  loop: "{{ vault_intermediate_cas }}"
+  loop_control:
+    loop_var: vault_intermediate_ca
+    label: "{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name }}"
+  when:
+    - vault_create_intermediate_ca
+    - vault_intermediate_ca_pki_engine_name is not defined
+
+- name: Including LEGACY {{ vault_mitm_ca_pki_engine_name }} creation tasks...
   ansible.builtin.include_tasks: ca_mitm.yml
-  when: vault_create_mitm_ca
+  when:
+    - vault_create_mitm_ca
+    - vault_mitm_ca_pki_engine_name is defined
+
+- name: Including creation tasks for following MiTM CAs...
+  ansible.builtin.include_tasks: ca_mitms.yml
+  loop: "{{ vault_mitm_cas }}"
+  loop_control:
+    loop_var: vault_mitm_ca
+    label: "{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}"
+  when:
+    - vault_create_mitm_ca
+    - vault_mitm_ca_pki_engine_name is not defined
 
 - name: Including ldap configuration task...
   ansible.builtin.include_tasks: configure_ldap.yml

@@ -1,7 +1,7 @@
 ---
 - name: Creating required Vault folders...
   ansible.builtin.file:
-    path: "{{ vault_dir }}"
+    path: "{{ vault_dir.path }}"
     state: directory
     owner: 100
     group: 1000
@@ -9,9 +9,9 @@
   loop_control:
     loop_var: vault_dir
   loop:
-    - "{{ vault_config_folder }}"
-    - "{{ vault_config_folder }}/config"
-    - "{{ vault_config_folder }}/file"
+    - path: "{{ vault_config_folder }}"
+    - path: "{{ vault_config_folder }}/config"
+    - path: "{{ vault_config_folder }}/file"
 
 - name: Templating configuration to machine...
   ansible.builtin.template:
