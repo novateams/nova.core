@@ -1,0 +1,147 @@
+---
+# MiTM CA
+- name: Checking if the MITM CA PKI engine already exists...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}/tune"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_root_token }}"
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 400 # This means that the engine doesn't exist
+  register: mitm_ca_pki_engine_status
+
+- name: Getting the time...
+  ansible.builtin.setup:
+    filter: "*_time"
+
+- name: Enabling MITM CA PKI engine...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}{{
+      '/tune' if mitm_ca_pki_engine_status.status == 200 else '' }}"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      type: pki
+      description: ""
+      config:
+        options: null
+        default_lease_ttl: "{{ vault_y2038_hours_left }}h" # Y2038-safe
+        max_lease_ttl: "{{ vault_y2038_hours_left }}h"
+        force_no_cache: false
+      local: false
+      seal_wrap: false
+      external_entropy_access: false
+      options: null
+    status_code: 204
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+
+- name: Creating MiTM CA...
+  when: mitm_ca_pki_engine_status.status != 200
+  block:
+    - name: Generating MITM CSR...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}/intermediate/generate/exported"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          ttl: "{{ vault_mitm_ca.mitm_ca_ttl_hours | default('87600') }}h" # Default is 10 years
+          common_name: "{{ vault_mitm_ca.vault_mitm_ca_name }}"
+          ou: "{{ vault_mitm_ca.vault_mitm_ca_ou | default('') }}"
+          organization: "{{ vault_mitm_ca.vault_mitm_ca_org | default('') }}"
+          country: "{{ vault_mitm_ca.vault_mitm_ca_country | default('') }}"
+          key_type: "{{ vault_mitm_ca.vault_mitm_ca_key_type | default('ec') }}"
+          key_bits: "{{ vault_mitm_ca.vault_mitm_ca_key_bits | default('384') }}"
+        body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
+      register: mitm_csr
+
+    - name: Signing MiTM CA...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_mitm_ca.vault_mitm_ca_root_to_sign_with_name }}/root/sign-intermediate"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          csr: "{{ mitm_csr.json.data.csr }}"
+          common_name: "{{ vault_mitm_ca.vault_mitm_ca_name }}"
+          use_csr_values: true
+        body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
+      register: signed_mitm_ca
+
+    - name: Saving generated {{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }} CA to {{ vault_config_folder }}/creds...
+      ansible.builtin.copy:
+        content: "{{ mitm_ca.content }}\n"
+        dest: "{{ mitm_ca.dest }}"
+        mode: "0600"
+      loop_control:
+        label: "{{ mitm_ca.dest }}"
+        loop_var: mitm_ca
+      loop:
+        - content: "{{ mitm_csr.json.data.private_key }}"
+          dest: "{{ vault_config_folder }}/creds/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}_key"
+
+        - content: "{{ signed_mitm_ca.json.data.certificate }}"
+          dest: "{{ vault_config_folder }}/creds/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}_cert"
+
+    - name: Setting signed MITM CA...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}/intermediate/set-signed"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          certificate: "{{ signed_mitm_ca.json.data.certificate }}"
+        body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
+        status_code:
+          - 200
+          - 204
+
+# CRL
+- name: Configuring {{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }} CRL...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}/config/crl"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      ocsp_disable: true
+      auto_rebuild: true
+      auto_rebuild_grace_period: 4320h # 180 days
+      enable_delta: false
+      expiry: 8760h # 1 year
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 204
+
+# URIs
+- name: Configuring URIs...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}/config/urls"
+    method: POST
+    headers:
+      X-Vault-Request: true
+      X-Vault-Token: "{{ vault_root_token }}"
+    body:
+      crl_distribution_points: "{{ vault_mitm_ca.vault_mitm_ca_crl_distribution_points
+        | default('http://' + vault_crl_fqdn + '/v1/' + vault_mitm_ca.vault_mitm_ca_pki_engine_name + '/crl/pem') }}"
+      issuing_certificates: "{{ vault_mitm_ca.vault_mitm_ca_issuing_certificates |
+        default('http://' + vault_aia_fqdn + '/v1/' + vault_mitm_ca.vault_mitm_ca_pki_engine_name + '/ca/pem') }}"
+    body_format: json
+    validate_certs: "{{ vault_validate_cert }}"
+    status_code:
+      - 200
+      - 204

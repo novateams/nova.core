@@ -121,34 +121,6 @@ dependencies:
       vault_create_root_ca: true # Create a self-signed root CA
       vault_create_intermediate_ca: true # Create an intermediate CA (signed by the root CA)
 
-      vault_root_ca_pki_engine_name: RootCA
-      vault_root_ca_name: "{{ project_fullname | upper }} RootCA"
-      vault_root_ca_ou: "{{ project_fullname | upper }}"
-      vault_root_ca_org: "{{ project_fullname | upper }} Project"
-      vault_root_ca_country: EU
-      vault_root_ca_key_type: ec
-      vault_root_ca_key_bits: 384
-      vault_root_ca_crl_distribution_points: https://{{ monolith_vault_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/crl/pem
-      vault_root_ca_issuing_certificates: https://{{ monolith_vault_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/ca/pem
-
-      vault_intermediate_ca_pki_engine_name: IntermediateCA
-      vault_intermediate_ca_name: "{{ project_fullname | upper }} IntermediateCA"
-      vault_intermediate_ca_ou: "{{ project_fullname | upper }}"
-      vault_intermediate_ca_org: "{{ project_fullname | upper }} Project"
-      vault_intermediate_ca_country: EU
-      vault_intermediate_ca_key_type: ec
-      vault_intermediate_ca_key_bits: 384
-      vault_intermediate_ca_crl_distribution_points: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/crl/pem
-      vault_intermediate_ca_issuing_certificates: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/ca/pem
-
-      vault_server_rsa_ou: "{{ project_fullname | upper }}"
-      vault_server_rsa_organization: "{{ project_fullname | upper }} Project"
-      vault_server_rsa_country: EU
-
-      vault_server_ec_ou: "{{ project_fullname | upper }}"
-      vault_server_ec_organization: "{{ project_fullname | upper }} Project"
-      vault_server_ec_country: EU
-
       #########
       # Nexus #
       #########

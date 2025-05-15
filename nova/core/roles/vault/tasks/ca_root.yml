@@ -1,95 +1,16 @@
 ---
-# Root CA
-- name: Checking if the Root CA PKI engine already exists...
-  ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_root_ca_pki_engine_name }}/tune"
-    method: GET
-    headers:
-      X-Vault-Token: "{{ vault_root_token }}"
-    validate_certs: "{{ vault_validate_cert }}"
-    status_code:
-      - 200
-      - 400 # This means that the engine doesn't exist
-  register: root_ca_pki_engine_status
+- name: Printing deprecation message...
+  block:
+    - name: DEPRECATED DATA STRUCTURE
+      ansible.builtin.debug:
+        msg: |
+          vault_root_ca_pki_engine_name variable found
+          Root CA(s) configuration must be defined as a list not as a single variable.
+          Check the nova.core.vault role defaults for an example on how to define the Root CA(s) as a list.
+          No Root CA configuration will be done.
 
-- name: Getting the time...
-  ansible.builtin.setup:
-    filter: "*_time"
-
-- name: Enabling Root CA PKI engine...
-  ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_root_ca_pki_engine_name }}{{ '/tune' if root_ca_pki_engine_status.status == 200 else '' }}"
-    method: POST
-    headers:
-      X-Vault-Request: true
-      X-Vault-Token: "{{ vault_root_token }}"
-    body:
-      type: pki
-      description: ""
-      config:
-        options: null
-        default_lease_ttl: "{{ vault_y2038_hours_left }}h" # Y2038-safe
-        max_lease_ttl: "{{ vault_y2038_hours_left }}h"
-        force_no_cache: false
-      local: false
-      seal_wrap: false
-      external_entropy_access: false
-      options: null
-    status_code: 204
-    body_format: json
-    validate_certs: "{{ vault_validate_cert }}"
-
-- name: Creating Root CA...
-  ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca_pki_engine_name }}/root/generate/internal"
-    method: POST
-    headers:
-      X-Vault-Request: true
-      X-Vault-Token: "{{ vault_root_token }}"
-    body:
-      ttl: "{{ vault_y2038_hours_left }}h"
-      common_name: "{{ vault_root_ca_name }}"
-      ou: "{{ vault_root_ca_ou | default('') }}"
-      organization: "{{ vault_root_ca_org | default('') }}"
-      country: "{{ vault_root_ca_country | default('') }}"
-      key_type: "{{ vault_root_ca_key_type | default('ec') }}"
-      key_bits: "{{ vault_root_ca_key_bits | default('384') }}"
-    body_format: json
-    validate_certs: "{{ vault_validate_cert }}"
-
-# CRL
-- name: Configuring {{ vault_root_ca_pki_engine_name }} CRL...
-  ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca_pki_engine_name }}/config/crl"
-    method: POST
-    headers:
-      X-Vault-Request: true
-      X-Vault-Token: "{{ vault_root_token }}"
-    body:
-      ocsp_disable: true
-      auto_rebuild: true
-      auto_rebuild_grace_period: 4320h # 180 days
-      enable_delta: false
-      expiry: 8760h # 1 year
-    body_format: json
-    validate_certs: "{{ vault_validate_cert }}"
-    status_code:
-      - 200
-      - 204
-
-# URIs
-- name: Configuring URIs...
-  ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/{{ vault_root_ca_pki_engine_name }}/config/urls"
-    method: POST
-    headers:
-      X-Vault-Request: true
-      X-Vault-Token: "{{ vault_root_token }}"
-    body:
-      crl_distribution_points: "{{ vault_root_ca_crl_distribution_points }}"
-      issuing_certificates: "{{ vault_root_ca_issuing_certificates }}"
-    body_format: json
-    validate_certs: "{{ vault_validate_cert }}"
-    status_code:
-      - 200
-      - 204
+    - name: Sleeping to read...
+      ansible.builtin.wait_for:
+        timeout: 30
+      become: false
+      delegate_to: localhost

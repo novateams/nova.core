@@ -1,7 +1,7 @@
 ---
 environment_name: # Name of the environment (e.g. dev, test, prod)
 project_fullname: # Full name of the project (e.g. My Project)
-fqdn: # FQDN of the server vault.example.org
+fqdn: {} # FQDN of the server vault.example.org
 docker_network: local-network # The network where the container will be attached to. Comes from nova.core.docker role.
 vault_proxy_container_name: {} # Name of the proxy container to restart after composing Vault.
 
@@ -14,8 +14,6 @@ vault_container_name: vault
 vault_server_log_level: debug # Debug gives better info about LDAP login failures and their reasons
 vault_validate_cert: true # Validate certificates when connecting to Vault
 
-# Testing/Dev environment variables
-
 # Disable for production environments and manually enter the unseal key(s) after container restart. Only works if vault_unseal_shares == 1
 vault_auto_unseal: true
 
@@ -26,58 +24,110 @@ vault_unseal_shares: 1 # Number of shares to split the unseal key into
 vault_unseal_threshold: 1 # Number of shares required to unseal the Vault
 
 # Certificate Authority variables
-vault_crl_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API
-vault_aia_fqdn: "{{ primary_ipv4 }}" # primary_ipv4 comes from Providentia API
+vault_crl_fqdn: "{{ egress_nic_ipv4 }}" # egress_nic_ipv4 comes from nova.core.deploy_vars
+vault_aia_fqdn: "{{ egress_nic_ipv4 }}" # egress_nic_ipv4 comes from nova.core.deploy_vars
 
-vault_create_root_ca: false # Create a self-signed root CA
-vault_create_intermediate_ca: false # Create an intermediate CA (signed by the root CA)
-vault_create_mitm_ca: false # Create a Man-in-the-Middle (TLS termination) CA
+vault_create_root_ca: false # Create a self-signed root CA(s)
+vault_root_cas:
+  - vault_root_ca_pki_engine_name: RootCA
+    vault_root_ca_name: "{{ environment_name }} {{ project_fullname }} RootCA"
+    vault_root_ca_ou: "{{ project_fullname }}"
+    vault_root_ca_org: "{{ environment_name }}"
+    vault_root_ca_country: US
+    vault_root_ca_key_type: ECC # https://docs.ansible.com/ansible/latest/collections/community/crypto/openssl_privatekey_pipe_module.html#parameter-type
+    vault_root_ca_key_curve: secp384r1 # https://docs.ansible.com/ansible/latest/collections/community/crypto/openssl_privatekey_module.html#parameter-curve
+    vault_root_ca_key_bits: 384
+    vault_root_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/RootCA/crl/pem
+    vault_root_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/RootCA/ca/pem
+    # Uncomment to enable more key usages
+    vault_root_ca_key_usage:
+      - digitalSignature
+      - Certificate Sign
+      - cRLSign
 
-vault_root_ca_pki_engine_name: RootCA
-vault_root_ca_name: "{{ environment_name }} {{ project_fullname }} RootCA"
-vault_root_ca_ou: "{{ project_fullname }}"
-vault_root_ca_org: "{{ environment_name }}"
-vault_root_ca_country: US
-vault_root_ca_key_type: ec
-vault_root_ca_key_bits: 384
-vault_root_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/crl/pem
-vault_root_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/ca/pem
+      # - keyAgreement
+      # - Non Repudiation
+      # - Key Encipherment
+      # - dataEncipherment
+      # - Encipher Only
+      # - decipherOnly
 
-vault_intermediate_ca_pki_engine_name: IntermediateCA
-vault_intermediate_ca_name: "{{ environment_name }} {{ project_fullname }} IntermediateCA"
-vault_intermediate_ca_ou: "{{ project_fullname }}"
-vault_intermediate_ca_org: "{{ environment_name }}"
-vault_intermediate_ca_country: US
-vault_intermediate_ca_key_type: ec
-vault_intermediate_ca_key_bits: 384
-vault_intermediate_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/crl/pem
-vault_intermediate_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/ca/pem
+    # Uncomment to enable extended key usages
+    # vault_root_ca_extended_key_usage:
+    #   - anyExtendedKeyUsage
+    #   - clientAuth
+    #   - codeSigning
+    #   - emailProtection
+    #   - ipsecIKE
+    #   - msCodeCom
+    #   - msCodeInd
+    #   - msCTLSign
+    #   - msEFS
+    #   - msEFSFR
+    #   - msSGC
+    #   - msTimestamp
+    #   - nsSGC
+    #   - OCSPSigning
+    #   - serverAuth
+    #   - smartcardLogon
+    #   - timeStamping
 
-vault_mitm_ca_pki_engine_name: MiTMCA
-vault_mitm_ca_name: "{{ environment_name }} {{ project_fullname }} MiTMCA"
-vault_mitm_ca_ou: "{{ project_fullname }}"
-vault_mitm_ca_org: "{{ environment_name }}"
-vault_mitm_ca_country: US
-vault_mitm_ca_key_type: ec
-vault_mitm_ca_key_bits: 384
-vault_mitm_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/{{ vault_mitm_ca_pki_engine_name }}/crl/pem
-vault_mitm_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/{{ vault_mitm_ca_pki_engine_name }}/ca/pem
+vault_create_intermediate_ca: false # Create an intermediate CA(s) (signed by the root CA(s))
+vault_intermediate_cas:
+  - vault_intermediate_ca_pki_engine_name: IntermediateCA
+    vault_intermediate_ca_root_to_sign_with_name: RootCA # This is the name of the root CA to sign the intermediate CA with
+    vault_intermediate_ca_name: "{{ environment_name }} {{ project_fullname }} IntermediateCA"
+    vault_intermediate_ca_ou: "{{ project_fullname }}"
+    vault_intermediate_ca_org: "{{ environment_name }}"
+    vault_intermediate_ca_country: US
+    vault_intermediate_ca_key_type: ec
+    vault_intermediate_ca_key_bits: 384
+    vault_intermediate_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/IntermediateCA/crl/pem
+    vault_intermediate_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/IntermediateCA/ca/pem
+    # List of roles to create under the intermediate CA for requesting leaf certificates
+    # Set to vault_intermediate_ca_roles == [] to not create any roles
+    vault_intermediate_ca_roles: "{{ vault_intermediate_ca_roles_defaults }}"
 
-# Roles under IntermediateCA
-vault_server_rsa_ou: "{{ project_fullname }}"
-vault_server_rsa_organization: "{{ environment_name }}"
-vault_server_rsa_country: US
+# If no vault_intermediate_ca_roles is defined in the vault_intermediate_cas list then the following defaults will be used
+vault_intermediate_ca_roles_defaults:
+  # RSA Client/Server certificate
+  - vault_cert_path: server_rsa
+    vault_cert_key_bits: 4096
+    vault_cert_key_type: rsa
+    vault_cert_ou: "{{ project_fullname }}"
+    vault_cert_organization: "{{ environment_name }}"
+    vault_cert_country: US
+    vault_cert_code_signing: false
 
-vault_server_ec_ou: "{{ project_fullname }}"
-vault_server_ec_organization: "{{ environment_name }}"
-vault_server_ec_country: US
+  # EC Client/Server certificate
+  - vault_cert_path: server_ec
+    vault_cert_key_bits: 256
+    vault_cert_key_type: ec
+    vault_cert_ou: "{{ project_fullname }}"
+    vault_cert_organization: "{{ environment_name }}"
+    vault_cert_country: US
+    vault_cert_code_signing: false
 
-vault_code_signing_enabled: false
-vault_code_signing_ou: "{{ project_fullname }}"
-vault_code_signing_organization: "{{ environment_name }}"
-vault_code_signing_country: US
-vault_code_signing_key_type: ec
-vault_code_signing_key_bits: 384
+  - vault_cert_path: code_signing
+    vault_cert_key_bits: 384
+    vault_cert_key_type: ec
+    vault_cert_ou: "{{ project_fullname }}"
+    vault_cert_organization: "{{ environment_name }}"
+    vault_cert_country: US
+    vault_cert_code_signing: true
+
+vault_create_mitm_ca: false # Create a Man-in-the-Middle (TLS termination) CA(s)
+vault_mitm_cas:
+  - vault_mitm_ca_pki_engine_name: MitMCA
+    vault_mitm_ca_root_to_sign_with_name: RootCA # This is the name of the root CA to sign the MitM CA with
+    vault_mitm_ca_name: "{{ environment_name }} {{ project_fullname }} MiTMCA"
+    vault_mitm_ca_ou: "{{ project_fullname }}"
+    vault_mitm_ca_org: "{{ environment_name }}"
+    vault_mitm_ca_country: US
+    vault_mitm_ca_key_type: ec
+    vault_mitm_ca_key_bits: 384
+    vault_mitm_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/MiTMCA/crl/pem
+    vault_mitm_ca_issuing_certificates: http://{{ vault_aia_fqdn }}/v1/MiTMCA/ca/pem
 
 # LDAPs configuration
 vault_ldap_engine_name: ldap
