@@ -34,7 +34,7 @@
     - outline_file_storage_mode == "local"
 
 ## MINIO CLIENT for automating the minio configuration
-- name: Copy minio bucket policy from template
+- name: Templating minio bucket policy from template for S3...
   ansible.builtin.template:
     src: bucket-policy.j2
     dest: "{{ minio_client_container_folder }}/bucket-policy.json"
@@ -43,7 +43,7 @@
     - minio_client_configuration | bool
     - outline_file_storage_mode == "s3"
 
-- name: Copy compose config from template
+- name: Templating compose file for minio client for S3...
   ansible.builtin.template:
     src: docker-compose-mc.yml.j2
     dest: "{{ minio_client_container_folder }}/docker-compose.yml"
@@ -52,7 +52,7 @@
     - minio_client_configuration | bool
     - outline_file_storage_mode == "s3"
 
-- name: Composing {{ inventory_hostname }} minio client...
+- name: Composing {{ inventory_hostname }} minio client for S3...
   community.docker.docker_compose_v2:
     project_src: "{{ minio_client_container_folder }}"
     state: present
@@ -62,13 +62,13 @@
     - outline_file_storage_mode == "s3"
 
 ## Outline main compose
-- name: Copy compose config from template
+- name: Templating Docker Compose file for Outline...
   ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ compose_config_folder }}/docker-compose.yml"
     mode: "0600"
 
-- name: Composing {{ inventory_hostname }} minio client...
+- name: Composing Outline on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ compose_config_folder }}"
     state: present
