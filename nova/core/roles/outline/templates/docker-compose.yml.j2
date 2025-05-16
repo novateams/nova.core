@@ -14,6 +14,11 @@ services:
       - MINIO_ROOT_PASSWORD={{ minio_root_password }}
       - MINIO_BROWSER_REDIRECT_URL={{ minio_browser_redirect_url }}
     command: "minio server /data --console-address ':9090'"
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
 {% endif %}
 
   {{ db_container_name }}:
@@ -34,6 +39,11 @@ services:
       -c effective_cache_size=1GB
       -c maintenance_work_mem=256MB
       -c work_mem=8MB
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
 
   {{ redis_container_name }}:
     container_name: "{{ redis_container_name }}"
@@ -45,6 +55,11 @@ services:
     command:
       - "redis-server"
       - "/redis.conf"
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
 
   {{ app_container_name }}:
     container_name: "{{ app_container_name }}"
@@ -103,6 +118,14 @@ services:
       - RATE_LIMITER_REQUESTS={{ outline_rate_limiter_requests }}
       - RATE_LIMITER_DURATION_WINDOW={{ outline_rate_limiter_duration_window }}
     command: sh -c "yarn sequelize db:migrate --env production-ssl-disabled && yarn start --env production-ssl-disabled"
+    depends_on:
+      - {{ redis_container_name }}
+      - {{ db_container_name }}
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
 
 networks:
   default:
