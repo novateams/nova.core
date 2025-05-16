@@ -22,9 +22,9 @@ services:
     # Overriding the default healthcheck values to allow longer startup times on low end machines
     # https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/master/docker/Dockerfile#L81-82
     healthcheck:
-      test: /opt/gitlab/bin/gitlab-healthcheck --fail --max-time 10
+      test: /opt/gitlab/bin/gitlab-healthcheck --fail --max-time 20
       interval: 60s
-      retries: 10
+      retries: 20
       timeout: 30s
 
     shm_size: "1G"
