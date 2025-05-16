@@ -6,9 +6,6 @@
     - name: Powering on {{ custom_vm_name | default(vm_name) }}...
       vmware.vmware.vm_powerstate:
         name: "{{ custom_vm_name | default(vm_name) }}"
-        hostname: "{{ vmware_defaults.hostname }}"
-        username: "{{ vmware_defaults.username }}"
-        password: "{{ vmware_defaults.password }}"
         datacenter: "{{ datacenter }}"
         state: powered-on
         force: true # Required to power on a VM that is in a suspended state
