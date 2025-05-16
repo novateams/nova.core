@@ -92,6 +92,12 @@ vmware_rest_defaults:
   vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
+vmware_vmware_defaults:
+  hostname: "{{ vcenter_hostname | default(omit) }}"
+  username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default(omit) }}"
+  password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default(omit) }}"
+  validate_certs: "{{ validate_vmware_certs }}"
+
 nsx_deployer_username: "{{ nsx_username | default(project_deployer_username)
   | default(deployer_username | default(omit) + '@' + ldap_auth_domain | default(omit)) }}"
 nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default(omit) }}"
