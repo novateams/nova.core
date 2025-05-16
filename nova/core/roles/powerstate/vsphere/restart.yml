@@ -6,9 +6,6 @@
     - name: Restarting {{ custom_vm_name | default(vm_name) }}...
       vmware.vmware.vm_powerstate:
         name: "{{ custom_vm_name | default(vm_name) }}"
-        hostname: "{{ vmware_defaults.hostname }}"
-        username: "{{ vmware_defaults.username }}"
-        password: "{{ vmware_defaults.password }}"
         datacenter: "{{ datacenter }}"
         state: powered-on
       when: vcenter_vm_info.value[0].power_state == "POWERED_OFF"
@@ -16,9 +13,6 @@
     - name: Restarting {{ custom_vm_name | default(vm_name) }}...
       vmware.vmware.vm_powerstate:
         name: "{{ custom_vm_name | default(vm_name) }}"
-        hostname: "{{ vmware_defaults.hostname }}"
-        username: "{{ vmware_defaults.username }}"
-        password: "{{ vmware_defaults.password }}"
         datacenter: "{{ datacenter }}"
         state: reboot-guest
       when: vcenter_vm_info.value[0].power_state != "POWERED_OFF"
