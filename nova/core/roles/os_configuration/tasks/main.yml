@@ -92,7 +92,7 @@
             snapshot_mode: snap
             live_snap: true
             snapshot_name: Pre-customization
-          when: os_configuration_create_snapshot_with_just_clone
+          when: os_configuration_create_snapshot_with_just_clone | bool
 
         - name: Including get_ip role...
           ansible.builtin.include_role:
