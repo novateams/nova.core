@@ -26,3 +26,9 @@ docker_network:
 
 # Docker APT proxy
 docker_apt_proxy: https://download.docker.com/linux/{{ ansible_distribution | lower }}
+
+# Mapping for non-default Debian OS based distributions like Kali, Parrot, etc.
+# This is used to set the correct distribution and codename for the Docker APT repository
+docker_non_default_debian_os_list:
+  - Kali
+  - Parrot
