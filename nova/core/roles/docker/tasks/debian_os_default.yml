@@ -10,37 +10,10 @@
   retries: 10
   delay: 6
 
-- name: Including Docker for Kali APT configuration block...
-  when: ansible_facts.lsb.id == "Kali"
+- name: Including Docker for default Debian based OS...
+  when: ansible_distribution not in docker_non_default_debian_os_list
   block:
-    - name: Adding Docker repo key...
-      ansible.builtin.get_url:
-        url: "{{ docker_apt_proxy }}/gpg"
-        dest: /etc/apt/trusted.gpg.d/docker.asc
-        mode: "0644"
-      register: docker_repo_key
-      until: not docker_repo_key.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
-      retries: 10
-      delay: 6
-      vars:
-        # Overriding ansible_distribution to match Debian because Kali does not have it's own Docker repository
-        ansible_distribution: debian
-
-    # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
-    - name: Adding Docker repository...
-      ansible.builtin.copy:
-        content: deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_distribution_release }} stable
-        dest: /etc/apt/sources.list.d/docker.list
-        mode: "0644"
-      vars:
-        # Overriding ansible_distribution and ansible_distribution_release to match Debian because Kali does not have it's own Docker repository
-        ansible_distribution_release: bookworm
-        ansible_distribution: debian
-
-- name: Including Docker for not Kali APT configuration block...
-  when: ansible_facts.lsb.id != "Kali"
-  block:
-    - name: Adding Docker repo key...
+    - name: Adding Docker repo key for {{ ansible_distribution }}...
       ansible.builtin.get_url:
         url: "{{ docker_apt_proxy }}/gpg"
         dest: /etc/apt/trusted.gpg.d/docker.asc

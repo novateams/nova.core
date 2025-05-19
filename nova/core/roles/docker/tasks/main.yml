@@ -8,8 +8,12 @@
         - ansible_os_family == "Windows"
         - ansible_os_installation_type == "Server"
 
+    - name: Including non-default Debian based OS repo tasks...
+      ansible.builtin.include_tasks: debian_os_non_default.yml
+      when: ansible_distribution in docker_non_default_debian_os_list
+
     - name: Installing Docker on Debian based Linux machine...
-      ansible.builtin.include_tasks: debian_os.yml
+      ansible.builtin.include_tasks: debian_os_default.yml
       when: ansible_os_family == "Debian"
 
     - name: Installing Docker on Archlinux based machine...
