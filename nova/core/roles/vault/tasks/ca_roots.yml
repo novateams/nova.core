@@ -59,7 +59,7 @@
   block:
     - name: Creating {{ vault_root_ca.vault_root_ca_name }} private key...
       community.crypto.openssl_privatekey_pipe:
-        type: "{{ vault_root_ca.vault_root_ca_key_type | upper | default('ECC') }}"
+        type: "{{ vault_root_ca.vault_root_ca_key_type | default('ECC') | upper }}"
         curve: "{{ vault_root_ca.vault_root_ca_key_curve | default('secp384r1') }}"
         size: "{{ vault_root_ca.vault_root_ca_key_bits | default('384') }}"
       register: root_ca_private_key

@@ -62,7 +62,7 @@
     - name: Signing Intermediate CA...
       ansible.builtin.uri:
         url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_root_to_sign_with_name
-          }}/root/sign-intermediate"
+          | default(vault_root_cas[loop_index].vault_root_ca_pki_engine_name) }}/root/sign-intermediate"
         method: POST
         headers:
           X-Vault-Request: true
@@ -130,8 +130,7 @@
   loop_control:
     loop_var: certificate_role
     label: "{{ certificate_role.vault_cert_path }}"
-  loop: "{{ vault_intermediate_ca.vault_intermediate_ca_roles | default(vault_intermediate_cas[0].vault_intermediate_ca_roles) }}"
-  when: vault_intermediate_ca.vault_intermediate_ca_roles != []
+  loop: "{{ vault_intermediate_ca.vault_intermediate_ca_roles | default(vault_intermediate_ca_roles_defaults) }}"
 
 # CRLs
 - name: Configuring {{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name }} CRL...

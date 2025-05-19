@@ -56,6 +56,7 @@
   loop_control:
     loop_var: vault_intermediate_ca
     label: "{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name }}"
+    index_var: loop_index
   when:
     - vault_create_intermediate_ca
     - vault_intermediate_ca_pki_engine_name is not defined
