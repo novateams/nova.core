@@ -696,31 +696,6 @@ nexus_default_repositories:
         policyNames:
           - default-cleanup-policy
 
-  # Kali docker apt proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
-    repo_body:
-      name: kali-rolling-docker
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://download.docker.com/linux/debian
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      apt:
-        distribution: bookworm
-        flat: false
-      cleanup:
-        policyNames:
-          - default-cleanup-policy
-
   # Debian bookworm docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
     repo_body:
