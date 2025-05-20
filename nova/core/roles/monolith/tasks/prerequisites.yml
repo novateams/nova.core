@@ -18,7 +18,7 @@
     loop_var: monolith_missing_var
   when: monolith_missing_var.value == {}
 
-- name: Checking if {{ monolith_vault_fqdn }} DNS resolves...
+- name: Checking if {{ monolith_vault_fqdn }} DNS resolves from localhost...
   ansible.builtin.wait_for:
     host: "{{ monolith_vault_fqdn }}"
     port: 22

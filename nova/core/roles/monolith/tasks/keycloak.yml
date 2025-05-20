@@ -20,6 +20,7 @@
   ansible.builtin.include_role:
     name: nova.core.keycloak
   vars:
+    secrets_vault_address: "https://{{ monolith_vault_fqdn }}"
     secrets_vault_engine_path: monolith
     secrets_vault_secrets_path: keycloak
     keycloak_hostname: "{{ monolith_keycloak_fqdn }}"
