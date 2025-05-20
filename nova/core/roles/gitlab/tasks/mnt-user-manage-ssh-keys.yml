@@ -1,42 +1,42 @@
 ---
-- name: Look up user id
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users?username={{ user.username }}&with_custom_attributes=true"
-    headers:
-      Content-Type: application/json
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-  register: gitlab_user
-  when: user.username in gl_existing_users.json | map(attribute="username")
+- name: Get user details from existing users list
+  ansible.builtin.set_fact:
+    current_gitlab_user: "{{ playbook_wide_gitlab_users_list | selectattr('username', 'equalto', user.username) | list | first | default({}) }}"
 
-- name: Get existing ssh keys for user..
+- name: Check if user exists in GitLab
+  ansible.builtin.set_fact:
+    user_exists_in_gitlab: "{{ current_gitlab_user.id is defined }}"
+
+- name: Get existing ssh keys for user
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users/{{ gitlab_user.json[0].id }}/keys"
+    url: "{{ gitlab_url_api }}/users/{{ current_gitlab_user.id }}/keys"
     method: GET
     body_format: json
     headers:
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     status_code: [200, 201]
   register: existing_ssh_keys
-  when: user.username in gl_existing_users.json | map(attribute="username")
+  when: user_exists_in_gitlab
 
 # - name: Cleanup existing ssh keys for user..
 #   ansible.builtin.uri:
-#     url: "{{ gitlab_url_api }}/users/{{ gitlab_user.json[0].id }}/keys/{{ item.id }}"
+#     url: "{{ gitlab_url_api }}/users/{{ current_gitlab_user.id }}/keys/{{ item.id }}"
 #     method: DELETE
 #     body_format: json
 #     headers:
 #       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
 #     status_code: [200, 204]
 #   loop: "{{ existing_ssh_keys.json | default([]) }}"
-#   when: user.username in gl_existing_users.json | map(attribute="username")
+#   when: user_exists_in_gitlab
 
 - name: Print user ssh keys, just for info..
   ansible.builtin.debug:
     var: existing_ssh_keys.json
+  when: user_exists_in_gitlab
 
 - name: Add ssh keys to user..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users/{{ gitlab_user.json[0].id }}/keys"
+    url: "{{ gitlab_url_api }}/users/{{ current_gitlab_user.id }}/keys"
     method: POST
     body_format: json
     body:
@@ -46,5 +46,6 @@
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     status_code: [200, 201]
   when:
+    - user_exists_in_gitlab
     - item.title not in existing_ssh_keys.json | map(attribute="title")
   loop: "{{ user.ssh_keys }}"

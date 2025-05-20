@@ -1,15 +1,12 @@
----
-- name: Get existing GitLab users..
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users?per_page=100"
-    method: GET
-    headers:
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-    return_content: true
-    status_code: 200
-  register: gl_existing_users
+- name: Check if user '{{ user.username }}' exists and retrieve details
+  ansible.builtin.set_fact:
+    existing_gitlab_user_details: "{{ playbook_wide_gitlab_users_list | selectattr('username', 'equalto', user.username) | list | first | default({}) }}"
 
-- name: Create a new GitLab user if already not created..
+- name: Determine if user '{{ user.username }}' already exists in GitLab
+  ansible.builtin.set_fact:
+    user_already_exists_in_gitlab: "{{ existing_gitlab_user_details.id is defined }}"
+
+- name: "CREATE user: '{{ user.username }}' (if not found in GitLab)"
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/users"
     method: POST
@@ -19,41 +16,30 @@
       password: "{{ user.password if user.password is defined else omit }}"
       username: "{{ user.username }}"
       name: "{{ user.name }}"
-      force_random_password: "{{ user.password is not defined }}" ## true if user.password is not defined
+      force_random_password: "{{ user.password is not defined }}"
       skip_confirmation: true
       skip_reconfirmation: true
       admin: "{{ user.admin }}"
     headers:
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     status_code: [200, 201]
-  when: user.username not in gl_existing_users.json | map(attribute="username")
+  when: not user_already_exists_in_gitlab
 
-- name: Look up user id
+- name: "MODIFY user: '{{ user.username }}' (if already exists in GitLab)"
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users?username={{ user.username }}&with_custom_attributes=true"
-    headers:
-      Content-Type: application/json
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-  register: gitlab_user
-  when: user.username in gl_existing_users.json | map(attribute="username")
-
-- name: If the user exists, modify instead...
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users/{{ gitlab_user.json[0].id }}"
+    url: "{{ gitlab_url_api }}/users/{{ existing_gitlab_user_details.id }}"
     method: PUT
     body_format: json
     body:
       email: "{{ user.email }}"
-      ## we should not update the user password by default, since this will force
-      ## the user to change the password after login.
       password: "{{ user.password if (user.password is defined and user.update_password | default(false)) else omit }}"
       username: "{{ user.username }}"
       name: "{{ user.name }}"
-      reset_password": false
+      reset_password: false
       skip_confirmation: true
       skip_reconfirmation: true
       admin: "{{ user.admin }}"
     headers:
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-    status_code: [200, 201]
-  when: user.username in gl_existing_users.json | map(attribute="username")
+    status_code: 200
+  when: user_already_exists_in_gitlab

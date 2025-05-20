@@ -1,25 +1,26 @@
 ---
-- name: Look up user id..
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users?username={{ user.username }}&with_custom_attributes=true"
-    headers:
-      Content-Type: application/json
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-  register: gitlab_user
+- name: Get user details from existing users list
+  ansible.builtin.set_fact:
+    current_gitlab_user: "{{ playbook_wide_gitlab_users_list | selectattr('username', 'equalto', user.username) | list | first | default({}) }}"
+
+- name: Check if user exists in GitLab
+  ansible.builtin.set_fact:
+    user_exists_in_gitlab: "{{ current_gitlab_user.id is defined }}"
 
 - name: Look up user's personal access tokens..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/personal_access_tokens?user_id={{ gitlab_user.json[0].id }}"
+    url: "{{ gitlab_url_api }}/personal_access_tokens?user_id={{ current_gitlab_user.id }}"
     headers:
       Content-Type: application/json
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
   register: gitlab_user_tokens
-  when:
-    - gitlab_user.json[0].id is defined
+  when: user_exists_in_gitlab
 
 - name: Include tasks to add user access token..
   ansible.builtin.include_tasks: mnt-user-add-apitoken.yml
   loop: "{{ user.apitokens }}"
   loop_control:
     loop_var: token
-  when: user.apitokens is defined
+  when:
+    - user.apitokens is defined
+    - user_exists_in_gitlab
