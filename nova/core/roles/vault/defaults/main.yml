@@ -155,7 +155,7 @@ vault_ldap_configuration:
   upndomain: "{{ vault_upndomain | default(domain) }}"
   url: "{{ vault_ldaps_url }}" # Can use multiple URLs separated by comma
   use_pre111_group_cn_behavior: false
-  use_token_groups: false
+  use_token_groups: true
   userattr: samaccountname
   userdn: "{{ vault_userdn }}"
   username_as_alias: false
