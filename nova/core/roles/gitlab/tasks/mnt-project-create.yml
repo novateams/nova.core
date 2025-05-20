@@ -36,6 +36,29 @@
   ansible.builtin.set_fact:
     gl_project_id: "{{ gl_matched_projects[0].id | default(None) }}"
 
+- name: Get a list of repositories for project..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/registry/repositories"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: 200
+  register: gl_project_repositories
+  when:
+    - gl_project_id != ''
+
+- name: Delete container registry..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/registry/repositories/{{ gl_project_repositories.json[0].id }}"
+    method: DELETE
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: [200, 202]
+  when:
+    - gl_project_repositories.json is defined
+    - gl_project_repositories.json | length > 0
+    - gl_project_repositories.json[0].id is defined
+
 - name: Removing the project..
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}"
