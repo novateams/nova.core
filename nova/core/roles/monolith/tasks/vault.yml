@@ -18,25 +18,28 @@
     secrets_vault_secrets_path: vault
 
 - name: Trusting Vault generated Root CA...
-  when: vault_root_ca_pki_engine_name is defined # This means that CA was also installed and configured with the Vault role
+  # This means that CA was also installed and configured with the Vault role
+  when: vault_create_root_ca | default(true)
   block:
     - name: Including nova.core.trusted_certificates role...
       ansible.builtin.include_role:
         name: nova.core.trusted_certificates
       vars:
         trusted_certificates_list:
-          - name: "{{ vault_root_ca_name }}"
-            src: https://{{ monolith_vault_fqdn }}/v1/{{ vault_root_ca_pki_engine_name }}/ca/pem
+          - name: "{{ vault_root_cas[0].vault_root_ca_name | default('RootCA') }}"
+            src: https://{{ monolith_vault_fqdn }}/v1/{{ vault_root_cas[0].vault_root_ca_pki_engine_name | default('RootCA') }}/ca/pem
 
     - name: Getting Root CA certificate contents...
       ansible.builtin.slurp:
-        src: /usr/local/share/ca-certificates/{{ vault_root_ca_name }}.crt
+        src: /usr/local/share/ca-certificates/{{ vault_root_cas[0].vault_root_ca_name | default('RootCA') }}.crt
       register: monolith_vault_root_ca
 
-    - name: Copying {{ vault_root_ca_name }} certificate to /usr/local/share/ca-certificates/{{ vault_root_ca_name }}.crt...
+    - name: Copying {{ vault_root_cas[0].vault_root_ca_name | default('RootCA')
+        }} certificate to /usr/local/share/ca-certificates/{{ vault_root_cas[0].vault_root_ca_name
+        | default('RootCA') }}.crt...
       ansible.builtin.copy:
         content: "{{ monolith_vault_root_ca.content | b64decode }}"
-        dest: /usr/local/share/ca-certificates/{{ vault_root_ca_name }}.crt
+        dest: /usr/local/share/ca-certificates/{{ vault_root_cas[0].vault_root_ca_name | default('RootCA') }}.crt
         mode: "0644"
       delegate_to: localhost
       become: true
@@ -65,13 +68,13 @@
     auth_method: token
     token: "{{ vault_creds.results[0].stdout }}"
     validate_certs: "{{ vault_validate_cert | default(true) }}"
-  register: deploy_vars_vault_token
+  register: monolith_vault_token
 
 - name: Setting vault_access_token fact...
   ansible.builtin.set_fact:
-    vault_access_token: "{{ deploy_vars_vault_token.login.auth.client_token }}"
+    vault_access_token: "{{ monolith_vault_token.login.auth.client_token }}"
     root_token: "{{ vault_creds.results[0].stdout }}"
-    vault_lookup_fragment: "url=https://{{ monolith_vault_fqdn }} token={{ vault_access_token }} "
+    vault_lookup_fragment: "url=https://{{ monolith_vault_fqdn }} token={{ monolith_vault_token.login.auth.client_token }} "
 
 - name: Listing all mounts...
   ansible.builtin.uri:
@@ -100,6 +103,8 @@
     body_format: json
     validate_certs: "{{ vault_validate_cert | default(true) }}"
     status_code: 204
+  vars:
+    secrets_vault_engine_path: monolith
 
 - name: Including nova.core.secrets_to_vault role...
   ansible.builtin.include_role:
