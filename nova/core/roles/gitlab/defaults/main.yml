@@ -65,3 +65,8 @@ gitlab_config_folder: /srv/gitlab
 gitlab_general_settings_gravatar_enabled: false
 gitlab_general_settings_signup_enabled: false
 gitlab_general_settings_max_artifacts_size: 1000
+
+## Disable usage tracking by default
+gitlab_general_settings_product_usage_data_enabled: false
+gitlab_general_settings_version_check_enabled: false
+gitlab_general_settings_usage_ping_enabled: false
