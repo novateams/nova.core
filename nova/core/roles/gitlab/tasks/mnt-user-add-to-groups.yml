@@ -1,13 +1,13 @@
 ---
-- name: Look up user id..
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users?username={{ user.username }}&with_custom_attributes=true"
-    headers:
-      Content-Type: application/json
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-  register: gl_user
+- name: Get user details from existing users list
+  ansible.builtin.set_fact:
+    current_gitlab_user: "{{ playbook_wide_gitlab_users_list | selectattr('username', 'equalto', user.username) | list | first | default({}) }}"
 
-- name: Look ip existing GitLab groups..
+- name: Check if user exists in GitLab
+  ansible.builtin.set_fact:
+    user_exists_in_gitlab: "{{ current_gitlab_user.id is defined }}"
+
+- name: Look up existing GitLab groups..
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/groups"
     method: GET
@@ -16,14 +16,16 @@
     return_content: true
     status_code: 200
   register: gl_existing_namespaces
+  when: user_exists_in_gitlab
 
 - name: Look up user memberships..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/users/{{ gl_user.json[0].id }}/memberships"
+    url: "{{ gitlab_url_api }}/users/{{ current_gitlab_user.id }}/memberships"
     headers:
       Content-Type: application/json
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
   register: gl_user_memberships
+  when: user_exists_in_gitlab
 
 - name: Add user to group..
   ansible.builtin.uri:
@@ -34,33 +36,37 @@
       Content-Type: application/json
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     body:
-      user_id: "{{ gl_user.json[0].id }}"
+      user_id: "{{ current_gitlab_user.id }}"
       access_level: "{{ group.access_level }}"
     status_code: [200, 201]
   loop: "{{ user.groups }}"
   loop_control:
     loop_var: group
   when:
+    - user_exists_in_gitlab
     - user.groups is defined
     - user.groups | length > 0
     - group.name not in gl_user_memberships.json | map(attribute="source_name")
 
 - name: Modify user group membership..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json | selectattr('name', 'equalto', group.name))[0].id }}/members/{{ gl_user.json[0].id }}"
+    url:
+      "{{ gitlab_url_api }}/groups/{{ (gl_existing_namespaces.json | selectattr('name',
+      'equalto', group.name))[0].id }}/members/{{ current_gitlab_user.id }}"
     method: PUT
     body_format: json
     headers:
       Content-Type: application/json
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     body:
-      user_id: "{{ gl_user.json[0].id }}"
+      user_id: "{{ current_gitlab_user.id }}"
       access_level: "{{ group.access_level }}"
     status_code: [200, 201]
   loop: "{{ user.groups }}"
   loop_control:
     loop_var: group
   when:
+    - user_exists_in_gitlab
     - user.groups is defined
     - user.groups | length > 0
     - group.name in gl_user_memberships.json | map(attribute="source_name")

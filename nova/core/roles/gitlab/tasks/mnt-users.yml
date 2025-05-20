@@ -1,4 +1,46 @@
 ---
+- name: Get existing GitLab users (first page and pagination headers)
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users?per_page=100&page=1"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_users_first_page_response
+
+- name: Initialize user list with first page results
+  ansible.builtin.set_fact:
+    playbook_wide_gitlab_users_list: "{{ gl_users_first_page_response.json | default([]) }}"
+    total_pages: "{{ gl_users_first_page_response.x_total_pages }}" # Stored as string
+
+- name: Fetch additional pages of GitLab users
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/users?per_page=100&page={{ page_num }}"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: additional_page_response
+  # Explicitly convert total_pages to int in the range function
+  loop: "{{ range(2, (total_pages | int) + 1) | list }}"
+  loop_control:
+    loop_var: page_num
+  when: total_pages | int > 1 # Convert to int for comparison
+
+- name: Add users from additional pages to the complete list
+  ansible.builtin.set_fact:
+    playbook_wide_gitlab_users_list: "{{ playbook_wide_gitlab_users_list + item.json }}"
+  loop: "{{ additional_page_response.results | default([]) }}"
+  when: total_pages | int > 1 and item.json is defined
+  loop_control:
+    label: "Adding more user from pages .."
+
+- name: Debug final user count
+  ansible.builtin.debug:
+    msg: "Total GitLab users collected: {{ playbook_wide_gitlab_users_list | length }}"
+
 - name: Include - create or modify users..
   ansible.builtin.include_tasks: mnt-user-create-modify.yml
   loop: "{{ gitlab_users }}"
