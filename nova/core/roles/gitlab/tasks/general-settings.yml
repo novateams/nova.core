@@ -1,4 +1,43 @@
 ---
+- name: Set event tracking settings..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/application/settings"
+    method: PUT
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      gitlab_product_usage_data_enabled: "{{ gitlab_general_settings_product_usage_data_enabled | default(false) }}"
+    return_content: true
+    status_code: [200, 201]
+  when: gitlab_general_settings_product_usage_data_enabled is defined
+
+- name: Set version check ping settings..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/application/settings"
+    method: PUT
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      version_check_enabled: "{{ gitlab_general_settings_version_check_enabled | default(false) }}"
+    return_content: true
+    status_code: [200, 201]
+  when: gitlab_general_settings_version_check_enabled is defined
+
+- name: Set usage ping settings..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/application/settings"
+    method: PUT
+    body_format: json
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body:
+      usage_ping_enabled: "{{ gitlab_general_settings_usage_ping_enabled | default(false) }}"
+    return_content: true
+    status_code: [200, 201]
+  when: gitlab_general_settings_usage_ping_enabled is defined
+
 - name: Set gravatar_enabled {{ gitlab_general_settings_gravatar_enabled }}...
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/application/settings"
@@ -9,9 +48,7 @@
     body:
       gravatar_enabled: "{{ gitlab_general_settings_gravatar_enabled }}"
     return_content: true
-    status_code:
-      - 200
-      - 201
+    status_code: [200, 201]
   when: gitlab_general_settings_gravatar_enabled is defined
 
 - name: Set signup_enabled {{ gitlab_general_settings_signup_enabled }}...
@@ -24,9 +61,7 @@
     body:
       signup_enabled: "{{ gitlab_general_settings_signup_enabled }}"
     return_content: true
-    status_code:
-      - 200
-      - 201
+    status_code: [200, 201]
   when: gitlab_general_settings_signup_enabled is defined
 
 - name: Set CICD Maximum Artifacts Size to {{ gitlab_general_settings_max_artifacts_size }}...
@@ -39,7 +74,5 @@
     body:
       max_artifacts_size: "{{ gitlab_general_settings_max_artifacts_size }}"
     return_content: true
-    status_code:
-      - 200
-      - 201
+    status_code: [200, 201]
   when: gitlab_general_settings_max_artifacts_size is defined
