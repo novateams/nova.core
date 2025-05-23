@@ -1,5 +1,5 @@
 ---
-- name: Disabling auto-updates...
+- name: Setting following configuration settings to disable auto updates...
   ansible.builtin.lineinfile:
     path: "{{ auto_update_disable.path }}"
     regexp: "{{ auto_update_disable.regexp }}"
@@ -8,7 +8,7 @@
     mode: "0644"
   loop_control:
     loop_var: auto_update_disable
-    label: "{{ auto_update_disable.line }}"
+    label: "{{ auto_update_disable.line }} > {{ auto_update_disable.path }}"
   loop:
     - path: /etc/apt/apt.conf.d/20auto-upgrades
       regexp: .*Unattended-Upgrade
