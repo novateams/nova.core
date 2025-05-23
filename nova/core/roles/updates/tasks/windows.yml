@@ -18,20 +18,83 @@
   retries: 3
   when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
 
+# Using this block and rescue approach in order to avoid this issue:
+# https://github.com/ansible-collections/ansible.windows/issues/762
 - name: Including Windows updates task...
   block:
+    - name: Checking for pending reboot...
+      ansible.windows.win_updates:
+        category_names: "{{ updates_category_names }}"
+        state: searched
+      register: win_updates_searched
+
+    - name: Rebooting...
+      ansible.windows.win_reboot:
+      when: win_updates_searched.reboot_required
+
     - name: Installing Windows updates...
       ansible.windows.win_updates:
         category_names: "{{ updates_category_names }}"
-        reboot: true
       register: win_updates
       until: not win_updates.failed
       retries: 2
 
+    - name: Rebooting and re-including the task...
+      when:
+        - win_updates.reboot_required
+        - updates_include_count is not defined or updates_include_count | int < 3
+      block:
+        - name: Setting update loop count...
+          ansible.builtin.set_fact:
+            updates_include_count: "{{ updates_include_count | default(0) | int + 1 }}"
+
+        - name: Rebooting...
+          ansible.windows.win_reboot:
+
+        - name: Including Windows Update tasks...
+          ansible.builtin.include_tasks: windows.yml
+
   # In some cases Windows Update may fail to install updates, so we need to try rescue the situation
   rescue:
-    - name: Including Windows Update rescue tasks...
-      ansible.builtin.include_tasks: windows_rescue.yml
+    - name: WINDOWS UPDATE ERROR
+      ansible.builtin.fail:
+        msg: Windows Update failed to install updates. Check the errors above and {{ inventory_hostname }} host logs for more details.
+      when:
+        - updates_rescue_count is defined
+        - updates_rescue_count | int < 3
+
+    - name: Stopping Windows Update service...
+      ansible.windows.win_service:
+        name: wuauserv
+        state: stopped
+      register: disable_windows_update_service
+      until: not disable_windows_update_service.failed
+      retries: 5
+
+    # Greater than Windows 8.1 & Server 2012 R2
+    - name: Stopping Update Orchestrator Service...
+      ansible.windows.win_service:
+        name: UsoSvc
+        state: stopped
+      when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>')
+
+    # Removing Windows Update cache using rd because Powershell (win_file module) can't do it in some cases although it's possible manually
+    # The issue is most likely related to long paths
+    - name: Removing C:\Windows\SoftwareDistribution...
+      ansible.windows.win_shell: if ((Test-Path "C:\Windows\SoftwareDistribution") -eq $true) {cmd /c rd C:\Windows\SoftwareDistribution /S /Q}
+      register: remove_win_update_cache
+      until: not remove_win_update_cache.failed
+      retries: 5
+
+    - name: Setting rescue loop count...
+      ansible.builtin.set_fact:
+        updates_include_count: "{{ updates_rescue_count | default(0) | int + 1 }}"
+
+    - name: Rebooting...
+      ansible.windows.win_reboot:
+
+    - name: Re-including Windows Update tasks...
+      ansible.builtin.include_tasks: windows.yml
 
 - name: Reporting update state... # Useful when WSUS is used
   ansible.windows.win_command: wuauclt /reportnow
