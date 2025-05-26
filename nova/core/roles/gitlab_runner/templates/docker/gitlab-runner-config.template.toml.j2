@@ -14,3 +14,9 @@
 {% if runner.allowed_privileged_services is defined %}
     allowed_privileged_services = {{ runner.allowed_privileged_services }}
 {% endif %}
+{% if runner.executor_cpus is defined %}
+    cpus = "{{ runner.executor_cpus }}"
+{% endif %}
+{% if runner.executor_memory is defined %}
+    memory = "{{ runner.executor_memory }}"
+{% endif %}
