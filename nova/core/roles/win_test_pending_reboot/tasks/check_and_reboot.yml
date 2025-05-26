@@ -9,7 +9,7 @@
   block:
     - name: Rebooting & rechecking...
       ansible.windows.win_reboot:
-        reboot_timeout: 1200 # Temp FIX for Exchange long reboots when running Elastic Agent
+        reboot_timeout: 1200
 
     - name: Re-including check_and_reboot task...
       ansible.builtin.include_tasks: check_and_reboot.yml

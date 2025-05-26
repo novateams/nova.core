@@ -47,7 +47,7 @@
   when:
     - gl_project_id != ''
 
-- name: Delete container registry..
+- name: Mark container registry for deletion..
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/registry/repositories/{{ gl_project_repositories.json[0].id }}"
     method: DELETE
@@ -55,9 +55,23 @@
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     status_code: [200, 202]
   when:
-    - gl_project_repositories.json is defined
-    - gl_project_repositories.json | length > 0
-    - gl_project_repositories.json[0].id is defined
+    - gl_project_repositories.json | default([]) | length > 0
+    - gl_project_repositories.json[0].id | default('') != ''
+
+- name: Get tags for repository to verify deletion..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/registry/repositories/{{ gl_project_repositories.json[0].id }}/tags"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    status_code: 200
+  register: gl_project_tags
+  until: gl_project_tags.json | default([]) | length == 0
+  retries: 40
+  delay: 5
+  when:
+    - gl_project_repositories.json | default([]) | length > 0
+    - gl_project_repositories.json[0].id | default('') != ''
 
 - name: Removing the project..
   ansible.builtin.uri:
