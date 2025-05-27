@@ -1,26 +1,14 @@
 ---
-- name: Look up existing projects info..
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/projects"
-    headers:
-      Content-Type: application/json
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-  register: gl_existing_projects
+- name: Include tasks | look up existing projects..
+  ansible.builtin.include_tasks: mnt-project-lookup.yml
 
-- name: Look up existing GitLab namespaces (groups)..
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups"
-    method: GET
-    headers:
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-    return_content: true
-    status_code: 200
-  register: gl_existing_namespaces
+- name: Include tasks  | look up existing namespaces..
+  ansible.builtin.include_tasks: mnt-namespace-lookup.yml
 
 ## This is to be sure that the search is precise, project name is not unique
 - name: Search for the project using namespace and project name..
   ansible.builtin.set_fact:
-    gl_matched_projects: "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
+    gl_matched_projects: "{{ gl_existing_projects | selectattr('namespace.full_path', 'equalto', project.namespace)
       | selectattr('name', 'equalto', project.name) }}"
 
 - name: Set current existing project ID variable..

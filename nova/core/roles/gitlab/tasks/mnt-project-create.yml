@@ -1,23 +1,11 @@
 ---
-- name: Look up existing projects info..
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/projects"
-    headers:
-      Content-Type: application/json
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-  register: gl_existing_projects
+- name: Include tasks | look up existing projects..
+  ansible.builtin.include_tasks: mnt-project-lookup.yml
 
-- name: Look up existing GitLab groups..
-  ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/groups"
-    method: GET
-    headers:
-      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
-    return_content: true
-    status_code: 200
-  register: gl_existing_namespaces
+- name: Include tasks  | look up existing namespaces..
+  ansible.builtin.include_tasks: mnt-namespace-lookup.yml
 
-- name: Set the current projects namespace ID variable..
+- name: Set the current project namespace ID variable..
   ansible.builtin.set_fact:
     gl_namespace_id: "{{ (gl_existing_namespaces.json | selectattr('name', 'equalto', project.namespace) | first).id }}"
 
@@ -26,10 +14,9 @@
     gl_project_path: "{{ project.name | replace(' ', '-') | lower if project.path is not defined else project.path }}"
 
 ## This is to be sure that the search is precise, project path is not unique
-- name: Search for the project using namespace and project path..
+- name: Searching for the project using namespace and project path..
   ansible.builtin.set_fact:
-    gl_matched_projects:
-      "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
+    gl_matched_projects: "{{ gl_existing_projects | selectattr('namespace.full_path', 'equalto', project.namespace)
       | selectattr('path', 'equalto', gl_project_path) }}"
 
 - name: Set current existing project ID variable..
@@ -47,11 +34,27 @@
   when:
     - gl_project_id != ''
 
-- name: Mark container registry for deletion..
+- name: Mark all container tags for deletion..
   ansible.builtin.uri:
-    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/registry/repositories/{{ gl_project_repositories.json[0].id }}"
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/registry/repositories/{{ gl_project_repositories.json[0].id }}/tags"
     method: DELETE
     headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body_format: json
+    body:
+      name_regex_delete: .*
+    status_code: [200, 202, 400]
+  when:
+    - gl_project_repositories.json | default([]) | length > 0
+    - gl_project_repositories.json[0].id | default('') != ''
+
+- name: Mark the latest container tag for deletion..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}/registry/repositories/{{ gl_project_repositories.json[0].id }}/tags/latest"
+    method: DELETE
+    headers:
+      Content-Type: application/json
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     status_code: [200, 202]
   when:
@@ -67,17 +70,18 @@
     status_code: 200
   register: gl_project_tags
   until: gl_project_tags.json | default([]) | length == 0
-  retries: 40
-  delay: 5
+  retries: 50
+  delay: 10
   when:
     - gl_project_repositories.json | default([]) | length > 0
     - gl_project_repositories.json[0].id | default('') != ''
 
-- name: Removing the project..
+- name: Mark the project for deletion..
   ansible.builtin.uri:
     url: "{{ gitlab_url_api }}/projects/{{ gl_project_id }}"
     method: DELETE
     headers:
+      Content-Type: application/json
       PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
     status_code: [200, 202]
   when:

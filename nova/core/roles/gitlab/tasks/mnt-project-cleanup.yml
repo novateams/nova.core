@@ -1,0 +1,26 @@
+---
+- name: Include tasks | look up existing projects..
+  ansible.builtin.include_tasks: mnt-project-lookup.yml
+
+- name: Search for all projects marked for deletion..
+  ansible.builtin.set_fact:
+    gl_projects_to_delete: "{{ gl_existing_projects | selectattr('marked_for_deletion_on', 'defined')
+      | selectattr('marked_for_deletion_on', 'ne', none) | list }}"
+
+- name: Removing projects marked for deletion..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects/{{ item.id }}"
+    method: DELETE
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    body_format: json
+    body:
+      full_path: "{{ item.path_with_namespace }}"
+      permanently_remove: true
+    status_code: [200, 202]
+  loop: "{{ gl_projects_to_delete }}"
+  loop_control:
+    label: "Cleaning up archived project {{ item.name }}"
+  when:
+    - gl_projects_to_delete | length > 0

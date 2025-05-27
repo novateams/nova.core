@@ -1,0 +1,10 @@
+---
+- name: Look up existing GitLab groups(namespaces)..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/groups"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: gl_existing_namespaces
