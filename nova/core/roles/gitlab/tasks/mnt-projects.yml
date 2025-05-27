@@ -18,3 +18,7 @@
   loop: "{{ gitlab_projects }}"
   loop_control:
     loop_var: project
+
+- name: Include tasks to cleanup projects marked for deletion..
+  ansible.builtin.include_tasks: mnt-project-cleanup.yml
+  when: gitlab_cleanup_projects_marked_for_removal | default(false) | bool

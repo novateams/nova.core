@@ -1,0 +1,39 @@
+---
+- name: Get existing GitLab projects, first page..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects?per_page=100&page=1"
+    method: GET
+    headers:
+      Content-Type: application/json
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+    body_format: json
+  register: gl_projects_first_page_response
+
+- name: Initialize projects list with results from the first page..
+  ansible.builtin.set_fact:
+    gl_existing_projects: "{{ gl_projects_first_page_response.json }}"
+    total_pages: "{{ gl_projects_first_page_response.x_total_pages }}"
+
+- name: Fetch additional pages of GitLab projects..
+  ansible.builtin.uri:
+    url: "{{ gitlab_url_api }}/projects?per_page=100&page={{ page_num }}"
+    method: GET
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_root_personal_token }}"
+    return_content: true
+    status_code: 200
+  register: additional_page_response
+  loop: "{{ range(2, (total_pages | int) + 1) | list }}"
+  loop_control:
+    loop_var: page_num
+  when: total_pages | int > 1
+
+- name: Add projects from additional pages to the complete list..
+  ansible.builtin.set_fact:
+    gl_existing_projects: "{{ gl_existing_projects + item.json }}"
+  loop: "{{ additional_page_response.results | default([]) }}"
+  when: total_pages | int > 1 and item.json is defined
+  loop_control:
+    label: "Adding more projects from pages .."
