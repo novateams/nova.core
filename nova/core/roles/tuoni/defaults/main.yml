@@ -12,6 +12,8 @@ tuoni_version: {} # Set the version of Tuoni to install. If left empty the lates
 tuoni_branch: main # Set the branch of Tuoni to install. If left empty the main branch will be installed
 tuoni_docker_ipv6_enabled: false # Set to true to enable IPv6 in Tuoni Docker. If left empty IPv6 will be disabled
 
+tuoni_licence_key: {} # Set the Tuoni licence key to install licensed plugins
+
 tuoni_users: # The list of users that will be created in Tuoni pass a custom list as a variable to override this default list
   - username: operator
     password: Operator1Operator1 # Make sure to change this password
