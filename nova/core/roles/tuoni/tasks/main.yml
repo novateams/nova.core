@@ -17,7 +17,7 @@
       ansible.builtin.set_fact:
         tuoni_vars: "{{ tuoni_config.content | b64decode | from_yaml }}"
 
-- name: Getting the API token ...
+- name: Getting the API token...
   ansible.builtin.uri:
     url: https://{{ tuoni_fqdn }}:8443/api/v1/auth/login
     url_username: "{{ tuoni_api_username | default(tuoni_vars.tuoni.auth.credentials.username) }}"
@@ -40,3 +40,7 @@
 - name: Including Tuoni listeners tasks...
   ansible.builtin.include_tasks: listeners.yml
   when: tuoni_listeners != []
+
+- name: Including Tuoni plugins tasks...
+  ansible.builtin.include_tasks: plugins.yml
+  when: tuoni_licence_key != {}

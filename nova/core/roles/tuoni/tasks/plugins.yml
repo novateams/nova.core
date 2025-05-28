@@ -1,0 +1,11 @@
+---
+- name: Installing Tuoni plugins...
+  ansible.builtin.shell: |
+    export SILENT=1
+    {{ 'export TUONI_LICENCE_KEY=' + tuoni_licence_key if tuoni_licence_key != {} else '' }}
+    {{ 'export TUONI_VERSION=' + tuoni_version if tuoni_version != {} else '' }}
+    cd /srv/tuoni
+    ./tuoni update-plugins
+  changed_when: true
+  become: true
+  become_user: "{{ 'root' if tuoni_install_as_root else ansible_user }}"
