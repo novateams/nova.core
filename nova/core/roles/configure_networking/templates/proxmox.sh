@@ -21,7 +21,7 @@ until systemctl is-active --quiet pve-cluster; do
     sleep 3
 done
 
-MGMT_INTERFACE_NAME={{ configure_networking_proxmox_mgmt_interface_name }}
+MGMT_INTERFACE_NAME={{ configure_networking_proxmox_mgmt_interface_name | default("$(ip -o link show | awk -F': ' '{print $2}' | grep -v '^lo$' | head -n 1)") }}
 NODE_NAME={{ configure_networking_proxmox_node_name | default("$(hostname)") }}
 
 {% if mgmt_ipv4 != false %}
