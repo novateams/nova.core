@@ -21,30 +21,19 @@ network:
       addresses:
       {% endif %}
         {% for ip_address in interface.addresses %}
-        {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("mgmt.*")) and (netplan_renderer != "NetworkManager") %}
-        - {{ ip_address.address }}:
-            lifetime: 0
-        {% elif (ip_address.mode == "ipv4_static") %}
         - {{ ip_address.address }}
-        {% endif %}
-        {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("mgmt.*")) and (netplan_renderer != "NetworkManager") %}
-        - "{{ ip_address.address }}":
-            lifetime: 0
-        {% elif (ip_address.mode == "ipv6_static") %}
-        - "{{ ip_address.address }}"
-        {% endif %}
         {% endfor %}
-        {% if extra_ipv4[ interface.network_id ] is defined %}
-        {% for ipv4 in extra_ipv4[ interface.network_id ] %}
+        {% if extra_ipv4[interface.network_id] is defined %}
+        {% for ipv4 in extra_ipv4[interface.network_id] %}
         - {{ ipv4 }}
         {% endfor %}
         {% endif %}
-        {% if extra_ipv6[ interface.network_id ] is defined %}
-        {% for ipv6 in extra_ipv6[ interface.network_id ] %}
+        {% if extra_ipv6[interface.network_id] is defined %}
+        {% for ipv6 in extra_ipv6[interface.network_id] %}
         - {{ ipv6 }}
         {% endfor %}
         {% endif %}
-      {% if (interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes[ interface.network_id ] is defined) %}
+      {% if (interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes[interface.network_id] is defined) %}
       routes:
       {% endif %}
       {% for ip_address in interface.addresses %}
@@ -56,15 +45,19 @@ network:
       {% for ip_address in interface.addresses %}
       {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway is defined) and (ip_address.gateway != none) %}
         - to: default
-          via: "{{ ip_address.gateway }}"
+          via: {{ ip_address.gateway }}
       {% endif %}
       {% endfor %}
-      {% if extra_routes[ interface.network_id ] is defined %}
-      {% for route in extra_routes[ interface.network_id ] %}
-        - to: "{{ route.to }}"
-          via: "{{ route.via }}"
+      {% if extra_routes[interface.network_id] is defined %}
+      {% for route in extra_routes[interface.network_id] %}
+        - to: {{ route.to }}
+          via: {{ route.via }}
       {% endfor %}
       {% endif %}
+      {% if extra_ipv4 is defined or extra_ipv6 is defined %}
+      {{ '# Since one of the interfaces contains multiple IP addresses,' }}
+      {{ '# The DNS servers are configured in /etc/resolv.conf' }}
+      {% else %}
       {% if ((interface.connection) or (interface.egress)) and (dns_server_combined != []) %}
       nameservers:
         addresses:
@@ -75,11 +68,12 @@ network:
           {% endif %}
           {% if (dns_servers6 != []) and (interface.addresses | map(attribute='mode') | regex_search(".*ipv6.*")) %}
           {% for address in dns_servers6 %}
-          - "{{ address }}"
+          - {{ address }}
           {% endfor %}
           {% endif %}
         search:
           - {{ domain }}
+      {% endif %}
       {% endif %}
       {% endif %}
   {% endfor %}

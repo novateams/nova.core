@@ -45,7 +45,8 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "rm -rf /etc/netplan/*"
+            # netplan apply here is needed to avoid systemd-networkd-wait-online.service timing out
+            arguments: -c "rm -rf /etc/netplan/* && netplan apply"
             path: /bin/bash
         status_code: 201
         body_format: json
@@ -78,8 +79,7 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            # Through testing, it was found that the following command gives the most consistent results for configuring the network.
-            arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && systemctl restart systemd-networkd.service && netplan apply"
+            arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply"
             path: /bin/bash
         status_code: 201
         body_format: json
@@ -89,3 +89,94 @@
 
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
+
+    # When using many IPs on a single interface, netplan will start having DNS resolution issues
+    # For those use cases we will use resolv.conf to configure DNS
+    - name: Configuring resolv.conf for multi-ip systems...
+      when: extra_ipv4 is defined
+        or extra_ipv6 is defined
+      block:
+        - name: Disabling systemd-resolved service...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+              | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "systemctl disable --now systemd-resolved"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          retries: 3
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+        - name: Removing existing resolv.conf file...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+              | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "rm -f /etc/resolv.conf"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          retries: 3
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+        - name: Templating resolv.conf configuration script...
+          ansible.builtin.template:
+            src: resolv.conf
+            dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+            lstrip_blocks: true
+            mode: "0644"
+
+        - name: Getting resolv.conf file info...
+          ansible.builtin.stat:
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+          register: resolv_file_size
+
+        - name: Preparing resolv.conf upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+              | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ resolv_file_size.stat.size }}"
+                path: /etc/resolv.conf
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          retries: 3
+          register: resolv_file_upload_prep
+
+        - name: Uploading resolv.conf...
+          ansible.builtin.uri:
+            url: "{{ resolv_file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"

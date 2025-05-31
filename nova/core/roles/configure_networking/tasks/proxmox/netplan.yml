@@ -20,7 +20,7 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
       register: file_contents
 
-    - name: Removing existing /etc/netplan folder...
+    - name: Removing any existing netplan configurations...
       ansible.builtin.uri:
         url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
           }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
@@ -29,28 +29,9 @@
         method: POST
         body:
           command:
-            - rm
-            - -rf
-            - /etc/netplan
-        body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
-      register: network_config_command
-
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
-
-    - name: Recreating /etc/netplan folder...
-      ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
-        headers:
-          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
-        method: POST
-        body:
-          command:
-            - mkdir
-            - -p
-            - /etc/netplan
+            - sh
+            - -c
+            - "rm -f /etc/netplan/*"
         body_format: json
         validate_certs: "{{ proxmox_validate_certs }}"
       register: network_config_command
