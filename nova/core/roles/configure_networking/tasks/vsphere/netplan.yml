@@ -3,7 +3,7 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Templating network configuration script...
+    - name: Templating network netplan.yml...
       ansible.builtin.template:
         src: netplan.yml
         dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
@@ -17,7 +17,7 @@
 
     - name: Preparing file upload...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
@@ -37,7 +37,7 @@
 
     - name: Removing existing netplan configuration file(s)...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
@@ -70,7 +70,7 @@
 
     - name: Configuring network...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:

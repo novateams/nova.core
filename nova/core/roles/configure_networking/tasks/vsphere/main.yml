@@ -16,7 +16,7 @@
 
     - name: Getting REST API token...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/session
+        url: https://{{ vmware_defaults.hostname }}/api/session
         method: POST
         user: "{{ vmware_defaults.username }}"
         password: "{{ vmware_defaults.password }}"
@@ -32,7 +32,7 @@
 
     - name: Terminating the REST API session...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/session
+        url: https://{{ vmware_defaults.hostname }}/api/session
         method: DELETE
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.vmware_api_session_id }}"
