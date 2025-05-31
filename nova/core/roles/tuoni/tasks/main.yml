@@ -17,21 +17,27 @@
       ansible.builtin.set_fact:
         tuoni_vars: "{{ tuoni_config.content | b64decode | from_yaml }}"
 
-- name: Getting the API token...
-  ansible.builtin.uri:
-    url: https://{{ tuoni_fqdn }}:8443/api/v1/auth/login
-    url_username: "{{ tuoni_api_username | default(tuoni_vars.tuoni.auth.credentials.username) }}"
-    url_password: "{{ tuoni_api_password | default(tuoni_vars.tuoni.auth.credentials.password) }}"
-    method: POST
-    status_code: 200
-    return_content: true
-    force_basic_auth: true
-    validate_certs: false # Because Tuoni uses self-signed certificate with an empty Subject Name
-  register: tuoni_api_token
-  until: tuoni_api_token.status == 200
-  retries: 10
-  delay: 6
+- name: Getting and setting Tuoni API token...
   when: tuoni_users != [] or tuoni_listeners != []
+  block:
+    - name: Getting the API token...
+      ansible.builtin.uri:
+        url: https://{{ tuoni_fqdn }}:8443/api/v1/auth/login
+        url_username: "{{ tuoni_api_username | default(tuoni_vars.tuoni.auth.credentials.username) }}"
+        url_password: "{{ tuoni_api_password | default(tuoni_vars.tuoni.auth.credentials.password) }}"
+        method: POST
+        status_code: 200
+        return_content: true
+        force_basic_auth: true
+        validate_certs: false # Because Tuoni uses self-signed certificate with an empty Subject Name
+      register: tuoni_api_token
+      until: tuoni_api_token.status == 200
+      retries: 10
+      delay: 6
+
+    - name: Setting Tuoni API token...
+      ansible.builtin.set_fact:
+        tuoni_api_token: "{{ tuoni_api_token.content }}"
 
 - name: Including Tuoni users tasks...
   ansible.builtin.include_tasks: users.yml

@@ -4,7 +4,7 @@
     url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners
     method: GET
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     force_basic_auth: true
     body_format: json
     status_code: 200
@@ -16,7 +16,7 @@
     url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners
     method: POST
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     force_basic_auth: true
     body_format: json
     status_code: 200
@@ -33,7 +33,7 @@
       | selectattr('name', 'equalto', item.name) | map(attribute='id') | first }}
     method: PATCH
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     force_basic_auth: true
     body_format: json
     status_code: 200
@@ -52,7 +52,7 @@
     url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners
     method: GET
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     force_basic_auth: true
     body_format: json
     status_code: 200
@@ -79,7 +79,7 @@
         url: https://{{ tuoni_fqdn }}:8443/api/v1/payloads
         method: POST
         headers:
-          Authorization: Bearer {{ tuoni_api_token.content }}
+          Authorization: Bearer {{ tuoni_api_token }}
         force_basic_auth: true
         body: "{{ item }}"
         body_format: json
