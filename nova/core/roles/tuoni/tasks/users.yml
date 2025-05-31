@@ -4,7 +4,7 @@
     url: https://{{ tuoni_fqdn }}:8443/api/v1/users
     method: GET
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     validate_certs: false
   register: tuoni_existing_users
 
@@ -13,7 +13,7 @@
     url: https://{{ tuoni_fqdn }}:8443/api/v1/users
     method: POST
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     force_basic_auth: true
     body_format: json
     status_code:
@@ -31,7 +31,7 @@
     url: https://{{ tuoni_fqdn }}:8443/api/v1/users/{{ item.username }}
     method: PUT
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     force_basic_auth: true
     body_format: json
     status_code:
@@ -51,7 +51,7 @@
     url: https://{{ tuoni_fqdn }}:8443/api/v1/users/{{ item.username }}/password
     method: PUT
     headers:
-      Authorization: Bearer {{ tuoni_api_token.content }}
+      Authorization: Bearer {{ tuoni_api_token }}
     force_basic_auth: true
     body_format: json
     status_code:
