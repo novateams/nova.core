@@ -1,14 +1,25 @@
 ---
-- name: Creating /etc/polkit-1/localauthority/50-local.d
-  ansible.builtin.file:
-    path: /etc/polkit-1/localauthority/50-local.d
-    state: directory
-    recurse: true
-    mode: "0755"
+- name: Configuring older Ubuntu versions...
+  when: ansible_distribution_major_version is version(22, '<=')
+  block:
+    - name: Creating /etc/polkit-1/localauthority/50-local.d
+      ansible.builtin.file:
+        path: /etc/polkit-1/localauthority/50-local.d
+        state: directory
+        # recurse: true
+        mode: "0755"
 
-# http://c-nergy.be/blog/?p=12043
+    # http://c-nergy.be/blog/?p=12043
+    - name: Configuring XRDP polkit...
+      ansible.builtin.copy:
+        src: 10-configuration.pkla
+        dest: /etc/polkit-1/localauthority/50-local.d/10-configuration.pkla
+        mode: "0644"
+
+# https://c-nergy.be/blog/?p=12073
 - name: Configuring XRDP polkit...
   ansible.builtin.copy:
-    src: 10-configuration.pkla
-    dest: /etc/polkit-1/localauthority/50-local.d/10-configuration.pkla
+    src: 10-configuration.rules
+    dest: /etc/polkit-1/rules.d/10-configuration.rules
     mode: "0644"
+  when: ansible_distribution_major_version is version(24, '>=')
