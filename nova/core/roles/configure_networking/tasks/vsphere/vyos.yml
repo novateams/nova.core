@@ -7,7 +7,7 @@
     # Otherwise VyOS interfaces will not match the ones in vCenter
     - name: Resetting VyOS NIC(s) for {{ inventory_hostname }}...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
@@ -46,7 +46,7 @@
 
     - name: Preparing config.boot upload...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
@@ -79,7 +79,7 @@
 
     - name: Configuring VyOS network for {{ inventory_hostname }}...
       ansible.builtin.uri:
-        url: https://{{ vcenter_hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
