@@ -11,6 +11,7 @@
     update_cache: true
   register: firewall_dependencies_install
   until: not firewall_dependencies_install.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+  notify: reboot_unix
   retries: 10
   delay: 6
 
@@ -21,19 +22,12 @@
     lstrip_blocks: true
     mode: "0644"
   register: nftables_rules
-  notify: Restarting nftables...
+  notify: nftables_restart
 
-# This is required to make sure automatic Docker IPTables rules get re-populated
-- name: Checking if Docker service exists... # noqa: no-handler
+# This is required to make sure automatic iptables rules used by Docker gets re-populated
+- name: Checking if Docker service exists...
   ansible.builtin.systemd:
     name: docker.service
   register: docker_service_exists
-  changed_when: docker_service_exists.status.LoadState != "not-found"
-  notify: Restarting Docker...
-  when: nftables_rules.changed
-
-- name: Rebooting Unix...
-  ansible.builtin.reboot:
-  when:
-    - ansible_os_family == "Archlinux" # For some reason nftables does not work without a reboot on Archlinux
-    - firewall_dependencies_install.changed # noqa: no-handler
+  changed_when: nftables_rules.changed
+  notify: docker_restart
