@@ -5,6 +5,7 @@
   when: no_undeploy or ['no_undeploy', 'custom_no_undeploy'] | intersect(group_names) | length > 0
 
 - name: Removing machine and any leftover disks...
+  when: proxmox_vm_exists.proxmox_vms != []
   delegate_to: localhost
   become: false
   block:
