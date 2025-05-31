@@ -78,5 +78,5 @@
     name: docker.service
   register: docker_service_exists
   changed_when: docker_service_exists.status.LoadState != "not-found"
-  notify: Restarting Docker...
+  notify: docker_restart
   when: ipv4_rules_result.changed or ipv6_rules_result.changed or iptables_service_result.changed
