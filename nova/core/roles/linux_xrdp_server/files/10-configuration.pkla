@@ -19,9 +19,9 @@ ResultAny=yes
 ResultInactive=no
 ResultActive=yes
 
-[Allow all users to restart]
+[Allow all users to restart and power off the system]
 Identity=unix-user:*
-Action=org.freedesktop.login1.reboot
+Action=org.freedesktop.login1.reboot;org.freedesktop.login1.power-off;org.freedesktop.login1.reboot-multiple-sessions
 ResultAny=yes
-ResultInactive=no
+ResultInactive=yes
 ResultActive=yes
