@@ -12,7 +12,7 @@
 
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
-    | upper }} over {{ connection_address_custom | default(connection_address) }}...
+    | upper }} over {{ connection_address_custom | default(connection_address) }}... # noqa: name[template]
   ansible.builtin.set_fact:
     ansible_host: "{{ connection_address_custom | default(connection_address) }}"
     ansible_connection: "{{ default_connection_plugin }}"

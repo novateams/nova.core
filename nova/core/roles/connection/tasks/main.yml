@@ -38,7 +38,7 @@
     - ansible_network_os is defined
     - ansible_network_os == "panos"
 
-- name: Waiting for {{ inventory_hostname }} to become reachable...
+- name: Waiting for connection to {{ inventory_hostname }}...
   ansible.builtin.wait_for_connection:
     timeout: 300
   when:
@@ -51,7 +51,7 @@
     - ansible_system is defined
     - ansible_system == "Darwin"
   block:
-    - name: Waiting for {{ inventory_hostname }} to become reachable...
+    - name: Waiting for connection to {{ inventory_hostname }}...
       ansible.builtin.raw: echo " "
       changed_when: true
       retries: 30
@@ -62,7 +62,7 @@
         - not role_only_wp
         - not macos_has_python
 
-    - name: Waiting for {{ inventory_hostname }} to become reachable...
+    - name: Waiting for connection to {{ inventory_hostname }}...
       ansible.builtin.wait_for_connection:
         timeout: 300
       when:
