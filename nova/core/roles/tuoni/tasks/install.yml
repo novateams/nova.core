@@ -23,8 +23,6 @@
     {{ 'export TUONI_BRANCH=' + tuoni_branch if tuoni_branch != {} else '' }}
     {{ 'export TUONI_DOCKER_IPV6_ENABLED=' + (tuoni_docker_ipv6_enabled | string) if tuoni_docker_ipv6_enabled != {} else '' }}
     {{ '' if tuoni_update_on_deploy else 'NO_UPDATE=1' }} /tmp/tuoni.sh
-    cd /srv/tuoni
-    ./tuoni start
   changed_when: true
   become: true
   become_user: "{{ 'root' if tuoni_install_as_root else ansible_user }}"
