@@ -46,8 +46,10 @@
               ansible.builtin.setup:
                 filter: "*_time"
 
+            # Node is where the template is located, will not work if the template is not on the same node
+            # The next task will move the VM to the correct node before starting it
             - name: Cloning {{ custom_vm_name | default(vm_name) }} VM...
-              community.general.proxmox_kvm:
+              community.proxmox.proxmox_kvm:
                 clone: "{{ vm_template }}"
                 description: "{{ vm_description }}"
                 full: "{{ false if linked_clone_status else true }}"
@@ -82,6 +84,14 @@
                   Cloning {{ custom_vm_name | default(vm_name) }} failed.
                   Check the errors above for this host and try again.
 
+    - name: Migrating {{ custom_vm_name | default(vm_name) }} VM to {{ proxmox_node }} node...
+      community.general.proxmox_kvm:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        node: "{{ proxmox_node }}"
+        migrate: true
+      retries: 12
+      delay: 5
+
     - name: Resizing {{ custom_vm_name | default(vm_name) }} VM disk...
       community.general.proxmox_disk:
         name: "{{ custom_vm_name | default(vm_name) }}"
@@ -89,8 +99,8 @@
         disk: "{{ machine_operations_proxmox_os_disk }}"
         size: "{{ hardware_primary_disk_size }}G"
         state: resized
-      retries: 12
-      delay: 5
+      # hardware_primary_disk_size variable usually comes from Providentia
+      when: hardware_primary_disk_size is defined
 
     - name: Updating {{ custom_vm_name | default(vm_name) }} VM configuration...
       community.general.proxmox_kvm:
@@ -100,7 +110,7 @@
         memory: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
-        node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
+        node: "{{ proxmox_node }}"
         onboot: "{{ machine_operations_proxmox_vm_start_on_boot }}"
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
         update: true
@@ -117,12 +127,6 @@
         index_var: idx
         label: "{{ nic.cloud_id }}"
       loop: "{{ interfaces }}"
-
-    - name: Migrating {{ custom_vm_name | default(vm_name) }} VM to {{ proxmox_node }} node...
-      community.general.proxmox_kvm:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        node: "{{ proxmox_node }}"
-        migrate: true
 
     - name: Starting {{ custom_vm_name | default(vm_name) }} VM... # noqa: no-handler
       community.general.proxmox_kvm:

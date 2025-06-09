@@ -3,34 +3,16 @@
   become: false
   delegate_to: localhost
   block:
-    # Waiting until QEMU agent is not responding
-    - name: Waiting for final sysprep reboot...
-      ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/info"
-        headers:
-          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
-        method: GET
-        validate_certs: "{{ proxmox_validate_certs }}"
-        status_code: 500
-      retries: 100
-      delay: 3
-      until: sysprep_reboot.json.data == none
-      register: sysprep_reboot
-      when: fresh_deploy
+    - name: Including Sysprep check tasks...
+      ansible.builtin.include_tasks: windows_check_sysprep.yml
 
-    - name: Waiting until agent is running...
-      ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/info"
-        headers:
-          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
-        method: GET
-        validate_certs: "{{ proxmox_validate_certs }}"
+    - name: Waiting until quest agent is running...
+      community.general.proxmox_vm_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        config: current
+        network: true
       retries: 30
       delay: 10
-      register: agent_running
-      until: not agent_running.failed
 
     - name: Templating network configuration script...
       ansible.builtin.template:
@@ -56,10 +38,6 @@
           file: C:\Windows\Temp\Configure-Network.ps1
         body_format: json
         validate_certs: "{{ proxmox_validate_certs }}"
-      register: network_config_write
-      until: not network_config_write.failed
-      retries: 30
-      delay: 10
 
     - name: Configuring network...
       ansible.builtin.uri:
@@ -81,6 +59,41 @@
         body_format: json
         validate_certs: "{{ proxmox_validate_certs }}"
       register: network_config_command
+      retries: 24
+      delay: 5
 
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Waiting for the network to be configured...
+      ansible.builtin.wait_for:
+        host: "{{ connection_address }}"
+        port: 22
+
+  rescue:
+    - name: WINDOWS NETWORK ERROR
+      ansible.builtin.fail:
+        msg: |
+          Failed to configure networking on Windows VM.
+          Check the following places for errors:
+            - Errors logs above
+            - {{ inventory_hostname }} host logs about Sysprep errors
+            - Try running C:\Windows\Temp\Configure-Network.ps1 manually on the VM to see if there are any errors.
+      when: sysprep_loop_count | int >= 3
+
+    - name: Rebooting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
+
+    - name: Waiting until quest agent is running...
+      community.general.proxmox_vm_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        config: current
+        network: true
+      retries: 30
+      delay: 10
+
+    - name: Re-including Windows CLI tasks...
+      ansible.builtin.include_tasks: windows_cli.yml

@@ -12,8 +12,8 @@
         network: true
       register: proxmox_vm_info
       until: not proxmox_vm_info.failed
-      retries: 18
-      delay: 10
+      retries: 60
+      delay: 5
 
     - name: Including {{ customization_method }} network configuration tasks...
       ansible.builtin.include_tasks: "{{ customization_method }}.yml"
