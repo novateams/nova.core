@@ -1,0 +1,61 @@
+---
+- name: Running Windows Sysprep check loop...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Saving Sysprep status...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          command:
+            - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+            - -ExecutionPolicy
+            - Bypass
+            - -NoProfile
+            - -WindowStyle
+            - Hidden
+            - -Command
+            - "Set-Content -Path C:\\Windows\\Temp\\SysprepStatus -Value (Get-ItemProperty -Path HKLM:\\SYSTEM\\Setup\\Status\\SysprepStatus
+              | Select-Object -ExpandProperty GeneralizationState) -Force"
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+      retries: 60
+      delay: 2
+
+    - name: Getting Sysprep status...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid
+          }}/agent/file-read?file=C:\\Windows\\Temp\\SysprepStatus"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: sysprep_status
+      retries: 60
+      delay: 2
+
+    - name: Setting Sysprep loop count to {{ sysprep_loop_count | default(0) | int + 1 }}...
+      ansible.builtin.set_fact:
+        sysprep_loop_count: "{{ sysprep_loop_count | default(0) | int + 1 }}"
+
+    - name: Waiting for Sysprep to finish...
+      community.general.proxmox_vm_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        config: current
+        network: true
+      register: proxmox_agent_status
+      until:
+        - proxmox_agent_status.msg is defined
+        - proxmox_agent_status.msg is search('.*agent is not running.*')
+      failed_when: proxmox_agent_status.failed and proxmox_agent_status.msg is not search('.*agent is not running.*')
+      retries: 60
+      delay: 5
+      when:
+        - sysprep_status.json.data['content'] | trim != "7"
+        - sysprep_loop_count | default(1) | int == 1 # Not need for rescue loops
