@@ -4,11 +4,25 @@
   delegate_to: localhost
   become: false
   block:
-    - name: DHCP UNSUPPORTED
-      ansible.builtin.fail:
-        msg: |
-          DHCP connection mode is currently not supported for Proxmox.
-          Please use static IP address for connection.
+    - name: Getting {{ custom_vm_name | default(vm_name) }} network configuration...
+      community.general.proxmox_vm_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        config: current
+        network: true
+      delegate_to: localhost
+      become: false
+      register: proxmox_vm_info
+      until: not proxmox_vm_info.failed
+      retries: 30
+      delay: 10
+
+    # Most likely candidate to be the DHCP IPv4 connection address
+    - name: Setting connection_address for {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.set_fact:
+        connection_address: "{{ (proxmox_vm_info.proxmox_vms[0].network |
+          map(attribute='ip-addresses') | flatten |
+          map(attribute='ip-address') | ansible.utils.ipv4 |
+          reject('search', '^127\\.') | reject('search', '^169.254\\.'))[0] }}"
 
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
