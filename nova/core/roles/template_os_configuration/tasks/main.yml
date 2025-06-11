@@ -10,7 +10,7 @@
 - name: Including updates role...
   ansible.builtin.include_role:
     name: nova.core.updates
-  when: update_system
+  when: template_os_configuration_update_system
 
 # To reboot the machine after updates if required and avoid future issues
 - name: Flush handlers...
@@ -59,17 +59,8 @@
     name: nova.core.win_sysprep
   when:
     - ansible_network_os is not defined
-    - sysprep
+    - template_os_configuration_sysprep
     - ansible_system == "Win32NT"
-
-- name: Including powerstate role...
-  ansible.builtin.include_role:
-    name: nova.core.powerstate
-  vars:
-    shutdown: true
-  # Because sysprep will shut down the machine when it's done
-  # On Proxmox the clean-snap does not shut down the VM, so we need another task
-  when: not sysprep or infra_env == "proxmox"
 
 - name: Including snapshots role...
   ansible.builtin.include_role:
