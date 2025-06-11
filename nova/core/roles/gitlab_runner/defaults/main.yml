@@ -5,8 +5,8 @@ gitlab_runner_version: 17.2.1
 ## Default gitlab instance to register to
 gitlab_runner_gitlab_inventory_hostname: gitlab
 gitlab_runner_gitlab_fqdn: "{{ hostvars[gitlab_runner_gitlab_inventory_hostname].fqdn }}"
-gitlab_runner_gitlab_url: "https://{{ gitlab_fqdn }}"
-gitlab_runner_gitlab_url_api: "https://{{ gitlab_fqdn }}/api/v4"
+gitlab_runner_gitlab_url: "https://{{ gitlab_runner_gitlab_fqdn }}"
+gitlab_runner_gitlab_url_api: "https://{{ gitlab_runner_gitlab_fqdn }}/api/v4"
 
 ## Docker runner defaults
 gitlab_runner_docker_network: local-network
