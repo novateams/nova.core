@@ -3,6 +3,15 @@
   delegate_to: localhost
   become: false
   block:
+    - name: Including powerstate role...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        shutdown: true
+      when:
+        - snapshot_mode in ['clean-snap', 're-snap', 'snap']
+        - not live_snap | bool
+
     - name: Removing the latest snapshot snapshot...
       community.general.proxmox_snap:
         hostname: "{{ custom_vm_name | default(vm_name) }}"
