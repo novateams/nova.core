@@ -85,10 +85,8 @@
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
 
-    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
-      community.general.proxmox_kvm:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        state: restarted
-        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-      retries: 6
-      delay: 5
+    - name: Rebooting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
