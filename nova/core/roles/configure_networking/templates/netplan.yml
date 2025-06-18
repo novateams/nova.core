@@ -39,19 +39,19 @@ network:
       {% for ip_address in interface.addresses %}
       {% if (ip_address.mode == "ipv4_static") and (ip_address.gateway is defined) and (ip_address.gateway != none) %}
         - to: default
-          via: {{ ip_address.gateway }}
+          via: "{{ ip_address.gateway }}"
       {% endif %}
       {% endfor %}
       {% for ip_address in interface.addresses %}
       {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway is defined) and (ip_address.gateway != none) %}
         - to: default
-          via: {{ ip_address.gateway }}
+          via: "{{ ip_address.gateway }}"
       {% endif %}
       {% endfor %}
       {% if extra_routes[interface.network_id] is defined %}
       {% for route in extra_routes[interface.network_id] %}
         - to: {{ route.to }}
-          via: {{ route.via }}
+          via: "{{ route.via }}"
       {% endfor %}
       {% endif %}
       {% if extra_ipv4 is defined or extra_ipv6 is defined %}
