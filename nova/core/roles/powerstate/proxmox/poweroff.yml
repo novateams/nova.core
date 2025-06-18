@@ -12,7 +12,7 @@
   delay: 5
 
 - name: Waiting until {{ custom_vm_name | default(vm_name) }} to be stopped...
-  community.general.proxmox_vm_info:
+  community.proxmox.proxmox_vm_info:
     name: "{{ custom_vm_name | default(vm_name) }}"
   delegate_to: localhost
   become: false

@@ -1,6 +1,6 @@
 ---
 - name: Listing {{ custom_vm_name | default(vm_name) }} unreferenced disks...
-  community.general.proxmox_storage_contents_info:
+  community.proxmox.proxmox_storage_contents_info:
     storage: "{{ proxmox_storage }}"
     node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
     vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
@@ -27,7 +27,7 @@
       delay: 5
 
     - name: Re-listing {{ custom_vm_name | default(vm_name) }} unreferenced disks...
-      community.general.proxmox_storage_contents_info:
+      community.proxmox.proxmox_storage_contents_info:
         storage: "{{ proxmox_storage }}"
         node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
