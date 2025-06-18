@@ -24,7 +24,7 @@
       when: fresh_deploy
       block:
         - name: Looking up {{ vm_template }} info...
-          community.general.proxmox_vm_info:
+          community.proxmox.proxmox_vm_info:
             name: "{{ vm_template }}"
           register: proxmox_vm_template
           until: proxmox_vm_template is not failed
@@ -63,7 +63,7 @@
           # Using rescue to remove disks left over from failed cloning attempts
           rescue:
             - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
-              community.general.proxmox_kvm:
+              community.proxmox.proxmox_kvm:
                 name: "{{ custom_vm_name | default(vm_name) }}"
                 vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
                 state: absent
@@ -85,7 +85,7 @@
                   Check the errors above for this host and try again.
 
     - name: Migrating {{ custom_vm_name | default(vm_name) }} VM to {{ proxmox_node }} node...
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         name: "{{ custom_vm_name | default(vm_name) }}"
         node: "{{ proxmox_node }}"
         migrate: true
@@ -93,7 +93,7 @@
       delay: 5
 
     - name: Resizing {{ custom_vm_name | default(vm_name) }} VM disk...
-      community.general.proxmox_disk:
+      community.proxmox.proxmox_disk:
         name: "{{ custom_vm_name | default(vm_name) }}"
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
         disk: "{{ machine_operations_proxmox_os_disk }}"
@@ -103,7 +103,7 @@
       when: hardware_primary_disk_size is defined
 
     - name: Updating {{ custom_vm_name | default(vm_name) }} VM configuration...
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         autostart: true
         cores: "{{ omit if not hardware_cpu else hardware_cpu }}"
         hotplug: "{{ machine_operations_proxmox_hotplug | join(',') }}"
@@ -116,7 +116,7 @@
         update: true
 
     - name: Attaching following networks interfaces...
-      community.general.proxmox_nic:
+      community.proxmox.proxmox_nic:
         name: "{{ custom_vm_name | default(vm_name) }}"
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
         interface: "net{{ idx }}"
@@ -129,7 +129,7 @@
       loop: "{{ interfaces }}"
 
     - name: Starting {{ custom_vm_name | default(vm_name) }} VM... # noqa: no-handler
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         name: "{{ custom_vm_name | default(vm_name) }}"
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
         state: started

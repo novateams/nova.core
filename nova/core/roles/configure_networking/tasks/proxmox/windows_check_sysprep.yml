@@ -45,7 +45,7 @@
         sysprep_loop_count: "{{ sysprep_loop_count | default(0) | int + 1 }}"
 
     - name: Waiting for Sysprep to finish...
-      community.general.proxmox_vm_info:
+      community.proxmox.proxmox_vm_info:
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true

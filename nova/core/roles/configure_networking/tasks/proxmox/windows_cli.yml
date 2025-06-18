@@ -7,7 +7,7 @@
       ansible.builtin.include_tasks: windows_check_sysprep.yml
 
     - name: Waiting until quest agent is running...
-      community.general.proxmox_vm_info:
+      community.proxmox.proxmox_vm_info:
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
@@ -88,7 +88,7 @@
         restart: true
 
     - name: Waiting until quest agent is running...
-      community.general.proxmox_vm_info:
+      community.proxmox.proxmox_vm_info:
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true

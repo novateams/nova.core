@@ -13,7 +13,7 @@
         - not live_snap | bool
 
     - name: Removing the latest snapshot snapshot...
-      community.general.proxmox_snap:
+      community.proxmox.proxmox_snap:
         hostname: "{{ custom_vm_name | default(vm_name) }}"
         snapname: "{{ (snapshot_info.json.data | map(attribute='name'))[0] }}"
         state: absent
@@ -26,7 +26,7 @@
         filter: "*_time"
 
     - name: Creating a snapshot for {{ custom_vm_name | default(vm_name) }}...
-      community.general.proxmox_snap:
+      community.proxmox.proxmox_snap:
         hostname: "{{ custom_vm_name | default(vm_name) }}"
         state: present
         # Using Snapshot- prefix and regex_replace tp make sure the default snapshot name fit's the Proxmox naming convention

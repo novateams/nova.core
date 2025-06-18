@@ -6,7 +6,7 @@
   block:
     # Retrying until the host is available, might take some time depending on the OS.
     - name: Getting {{ custom_vm_name | default(vm_name) }} network configuration...
-      community.general.proxmox_vm_info:
+      community.proxmox.proxmox_vm_info:
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true

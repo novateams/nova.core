@@ -14,7 +14,7 @@
   when: proxmox_vm_info.proxmox_vms[0].status == 'running'
 
 - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: started
     timeout: "{{ proxmox_machine_operations_operation_timeout }}"

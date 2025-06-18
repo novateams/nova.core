@@ -1,6 +1,6 @@
 ---
 - name: Reverting to {{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }} snapshot...
-  community.general.proxmox_snap:
+  community.proxmox.proxmox_snap:
     hostname: "{{ custom_vm_name | default(vm_name) }}"
     state: rollback
     snapname: "{{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }}"
