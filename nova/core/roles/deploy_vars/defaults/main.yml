@@ -63,7 +63,14 @@ mgmt_ipv6_with_prefix: "{{ interfaces | nova.core.addresses('mgmt_ipv6') | first
 #########
 
 vault_address: {} # Required when Vault is used to save or retrieve secrets - example https://vault.example.com
-deploy_vars_get_vault_token: true # Set to false to skip getting a Vault token
+
+# Set to false to skip getting Vault token
+deploy_vars_get_vault_token: true
+
+# Set to true to get Vault token when pre_role is used
+# Most of the time pre_role does not require a Vault token, but if it does, this variable can be set to true
+deploy_vars_get_vault_token_with_pre_role: false
+
 deploy_vars_vault_auth_method: ldap # Method used to authenticate to Vault. Can be ldap or token.
 deploy_vars_vault_mount_point: "{{ omit }}" # The mount point for the secrets engine in Vault will be omitted if empty
 vault_ca_cert: "{{ omit }}" # The path to the CA certificate file which is used to validate the Vault server certificate

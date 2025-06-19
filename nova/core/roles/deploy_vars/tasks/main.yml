@@ -28,7 +28,7 @@
   when:
     - vault_address != {}
     - deploy_vars_get_vault_token | bool # | bool is required to pass the variable from the command line
-
+    - pre_role is not defined or deploy_vars_get_vault_token_with_pre_role | bool
 # # Uncomment to debug variables
 # - ansible.builtin.debug: msg="{{  }}"
 # - meta: end_play
