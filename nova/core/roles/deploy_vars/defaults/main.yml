@@ -145,4 +145,4 @@ proxmox_validate_certs: true
 proxmox_api_url: https://{{ proxmox_defaults.api_host }}:8006/api2/json
 
 # How long to wait for a Proxmox operation (like clone, powerstate and snapshots) to complete
-proxmox_machine_operations_operation_timeout: 600
+proxmox_machine_operations_operation_timeout: 300

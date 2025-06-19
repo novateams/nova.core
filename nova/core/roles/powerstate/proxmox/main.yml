@@ -1,6 +1,6 @@
 ---
 - name: Getting {{ custom_vm_name | default(vm_name) }} info...
-  community.general.proxmox_vm_info:
+  community.proxmox.proxmox_vm_info:
     name: "{{ custom_vm_name | default(vm_name) }}"
   register: proxmox_vm_info
   delegate_to: localhost

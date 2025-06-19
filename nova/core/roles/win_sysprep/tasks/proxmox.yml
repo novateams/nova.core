@@ -16,15 +16,24 @@
       ansible.builtin.set_fact:
         proxmox_vm_id: "{{ all_proxmox_node_vms.json.data | selectattr('name', 'equalto', custom_vm_name | default(vm_name)) | map(attribute='vmid') | first }}"
 
-    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is stopped
-      ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_node }}/qemu/{{ proxmox_vm_id }}/status/current"
-        headers:
-          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
-        method: GET
-        validate_certs: "{{ proxmox_validate_certs }}"
-      register: proxmox_vm_current_status
-      until:
-        - proxmox_vm_current_status.json.data.status == 'stopped'
-      retries: 90
-      delay: 10
+    - name: Waiting for Sysprep to finish...
+      block:
+        - name: Waiting until {{ custom_vm_name | default(vm_name) }} is stopped
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ proxmox_node }}/qemu/{{ proxmox_vm_id }}/status/current"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: GET
+            validate_certs: "{{ proxmox_validate_certs }}"
+          register: proxmox_vm_current_status
+          until:
+            - proxmox_vm_current_status.json.data.status == 'stopped'
+          retries: 90
+          delay: 10
+
+      rescue:
+        - name: SYSPREP WAIT TIMEOUT
+          ansible.builtin.fail:
+            msg: |
+              Timeout waiting for Sysprep to shut down the VM.
+              Check the C:\Windows\System32\Sysprep\Panther\setuperr.log file on the VM for more details.

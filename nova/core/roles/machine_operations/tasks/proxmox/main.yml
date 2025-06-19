@@ -9,7 +9,7 @@
   when: proxmox_api_user is not defined or proxmox_api_token_id is not defined or proxmox_api_token_secret is not defined
 
 - name: Checking if {{ custom_vm_name | default(vm_name) }} exists...
-  community.general.proxmox_vm_info:
+  community.proxmox.proxmox_vm_info:
     name: "{{ custom_vm_name | default(vm_name) }}"
   delegate_to: localhost
   become: false

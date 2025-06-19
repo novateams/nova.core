@@ -1,8 +1,8 @@
 ---
-sysprep: true
+template_os_configuration_sysprep: true # Will run sysprep on Windows machines if set to true
 template_os_configuration_install_chocolatey: true # Set to false to skip Chocolatey installation
 template_os_configuration_remove_extra_cdroms_on_vsphere: true # Find and remove extra cdroms on vSphere if there are more than 1
-update_system: true
+template_os_configuration_update_system: true # Update OS during this role
 
 # Increasing MaxAuthTries in sshd_config to avoid issues where user has more then 6 keys in their SSH agent
 template_os_configuration_increase_maxauthtries: true

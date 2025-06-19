@@ -20,7 +20,7 @@
       delay: 5
 
     - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
-      community.general.proxmox_kvm:
+      community.proxmox.proxmox_kvm:
         name: "{{ custom_vm_name | default(vm_name) }}"
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
         state: absent

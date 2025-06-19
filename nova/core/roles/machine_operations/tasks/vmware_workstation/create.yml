@@ -45,6 +45,10 @@
                 state: absent
               when: machine_operations_vmware_workstation_template_update
 
+            - name: Downloading {{ vm_template }} template...
+              ansible.builtin.debug:
+                msg: Downloading new {{ vm_template }} template, this will take a while...
+
             # regex_replace is required because urlib considers / as a safe character and doesn't encode it
             - name: Downloading {{ vm_template }} since it's not present or is older than the update interval...
               ansible.builtin.command:

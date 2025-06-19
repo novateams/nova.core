@@ -1,6 +1,6 @@
 ---
 - name: Restarting {{ custom_vm_name | default(vm_name) }}...
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: restarted
     timeout: "{{ proxmox_machine_operations_operation_timeout }}"
