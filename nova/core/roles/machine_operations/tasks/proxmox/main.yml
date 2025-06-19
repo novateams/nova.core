@@ -15,8 +15,8 @@
   become: false
   register: proxmox_vm_exists
   until: proxmox_vm_exists is not failed
-  retries: 24
-  delay: 5
+  retries: 5
+  delay: 3
 
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml

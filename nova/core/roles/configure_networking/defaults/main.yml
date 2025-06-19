@@ -49,8 +49,3 @@ extra_routes: [] # Configure extra routes per interfaces.
 configure_networking_panos_enable_ipv6: true # Enable IPv6 on configured interfaces
 configure_networking_panos_primary_dns_server: "{{ dns_servers[0] }}"
 configure_networking_panos_secondary_dns_server: "{{ dns_servers6[0] }}"
-
-# Proxmox
-
-# This means that that the Windows VM template on Proxmox was sysprep'd before it was shut down.
-configure_networking_proxmox_windows_sysprep: true

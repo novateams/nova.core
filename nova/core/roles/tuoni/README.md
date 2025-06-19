@@ -18,5 +18,6 @@ none
 
 ```yaml
 - name: Including Tuoni role...
-  ansible.builtin.include_role: nova.core.tuoni
+  ansible.builtin.include_role:
+    name: nova.core.tuoni
 ```
