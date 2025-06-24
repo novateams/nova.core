@@ -1,5 +1,28 @@
 ---
-- name: Creating {{ custom_vm_name | default(vm_name) }} in Linode...
+- name: Checking if {{ custom_vm_name | default(vm_name) }} exists in Linode...
+  linode.cloud.instance_list:
+    api_token: "{{ linode_api_token }}"
+    filters:
+      - name: label
+        values: "{{ custom_vm_name | default(vm_name) }}"
+  delegate_to: localhost
+  become: false
+  register: linode_vm_list
+
+- name: Setting fresh_deploy as fact...
+  ansible.builtin.set_fact:
+    fresh_deploy: true
+  when: linode_vm_list.instances == []
+
+- name: Checking for the correct deploy mode...
+  ansible.builtin.fail:
+    msg: |
+      Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
+  when:
+    - fresh_deploy
+    - role_only or role_only_wp or single_role is defined
+
+- name: Configuring {{ custom_vm_name | default(vm_name) }} in Linode...
   linode.cloud.instance:
     api_token: "{{ linode_api_token }}"
     label: "{{ custom_vm_name | default(vm_name) }}"
@@ -13,11 +36,6 @@
   register: linode_vm
   delegate_to: localhost
   become: false
-
-- name: Setting fresh_deploy as fact...
-  ansible.builtin.set_fact:
-    fresh_deploy: true
-  when: linode_vm.actions != []
 
 - name: Setting IP address facts for {{ inventory_hostname }}...
   ansible.builtin.set_fact:

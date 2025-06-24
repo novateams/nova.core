@@ -60,6 +60,14 @@
           ansible.builtin.set_fact:
             fresh_deploy: true
 
+        - name: Checking for the correct deploy mode...
+          ansible.builtin.fail:
+            msg: |
+              Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
+          when:
+            - fresh_deploy
+            - role_only or role_only_wp or single_role is defined
+
         - name: Create VM folder if it does not exist
           ansible.builtin.file:
             path: "{{ vmware_workstation.local_vm_folder }}"
