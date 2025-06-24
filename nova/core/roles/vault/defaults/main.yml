@@ -12,6 +12,7 @@ vault_config_folder: /srv/vault
 vault_version: 1.19.5 # Default Vault Docker image version
 vault_container_name: vault
 vault_server_log_level: debug # Debug gives better info about LDAP login failures and their reasons
+vault_audit_logging: false # Enable Vault audit logging
 vault_validate_cert: true # Validate certificates when connecting to Vault
 
 # Disable for production environments and manually enter the unseal key(s) after container restart. Only works if vault_unseal_shares == 1

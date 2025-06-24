@@ -143,3 +143,33 @@
         special_time: reboot
         job: "{{ vault_config_folder }}/config/unseal-vault.sh"
         user: root
+
+- name: Enabling Vault audit log...
+  when: vault_audit_logging | bool
+  block:
+    - name: Listing audit devices...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/sys/audit"
+        method: GET
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        validate_certs: "{{ vault_validate_cert }}"
+      register: vault_audit_devices
+
+    - name: Enabling Vault audit logging...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/sys/audit/file"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          type: file
+          options:
+            # This is a path inside the Vault container that is mounted to the host
+            file_path: /vault/logs/audit.json
+        body_format: json
+        status_code: 204
+        validate_certs: "{{ vault_validate_cert }}"
+      when: vault_audit_devices.json.data == {}
