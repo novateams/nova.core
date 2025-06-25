@@ -33,7 +33,7 @@
         provider: "{{ panos_connection_params }}"
         admin_username: "{{ item.username }}"
         admin_password: "{{ item.password | default(pregenerated_password) }}"
-        # ssh_public_key: "{{ item.ssh_key | default(omit) }}"
+        ssh_public_key: "{{ item.ssh_key | default(omit) | b64encode }}"
         superuser: true
       loop: "{{ admin_accounts }}"
       loop_control:
