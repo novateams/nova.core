@@ -4,7 +4,7 @@ admin_accounts: []
 user_accounts: []
 domain_user_accounts: []
 domain_groups: []
-sudo_requires_password: true
+sudo_requires_password: true # Unix & MacOS only
 use_ssh_agent_for_sudo: false
 accounts_remove_stale: true # Compares the accounts list with the users on the system created by this role and removes any that are not in the accounts list
 fresh_deploy: false # Checks if the machine has just been created, required for setting correct connection parameters for AWS machines
@@ -15,10 +15,14 @@ accounts_post_roles: [] # Extra roles to include as last step in this one
 accounts_exclusive_ssh_key: true
 
 # The default lookup paths are Vault's KV v2 secret engine and a secrets name under that.
-pregenerated_password:
-  "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
-  | default(environment_name) + '/data/' + secrets_vault_secrets_path | default(project_fullname) + ':' + inventory_hostname + '_' + item.username) }}"
-random_generated_password: "{{ lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits') }}"
+pregenerated_password: >-
+  {%- if save_secrets_to_vault and item.save_password_to_vault | default(true) -%}
+  {{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
+    | default(environment_name) + '/data/' + secrets_vault_secrets_path | default(project_fullname)
+    + ':' + inventory_hostname + '_' + item.username) }}
+  {%- else -%}
+  {{ lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits') }}
+  {%- endif -%}
 
 # Windows defaults
 windows_domain_admin_groups:

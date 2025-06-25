@@ -10,9 +10,9 @@
     - ansible_facts.windows_domain_role != "Primary domain controller"
     - ansible_facts.windows_domain_role != "Backup domain controller"
   block:
-    - name: Getting local users not defined in local_accounts_list...
+    - name: Getting local users not defined in local_accounts_with_password...
       ansible.builtin.set_fact:
-        local_users_to_remove: "{{ user_profiles.stdout_lines | difference(local_accounts_list | map(attribute='username')) }}"
+        local_users_to_remove: "{{ user_profiles.stdout_lines | difference(local_accounts_with_password | map(attribute='username')) }}"
 
     # This is to block any logins after reboot
     - name: Disabling following local accounts...

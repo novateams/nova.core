@@ -2,16 +2,18 @@
 - name: Listing user accounts created with {{ ansible_role_name }}...
   ansible.builtin.raw: |
     for profile in /Users/*/; do
-        if [ -e $profile/.created ]; then
+        if [[ -f $profile/.created ]]; then
             echo $(basename $profile)
         fi
     done
   register: home_profiles
   changed_when: false
 
+# Filtering out empty lines
 - name: Getting profiles not defined in accounts list...
   ansible.builtin.set_fact:
-    user_profiles_to_remove: "{{ home_profiles.stdout_lines | difference(local_accounts_list | map(attribute='username')) }}"
+    user_profiles_to_remove: "{{ home_profiles.stdout_lines | select('string') | select('regex', '.+')
+      | difference(local_accounts_with_password | map(attribute='username')) }}"
 
 - name: Rebooting to close any open sessions...
   ansible.builtin.raw: reboot

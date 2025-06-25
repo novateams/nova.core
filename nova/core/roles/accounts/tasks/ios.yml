@@ -1,11 +1,10 @@
 ---
 - name: Create admin users...
   cisco.ios.ios_config:
-    lines:
-      username {{ item.username }} privilege {{ item.cisco_privilege | default(15) }} algorithm-type scrypt secret {{ item.password
-      | default(pregenerated_password) }}
+    lines: username {{ item.username }} privilege {{ item.cisco_privilege | default(15)
+      }} algorithm-type scrypt secret {{ item.password }}
   no_log: true
-  loop: "{{ admin_accounts }}"
+  loop: "{{ admin_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
 
@@ -15,7 +14,7 @@
     sshkey: "{{ item.ssh_key.split(' ')[1] }}"
     state: present
   no_log: true
-  loop: "{{ admin_accounts }}"
+  loop: "{{ admin_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
   when: item.ssh_key is defined
