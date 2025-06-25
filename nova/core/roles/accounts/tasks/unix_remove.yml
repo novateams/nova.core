@@ -11,7 +11,7 @@
 
 - name: Getting profiles not defined in accounts list...
   ansible.builtin.set_fact:
-    user_profiles_to_remove: "{{ home_profiles.stdout_lines | difference(local_accounts_list | map(attribute='username')) }}"
+    user_profiles_to_remove: "{{ home_profiles.stdout_lines | difference(local_accounts_with_password | map(attribute='username')) }}"
 
 - name: Rebooting to close any open sessions...
   ansible.builtin.reboot:

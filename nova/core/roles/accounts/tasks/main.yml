@@ -12,20 +12,11 @@
     - customization_context == "host" # Alternative is container that doesn't need this role
     - infra_env != "my_host" # my_host is computer where you run the play from
   block:
-    # Accounts creation preparation tasks
-    - name: Creating required admins & users lists...
-      ansible.builtin.set_fact:
-        accounts: "{{ user_accounts + admin_accounts + domain_user_accounts }}"
-        local_accounts_list: "{{ user_accounts + admin_accounts }}"
-        domain_accounts_list: "{{ domain_user_accounts + admin_accounts }}"
-
-    - name: Setting required password fact...
-      ansible.builtin.set_fact:
-        pregenerated_password: "{{ random_generated_password }}"
-      when: not save_secrets_to_vault
+    - name: Including accounts lists creation tasks...
+      ansible.builtin.include_tasks: create_accounts_lists.yml
 
     # Accounts creation tasks
-    - name: Creation accounts for non-Netowork OS accounts...
+    - name: Creation accounts for non-Network OS accounts...
       when: ansible_network_os is not defined
       block:
         - name: Including Windows accounts creation tasks...

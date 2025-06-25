@@ -2,19 +2,16 @@
 - name: Creating following users...
   community.routeros.command:
     commands: # Two lines because first adds missing accounts and the second sets the correct passwords
-      - /user add name={{ item.username }} group=full password={{ item.password | default(pregenerated_password) }}
-      - /user set {{ item.username }} password={{ item.password | default(pregenerated_password) }} group=full comment=""
-  loop: "{{ admin_accounts }}"
+      - /user add name={{ item.username }} group=full password={{ item.password }}
+      - /user set {{ item.username }} password={{ item.password }} group=full comment=""
+  loop: "{{ admin_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
 
 - name: Setting correct password for {{ ansible_deployer_username }}...
   ansible.builtin.set_fact:
-    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
-  loop: "{{ admin_accounts }}"
-  loop_control:
-    label: "{{ item.username }}"
-  when: item.username == ansible_deployer_username
+    ansible_deployer_password: "{{ admin_accounts_with_password
+      | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
 
 - name: Adding RSA ssh key for following users...
   community.routeros.command:
@@ -23,7 +20,7 @@
       - :delay 2s
       - /file set ssh_user_key_{{ item.username }}.txt contents="{{ item.ssh_key }}"
       - /user ssh-keys import user={{ item.username }} public-key-file=ssh_user_key_{{ item.username }}.txt
-  loop: "{{ admin_accounts }}"
+  loop: "{{ admin_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
   when:

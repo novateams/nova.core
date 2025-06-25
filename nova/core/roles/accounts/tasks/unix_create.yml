@@ -11,24 +11,22 @@
 - name: Creating accounts for...
   ansible.builtin.user:
     name: "{{ item.username }}"
-    password: "{{ item.password | default(pregenerated_password) | password_hash('sha512') }}"
+    password: "{{ item.password | password_hash('sha512') }}"
     shell: "{{ item.shell | default(unix_distro_shell_map[ansible_distribution] | default('/bin/bash')) }}"
     groups: "{{ item.groups | default(root_group if item.username in admin_accounts | map(attribute='username') else 'users') }}"
     skeleton: "{{ unix_distro_skel_map[ansible_distribution] | default('/etc/skel') }}"
     uid: "{{ item.uid | default(omit) }}"
     createhome: true
     append: true
-  loop: "{{ local_accounts_list }}"
+  register: created_account
+  loop: "{{ local_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
 
 - name: Setting correct password for {{ ansible_deployer_username }}...
   ansible.builtin.set_fact:
-    ansible_deployer_password: "{{ item.password | default(pregenerated_password) }}"
-  loop: "{{ local_accounts_list }}"
-  loop_control:
-    label: "{{ item.username }}"
-  when: item.username == ansible_deployer_username
+    ansible_deployer_password: "{{ local_accounts_with_password
+      | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
 
 - name: Adding account creation source flag...
   ansible.builtin.lineinfile:
@@ -38,7 +36,7 @@
     create: true
     owner: "{{ item.username }}"
     mode: "0600"
-  loop: "{{ local_accounts_list }}"
+  loop: "{{ local_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
   when: item.username != admin_account # Cannot remove admin (usually root) account
@@ -50,7 +48,7 @@
     key: "{{ item.ssh_key }}"
     exclusive: "{{ item.ssh_key_exclusive | default(accounts_exclusive_ssh_key) }}"
     path: "{{ item.ssh_key_path | default(omit) }}"
-  loop: "{{ local_accounts_list }}"
+  loop: "{{ local_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
   when: item.ssh_key is defined
