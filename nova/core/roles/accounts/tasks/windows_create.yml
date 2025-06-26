@@ -21,6 +21,7 @@
         password: "{{ item.password }}"
         state: present
         update_password: "{{ item.update_password | default('always') }}" # always or on_create
+      register: created_account
       loop: "{{ local_accounts_with_password }}"
       loop_control:
         label: "{{ item.username }}"
@@ -29,6 +30,8 @@
       ansible.builtin.set_fact:
         ansible_deployer_password: "{{ admin_accounts_with_password
           | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
+      when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+        | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Checking and creating domain accounts...
   when: ansible_facts.windows_domain_role == "Primary domain controller"
@@ -64,7 +67,10 @@
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ admin_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-  when: ansible_facts.windows_domain_role in ["Primary domain controller", "Backup domain controller"]
+  when:
+    - ansible_windows_domain_role in ["Primary domain controller", "Backup domain controller"]
+    - win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+      | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Creating a profiles for...
   ansible.windows.win_user_profile:
@@ -98,10 +104,10 @@
     label: "{{ item.username }}"
   when: item.ssh_key is defined
 
-- name: Removing existing authorized_keys file for...
-  ansible.windows.win_file:
-    path: C:\Users\{{ item.username }}\.ssh\authorized_keys
-    state: absent
+- name: Replacing authorized_keys file for...
+  ansible.windows.win_copy:
+    content: "{{ item.ssh_key }}"
+    dest: C:\Users\{{ item.username }}\.ssh\authorized_keys
   loop: "{{ accounts }}"
   loop_control:
     label: "{{ item.username }}"
@@ -117,7 +123,9 @@
   loop: "{{ accounts }}"
   loop_control:
     label: "{{ item.username }}"
-  when: item.ssh_key is defined
+  when:
+    - item.ssh_key is defined
+    - not item.ssh_key_exclusive | default(accounts_exclusive_ssh_key)
 
 - name: Creating administrators_authorized_keys file...
   ansible.windows.win_file:

@@ -28,6 +28,8 @@
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ local_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
+  when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+    | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Adding account creation source flag...
   ansible.builtin.lineinfile:
