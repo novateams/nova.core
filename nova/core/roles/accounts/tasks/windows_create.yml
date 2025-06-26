@@ -14,12 +14,13 @@
   block:
     - name: Creating following local accounts...
       ansible.windows.win_user:
-        name: "{{ item.username }}"
-        password: "{{ item.password }}"
-        password_never_expires: true
-        state: present
         groups_action: add
         groups: "{{ item.groups | default(windows_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"
+        name: "{{ item.username }}"
+        password_never_expires: true
+        password: "{{ item.password }}"
+        state: present
+        update_password: "{{ item.update_password | default('always') }}" # always or on_create
       loop: "{{ local_accounts_with_password }}"
       loop_control:
         label: "{{ item.username }}"
@@ -38,18 +39,19 @@
 
     - name: Creating following domain accounts...
       microsoft.ad.user:
-        sam_account_name: "{{ item.username[:20] }}" # https://docs.microsoft.com/en-us/windows/win32/adschema/a-samaccountname
-        name: "{{ item.display_name | default(item.username) }}"
-        identity: "{{ item.username }}"
         description: "{{ item.description | default(omit) }}"
         display_name: "{{ item.display_name | default(omit) }}"
         email: "{{ item.email | default(omit) }}"
-        upn: "{{ item.username }}@{{ ad_domain_name }}"
-        password: "{{ item.password }}"
+        identity: "{{ item.username }}"
+        name: "{{ item.display_name | default(item.username) }}"
         password_never_expires: true
-        state: present
+        password: "{{ item.password }}"
         path: "{{ item.ou | default(omit) }}"
+        sam_account_name: "{{ item.username[:20] }}" # https://docs.microsoft.com/en-us/windows/win32/adschema/a-samaccountname
         spn: "{{ item.spn | default(omit) }}" # https://docs.ansible.com/ansible/latest/collections/microsoft/ad/user_module.html#parameter-spn
+        state: present
+        update_password: "{{ item.update_password | default('always') }}" # always, on_create or when_changed
+        upn: "{{ item.username }}@{{ ad_domain_name }}"
         groups:
           add: "{{ item.groups | default(windows_domain_admin_groups if item.username in admin_accounts | map(attribute='username') else omit) }}"
       register: win_domain_user
