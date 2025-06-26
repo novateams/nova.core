@@ -5,6 +5,7 @@
     name: "{{ item.username }}"
     state: present
     update_password: "{{ item.update_password | default('always') }}" # always or on_create
+  register: created_account
   loop: "{{ admin_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
@@ -13,6 +14,8 @@
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ admin_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
+  when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+    | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Adding authorized keys... # vyos.vyos.vyos_user module still doesn't support this.
   vyos.vyos.vyos_config:
