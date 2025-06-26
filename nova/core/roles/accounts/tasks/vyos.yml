@@ -1,10 +1,10 @@
 ---
 - name: Configuring accounts for...
   vyos.vyos.vyos_user:
-    name: "{{ item.username }}"
     configured_password: "{{ item.password }}"
-    update_password: always
+    name: "{{ item.username }}"
     state: present
+    update_password: "{{ item.update_password | default('always') }}" # always or on_create
   loop: "{{ admin_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"

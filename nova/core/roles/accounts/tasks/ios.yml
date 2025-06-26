@@ -13,6 +13,7 @@
     name: "{{ item.username }}"
     sshkey: "{{ item.ssh_key.split(' ')[1] }}"
     state: present
+    update_password: "{{ item.update_password | default('always') }}" # always or on_create
   no_log: true
   loop: "{{ admin_accounts_with_password }}"
   loop_control:

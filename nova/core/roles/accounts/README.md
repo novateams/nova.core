@@ -36,6 +36,15 @@ admin_accounts:
   - username: admin
     password: Password123
     ssh_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIB8J
+
+  - username: admin1
+    password: Password123
+    ssh_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIB8J
+    update_password: on_create # This will update the password only when the account is created
+
+  - username: admin2
+    ssh_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIB8J
+    save_password_to_vault: false # This will not save a random generated the password to the vault, ssh is needed for authentication
 ```
 
 ```yaml
