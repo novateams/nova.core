@@ -1,6 +1,6 @@
 namespace: nova
 name: core
-version: 5.3.7
+version: 5.3.8
 readme: README.md
 authors:
   - https://github.com/novateams
