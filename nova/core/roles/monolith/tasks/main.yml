@@ -132,11 +132,15 @@
     file: "{{ monolith_single_service }}.yml"
   when: monolith_single_service is defined
 
-# This means that now pre-existing certificate was found before monolith role was executed
+- name: Checking for Vault certificate request marker...
+  ansible.builtin.stat:
+    path: /srv/certs/request_from_vault
+  register: vault_request_marker
+
+# This means that no pre-existing certificate was found before monolith role was executed
+# So requesting a new certificate from Vault
 - name: Requesting a certificate for web proxy...
-  when:
-    - not fullchain_cert_state.stat.exists
-    - caddy_generate_self_signed_certificate is not defined
+  when: vault_request_marker.stat.exists
   block:
     - name: Checking for existing certificate...
       ansible.builtin.stat:
@@ -162,7 +166,9 @@
 
         - name: Requesting certificate...
           ansible.builtin.uri:
-            url: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name }}/issue/server_ec
+            url: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name
+              | default(vault_intermediate_cas[0].vault_intermediate_ca_pki_engine_name)
+              | default('IntermediateCA') }}/issue/server_ec
             method: POST
             headers:
               X-Vault-Request: true

@@ -32,10 +32,25 @@
     path: /srv/certs/{{ fqdn }}_fullchain.crt
   register: fullchain_cert_state
 
-- name: Generating self-signed certificates with Caddy...
-  ansible.builtin.set_fact:
-    caddy_generate_self_signed_certificate: true
+- name: Generating self-signed certificates...
   when: not fullchain_cert_state.stat.exists
+  block:
+    - name: Generating self-signed certificates with Caddy...
+      ansible.builtin.set_fact:
+        caddy_generate_self_signed_certificate: true
+
+    - name: Creating /srv/certs directory...
+      ansible.builtin.file:
+        path: /srv/certs
+        state: directory
+        mode: "0755"
+        recurse: true
+
+    - name: Creating a marker for Vault certificate request...
+      ansible.builtin.file:
+        path: /srv/certs/request_from_vault
+        state: touch
+        mode: "0644"
 
 - name: Adding following hosts file entries for {{ fqdn }}...
   ansible.builtin.lineinfile:

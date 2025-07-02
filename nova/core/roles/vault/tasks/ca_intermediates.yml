@@ -14,7 +14,8 @@
 
 - name: Enabling Intermediate CA PKI engine...
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name
+    url:
+      "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name
       }}{{ '/tune' if intermediate_ca_pki_engine_status.status == 200 else '' }}"
     method: POST
     headers:
@@ -41,7 +42,8 @@
   block:
     - name: Generating Intermediate CSR...
       ansible.builtin.uri:
-        url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name
+        url:
+          "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name
           }}/intermediate/generate/internal"
         method: POST
         headers:
@@ -61,7 +63,8 @@
 
     - name: Signing Intermediate CA...
       ansible.builtin.uri:
-        url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_root_to_sign_with_name
+        url:
+          "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_root_to_sign_with_name
           | default(vault_root_cas[loop_index].vault_root_ca_pki_engine_name) }}/root/sign-intermediate"
         method: POST
         headers:
@@ -92,7 +95,8 @@
 
 - name: Creating following certificate roles...
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name
+    url:
+      "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name
       }}/roles/{{ certificate_role.vault_cert_path }}"
     method: POST
     headers:
@@ -161,9 +165,11 @@
       X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body:
-      crl_distribution_points: "{{ vault_intermediate_ca.vault_intermediate_ca_crl_distribution_points |
+      crl_distribution_points:
+        "{{ vault_intermediate_ca.vault_intermediate_ca_crl_distribution_points |
         default('http://' + vault_crl_fqdn + '/v1/' + vault_intermediate_ca.vault_intermediate_ca_pki_engine_name + '/crl/pem') }}"
-      issuing_certificates: "{{ vault_intermediate_ca.vault_intermediate_ca_issuing_certificates |
+      issuing_certificates:
+        "{{ vault_intermediate_ca.vault_intermediate_ca_issuing_certificates |
         default('http://' + vault_aia_fqdn + '/v1/' + vault_intermediate_ca.vault_intermediate_ca_pki_engine_name + '/ca/pem') }}"
     body_format: json
     validate_certs: "{{ vault_validate_cert }}"
