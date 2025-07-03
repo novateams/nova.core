@@ -1,27 +1,39 @@
 ---
-- name: Including the shutdown wait tasks block...
+- name: Looking up the VM...
+  vmware.vmware_rest.vcenter_vm_info:
+    filter_names: "{{ custom_vm_name | default(vm_name) }}"
+  register: vcenter_vm_info
+  until: not vcenter_vm_info.failed
+  retries: 5
+  delay: 2
   delegate_to: localhost
   become: false
-  block:
-    - name: Looking up the VM...
-      vmware.vmware_rest.vcenter_vm_info:
-        filter_names: "{{ custom_vm_name | default(vm_name) }}"
-      register: vcenter_vm_info
-      until: not vcenter_vm_info.failed
-      retries: 5
-      delay: 2
 
-    - name: Waiting for Sysprep to finish...
+- name: Waiting for Sysprep to finish...
+  block:
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
+      vmware.vmware_rest.vcenter_vm_guest_power_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      register: poweroff_status
+      until:
+        - poweroff_status.value.state is defined
+        - poweroff_status.value.state == "NOT_RUNNING"
+      retries: 90
+      delay: 10
+      delegate_to: localhost
+      become: false
+
+  rescue:
+    - name: Trying to get Sysprep error log content...
       block:
-        - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
-          vmware.vmware_rest.vcenter_vm_guest_power_info:
-            vm: "{{ vcenter_vm_info.value[0].vm }}"
-          register: poweroff_status
-          until:
-            - poweroff_status.value.state is defined
-            - poweroff_status.value.state == "NOT_RUNNING"
-          retries: 90
-          delay: 10
+        - name: Getting error log content...
+          ansible.windows.slurp:
+            src: C:\Windows\System32\Sysprep\Panther\setuperr.log
+          register: sysprep_error_log
+
+        - name: Displaying Sysprep error log content
+          ansible.builtin.fail:
+            msg: "{{ sysprep_error_log.content | b64decode }}"
 
       rescue:
         - name: SYSPREP WAIT TIMEOUT
