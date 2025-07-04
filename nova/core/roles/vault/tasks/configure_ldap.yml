@@ -37,7 +37,8 @@
       X-Vault-Token: "{{ vault_root_token }}"
     body:
       listing_visibility: unauth
-      lockout_disable: true # This is done in the backend LDAP server
+      user_lockout_config:
+        lockout_disable: true # This is done in the backend LDAP server
     body_format: json
     validate_certs: "{{ vault_validate_cert }}"
     status_code:

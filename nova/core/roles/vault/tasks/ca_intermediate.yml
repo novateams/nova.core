@@ -4,7 +4,7 @@
     - name: DEPRECATED DATA STRUCTURE
       ansible.builtin.debug:
         msg: |
-          vault_mitm_ca_pki_engine_name variable found
+          vault_intermediate_ca_pki_engine_name variable found
           MiTM CA(s) configuration must be defined as a list not as a single variable.
           Check the nova.core.vault role defaults for an example on how to define the Intermediate CA(s) as a list.
           No Intermediate CA configuration will be done.

@@ -45,5 +45,5 @@
 - name: Creating combined users lists...
   ansible.builtin.set_fact:
     accounts: "{{ admin_accounts_with_password | default([]) + domain_users_with_password | default([]) + user_accounts_with_password | default([]) }}"
-    local_accounts_with_password: "{{ user_accounts_with_password | default([]) + admin_accounts_with_password | default([]) }}"
     domain_accounts_with_password: "{{ domain_users_with_password | default([]) + admin_accounts_with_password | default([]) }}"
+    local_accounts_with_password: "{{ user_accounts_with_password | default([]) + admin_accounts_with_password | default([]) }}"
