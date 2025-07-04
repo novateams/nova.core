@@ -6,12 +6,18 @@
 # - Accounts with random generated passwords that are saved and looked up from HashiCorp Vault
 # - Accounts with random generated passwords when passwordless sudo or similar is used (Unix only)
 
+- name: Initialize account lists to empty arrays
+  ansible.builtin.set_fact:
+    user_accounts_with_password: []
+    admin_accounts_with_password: []
+    domain_users_with_password: []
+
 - name: Adding a password key for following local accounts...
   ansible.builtin.set_fact:
-    user_accounts_with_password: "{{ user_accounts_with_password | default([]) + [item_with_password] }}"
+    user_accounts_with_password: "{{ user_accounts_with_password + [item_with_password] }}"
   vars:
     item_with_password: >-
-      {%- if item.password is not defined -%}
+      {%- if item.password is not defined or item.password | regex_search('.*__omit_place_holder__.*') -%}
       {{ item | combine({'password': pregenerated_password}) }}{%- else -%}
       {{ item }}{%- endif -%}
   loop: "{{ user_accounts }}"
@@ -20,10 +26,10 @@
 
 - name: Adding a password key for following admin accounts...
   ansible.builtin.set_fact:
-    admin_accounts_with_password: "{{ admin_accounts_with_password | default([]) + [item_with_password] }}"
+    admin_accounts_with_password: "{{ admin_accounts_with_password + [item_with_password] }}"
   vars:
     item_with_password: >-
-      {%- if item.password is not defined -%}
+      {%- if item.password is not defined or item.password | regex_search('.*__omit_place_holder__.*') -%}
       {{ item | combine({'password': pregenerated_password}) }}{%- else -%}
       {{ item }}{%- endif -%}
   loop: "{{ admin_accounts }}"
@@ -32,10 +38,10 @@
 
 - name: Adding a password key for following domain accounts...
   ansible.builtin.set_fact:
-    domain_users_with_password: "{{ domain_users_with_password | default([]) + [item_with_password] }}"
+    domain_users_with_password: "{{ domain_users_with_password + [item_with_password] }}"
   vars:
     item_with_password: >-
-      {%- if item.password is not defined -%}
+      {%- if item.password is not defined or item.password | regex_search('.*__omit_place_holder__.*') -%}
       {{ item | combine({'password': pregenerated_password}) }}{%- else -%}
       {{ item }}{%- endif -%}
   loop: "{{ domain_user_accounts }}"
@@ -44,6 +50,6 @@
 
 - name: Creating combined users lists...
   ansible.builtin.set_fact:
-    accounts: "{{ admin_accounts_with_password | default([]) + domain_users_with_password | default([]) + user_accounts_with_password | default([]) }}"
-    domain_accounts_with_password: "{{ domain_users_with_password | default([]) + admin_accounts_with_password | default([]) }}"
-    local_accounts_with_password: "{{ user_accounts_with_password | default([]) + admin_accounts_with_password | default([]) }}"
+    accounts: "{{ admin_accounts_with_password + domain_users_with_password + user_accounts_with_password }}"
+    domain_accounts_with_password: "{{ domain_users_with_password + admin_accounts_with_password }}"
+    local_accounts_with_password: "{{ user_accounts_with_password + admin_accounts_with_password }}"
