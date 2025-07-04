@@ -33,24 +33,34 @@
     - name: Backing up and removing original ubuntu.sources...
       when: not noble_apt_backup_file.stat.exists
       block:
-        - name: Backing up existing {{ ansible_distribution_release }} sources.list...
+        - name: Checking if ubuntu.sources exists...
+          ansible.builtin.stat:
+            path: /etc/apt/sources.list.d/ubuntu.sources
+          register: ubuntu_sources_state
+
+        - name: Backing up existing {{ ansible_distribution_release }} ubuntu.sources...
           ansible.builtin.copy:
             src: /etc/apt/sources.list.d/ubuntu.sources
             dest: /etc/apt/ubuntu.sources_backup
             remote_src: true
             mode: "0644"
-
-        - name: Removing original ubuntu.sources...
-          ansible.builtin.file:
-            path: /etc/apt/sources.list.d/ubuntu.sources
-            state: absent
+          when: ubuntu_sources_state.stat.exists
 
     - name: Templating custom ubuntu-sources.list to {{ inventory_hostname }}...
       ansible.builtin.template:
-        src: ubuntu-sources.list
-        dest: /etc/apt/sources.list
+        src: ubuntu.sources
+        dest: /etc/apt/sources.list.d/ubuntu.sources
         mode: "0644"
       register: noble_apt_sources
+
+    - name: Restoring original sources.list...
+      ansible.builtin.copy:
+        content: |
+          # Ubuntu sources have moved to /etc/apt/sources.list.d/ubuntu.sources
+
+        dest: /etc/apt/sources.list
+        mode: "0644"
+      when: noble_apt_sources.changed # noqa: no-handler
 
 - name: Running apt update...
   ansible.builtin.apt:
