@@ -1,0 +1,13 @@
+# The original ubuntu.sources is backed up as /etc/apt/ubuntu.sources_backup
+
+Types: deb
+URIs: {{ package_mirror_ubuntu_uri.general }}
+Suites: noble noble-updates noble-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: {{ package_mirror_ubuntu_uri.security }}
+Suites: noble-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
