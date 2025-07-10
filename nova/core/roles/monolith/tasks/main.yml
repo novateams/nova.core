@@ -14,37 +14,37 @@
       - "DNS:{{ monolith_nexus_fqdn }}"
     caddy_servers:
       - caddy_server_name: "{{ monolith_vault_fqdn }}"
-        caddy_server_certificate_path: /srv/certs/{{ fqdn }}_fullchain.crt
-        caddy_server_certificate_key_path: /srv/certs/{{ fqdn }}_key.crt
+        caddy_server_certificate_path: /srv/certs/{{ monolith_vault_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+        caddy_server_certificate_key_path: /srv/certs/{{ monolith_vault_certificate_file_name | default(fqdn + '_key') }}.crt
         caddy_server_listen_addresses:
           - "{{ monolith_vault_fqdn }}"
         caddy_server_reverse_proxy_to_address: http://vault
 
       - caddy_server_name: "{{ monolith_keycloak_fqdn }}"
-        caddy_server_certificate_path: /srv/certs/{{ fqdn }}_fullchain.crt
-        caddy_server_certificate_key_path: /srv/certs/{{ fqdn }}_key.crt
+        caddy_server_certificate_path: /srv/certs/{{ monolith_keycloak_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+        caddy_server_certificate_key_path: /srv/certs/{{ monolith_keycloak_certificate_file_name | default(fqdn + '_key') }}.crt
         caddy_server_listen_addresses:
           - "{{ monolith_keycloak_fqdn }}"
         caddy_server_reverse_proxy_to_address: http://keycloak:8080
 
       - caddy_server_name: "{{ monolith_providentia_fqdn }}"
-        caddy_server_certificate_path: /srv/certs/{{ fqdn }}_fullchain.crt
-        caddy_server_certificate_key_path: /srv/certs/{{ fqdn }}_key.crt
+        caddy_server_certificate_path: /srv/certs/{{ monolith_providentia_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+        caddy_server_certificate_key_path: /srv/certs/{{ monolith_providentia_certificate_file_name | default(fqdn + '_key') }}.crt
         caddy_server_listen_addresses:
           - "{{ monolith_providentia_fqdn }}"
         caddy_server_reverse_proxy_to_address: http://providentia-web:3000
 
       - caddy_server_name: "{{ monolith_nexus_fqdn }}"
-        caddy_server_certificate_path: /srv/certs/{{ fqdn }}_fullchain.crt
-        caddy_server_certificate_key_path: /srv/certs/{{ fqdn }}_key.crt
+        caddy_server_certificate_path: /srv/certs/{{ monolith_nexus_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+        caddy_server_certificate_key_path: /srv/certs/{{ monolith_nexus_certificate_file_name | default(fqdn + '_key') }}.crt
         caddy_server_listen_addresses:
           - "{{ monolith_nexus_fqdn }}"
         caddy_server_reverse_proxy_to_address: http://nexus:8081
         caddy_server_request_body_size: 10000M
 
       - caddy_server_name: docker-proxy.{{ domain }}
-        caddy_server_certificate_path: /srv/certs/{{ fqdn }}_fullchain.crt
-        caddy_server_certificate_key_path: /srv/certs/{{ fqdn }}_key.crt
+        caddy_server_certificate_path: /srv/certs/{{ monolith_docker_proxy_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+        caddy_server_certificate_key_path: /srv/certs/{{ monolith_docker_proxy_certificate_file_name | default(fqdn + '_key') }}.crt
         caddy_server_listen_addresses:
           - docker-proxy.{{ domain }}
         caddy_server_reverse_proxy_rewrite: "* /repository/docker-proxy{uri}"
