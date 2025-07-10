@@ -73,6 +73,7 @@
         organizational_unit_name: "{{ vault_root_ca.vault_root_ca_ou | default('') }}"
         key_usage: "{{ vault_root_ca.vault_root_ca_key_usage | default(['digitalSignature', 'Certificate Sign', 'cRLSign']) }}"
         key_usage_critical: true
+        basic_constraints_critical: true
         basic_constraints: "{{ ['CA:TRUE'] if vault_root_ca.vault_root_ca_path_length is not defined
           else ['CA:TRUE', 'pathlen:' + vault_root_ca.vault_root_ca_path_length | string] }}"
         extended_key_usage: "{{ vault_root_ca.vault_root_ca_extended_key_usage | default([]) }}"
