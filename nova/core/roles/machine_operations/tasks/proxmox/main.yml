@@ -1,12 +1,15 @@
 ---
-- name: Missing required variables...
+- name: Checking for required variables...
   ansible.builtin.fail:
     msg: |
       Following variables are required to run this role:
       - proxmox_api_user
       - proxmox_api_token_id
       - proxmox_api_token_secret
-  when: proxmox_api_user is not defined or proxmox_api_token_id is not defined or proxmox_api_token_secret is not defined
+  when: >
+    proxmox_defaults.api_user == omit or
+    proxmox_defaults.api_token_id == omit or
+    proxmox_defaults.api_token_secret == omit
 
 - name: Checking if {{ custom_vm_name | default(vm_name) }} exists...
   community.proxmox.proxmox_vm_info:
