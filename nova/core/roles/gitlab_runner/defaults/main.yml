@@ -1,6 +1,6 @@
 ---
 # Global
-gitlab_runner_version: 17.2.1
+gitlab_runner_version: latest
 
 ## Default gitlab instance to register to
 gitlab_runner_gitlab_inventory_hostname: gitlab
