@@ -27,3 +27,53 @@ monolith_providentia_fqdn: providentia.{{ domain }}
 monolith_nexus_fqdn: nexus.{{ domain }}
 monolith_keycloak_fqdn: keycloak.{{ domain }}
 monolith_vault_fqdn: vault.{{ domain }}
+monolith_docker_proxy_fqdn: docker-proxy.{{ domain }}
+
+# Alt (SAN) names for self-signed certificate if it's used
+monolith_caddy_self_signed_certificate_subject_alt_name:
+  - "DNS:{{ monolith_vault_fqdn }}"
+  - "DNS:{{ monolith_keycloak_fqdn }}"
+  - "DNS:{{ monolith_providentia_fqdn }}"
+  - "DNS:{{ monolith_nexus_fqdn }}"
+  - "DNS:{{ monolith_docker_proxy_fqdn }}"
+
+# Default Caddy servers for Monolith
+# Pass a custom list of Caddy servers to replace the default ones
+monolith_caddy_servers:
+  - caddy_server_name: "{{ monolith_vault_fqdn }}"
+    caddy_server_certificate_path: /srv/certs/{{ monolith_vault_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+    caddy_server_certificate_key_path: /srv/certs/{{ monolith_vault_certificate_file_name | default(fqdn + '_key') }}.crt
+    caddy_server_listen_addresses:
+      - "{{ monolith_vault_fqdn }}"
+    caddy_server_reverse_proxy_to_address: http://vault
+
+  - caddy_server_name: "{{ monolith_keycloak_fqdn }}"
+    caddy_server_certificate_path: /srv/certs/{{ monolith_keycloak_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+    caddy_server_certificate_key_path: /srv/certs/{{ monolith_keycloak_certificate_file_name | default(fqdn + '_key') }}.crt
+    caddy_server_listen_addresses:
+      - "{{ monolith_keycloak_fqdn }}"
+    caddy_server_reverse_proxy_to_address: http://keycloak:8080
+
+  - caddy_server_name: "{{ monolith_providentia_fqdn }}"
+    caddy_server_certificate_path: /srv/certs/{{ monolith_providentia_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+    caddy_server_certificate_key_path: /srv/certs/{{ monolith_providentia_certificate_file_name | default(fqdn + '_key') }}.crt
+    caddy_server_listen_addresses:
+      - "{{ monolith_providentia_fqdn }}"
+    caddy_server_reverse_proxy_to_address: http://providentia-web:3000
+
+  - caddy_server_name: "{{ monolith_nexus_fqdn }}"
+    caddy_server_certificate_path: /srv/certs/{{ monolith_nexus_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+    caddy_server_certificate_key_path: /srv/certs/{{ monolith_nexus_certificate_file_name | default(fqdn + '_key') }}.crt
+    caddy_server_listen_addresses:
+      - "{{ monolith_nexus_fqdn }}"
+    caddy_server_reverse_proxy_to_address: http://nexus:8081
+    caddy_server_request_body_size: 10000M
+
+  - caddy_server_name: "{{ monolith_docker_proxy_fqdn }}"
+    caddy_server_certificate_path: /srv/certs/{{ monolith_docker_proxy_certificate_file_name | default(fqdn + '_fullchain') }}.crt
+    caddy_server_certificate_key_path: /srv/certs/{{ monolith_docker_proxy_certificate_file_name | default(fqdn + '_key') }}.crt
+    caddy_server_listen_addresses:
+      - docker-proxy.{{ domain }}
+    caddy_server_reverse_proxy_rewrite: "* /repository/docker-proxy{uri}"
+    caddy_server_reverse_proxy_to_address: http://nexus:8081
+    caddy_server_request_body_size: 10000M
