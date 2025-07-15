@@ -279,11 +279,11 @@
     - fresh_deploy or vcenter_vm_info.value[0].power_state != "POWERED_ON"
     - not just_create
   block:
-    - name: Starting VM...
-      community.vmware.vmware_guest_powerstate:
-        state: powered-on
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        folder: "{{ folder }}"
+    - name: Including nova.core.powerstate role...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        poweron: true
 
     # Connect is required when cloning to a cluster that does not have the template network available
     - name: Connecting the {{ default_interface[0].name }} interface...
