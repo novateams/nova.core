@@ -33,7 +33,8 @@
       register: res
       failed_when: not (('0 received' in res.stdout) or ('0 packets received' in res.stdout))
       changed_when: false
-      when: not connection_mode_dhcp
+      # The list of connection modes are the ones that are available in Providentia
+      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
 
     - name: Missing Operating System...
       ansible.builtin.fail:
