@@ -12,6 +12,11 @@ DOCUMENTATION="""
                 - Gets the address used for connection to the host.
             required: true
             type: str
+        connection_mode:
+            description:
+                - Gets the method used for setting or getting connection IP address.
+            required: true
+            type: str
         connection_nic_ipv4:
             description:
                 - Gets all connection NIC IPv4 addresses.
@@ -88,6 +93,7 @@ class FilterModule(object):
     def addresses(self, interfaces, parameter):
         filter_functions = {
             'connection_address': self.get_connection_address(interfaces),
+            'connection_mode': self.get_connection_mode(interfaces),
             'connection_nic_ipv4': self.get_addresses_by_mode(interfaces, 'connection', 'ipv4_static'),
             'connection_nic_ipv4_gw': self.get_gateways_by_mode(interfaces, 'connection', 'ipv4_static'),
             'connection_nic_ipv6': self.get_addresses_by_mode(interfaces, 'connection', 'ipv6_static'),
@@ -102,6 +108,14 @@ class FilterModule(object):
 
         result = filter_functions.get(parameter, [])
         return result if result else ['null']  # Return 'null' if result is empty
+
+    def get_connection_mode(self, interfaces):
+        for interface in interfaces:
+            if interface.get('connection') is True:
+                for address in interface.get('addresses', []):
+                    if address.get('connection') is True:
+                        return [address.get('mode')]
+        return None
 
     def get_addresses_by_mode(self, interfaces, interface_type, mode):
         addresses = []
