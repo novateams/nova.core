@@ -48,14 +48,6 @@ machine_operations_esxi_hostname: # https://docs.ansible.com/ansible/latest/coll
 linked_clone_status: false
 linked_clone_snapshot_name: LinkedCloneSource # Case sensitive default value
 
-# Connection address defaults
-primary_network: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default([]) }}"
-connection_mode: "{{ primary_network.addresses | selectattr('connection', 'equalto', true) | map(attribute='mode') | first }}"
-connection_mode_dhcp: "{{ true if connection_mode | regex_search('.*dhcp.*') else false }}"
-connection_address:
-  "{{ 'DHCP' if connection_mode_dhcp else primary_network.addresses | selectattr('connection', 'equalto', true)
-  | map(attribute='address') | first | ansible.utils.ipaddr('address') }}"
-
 # Video memory
 video_increase_memory: false
 video_memory: 64

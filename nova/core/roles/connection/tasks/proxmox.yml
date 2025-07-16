@@ -1,6 +1,7 @@
 ---
 - name: Including DHCP detection tasks block...
-  when: connection_mode_dhcp
+  # The list of connection modes are the ones that are available in Providentia
+  when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
   delegate_to: localhost
   become: false
   block:

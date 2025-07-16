@@ -27,6 +27,7 @@ ansible_become_password: "{{ ansible_password | default(omit) }}" # Defaulting t
 # To make sure these values can be used as hostvar lookups they also need to be defined in projects group_vars all.yml file
 
 connection_address: "{{ interfaces | nova.core.addresses('connection_address') | first | ansible.utils.ipaddr('address') }}"
+connection_mode: "{{ interfaces | nova.core.addresses('connection_mode') | first }}"
 egress_network_info: "{{ interfaces | selectattr('egress', 'equalto', true) | first }}"
 connection_network_info: "{{ interfaces | selectattr('connection', 'equalto', true) | first }}"
 
