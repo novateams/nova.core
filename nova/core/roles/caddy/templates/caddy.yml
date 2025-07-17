@@ -5,19 +5,29 @@ services:
     hostname: caddy
     container_name: caddy
     restart: unless-stopped
+    {% if caddy_enable_api %}
+    command: caddy run --resume
+    environment:
+      - CADDY_ADMIN=0.0.0.0:2019
+    {% endif %}
     ports:
+      {% if caddy_enable_api %}
+      {% for port in caddy_api_container_ports %}
+      - "{{ port }}"
+      {% endfor %}
+      {% else %}
       {% for port in caddy_container_ports %}
       - "{{ port }}"
       {% endfor %}
+      {% endif %}
     volumes:
-      - /srv/caddy/etc:/etc/caddy # When only mounting Caddyfile the changes are not picked up inside the container
+      - /srv/caddy/etc:/etc/caddy
       - /srv/caddy/data:/data/caddy
       - /srv/caddy/config:/config/caddy
       - /srv/caddy/logs:/srv/logs
       - /srv/caddy/www:/srv/www
       - "{{ caddy_certificates_folder }}:/srv/certs"
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
-
 networks:
   default:
     name: "{{ caddy_docker_network }}"

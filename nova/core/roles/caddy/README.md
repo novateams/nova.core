@@ -57,3 +57,23 @@ Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/mai
           - www2.example.com
         caddy_server_reverse_proxy_to_address: http://internal.example.com
 ```
+
+```yaml
+# Installing Caddy server that has no configuration but API enabled from localhost for further configuration
+- name: Installing Caddy...
+  ansible.builtin.include_role:
+    name: nova.core.caddy
+  vars:
+    caddy_enable_api: true
+```
+
+```yaml
+# Installing Caddy server that has no configuration but API enabled from everywhere for further configuration
+# Careful with this, as it allows anyone to access the Caddy API. The API port should be protected by a firewall.
+- name: Installing Caddy...
+  ansible.builtin.include_role:
+    name: nova.core.caddy
+  vars:
+    caddy_enable_api: true
+    caddy_api_from_localhost_only: false
+```

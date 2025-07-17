@@ -1,0 +1,11 @@
+---
+- name: Waiting Caddy API is up...
+  ansible.builtin.uri:
+    url: http://localhost:2019
+    method: GET
+    force_basic_auth: true
+    status_code:
+      - 200
+      - 404
+  retries: 5
+  delay: 3

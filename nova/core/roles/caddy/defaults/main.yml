@@ -9,6 +9,14 @@ caddy_container_ports:
   - "443:443"
   - "443:443/udp"
 
+caddy_enable_api: false # Set to true to enable Caddy API
+caddy_api_from_localhost_only: true # Set to false to allow API access from any IP
+caddy_api_container_ports:
+  - "80:80"
+  - "443:443"
+  - "443:443/udp"
+  - "{{ '127.0.0.1:' if caddy_api_from_localhost_only else '' }}2019:2019" # Caddy API port
+
 caddy_config_folder: /srv/caddy
 caddy_version: 2.10.0
 
