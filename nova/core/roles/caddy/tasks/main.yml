@@ -4,11 +4,15 @@
 
 - name: Including Caddyfile with variables mode tasks...
   ansible.builtin.include_tasks: caddyfile_with_vars.yml
-  when: not caddy_template_caddyfile
+  when:
+    - not caddy_template_caddyfile
+    - not caddy_enable_api
 
 - name: Including Caddyfile template tasks...
   ansible.builtin.include_tasks: caddy_template.yml
-  when: caddy_template_caddyfile
+  when:
+    - caddy_template_caddyfile
+    - not caddy_enable_api
 
 - name: Composing Caddy for {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
@@ -20,6 +24,7 @@
   community.docker.docker_container_exec:
     container: caddy
     command: caddy fmt --overwrite /etc/caddy/Caddyfile
+  when: not caddy_enable_api
 
 # This is mostly for when certificates are updated
 - name: Restarting Caddy for {{ inventory_hostname }}...
@@ -27,3 +32,7 @@
     project_src: "{{ caddy_config_folder }}"
     state: restarted
     wait: true
+
+- name: Including Caddyfile API configuration tasks...
+  ansible.builtin.include_tasks: caddy_api.yml
+  when: caddy_enable_api
