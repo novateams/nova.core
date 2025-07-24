@@ -119,7 +119,8 @@
             current_os_disk_size: "{{ (vm_disk_info.instance.config.hardware.device
               | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk') | map(attribute='capacityInKB') | first / 1024) | int }}"
 
-        - name: Setting {{ custom_vm_name | default(vm_name) }} disk size to {{ (os_disk_size | int / 1024) | int }}GB...
+        - name: Setting {{ custom_vm_name | default(vm_name) }} disk size to {{
+            (os_disk_size if os_disk_size is defined else 1 | int / 1024) | int }}GB...
           community.vmware.vmware_guest:
             name: "{{ custom_vm_name | default(vm_name) }}"
             esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"

@@ -9,7 +9,7 @@
         label: "{{ custom_vm_name | default(vm_name) }}"
         booted: true
         state: present
-      when: poweron
+      when: poweron | bool
 
     - name: Restarting {{ custom_vm_name | default(vm_name) }}...
       linode.cloud.instance:
@@ -18,7 +18,7 @@
         booted: true
         rebooted: true
         state: present
-      when: restart or reset
+      when: restart | bool or reset | bool
 
     - name: Shutting down {{ custom_vm_name | default(vm_name) }}...
       linode.cloud.instance:
@@ -26,4 +26,4 @@
         label: "{{ custom_vm_name | default(vm_name) }}"
         booted: false
         state: present
-      when: shutdown or poweroff
+      when: shutdown | bool or poweroff | bool

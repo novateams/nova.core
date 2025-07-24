@@ -3,7 +3,7 @@
   ansible.builtin.package:
     name:
       - xrdp
-      - xorgxrdp{{ '=' + linux_xrdp_server_xorgxrdp_version if linux_xrdp_server_xorgxrdp_version != {} else none }}
+      - xorgxrdp{{ '=' + linux_xrdp_server_xorgxrdp_version if linux_xrdp_server_xorgxrdp_version != {} else '' }}
     state: present
     update_cache: true
     allow_downgrades: true

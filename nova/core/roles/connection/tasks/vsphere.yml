@@ -14,7 +14,7 @@
       delegate_to: localhost
       register: detect_dhcp
       until:
-        - detect_dhcp.instance.guest.ipAddress
+        - detect_dhcp.instance.guest.ipAddress != none
         - detect_dhcp.instance.guest.ipAddress != "0.0.0.0"
         - not (detect_dhcp.instance.guest.ipAddress | regex_search('169.254.*')) # Protection against APIPA address
         - not (detect_dhcp.instance.guest.ipAddress | ansible.utils.ipv6) # Protection against IPv6 link-local address

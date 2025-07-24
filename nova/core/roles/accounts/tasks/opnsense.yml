@@ -75,7 +75,7 @@
                 - password: "{{ item.password | password_hash('sha512') }}"
                 - authorizedkeys: "{{ (item.ssh_key | b64encode) if item.ssh_key is defined }}"
                 - shell: "{{ '/usr/local/sbin/opnsense-shell' if item.username == admin_account else '/bin/tcsh' }}"
-                - uid: "{{ 0 if item.username == admin_account else 2000 + idx - 1 }}"
+                - uid: "{{ (0 if item.username == admin_account else 2000 + idx - 1) | string }}"
       loop: "{{ admin_accounts_with_password }}"
       loop_control:
         index_var: idx
@@ -87,7 +87,7 @@
         xpath: /opnsense/system/group[name='admins']
         pretty_print: true
         add_children:
-          - member: "{{ 0 if item.username == admin_account else 2000 + idx - 1 }}"
+          - member: "{{ (0 if item.username == admin_account else 2000 + idx - 1) | string }}"
       loop: "{{ admin_accounts_with_password }}"
       loop_control:
         index_var: idx

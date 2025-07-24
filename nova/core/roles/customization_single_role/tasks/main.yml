@@ -7,7 +7,7 @@
     - ansible_system is defined
     - ansible_system == "Win32NT"
 
-- name: Including {{ single_role }} role...
+- name: Including {{ single_role if single_role is defined else omit }} role...
   ansible.builtin.include_role:
     name: "{{ single_role }}"
 

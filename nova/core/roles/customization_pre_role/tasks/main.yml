@@ -1,5 +1,5 @@
 ---
-- name: Including {{ pre_role }} role...
+- name: Including role {{ pre_role if pre_role is defined else 'omit' }}...
   ansible.builtin.include_role:
     name: "{{ pre_role }}"
 
