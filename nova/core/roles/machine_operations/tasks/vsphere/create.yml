@@ -26,7 +26,7 @@
           Check that you have the following configuration set:
             * {{ inventory_hostname }} machine has at least network interface defined
             * {{ inventory_hostname }} machine interface has the connection flag set to true
-      when: primary_network == []
+      when: connection_network_info == []
 
     - name: Checking that nothing is already responding on {{ connection_address }}...
       ansible.builtin.command: ping -q -c 2 -W 2 {{ connection_address }}
@@ -163,7 +163,7 @@
         datacenter: "{{ datacenter }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         vgpu: "{{ machine_operations_vgpu }}"
-      when: machine_operations_vgpu
+      when: machine_operations_vgpu != none
 
     - name: Looking up the cloned VM...
       vmware.vmware_rest.vcenter_vm_info:
