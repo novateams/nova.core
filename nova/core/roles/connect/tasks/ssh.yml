@@ -3,7 +3,8 @@
 - name: Saving connection info to /tmp/ansible_connect
   ansible.builtin.copy:
     content: -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ '-o PreferredAuthentications=password' if
-      connect_connection_method_ssh_preferred_authentication_password else '' }} {{ connect_user }}@{{ ansible_host }} {{ '-A'
+      connect_connection_method_ssh_preferred_authentication_password else '' }} {{
+      ansible_ssh_extra_args | default('') }} {{ connect_user }}@{{ ansible_host }} {{ '-A'
       if connect_connection_method_ssh_forward_agent else '' }}
     dest: /tmp/ansible_connect
     mode: "0600"
