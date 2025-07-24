@@ -28,7 +28,7 @@
   retries: 60
   delay: 5
 
-- name: Including LEGACY {{ vault_root_ca_pki_engine_name }} creation tasks...
+- name: Including LEGACY Root CA creation tasks...
   ansible.builtin.include_tasks: ca_root.yml
   when:
     - vault_create_root_ca
@@ -44,7 +44,7 @@
     - vault_create_root_ca
     - vault_root_ca_pki_engine_name is not defined
 
-- name: Including LEGACY {{ vault_intermediate_ca_pki_engine_name }} creation tasks...
+- name: Including LEGACY Intermediate CA creation tasks...
   ansible.builtin.include_tasks: ca_intermediate.yml
   when:
     - vault_create_intermediate_ca
@@ -61,7 +61,7 @@
     - vault_create_intermediate_ca
     - vault_intermediate_ca_pki_engine_name is not defined
 
-- name: Including LEGACY {{ vault_mitm_ca_pki_engine_name }} creation tasks...
+- name: Including LEGACY MiTM CA creation tasks...
   ansible.builtin.include_tasks: ca_mitm.yml
   when:
     - vault_create_mitm_ca

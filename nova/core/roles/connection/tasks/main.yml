@@ -73,7 +73,7 @@
 - name: Including connect role...
   ansible.builtin.include_role:
     name: nova.core.connect
-  when: connection_connect
+  when: connection_connect | bool
 
 - name: Including gather_facts role...
   ansible.builtin.include_role:

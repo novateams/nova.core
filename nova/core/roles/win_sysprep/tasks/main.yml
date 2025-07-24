@@ -1,6 +1,6 @@
 ---
 - name: Including sysprep fix tasks...
-  when: ansible_distribution | regex_search('Microsoft Windows 1(0|1).*') # Windows 10 and 11
+  when: ansible_distribution | regex_search('Microsoft Windows 1(0|1).*') != none # Windows 10 and 11
   block:
     - name: Removing sysprep-blocking packages from {{ ansible_distribution }}...
       ansible.windows.win_shell: |

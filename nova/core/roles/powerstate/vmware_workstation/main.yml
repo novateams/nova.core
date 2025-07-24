@@ -11,24 +11,24 @@
 - name: Stopping {{ inventory_hostname }}...
   ansible.builtin.command: vmcli power stop --opType hard {{ vmware_workstation.local_vmx_path }}
   changed_when: true
-  when: poweroff
+  when: poweroff | bool
 
 - name: Starting {{ inventory_hostname }}...
   ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
   changed_when: true
-  when: poweron
+  when: poweron | bool
 
 - name: Resetting {{ inventory_hostname }}...
   ansible.builtin.command: vmcli power reset --opType hard {{ vmware_workstation.local_vmx_path }}
   changed_when: true
-  when: reset
+  when: reset | bool
 
 - name: Restarting {{ inventory_hostname }}...
   ansible.builtin.command: vmcli power reset --opType trySoft {{ vmware_workstation.local_vmx_path }}
   changed_when: true
-  when: restart
+  when: restart | bool
 
 - name: Shutting down {{ inventory_hostname }}...
   ansible.builtin.command: vmcli power stop --opType trySoft {{ vmware_workstation.local_vmx_path }}
   changed_when: true
-  when: shutdown
+  when: shutdown | bool

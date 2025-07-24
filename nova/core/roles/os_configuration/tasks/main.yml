@@ -79,7 +79,7 @@
 
     # This needs to be last because the play stops after that
     - name: Creating snapshot, getting IP and stopping play...
-      when: just_clone
+      when: just_clone | bool
       block:
         - name: Including snapshots role...
           ansible.builtin.include_role:

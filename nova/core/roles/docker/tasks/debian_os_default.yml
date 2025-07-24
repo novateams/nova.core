@@ -34,8 +34,8 @@
   ansible.builtin.apt:
     name:
       - containerd.io
-      - docker-ce-cli{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else none }}
-      - docker-ce{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else none }}
+      - docker-ce-cli{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else '' }}
+      - docker-ce{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else '' }}
       - docker-compose-plugin
       - python3-docker
       - python3-jsondiff
@@ -79,7 +79,7 @@
   when: daemon_config.changed
 
 - name: Including default network creation tasks...
-  when: docker_create_network
+  when: docker_create_network | bool
   block:
     - name: Checking if {{ docker_network.name }} exists...
       community.docker.docker_network_info:

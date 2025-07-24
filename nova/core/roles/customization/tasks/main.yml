@@ -25,7 +25,7 @@
   ansible.builtin.meta: flush_handlers
 
 - name: Getting IP and ending play...
-  when: role_only
+  when: role_only | bool
   block:
     - name: Including get_ip role...
       ansible.builtin.include_role:

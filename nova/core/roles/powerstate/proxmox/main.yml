@@ -14,24 +14,24 @@
 
 - name: Including {{ custom_vm_name | default(vm_name) }} poweron tasks...
   ansible.builtin.include_tasks: poweron.yml
-  when: poweron
+  when: poweron | bool
 
 - name: Including {{ custom_vm_name | default(vm_name) }} reset tasks...
   ansible.builtin.include_tasks: reset.yml
-  when: reset
+  when: reset | bool
 
 - name: Including {{ custom_vm_name | default(vm_name) }} restart tasks...
   ansible.builtin.include_tasks: restart.yml
-  when: restart
+  when: restart | bool
 
 - name: Including {{ custom_vm_name | default(vm_name) }} suspend tasks...
   ansible.builtin.include_tasks: suspend.yml
-  when: suspend
+  when: suspend | bool
 
 - name: Including {{ custom_vm_name | default(vm_name) }} shutdown tasks...
   ansible.builtin.include_tasks: shutdown.yml
-  when: shutdown
+  when: shutdown | bool
 
 - name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
   ansible.builtin.include_tasks: poweroff.yml
-  when: poweroff
+  when: poweroff | bool

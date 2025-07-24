@@ -20,7 +20,7 @@
       set: "{{ item.members }}"
   loop: "{{ domain_groups }}"
   loop_control:
-    label: "{{ item.name }} > {{ item.members | default(omit) | join(', ') }}"
+    label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name }}"
   when:
     - item.members is defined
     - accounts_domain_groups_members_strategy == 'replace'
@@ -35,7 +35,7 @@
       add: "{{ item.members }}"
   loop: "{{ domain_groups }}"
   loop_control:
-    label: "{{ item.name }} >> {{ item.members | default(omit) | join(', ') }}"
+    label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name }}"
   when:
     - item.members is defined
     - accounts_domain_groups_members_strategy == 'add'
