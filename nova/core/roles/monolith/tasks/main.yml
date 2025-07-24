@@ -7,7 +7,7 @@
   ansible.builtin.include_role:
     name: nova.core.caddy
   vars:
-    # Will be used only of no pre-existing certificate is found
+    # Will be used only if no pre-existing certificate is found
     caddy_self_signed_certificate_subject_alt_name: "{{ monolith_caddy_self_signed_certificate_subject_alt_name }}"
     caddy_servers: "{{ monolith_caddy_servers }}"
 
@@ -126,7 +126,8 @@
 
         - name: Requesting certificate...
           ansible.builtin.uri:
-            url: https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name
+            url:
+              https://{{ monolith_vault_fqdn }}/v1/{{ vault_intermediate_ca_pki_engine_name
               | default(vault_intermediate_cas[0].vault_intermediate_ca_pki_engine_name)
               | default('IntermediateCA') }}/issue/server_ec
             method: POST
