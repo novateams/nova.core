@@ -39,4 +39,13 @@
       community.vmware.vmware_guest_tools_upgrade:
         datacenter: "{{ datacenter }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
-      when: vmtools_upgrade_policy == "MANUAL"
+      when:
+        - vm_tools.value.version_status != "UNMANAGED"
+        - vmtools_upgrade_policy == "MANUAL"
+
+    - name: VMware Tools are managed by the operating system...
+      ansible.builtin.debug:
+        msg: |
+          VMware Tools are managed by the operating system, skipping upgrade.
+          Use the operating system package manager to upgrade VMware Tools.
+      when: vm_tools.value.version_status == "UNMANAGED"
