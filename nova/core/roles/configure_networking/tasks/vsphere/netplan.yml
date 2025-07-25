@@ -79,7 +79,8 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply"
+            # 2x netplan is required for Ubuntu 20.04 for some reason
+            arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply"
             path: /bin/bash
         status_code: 201
         body_format: json

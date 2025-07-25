@@ -13,8 +13,8 @@ Name={{ item.network_id }}
 
 [Network]
 Description={{ item.network_id }}
-DHCP=no
-IPv6AcceptRouterAdvertisements=no
+DHCP={{ 'yes' if item.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) else 'no' }}
+IPv6AcceptRouterAdvertisements={{ 'yes' if item.addresses | map(attribute='mode') | intersect(['ipv6_dhcp','ipv6_slaac']) else 'no' }}
 {% if item.addresses != [] %}
 {% for ip_address in item.addresses %}
 {% if ip_address.mode == 'ipv4_static' %}

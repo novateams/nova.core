@@ -210,6 +210,29 @@
     - name: Applying network configuration on Debian...
       when: configure_networking_os is search('Debian')
       block:
+        - name: Getting DNS from DHCP...
+          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+          block:
+            - name: Enabling systemd-resolved service...
+              ansible.builtin.uri:
+                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+                  | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    arguments: -c "dhclient"
+                    path: /bin/bash
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: network_config_command
+
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
+
         - name: Configuring network interface(s) names on Debian...
           ansible.builtin.uri:
             url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm

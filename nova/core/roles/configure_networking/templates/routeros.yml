@@ -1,8 +1,14 @@
 ---
 router_os_networking_commands:
 {% for interface in interfaces %}
-{% if interface.addresses != [] %}
 {% set interface_loop_index = loop.index %}
+{% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
+- /ip dhcp-client add interface=ether{{ interface_loop_index }} use-peer-dns=yes use-peer-ntp=yes add-default-route=yes disabled=no
+{% endif %}
+{% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp', 'ipv6_slaac']) %}
+- /ipv6 dhcp-client add interface=ether{{ interface_loop_index }} add-default-route=yes request=address use-peer-dns=yes
+{% endif %}
+{% if interface.addresses != [] %}
 {% for ip_address in interface.addresses %}
 {% if (ip_address.mode == 'ipv4_static') %}
 - /ip address add address={{ ip_address.address }} interface=ether{{ interface_loop_index }}

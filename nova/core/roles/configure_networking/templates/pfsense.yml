@@ -38,6 +38,15 @@ pfsense_interfaces:
           - if: {{ nic_map[loop.index - 1] | replace("-", "_") }}
           - enable:
           - descr: {{ interface.network_id | replace("-", "_") }}
+          {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
+          - ipaddr: "dhcp"
+          {% endif %}
+          {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp']) %}
+          - ipaddrv6: "dhcp6"
+          {% endif %}
+          {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_slaac']) %}
+          - ipaddrv6: "slaac"
+          {% endif %}
           {% for ip_address in interface.addresses %}
           {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("default.*")) %}
           - ipaddr: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"

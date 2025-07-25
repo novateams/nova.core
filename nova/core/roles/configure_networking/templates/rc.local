@@ -1,9 +1,24 @@
 {% for interface in interfaces %}
+
+    # Configuring interface {{ loop.index }}
+    {% set interface_loop = loop.index %}
+    INTERFACE_{{ interface_loop }}_NAME=$(ifconfig -l | tr ' ' '\n' | grep -v 'lo0' | awk 'NR=={{ interface_loop }}')
+
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
+
+        pkill -f dhclient
+        dhclient $INTERFACE_{{ interface_loop }}_NAME
+
+    {% endif %}
+
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp', 'ipv6_slaac']) %}
+
+        ifconfig $INTERFACE_{{ interface_loop }}_NAME inet6 accept_rtadv auto_linklocal
+
+    {% endif %}
+
     {% if interface.addresses != [] %}
 
-        # Configuring interface {{ loop.index }}
-        {% set interface_loop = loop.index %}
-        INTERFACE_{{ interface_loop }}_NAME=$(ifconfig -l | tr ' ' '\n' | grep -v 'lo0' | awk 'NR=={{ interface_loop }}')
         {% for ip_address in interface.addresses %}
         {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
         ifconfig $INTERFACE_{{ interface_loop }}_NAME inet {{ ip_address.address | ansible.utils.ipaddr('address') }} netmask {{ ip_address.address | ansible.utils.ipaddr('netmask') }}
@@ -35,6 +50,8 @@
     {% endif %}
 {% endfor %}
 
+
+{% if dns_server_combined != [] %}
 echo "This file is re-generated on each startup by /etc/rc.local" > /etc/resolv.conf
 {% if dns_domain != {} %}
 echo "domain {{ dns_domain }}" >> /etc/resolv.conf
@@ -42,11 +59,10 @@ echo "domain {{ dns_domain }}" >> /etc/resolv.conf
 {% if dns_search %}
 echo "search {{ dns_search | join(' ') }}" >> /etc/resolv.conf
 {% endif %}
-{% if dns_server_combined != [] %}
 {% for dns_address in dns_server_combined %}
 echo "nameserver {{ dns_address }}" >> /etc/resolv.conf
 {% endfor %}
-{% endif %}
 {% if resolv_options %}
 echo "options {{ resolv_options }}" >> /etc/resolv.conf
+{% endif %}
 {% endif %}

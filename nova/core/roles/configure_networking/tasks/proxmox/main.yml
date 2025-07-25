@@ -1,6 +1,5 @@
 ---
 - name: Configuring VM network on Proxmox...
-  when: connection_mode in supported_connection_modes
   become: false
   delegate_to: localhost
   block:
