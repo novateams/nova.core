@@ -16,6 +16,17 @@ fi
     LOCAL_INTERFACE_NAME="eth{{ loop.index -1 }}-{{ interface.network_id[:10] }}"
     nmcli connection add type ethernet ifname $LOCAL_INTERFACE_NAME con-name $LOCAL_INTERFACE_NAME
 
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
+
+        nmcli connection modify $LOCAL_INTERFACE_NAME ipv4.method auto
+
+    {% endif %}
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp', 'ipv6_slaac']) %}
+
+        nmcli connection modify $LOCAL_INTERFACE_NAME ipv6.method auto
+
+    {% endif %}
+
     # Looping over IP addresses
     {% for ip_address in interface.addresses %}
 

@@ -17,11 +17,25 @@ source /opt/vyatta/etc/functions/script-template
 # find /sys/class/net -mindepth 1 -maxdepth 1 ! -name lo -printf "%P: " -execdir cat {}/address \;
 
 {% for interface in interfaces %}
-    {% if interface.addresses != [] %}
 
-        MAC_ADDRESS="{{ configure_networking_mac_addresses[loop.index - 1] }}"
-        INTERFACE_NAME=$( ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . | ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs)
-        set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
+    MAC_ADDRESS="{{ configure_networking_mac_addresses[loop.index - 1] }}"
+    INTERFACE_NAME=$( ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . | ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs)
+    set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
+
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
+
+        set interfaces ethernet $INTERFACE_NAME address dhcp
+
+    {% endif %}
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp', 'ipv6_slaac']) %}
+
+        set interfaces ethernet $INTERFACE_NAME ipv6 address autoconf
+        set interfaces ethernet $INTERFACE_NAME ipv6 dhcpv6-options ia-na
+        set interfaces ethernet $INTERFACE_NAME ipv6 dhcpv6-options name-server update
+
+    {% endif %}
+
+    {% if interface.addresses != [] %}
 
         {% for ip_address in interface.addresses %}
 

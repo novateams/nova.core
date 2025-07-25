@@ -53,31 +53,13 @@
             keys_send:
               - ENTER
 
-        - name: Setting static IP configuration for {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            string_send: set deviceconfig system type static
-
-        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            keys_send:
-              - ENTER
-
-        - name: Configuring MGMT IPv4...
-          when:
-            - interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
-            - interfaces | nova.core.addresses('mgmt_ipv4') | first | ansible.utils.ipaddr('address') is not ansible.utils.ipv4
+        - name: Configuring static IP address for {{ custom_vm_name | default(vm_name) }}...
+          when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
           block:
-            - name: Configuring MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
+            - name: Setting static IP configuration for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send:
-                  set deviceconfig system ip-address {{ interfaces | nova.core.addresses('connection_nic_ipv4')
-                  | first | ansible.utils.ipaddr('address') }} netmask {{ interfaces | nova.core.addresses('connection_nic_ipv4')
-                  | first | ansible.utils.ipaddr('netmask') }} {{ ' ' if interfaces | nova.core.addresses('connection_nic_ipv4_gw')
-                  | first == 'NA' else 'default-gateway ' + interfaces | nova.core.addresses('connection_nic_ipv4_gw') | first }}
-              when: interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+                string_send: set deviceconfig system type static
 
             - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -85,16 +67,94 @@
                 keys_send:
                   - ENTER
 
-        - name: Configuring OOB MGMT IPv4...
-          when: interfaces | nova.core.addresses('mgmt_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
-          block:
-            - name: Configuring OOB MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
+            - name: Configuring MGMT IPv4...
+              when:
+                - interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+                - interfaces | nova.core.addresses('mgmt_ipv4') | first | ansible.utils.ipaddr('address') is not ansible.utils.ipv4
+              block:
+                - name: Configuring MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send:
+                      set deviceconfig system ip-address {{ interfaces | nova.core.addresses('connection_nic_ipv4')
+                      | first | ansible.utils.ipaddr('address') }} netmask {{ interfaces | nova.core.addresses('connection_nic_ipv4')
+                      | first | ansible.utils.ipaddr('netmask') }} {{ ' ' if interfaces | nova.core.addresses('connection_nic_ipv4_gw')
+                      | first == 'NA' else 'default-gateway ' + interfaces | nova.core.addresses('connection_nic_ipv4_gw') | first }}
+                  when: interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+            - name: Configuring OOB MGMT IPv4...
+              when: interfaces | nova.core.addresses('mgmt_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+              block:
+                - name: Configuring OOB MGMT interface IPv4 for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system ip-address {{ interfaces | nova.core.addresses('mgmt_ipv4')
+                      | first | ansible.utils.ipaddr('address') }} netmask {{ interfaces | nova.core.addresses('mgmt_ipv4')
+                      | first | ansible.utils.ipaddr('netmask') }}
+                  when: interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+            - name: Configuring MGMT IPv6...
+              when:
+                - interfaces | nova.core.addresses('connection_nic_ipv6') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv6
+                - interfaces | nova.core.addresses('mgmt_ipv6') | first | ansible.utils.ipaddr('address') is not ansible.utils.ipv6
+              block:
+                - name: Configuring MGMT interface IPv6 for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system ipv6-address {{ interfaces | nova.core.addresses('connection_nic_ipv6') | first }}
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+            - name: Configuring MGMT IPv6 GW...
+              when:
+                - interfaces | nova.core.addresses('connection_nic_ipv6_gw') | first is ansible.utils.ipv6
+                - interfaces | nova.core.addresses('mgmt_ipv6') | first | ansible.utils.ipaddr('address') is not ansible.utils.ipv6
+              block:
+                - name: Configuring MGMT interface IPv6 gateway for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system ipv6-default-gateway {{ connection_nic_ipv6_gw }}
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+            - name: Configuring OOB MGMT IPv6...
+              when: interfaces | nova.core.addresses('mgmt_ipv6') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv6
+              block:
+                - name: Configuring OOB MGMT interface IPv6 for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system ipv6-address {{ interfaces | nova.core.addresses('mgmt_ipv6') | first }}
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+            - name: Committing changes for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ip-address {{ interfaces | nova.core.addresses('mgmt_ipv4')
-                  | first | ansible.utils.ipaddr('address') }} netmask {{ interfaces | nova.core.addresses('mgmt_ipv4')
-                  | first | ansible.utils.ipaddr('netmask') }}
-              when: interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+                string_send: commit
 
             - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -102,15 +162,74 @@
                 keys_send:
                   - ENTER
 
-        - name: Configuring MGMT IPv6...
-          when:
-            - interfaces | nova.core.addresses('connection_nic_ipv6') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv6
-            - interfaces | nova.core.addresses('mgmt_ipv6') | first | ansible.utils.ipaddr('address') is not ansible.utils.ipv6
+        - name: Configuring dynamic IP address for {{ custom_vm_name | default(vm_name) }}...
+          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
           block:
-            - name: Configuring MGMT interface IPv6 for {{ custom_vm_name | default(vm_name) }}...
+            - name: Configuring dynamic IPv4 address...
+              when: connection_mode == "ipv4_dhcp"
+              block:
+                - name: Setting dynamic IP configuration for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system type dhcp-client send-hostname yes
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+                - name: Setting dynamic IP configuration for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system type dhcp-client send-client-id yes
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+                - name: Setting dynamic IP configuration for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system type dhcp-client accept-dhcp-hostname yes
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+                - name: Setting dynamic IP configuration for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system type dhcp-client accept-dhcp-domain yes
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+            - name: Configuring dynamic IPv6 address...
+              when: connection_mode in ['ipv6_dhcp', 'ipv6_slaac']
+              block:
+                - name: Setting dynamic IPv6 configuration for {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    string_send: set deviceconfig system ipv6-type dynamic non-temporary-address yes
+
+                - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+                  community.vmware.vmware_guest_sendkey:
+                    name: "{{ custom_vm_name | default(vm_name) }}"
+                    keys_send:
+                      - ENTER
+
+            - name: Committing changes for {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ipv6-address {{ interfaces | nova.core.addresses('connection_nic_ipv6') | first }}
+                string_send: commit
 
             - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -118,46 +237,30 @@
                 keys_send:
                   - ENTER
 
-        - name: Configuring MGMT IPv6 GW...
-          when:
-            - interfaces | nova.core.addresses('connection_nic_ipv6_gw') | first is ansible.utils.ipv6
-            - interfaces | nova.core.addresses('mgmt_ipv6') | first | ansible.utils.ipaddr('address') is not ansible.utils.ipv6
-          block:
-            - name: Configuring MGMT interface IPv6 gateway for {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
+            - name: Detecting DHCP address for {{ hostname }}...
+              community.vmware.vmware_guest_info:
+                datacenter: "{{ datacenter }}"
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ipv6-default-gateway {{ connection_nic_ipv6_gw }}
+                folder: "{{ folder }}"
+                properties:
+                  - guest.ipAddress
+                schema: vsphere
+              delegate_to: localhost
+              register: detect_dhcp
+              until:
+                - detect_dhcp.instance.guest.ipAddress != none
+                - detect_dhcp.instance.guest.ipAddress != "0.0.0.0"
+                - not (detect_dhcp.instance.guest.ipAddress | regex_search('169.254.*')) # Protection against APIPA address
+                - not (detect_dhcp.instance.guest.ipAddress | ansible.utils.ipv6) # Protection against IPv6 link-local address
+              retries: 60
+              delay: 5
 
-            - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                keys_send:
-                  - ENTER
-
-        - name: Configuring OOB MGMT IPv6...
-          when: interfaces | nova.core.addresses('mgmt_ipv6') | first | ansible.utils.ipaddr('address') is ansible.utils.ipv6
-          block:
-            - name: Configuring OOB MGMT interface IPv6 for {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                string_send: set deviceconfig system ipv6-address {{ interfaces | nova.core.addresses('mgmt_ipv6') | first }}
-
-            - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-              community.vmware.vmware_guest_sendkey:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                keys_send:
-                  - ENTER
-
-        - name: Committing changes for {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            string_send: commit
-
-        - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            keys_send:
-              - ENTER
+            - name: Re-setting connection parameters for PanOS {{ inventory_hostname }}...
+              ansible.builtin.set_fact:
+                panos_connection_params:
+                  ip_address: "{{ detect_dhcp.instance.guest.ipAddress }}"
+                  username: "{{ rest_api_credentials.user_name }}"
+                  password: "{{ rest_api_credentials.password }}"
 
     - name: Waiting for {{ inventory_hostname }} to become reachable...
       paloaltonetworks.panos.panos_facts:
@@ -214,8 +317,14 @@
         provider: "{{ panos_connection_params }}"
         dns_server_primary: "{{ dns_servers[0] }}"
         dns_server_secondary: "{{ dns_servers6[0] | default(dns_servers[0]) }}"
+      when: dns_servers != []
+
+    - name: Configuring PanOS NTP...
+      paloaltonetworks.panos.panos_mgtconfig:
+        provider: "{{ panos_connection_params }}"
         ntp_server_primary: "{{ ntp_servers[0] }}"
         ntp_server_secondary: "{{ ntp_servers[1] | default(ntp_servers[0]) }}"
+      when: ntp_servers != []
 
     - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:

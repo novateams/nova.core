@@ -28,8 +28,8 @@
         name:
           - iptables-persistent
         state: present
-      register: iptables_persistent_isntall
-      until: not iptables_persistent_isntall.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
+      register: iptables_persistent_install
+      until: not iptables_persistent_install.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
       retries: 10
       delay: 6
 

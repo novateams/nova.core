@@ -24,34 +24,6 @@ done
 MGMT_INTERFACE_NAME={{ configure_networking_proxmox_mgmt_interface_name | default("$(ip -o link show | awk -F': ' '{print $2}' | grep -v '^lo$' | head -n 1)") }}
 NODE_NAME={{ configure_networking_proxmox_node_name | default("$(hostname)") }}
 
-{% if mgmt_ipv4 != false %}
-
-pvesh set /nodes/$NODE_NAME/network/$MGMT_INTERFACE_NAME --type bridge \
---address {{ mgmt_ipv4 | ansible.utils.ipaddr('address') }} \
---netmask {{ mgmt_ipv4 | ansible.utils.ipaddr('netmask') }} \
-{% if connection_nic_ipv6 != false %}
---address6 {{ connection_nic_ipv6 }} \
---netmask6 {{ connection_nic_ipv6_with_prefix | ansible.utils.ipaddr('prefix') }} \
-{% endif %}
-{% if connection_nic_ipv6_gw != false %}
---gateway6 {{ connection_nic_ipv6_gw }}
-{% endif %}
-
-{% elif mgmt_ipv6 != false %}
-
-pvesh set /nodes/$NODE_NAME/network/$MGMT_INTERFACE_NAME --type bridge \
---address6 {{ mgmt_ipv6 }} \
---netmask6 {{ mgmt_ipv6_with_prefix | ansible.utils.ipaddr('prefix') }} \
-{% if connection_nic_ipv4 != false %}
---address {{ connection_nic_ipv4 }} \
---netmask {{ connection_nic_ipv4_with_prefix | ansible.utils.ipaddr('netmask') }} \
-{% endif %}
-{% if connection_nic_ipv4_gw != false %}
---gateway {{ connection_nic_ipv4_gw }}
-{% endif %}
-
-{% else %}
-
 pvesh set /nodes/$NODE_NAME/network/$MGMT_INTERFACE_NAME --type bridge \
 {% if connection_nic_ipv4 != false %}
 --address {{ connection_nic_ipv4 }} \
@@ -66,8 +38,6 @@ pvesh set /nodes/$NODE_NAME/network/$MGMT_INTERFACE_NAME --type bridge \
 {% endif %}
 {% if connection_nic_ipv6_gw != false %}
 --gateway6 {{ connection_nic_ipv6_gw }}
-{% endif %}
-
 {% endif %}
 
 # Reload network configuration

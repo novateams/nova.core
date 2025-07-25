@@ -10,7 +10,8 @@
       block:
         - name: Getting static IPv4 addresses for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.set_fact:
-            connection_static_ipv4_addresses: "{{ connection_static_ipv6_addresses | default([]) + item.addresses
+            connection_static_ipv4_addresses:
+              "{{ connection_static_ipv4_addresses | default([]) + item.addresses
               | selectattr('mode', 'equalto', 'ipv4_static') | map(attribute='address') | ansible.utils.ipaddr('address') }}"
           loop: "{{ interfaces }}"
           loop_control:
@@ -35,7 +36,8 @@
 
         - name: Setting connection_address for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.set_fact:
-            connection_address: "{{ (proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
+            connection_address:
+              "{{ (proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
               flatten | map(attribute='ip-address') | ansible.utils.ipv4 |
               reject('search', '^127\\.') | reject('search', '^169.254\\.'))[0] }}"
 
@@ -44,7 +46,8 @@
       block:
         - name: Getting static IPv6 addresses for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.set_fact:
-            connection_static_ipv6_addresses: "{{ connection_static_ipv6_addresses | default([]) + item.addresses
+            connection_static_ipv6_addresses:
+              "{{ connection_static_ipv6_addresses | default([]) + item.addresses
               | selectattr('mode', 'equalto', 'ipv6_static') | map(attribute='address') | ansible.utils.ipaddr('address') }}"
           loop: "{{ interfaces }}"
           loop_control:
@@ -69,7 +72,8 @@
 
         - name: Setting connection_address for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.set_fact:
-            connection_address: "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
+            connection_address:
+              "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
               flatten | map(attribute='ip-address') | ansible.utils.ipv6 |
               reject('search', '^::1') | reject('search', '^fe80::') | difference(connection_static_ipv6_addresses) | first }}"
 

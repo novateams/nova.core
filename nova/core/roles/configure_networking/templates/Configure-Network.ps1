@@ -7,16 +7,24 @@ Get-NetRoute | Where-Object InterfaceAlias -NotLike Loopback* | Remove-NetRoute 
 
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
-    {% if interface.addresses != [] %}
+    {% set interface_loop = loop.index -1 %}
+    $Interfaces = @(Get-NetAdapter | Select-Object -ExpandProperty Name | Sort-Object)
 
-        {% set interface_loop = loop.index -1 %}
-        $Interfaces = @(Get-NetAdapter | Select-Object -ExpandProperty Name | Sort-Object)
+    # If no IP addresses are defined, enable DHCP and Router Discovery
+    {% if interface.addresses == [] %}
+    Set-NetIPInterface -InterfaceAlias $Interfaces[{{ interface_loop }}] -Dhcp Enabled -RouterDiscovery Enabled
+    Set-DnsClientServerAddress -InterfaceAlias $Interfaces[{{ interface_loop }}] -ResetServerAddresses
+    Restart-NetAdapter -Name $Interfaces[{{ interface_loop }}]
+    {% else %}
+    Set-NetIPInterface -InterfaceAlias $Interfaces[{{ interface_loop }}] `
+    -Dhcp {{ 'Enabled' if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) else 'Disabled' }} `
+    -RouterDiscovery {{ 'Enabled' if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) else 'Disabled' }}
+    Set-DnsClientServerAddress -InterfaceAlias $Interfaces[{{ interface_loop }}] -ResetServerAddresses
+    Restart-NetAdapter -Name $Interfaces[{{ interface_loop }}]
 
         # Looping over IP addresses
+        {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_static', 'ipv6_static']) | list | length > 0 %}
         {% for ip_address in interface.addresses %}
-
-            # Disabling DHCP and Router Discovery for the interface
-            Set-NetIPInterface -InterfaceAlias $Interfaces[{{ interface_loop }}] -Dhcp Disabled -RouterDiscovery Disabled
 
             {% if (ip_address.mode == 'ipv4_static') and (ip_address.gateway != none) %}
 
@@ -51,6 +59,7 @@ Get-NetRoute | Where-Object InterfaceAlias -NotLike Loopback* | Remove-NetRoute 
             {% endif %}
 
         {% endfor %}
+        {% endif %}
 
         {% if dns_server_combined != [] %}
         Set-DnsClientServerAddress -InterfaceAlias $Interfaces[{{ interface_loop }}] -ServerAddresses {{ dns_server_combined | join(', ') }}

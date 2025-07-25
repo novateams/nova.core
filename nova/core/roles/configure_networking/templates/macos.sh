@@ -10,13 +10,27 @@ networksetup -detectnewhardware
 
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
-{% if interface.addresses != [] %}
 
     {% if interfaces | length == 1 %}
     LOCAL_INTERFACE_NAME="Ethernet"
     {% else %}
     LOCAL_INTERFACE_NAME="Ethernet {{ loop.index + 1 }}"
     {% endif %}
+
+
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
+
+        networksetup -setdhcp $LOCAL_INTERFACE_NAME
+
+    {% endif %}
+
+    {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp', 'ipv6_slaac']) %}
+
+        networksetup -setv6automatic $LOCAL_INTERFACE_NAME
+
+    {% endif %}
+
+{% if interface.addresses != [] %}
 
     # Looping over IP addresses
     {% for ip_address in interface.addresses %}
@@ -73,8 +87,10 @@ networksetup -detectnewhardware
         {% endif %}
     {% endfor %}
 
+    {% if dns_server_combined != [] %}
     # Setting DNS servers
     networksetup -setdnsservers "$LOCAL_INTERFACE_NAME" {{ dns_server_combined | join(' ') }}
+    {% endif %}
 
     # Disabling and enabling interface to apply changes
     networksetup -setnetworkserviceenabled "$LOCAL_INTERFACE_NAME" off
