@@ -5,25 +5,73 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Getting {{ custom_vm_name | default(vm_name) }} network configuration...
-      community.proxmox.proxmox_vm_info:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        config: current
-        network: true
-      delegate_to: localhost
-      become: false
-      register: proxmox_vm_info
-      until: not proxmox_vm_info.failed
-      retries: 30
-      delay: 10
+    - name: Getting autoconfigured IPv4...
+      when: connection_mode == 'ipv4_dhcp'
+      block:
+        - name: Getting static IPv4 addresses for {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.set_fact:
+            connection_static_ipv4_addresses: "{{ connection_static_ipv6_addresses | default([]) + item.addresses
+              | selectattr('mode', 'equalto', 'ipv4_static') | map(attribute='address') | ansible.utils.ipaddr('address') }}"
+          loop: "{{ interfaces }}"
+          loop_control:
+            label: "{{ item.addresses | selectattr('mode', 'equalto', 'ipv4_static') | map(attribute='address') | ansible.utils.ipaddr('address') }}"
+          when: item.addresses | selectattr('mode', 'equalto', 'ipv4_static') != []
 
-    # Most likely candidate to be the DHCP IPv4 connection address
-    - name: Setting connection_address for {{ custom_vm_name | default(vm_name) }}...
-      ansible.builtin.set_fact:
-        connection_address: "{{ (proxmox_vm_info.proxmox_vms[0].network |
-          map(attribute='ip-addresses') | flatten |
-          map(attribute='ip-address') | ansible.utils.ipv4 |
-          reject('search', '^127\\.') | reject('search', '^169.254\\.'))[0] }}"
+        - name: Getting {{ custom_vm_name | default(vm_name) }} {{ connection_mode | upper }} address...
+          community.proxmox.proxmox_vm_info:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            config: current
+            network: true
+          delegate_to: localhost
+          become: false
+          register: proxmox_vm_info
+          until:
+            - not proxmox_vm_info.failed
+            - proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
+              flatten | map(attribute='ip-address') | ansible.utils.ipv4 |
+              reject('search', '^127\\.') | reject('search', '^169.254\\.') | difference(connection_static_ipv4_addresses) != []
+          retries: 30
+          delay: 10
+
+        - name: Setting connection_address for {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.set_fact:
+            connection_address: "{{ (proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
+              flatten | map(attribute='ip-address') | ansible.utils.ipv4 |
+              reject('search', '^127\\.') | reject('search', '^169.254\\.'))[0] }}"
+
+    - name: Getting autoconfigured IPv6...
+      when: connection_mode in ['ipv6_dhcp', 'ipv6_slaac']
+      block:
+        - name: Getting static IPv6 addresses for {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.set_fact:
+            connection_static_ipv6_addresses: "{{ connection_static_ipv6_addresses | default([]) + item.addresses
+              | selectattr('mode', 'equalto', 'ipv6_static') | map(attribute='address') | ansible.utils.ipaddr('address') }}"
+          loop: "{{ interfaces }}"
+          loop_control:
+            label: "{{ item.addresses | selectattr('mode', 'equalto', 'ipv6_static') | map(attribute='address') | ansible.utils.ipaddr('address') }}"
+          when: item.addresses | selectattr('mode', 'equalto', 'ipv6_static') != []
+
+        - name: Getting {{ custom_vm_name | default(vm_name) }} {{ connection_mode | upper }} address...
+          community.proxmox.proxmox_vm_info:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            config: current
+            network: true
+          delegate_to: localhost
+          become: false
+          register: proxmox_vm_info
+          until:
+            - not proxmox_vm_info.failed
+            - proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
+              flatten | map(attribute='ip-address') | ansible.utils.ipv6 |
+              reject('search', '^::1') | reject('search', '^fe80::') | difference(connection_static_ipv6_addresses) != []
+          retries: 30
+          delay: 10
+
+        - name: Setting connection_address for {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.set_fact:
+            connection_address: "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses') |
+              flatten | map(attribute='ip-address') | ansible.utils.ipv6 |
+              reject('search', '^::1') | reject('search', '^fe80::') | difference(connection_static_ipv6_addresses) | first }}"
 
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
