@@ -53,8 +53,8 @@ providentia_auth_mode: resource_access # One of `resource_access` or `scope`, sp
 providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
 providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
 providentia_resource_env_creator: Environment_Creator # The role name, which allows creating new environments in Providentia
-
-# Resource groups
+providentia_oidc_extra_scopes: "" # list of extra scopes to request from OpenID Connect, eg. "profile email"
+providentia_oidc_authorization_roles_claim: resource_access.Providentia.roles # The claim in the OpenID Connect token that contains the roles, defaults to `resource_access.Providentia.roles` for Keycloak
 
 # The prefix for authorization roles (groups)
 providentia_resource_prefix: Providentia_
