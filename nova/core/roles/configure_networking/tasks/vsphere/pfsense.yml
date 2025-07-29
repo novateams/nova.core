@@ -92,10 +92,9 @@
     - name: Enabling {{ inventory_hostname }} configured DNS servers...
       community.general.xml:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
-        xpath: /pfsense/system
+        xpath: /pfsense/system/dnslocalhost
         pretty_print: true
-        add_children:
-          - dnslocalhost: remote
+        value: remote
 
     - name: Adding WAN Anti-Lockout Rule for WAN interface...
       when: interfaces | selectattr('egress', 'equalto', true) | first == interfaces | selectattr('connection', 'equalto', true) | first
