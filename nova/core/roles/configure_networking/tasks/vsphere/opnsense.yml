@@ -12,8 +12,7 @@
   block:
     - name: Preparing /conf/config.xml download...
       ansible.builtin.uri:
-        url:
-          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
@@ -95,8 +94,7 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
         xpath: /opnsense/system
         pretty_print: true
-        add_children:
-          - dnslocalhost: remote
+        value: remote
 
     - name: Adding a wan management rule for {{ inventory_hostname }}...
       community.general.xml:
@@ -129,8 +127,7 @@
 
     - name: Preparing {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml file upload...
       ansible.builtin.uri:
-        url:
-          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
