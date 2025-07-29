@@ -315,15 +315,15 @@
     - name: Configuring PanOS DNS...
       paloaltonetworks.panos.panos_mgtconfig:
         provider: "{{ panos_connection_params }}"
-        dns_server_primary: "{{ dns_servers[0] }}"
-        dns_server_secondary: "{{ dns_servers6[0] | default(dns_servers[0]) }}"
+        dns_server_primary: "{{ configure_networking_panos_primary_dns_server }}"
+        dns_server_secondary: "{{ configure_networking_panos_secondary_dns_server }}"
       when: dns_servers != []
 
     - name: Configuring PanOS NTP...
       paloaltonetworks.panos.panos_mgtconfig:
         provider: "{{ panos_connection_params }}"
-        ntp_server_primary: "{{ ntp_servers[0] }}"
-        ntp_server_secondary: "{{ ntp_servers[1] | default(ntp_servers[0]) }}"
+        ntp_server_primary: "{{ configure_networking_panos_primary_ntp_server }}"
+        ntp_server_secondary: "{{ configure_networking_panos_secondary_ntp_server }}"
       when: ntp_servers != []
 
     - name: Committing PanOS changes...
