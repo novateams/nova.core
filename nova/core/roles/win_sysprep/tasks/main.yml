@@ -10,6 +10,8 @@
         Get-AppxPackage Microsoft.WidgetsPlatformRuntime* | Remove-AppPackage
         Get-AppxPackage MicrosoftWindows.Client.WebExperience* | Remove-AppPackage
         Get-AppxPackage Microsoft.XboxSpeechToTextOverlay* | Remove-AppPackage
+        Get-AppxPackage Microsoft.TimeTravelDebugging* | Remove-AppPackage
+        Get-AppxPackage Microsoft.WinDbg* | Remove-AppPackage
 
     - name: Rebooting...
       ansible.windows.win_reboot:
