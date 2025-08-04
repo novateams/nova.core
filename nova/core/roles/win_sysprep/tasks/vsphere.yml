@@ -24,20 +24,8 @@
       become: false
 
   rescue:
-    - name: Trying to get Sysprep error log content...
-      block:
-        - name: Getting error log content...
-          ansible.windows.slurp:
-            src: C:\Windows\System32\Sysprep\Panther\setuperr.log
-          register: sysprep_error_log
-
-        - name: Displaying Sysprep error log content
-          ansible.builtin.fail:
-            msg: "{{ sysprep_error_log.content | b64decode }}"
-
-      rescue:
-        - name: SYSPREP WAIT TIMEOUT
-          ansible.builtin.fail:
-            msg: |
-              Timeout waiting for Sysprep to shut down the VM.
-              Check the C:\Windows\System32\Sysprep\Panther\setuperr.log file on the VM for more details.
+    - name: SYSPREP WAIT TIMEOUT
+      ansible.builtin.fail:
+        msg: |
+          Timeout waiting for Sysprep to shut down the VM.
+          Check the C:\Windows\System32\Sysprep\Panther\setuperr.log file on the VM for more details.
