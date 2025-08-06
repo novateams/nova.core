@@ -48,6 +48,7 @@ gitlab_ldap_user_password: Password.123
 gitlab_ldap_user_dn: CN=gitlab.service,OU=Service Accounts,DC=example,DC=com
 gitlab_ldap_domain_groups_ou: OU=Gitlab,OU=Groups,DC=example,DC=com
 gitlab_ldap_verify_certificates: true
+gitlab_ldap_user_filter: objectclass=user
 
 ## gitlab internal nginx
 gitlab_nginx_real_ip_trusted_addresses:
