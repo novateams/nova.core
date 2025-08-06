@@ -4,6 +4,7 @@ services:
     container_name: gitlab
     hostname: gitlab-container
     image: gitlab/gitlab-ee:{{ gitlab_version | default('latest') }}
+    pull_policy: always
     restart: always
     ports:
       - "{{ gitlab_ssh_port }}:22"
