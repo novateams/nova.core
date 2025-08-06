@@ -1,16 +1,16 @@
 ---
 - name: Configuring Domain Organizational Units...
   ansible.builtin.include_tasks: create_domain_ous.yml
-  when: ansible_facts.windows_domain_role == "Primary domain controller"
+  when: ansible_windows_domain_role == "Primary domain controller"
 
 - name: Configuring Domain groups...
   ansible.builtin.include_tasks: create_domain_groups.yml
-  when: ansible_facts.windows_domain_role == "Primary domain controller"
+  when: ansible_windows_domain_role == "Primary domain controller"
 
 - name: Configuring local accounts...
   when:
-    - ansible_facts.windows_domain_role != "Primary domain controller"
-    - ansible_facts.windows_domain_role != "Backup domain controller"
+    - ansible_windows_domain_role != "Primary domain controller"
+    - ansible_windows_domain_role != "Backup domain controller"
   block:
     - name: Creating following local accounts...
       ansible.windows.win_user:
@@ -34,7 +34,7 @@
         | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Checking and creating domain accounts...
-  when: ansible_facts.windows_domain_role == "Primary domain controller"
+  when: ansible_windows_domain_role == "Primary domain controller"
   block:
     - name: DC post-reboot availability check... # Sometimes DCs are not available right after initial deployment if they are not sysprepped
       ansible.builtin.include_role:
@@ -62,15 +62,19 @@
       loop_control:
         label: "{{ item.username }}"
 
-# To make sure that we are setting the password for the correct account on all domain contollers
+    - name: Setting correct password for {{ ansible_deployer_username }}...
+      ansible.builtin.set_fact:
+        ansible_deployer_password: "{{ admin_accounts_with_password
+          | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
+      when: win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+        | list | intersect([ansible_deployer_username]) | length > 0
+
+# To make sure that we are setting the password for the correct account on non-primary domain controller
 - name: Setting correct password for {{ ansible_deployer_username }}...
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ admin_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-  when:
-    - ansible_windows_domain_role in ["Primary domain controller", "Backup domain controller"]
-    - win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
-      | list | intersect([ansible_deployer_username]) | length > 0
+  when: ansible_windows_domain_role == "Backup domain controller"
 
 - name: Creating a profiles for...
   ansible.windows.win_user_profile:
