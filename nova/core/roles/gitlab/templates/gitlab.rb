@@ -77,7 +77,7 @@ gitlab_rails['ldap_servers'] = {
     'allow_username_or_email_login' => false,
     'block_auto_created_users' => false,
     'base' => '{{ gitlab_ldap_domain_ou_base }}',
-    'user_filter' => '(objectclass=user)',
+    'user_filter' => '{{ gitlab_ldap_user_filter }}',
     'attributes' => {
       'username' => ['uid', 'userid', 'sAMAccountName'],
       'email' => ['mail', 'email', 'userPrincipalName'],

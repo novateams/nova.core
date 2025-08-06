@@ -26,10 +26,12 @@
     - src: sshd_config
       dest: "{{ gitlab_config_folder }}/sshd_config"
       mode: "0644"
+  register: gitlab_config_files
 
 - name: Composing Gitlab on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ gitlab_config_folder }}"
+    recreate: "{{ 'always' if gitlab_config_files.changed else 'auto' }}"
     state: present
     wait: true
     wait_timeout: 900
