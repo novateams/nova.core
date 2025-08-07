@@ -3,6 +3,11 @@
   when: ansible_hostname != hostname
   notify: starting_proxmox_services
   block:
+    - name: Getting Proxmox version...
+      ansible.builtin.command: pveversion
+      changed_when: false
+      register: pve_version
+
     - name: Stopping following services...
       ansible.builtin.systemd:
         name: "{{ item }}"
@@ -13,16 +18,23 @@
         - pveproxy
         - pvestatd
 
+    - name: Adding temp hostname... # This is so that sudo will not hang due to unknown hostname
+      ansible.builtin.lineinfile:
+        dest: /etc/hosts
+        regexp: ^127.0.1.2
+        line: 127.0.1.2       {{ fqdn }} {{ ansible_hostname }}
+
+    # Using sed because it allows changing certain line nr
+    - name: Updating /etc/hosts with new hostname... # noqa: command-instead-of-module
+      ansible.builtin.command: sed -i '2s/.*/{{ connection_address }} {{ fqdn }} {{ hostname }}/' /etc/hosts
+      changed_when: true
+
     - name: Fixing {{ inventory_hostname }} hostname...
       ansible.builtin.lineinfile:
         path: "{{ item.path }}"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
       loop:
-        - path: /etc/hosts
-          regexp: .*template.* # If the hostnames contained template, replace it otherwise add it
-          line: "{{ connection_address }} {{ fqdn }} {{ hostname }}"
-
         - path: /etc/postfix/main.cf
           regexp: ^myhostname=.*
           line: myhostname={{ fqdn }}
@@ -34,7 +46,24 @@
         - mv /var/lib/rrdcached/db/pve2-storage/{{ ansible_hostname }} /var/lib/rrdcached/db/pve2-storage/{{ hostname }}
         - mv /var/lib/rrdcached/db/pve2-node/{{ ansible_hostname }} /var/lib/rrdcached/db/pve2-node/{{ hostname }}
       changed_when: true
+      when: (pve_version.stdout).split('/')[1] is version('9.0.0','<')
 
-    - name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
-      ansible.builtin.set_fact:
-        reboot_on_finalize: true
+    # Using the mv instead of ansible.builtin.copy keep permissions and ownership
+    - name: Moving node directories...
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - mv /var/lib/rrdcached/db/pve-storage-9.0/{{ ansible_hostname }} /var/lib/rrdcached/db/pve-storage-9.0/{{ hostname }}
+        - mv /var/lib/rrdcached/db/pve-node-9.0/{{ ansible_hostname }} /var/lib/rrdcached/db/pve-node-9.0/{{ hostname }}
+      changed_when: true
+      when: (pve_version.stdout).split('/')[1] is version('9.0.0','>=')
+
+    - name: Setting hostname...
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+
+# This is separate from the block because for some reason if hostname get's change the when condition does not match in the middle of the block
+- name: Removing temp hostname...
+  ansible.builtin.lineinfile:
+    dest: /etc/hosts
+    regexp: ^127.0.1.2
+    state: absent
