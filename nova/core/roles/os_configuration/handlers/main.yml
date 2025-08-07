@@ -15,6 +15,11 @@
   changed_when: true
   listen: starting_proxmox_services
 
+- name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
+  ansible.builtin.set_fact:
+    reboot_on_finalize: true
+  listen: starting_proxmox_services
+
 - name: Restarting systemd-timesyncd.service...
   ansible.builtin.systemd:
     name: systemd-timesyncd

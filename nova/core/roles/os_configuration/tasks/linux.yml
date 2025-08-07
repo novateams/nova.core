@@ -1,8 +1,4 @@
 ---
-- name: Including Proxmox configuration tasks...
-  ansible.builtin.include_tasks: proxmox.yml
-  when: customization_method == "proxmox"
-
 - name: Including Linux in Cloud configuration tasks...
   ansible.builtin.include_tasks: linux_cloud.yml
   when: infra_env in ["aws", "linode", "azure"]
