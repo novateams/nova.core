@@ -26,12 +26,12 @@
         name: nova.core.trusted_certificates
       vars:
         trusted_certificates_list:
-          - name: "{{ vault_root_cas[0].vault_root_ca_name | default('RootCA') }}"
+          - name: "{{ project_fullname }} Monolith Root CA"
             src: https://{{ monolith_vault_fqdn }}/v1/{{ vault_root_cas[0].vault_root_ca_pki_engine_name | default('RootCA') }}/ca/pem
 
     - name: Getting Root CA certificate contents...
       ansible.builtin.slurp:
-        src: /usr/local/share/ca-certificates/{{ vault_root_cas[0].vault_root_ca_name | default('RootCA') }}.crt
+        src: /usr/local/share/ca-certificates/{{ project_fullname }} Monolith Root CA.crt
       register: monolith_vault_root_ca
 
     - name: Copying {{ vault_root_cas[0].vault_root_ca_name | default('RootCA')
@@ -39,7 +39,7 @@
         | default('RootCA') }}.crt...
       ansible.builtin.copy:
         content: "{{ monolith_vault_root_ca.content | b64decode }}"
-        dest: /usr/local/share/ca-certificates/{{ vault_root_cas[0].vault_root_ca_name | default('RootCA') }}.crt
+        dest: /usr/local/share/ca-certificates/{{ project_fullname }} Monolith Root CA.crt
         mode: "0644"
       delegate_to: localhost
       become: true
