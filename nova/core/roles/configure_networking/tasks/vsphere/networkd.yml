@@ -1,5 +1,11 @@
 ---
-# This comes from Waiting for VMware tools to become available... task
+- name: Getting OS info from VMware tools...
+  community.vmware.vmware_guest_tools_wait:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+  register: vmware_tools_information
+  until: vmware_tools_information.instance.advanced_settings['guestInfo.detailed.data'] is defined
+  retries: 10
+
 - name: Setting OS as fact...
   ansible.builtin.set_fact:
     configure_networking_os: "{{ (vmware_tools_information.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
@@ -10,7 +16,8 @@
   block:
     - name: Removing existing systemd-networkd configuration...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
@@ -50,7 +57,8 @@
 
     - name: Preparing interface(s) configuration upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
@@ -108,7 +116,8 @@
 
     - name: Preparing links(s) configuration upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
@@ -146,7 +155,8 @@
 
     - name: Starting networkd & udev services...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
         method: POST
         headers:
@@ -154,7 +164,8 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
+            arguments:
+              -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
               systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
             path: /bin/bash
         status_code: 201
@@ -179,7 +190,8 @@
 
     - name: Preparing resolv.conf upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+        url:
+          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
         method: POST
         headers:
@@ -210,32 +222,10 @@
     - name: Applying network configuration on Debian...
       when: configure_networking_os is search('Debian')
       block:
-        - name: Getting DNS from DHCP...
-          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
-          block:
-            - name: Enabling systemd-resolved service...
-              ansible.builtin.uri:
-                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-                  | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
-                method: POST
-                headers:
-                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-                body:
-                  credentials: "{{ rest_api_credentials }}"
-                  spec:
-                    arguments: -c "dhclient"
-                    path: /bin/bash
-                status_code: 201
-                body_format: json
-                validate_certs: "{{ validate_vmware_certs }}"
-              register: network_config_command
-
-            - name: Including command run check task...
-              ansible.builtin.include_tasks: command_run_check.yml
-
         - name: Configuring network interface(s) names on Debian...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+            url:
+              https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
               | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
             method: POST
             headers:
@@ -253,12 +243,37 @@
         - name: Including command run check task...
           ansible.builtin.include_tasks: command_run_check.yml
 
+        - name: Getting DNS from DHCP...
+          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+          block:
+            - name: Getting DNS from DHCP...
+              ansible.builtin.uri:
+                url:
+                  https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+                  | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    arguments: -c 'if [ -x "$(command -v dhclient)" ]; then dhclient; else :; fi'
+                    path: /bin/bash
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: network_config_command
+
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
+
     - name: Applying network configuration on Debian...
       when: configure_networking_os is search('Arch')
       block:
         - name: Configuring network interface(s) names on Arch...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+            url:
+              https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
               | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
             method: POST
             headers:
@@ -281,3 +296,22 @@
         name: nova.core.powerstate
       vars:
         restart: true
+      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+
+    # For DHCP doing shutdown and start otherwise there will be a a race condition where incorrect IP is reported by the VM
+    - name: Shutting down and starting {{ custom_vm_name | default(vm_name) }} VM...
+      when:
+        - configure_networking_os is search('Debian')
+        - connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+      block:
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            shutdown: true
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
