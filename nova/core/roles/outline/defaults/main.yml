@@ -8,7 +8,7 @@ db_container_name: outline_postgres
 storage_container_name: outline-storage
 minio_client_container_name: outline-mc
 
-outline_version: 0.86.0
+outline_version: 0.86.1
 outline_postgres_version: 17
 
 app_container_image: outlinewiki/outline:{{ outline_version }}
