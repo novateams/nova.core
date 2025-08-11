@@ -617,6 +617,81 @@ nexus_default_repositories:
         policyNames:
           - default-cleanup-policy
 
+  # Debian trixie apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: trixie
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: http://ftp.ee.debian.org/debian
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: trixie
+        flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
+
+  # Debian trixie-security apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: trixie-security
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: http://security.debian.org/debian-security
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: trixie-security
+        flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
+
+  # Debian trixie-updates apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: trixie-updates
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: http://ftp.ee.debian.org/debian
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: trixie-updates
+        flat: false
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
+
   ####################
   # Docker apt proxy #
   ####################
