@@ -7,7 +7,7 @@
     container_default_behavior: no_defaults
   listen: nexus_container_restart
 
-- name: Restarting {{ nexus_proxy_container_name }}...
+- name: Restarting Nexus proxy container...
   community.docker.docker_container:
     name: "{{ nexus_proxy_container_name }}"
     state: started
