@@ -45,6 +45,10 @@
       ansible.builtin.include_tasks: pfsense.yml
       when: ansible_network_os == "pfsense"
 
+    - name: Configure VyOS machine
+      ansible.builtin.include_tasks: vyos.yml
+      when: ansible_network_os == 'vyos.vyos.vyos'
+
 - name: Including following role...
   ansible.builtin.include_role:
     name: "{{ item }}"
