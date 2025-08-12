@@ -60,9 +60,10 @@
   loop_control:
     loop_var: conf
   loop:
-    - src: .makerc-vars
     - src: docker-compose.yml
-      dest: docker/prod/
+    - src: initdb_keycloak.sql
+    - src: keycloak-config.yml
+    - src: Makefile
   vars:
     cmd_and_entrypoint_needed: "{{ entrypoint_present.rc != 0 }}"
 
@@ -73,17 +74,16 @@
     replace: "{{ providentia_app_fqdn }}"
   when: providentia_builtin_keycloak
 
-- name: Remove old version info
-  ansible.builtin.file:
-    path: "{{ providentia_install_dir }}/CURRENT_VERSION"
-    state: absent
-
-- name: Build Providentia image, start containers
-  community.general.make:
+- name: Update version file
+  ansible.builtin.shell:
+    cmd: "git describe --tags >CURRENT_VERSION"
     chdir: "{{ providentia_install_dir }}"
-    target: "{{ build }}"
-  loop_control:
-    loop_var: build
-  loop:
-    - build
-    - start
+
+- name: Start Providentia containers
+  community.docker.docker_compose_v2:
+    project_src: "{{ providentia_install_dir }}"
+    build: always
+    state: present
+    pull: always
+    remove_orphans: true
+    wait: true

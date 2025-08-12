@@ -25,7 +25,7 @@ providentia_builtin_reverse_proxy_tls_pregenerated_key: # path to TLS key on hos
 # if providentia_deploy_branch is set, the code is cloned from github and image will be built on host
 # the value accepts a gitref and can be used deploy other tags or branches
 # otherwise, the image built in github will be used instead
-providentia_deploy_branch: null
+providentia_deploy_branch:
 providentia_image_version: latest
 providentia_install_dir: /srv/providentia # path where providentia will be installed
 providentia_install_dir_git: /srv/providentia.git # path where git configuration will be stored
