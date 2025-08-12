@@ -1,0 +1,112 @@
+---
+- name: Printing deprecation message...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: DEPRECATED VYOS VERSION SUPPORT
+      ansible.builtin.debug:
+        msg: |
+          Support for VyOS rolling release is deprecated and will be removed in the future.
+          Please use VyOS stream release instead.
+
+    - name: Sleeping to read...
+      ansible.builtin.wait_for:
+        timeout: 30
+
+- name: Configuring VyOS networking...
+  become: false
+  delegate_to: localhost
+  block:
+    # Wiping all interfaces from config.boot file...
+    # Otherwise VyOS interfaces will not match the ones in vCenter
+    - name: Resetting VyOS NIC(s) for {{ inventory_hostname }}...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c "sed -i '/interfaces/,/service/c\interfaces {\n    loopback lo { }\n}\nservice {' /config/config.boot"
+            path: /bin/vbash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
+
+    # This will reset all interfaces
+    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
+
+    - name: Templating network configuration script...
+      ansible.builtin.template:
+        src: config.boot_legacy
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.boot_legacy
+        mode: "0644"
+        lstrip_blocks: true
+
+    - name: Getting file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.boot_legacy
+      register: file_size
+
+    - name: Preparing config.boot_legacy upload...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            attributes:
+              overwrite: true
+              size: "{{ file_size.stat.size }}"
+            path: /home/{{ admin_account }}/firstconfig.sh
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+      register: file_upload_prep
+      until: file_upload_prep.status == 201
+      retries: 30
+      delay: 3
+
+    - name: Uploading config.boot_legacy...
+      ansible.builtin.uri:
+        url: "{{ file_upload_prep.json }}"
+        method: PUT
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_config.boot_legacy
+        status_code: 200
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+
+    - name: Configuring VyOS network for {{ inventory_hostname }}...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: /home/{{ admin_account }}/firstconfig.sh
+            path: /bin/vbash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ vmware_defaults.validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
