@@ -48,3 +48,6 @@
     name: "{{ item }}"
   loop: "{{ finalize_post_roles }}"
   when: finalize_post_roles != []
+
+- name: Flushing handlers...
+  ansible.builtin.meta: flush_handlers
