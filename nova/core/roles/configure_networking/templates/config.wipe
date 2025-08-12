@@ -1,0 +1,25 @@
+#!/bin/vbash
+
+exec > /tmp/network.log 2>&1
+
+# Waiting until vyos-router service prints "migrate system configure", "migrate configure", or "failed!"
+# This ensures VyOS has completed its boot process or encountered a failure
+while true; do
+    if journalctl -b -u vyos-router | grep -q "migrate system configure\|migrate configure\|failed!"; then
+        break
+    else
+        echo "Waiting for vyos-router service to be ready..."
+        sleep 1
+    fi
+done
+
+# Do not remove following line - VyOS-specific
+source /opt/vyatta/etc/functions/script-template
+
+# Deleting existing interfaces
+delete interfaces ethernet
+
+# Apply changes and save configuration
+commit
+save
+exit

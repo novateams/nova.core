@@ -1,9 +1,9 @@
 #!/bin/bash
 
-set -e # exit when any command fails
-
 # Logging script output
 exec > /tmp/network.log 2>&1
+
+set -e # exit when any command fails
 
 # Timeout duration in seconds
 TIMEOUT=180 # 5 minutes
