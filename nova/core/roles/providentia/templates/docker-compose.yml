@@ -10,7 +10,7 @@ services:
       {% endif %}
     {% if providentia_deploy_branch %}
     build:
-      context: ../../
+      context: .
       dockerfile: Dockerfile
       target: production
     {% else %}
