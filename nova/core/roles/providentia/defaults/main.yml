@@ -10,7 +10,6 @@ providentia_external_docker_network_config:
 
 # dependencies
 providentia_builtin_keycloak: true # Should keycloak instance be deployed with Providentia
-providentia_builtin_redis: true # Should redis be deployed with Providentia
 providentia_builtin_database: true # Should postgres instance be deployed with Providentia
 providentia_builtin_reverse_proxy: true # Should a reverse proxy be deployed with Providentia
 
@@ -32,7 +31,6 @@ providentia_install_dir: /srv/providentia # path where providentia will be insta
 providentia_install_dir_git: /srv/providentia.git # path where git configuration will be stored
 
 providentia_app_fqdn: "{{ fqdn }}" # fqdn for deployed instance
-providentia_redis_url: redis://redis:6379/0 # URL for app redis, defaults to builtin
 
 # full database URL used by the app, defaults to builtin postgres
 providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_password }}@postgresql/providentia?pool=5

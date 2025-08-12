@@ -8,9 +8,6 @@ services:
       {% if providentia_builtin_database %}
       - "postgresql"
       {% endif %}
-      {% if providentia_builtin_redis %}
-      - "redis"
-      {% endif %}
     {% if providentia_deploy_branch %}
     build:
       context: ../../
@@ -35,7 +32,6 @@ services:
       - RAILS_ENV=production
       - SECRET_KEY_BASE={{ providentia_secret_key_base }}
       - DATABASE_URL={{ providentia_db_url }}
-      - REDIS_URL={{ providentia_redis_url }}
       - OIDC_ISSUER={{ providentia_oidc_issuer }}
       - OIDC_CLIENT_ID={{ providentia_oidc_client_id }}
       - OIDC_CLIENT_SECRET={{ providentia_oidc_client_secret }}
@@ -101,14 +97,6 @@ services:
       caddy_0.auto_https: off
   {% endif %}
 
-  {% if providentia_builtin_redis %}
-  redis:
-    image: "redis:alpine"
-    restart: unless-stopped
-    volumes:
-      - "redis:/data"
-  {% endif %}
-
   {% if providentia_builtin_database or providentia_builtin_keycloak %}
   postgresql:
     image: "postgres:15-alpine"
@@ -159,9 +147,6 @@ services:
 volumes:
   {% if providentia_builtin_reverse_proxy %}
   caddy_data: {}
-  {% endif %}
-  {% if providentia_builtin_redis %}
-  redis: {}
   {% endif %}
   {% if providentia_builtin_database or providentia_builtin_keycloak %}
   database_storage: {}
