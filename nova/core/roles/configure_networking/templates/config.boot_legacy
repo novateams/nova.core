@@ -1,5 +1,7 @@
 #!/bin/vbash
 
+exec > >(tee -a /tmp/network.log) 2>&1
+
 # Waiting until ssh.service is running since one of the last services to start
 # That way we can be sure that VyOS has booted and is ready to accept commands
 while true; do
@@ -65,11 +67,7 @@ source /opt/vyatta/etc/functions/script-template
     {% endfor %}
 {% endif %}
 
-set service ssh disable-host-validation
-
 # Apply changes and save configuration
 commit
 save
 exit
-
-rm -f /home/vyos/firstconfig.sh

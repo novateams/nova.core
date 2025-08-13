@@ -1,6 +1,6 @@
 #!/bin/vbash
 
-exec > /tmp/network.log 2>&1
+exec > >(tee -a /tmp/network.log) 2>&1
 
 # Waiting until vyos-router service prints "migrate system configure", "migrate configure", or "failed!"
 # This ensures VyOS has completed its boot process or encountered a failure
