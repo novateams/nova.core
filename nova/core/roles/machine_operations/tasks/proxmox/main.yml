@@ -7,9 +7,9 @@
       - proxmox_api_token_id
       - proxmox_api_token_secret
   when: >
-    proxmox_defaults.api_user == "value_undefined"
-    or proxmox_defaults.api_token_id == "value_undefined"
-    or proxmox_defaults.api_token_secret == "value_undefined"
+    proxmox_defaults.api_user is ansible.builtin.falsy
+    or proxmox_defaults.api_token_id is ansible.builtin.falsy
+    or proxmox_defaults.api_token_secret is ansible.builtin.falsy
 
 - name: Checking if {{ custom_vm_name | default(vm_name) }} exists...
   community.proxmox.proxmox_vm_info:
