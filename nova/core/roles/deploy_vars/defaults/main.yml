@@ -89,27 +89,26 @@ vault_lookup_fragment: "url={{ vault_address }} token={{ vault_access_token }} "
 validate_vmware_certs: true
 
 vmware_defaults:
-  hostname: "{{ vcenter_hostname | default('value_undefined') }}"
-  username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default('value_undefined') }}"
-  password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default('value_undefined') }}"
+  hostname: "{{ vcenter_hostname | default('') }}"
+  username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default('') }}"
+  password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default('') }}"
   validate_certs: "{{ validate_vmware_certs }}"
 
 vmware_rest_defaults:
-  vcenter_hostname: "{{ vcenter_hostname | default('value_undefined') }}"
-  vcenter_username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default('value_undefined') }}"
-  vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default('value_undefined') }}"
+  vcenter_hostname: "{{ vcenter_hostname | default('') }}"
+  vcenter_username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default('') }}"
+  vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default('') }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
 nsx_deployer_username: "{{ nsx_username | default(project_deployer_username)
-  | default(deployer_username | default('value_undefined') + '@' + ldap_auth_domain | default('value_undefined')) }}"
-nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default('value_undefined') }}"
+  | default(deployer_username | default('') + '@' + ldap_auth_domain | default('')) }}"
+nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default('') }}"
 
 vmware_workstation:
   connection: ssh
   host: host.docker.internal
-  local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('value_undefined') }}
-  local_vmx_path:
-    /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('value_undefined') }}/{{ custom_vm_name
+  local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}
+  local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
     | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
   python_interpreter: /usr/bin/python3
   shell_type: sh
@@ -121,8 +120,8 @@ vmware_workstation:
 
 aws_defaults:
   region: "{{ aws_region | default('eu-north-1') }}" # Default is Stockholm
-  aws_access_key: "{{ aws_access_key_id | default('value_undefined') }}"
-  aws_secret_key: "{{ aws_access_key | default('value_undefined') }}"
+  aws_access_key: "{{ aws_access_key_id | default('') }}"
+  aws_secret_key: "{{ aws_access_key | default('') }}"
 
 #########
 # Azure #
@@ -131,23 +130,23 @@ aws_defaults:
 azure_location: westeurope
 azure_defaults:
   # Current subscription ID from https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade
-  subscription_id: "{{ azure_subscription_id | default('value_undefined') }}"
+  subscription_id: "{{ azure_subscription_id | default('') }}"
   # The Service Principal Name's (Service Account used for deployment) ID from
   # https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  client_id: "{{ azure_client_id | default('value_undefined') }}"
+  client_id: "{{ azure_client_id | default('') }}"
   # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  tenant: "{{ azure_tenant_id | default('value_undefined') }}"
-  secret: "{{ azure_service_principal_secret | default('value_undefined') }}"
+  tenant: "{{ azure_tenant_id | default('') }}"
+  secret: "{{ azure_service_principal_secret | default('') }}"
 
 ###########
 # Proxmox #
 ###########
 
 proxmox_defaults:
-  api_host: "{{ proxmox_api_host | default('value_undefined') }}"
-  api_user: "{{ proxmox_api_user | default('value_undefined') }}"
-  api_token_id: "{{ proxmox_api_token_id | default('value_undefined') }}"
-  api_token_secret: "{{ proxmox_api_token_secret | default('value_undefined') }}"
+  api_host: "{{ proxmox_api_host | default('') }}"
+  api_user: "{{ proxmox_api_user | default('') }}"
+  api_token_id: "{{ proxmox_api_token_id | default('') }}"
+  api_token_secret: "{{ proxmox_api_token_secret | default('') }}"
 
 proxmox_validate_certs: true
 proxmox_api_url: https://{{ proxmox_defaults.api_host }}:8006/api2/json

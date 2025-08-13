@@ -6,9 +6,9 @@
       - vcenter_hostname
       - vcenter_username or project_deployer_username or deployer_username
       - vcenter_password or project_deployer_password or deployer_password
-  when: vmware_defaults.hostname == "value_undefined"
-    or vmware_defaults.username == "value_undefined"
-    or vmware_defaults.password == "value_undefined"
+  when: vmware_defaults.hostname is ansible.builtin.falsy
+    or vmware_defaults.username is ansible.builtin.falsy
+    or vmware_defaults.password is ansible.builtin.falsy
 
 # All of the vmware.vmware_rest have retries for stability
 - name: Checking if {{ custom_vm_name | default(vm_name) }} already exists...
