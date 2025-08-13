@@ -71,7 +71,7 @@
             attributes:
               overwrite: true
               size: "{{ file_size.stat.size }}"
-            path: /home/{{ admin_account }}/firstconfig.sh
+            path: /tmp/config.boot_legacy
         status_code: 201
         body_format: json
         validate_certs: "{{ vmware_defaults.validate_certs }}"
@@ -101,7 +101,7 @@
         body:
           credentials: "{{ rest_api_credentials }}"
           spec:
-            arguments: /home/{{ admin_account }}/firstconfig.sh
+            arguments: /tmp/config.boot_legacy
             path: /bin/vbash
         status_code: 201
         body_format: json
