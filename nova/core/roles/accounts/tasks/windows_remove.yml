@@ -32,9 +32,10 @@
       loop: "{{ local_users_to_remove }}"
 
     - name: Removing following user profiles...
-      ansible.windows.win_file:
-        path: C:\Users\{{ item }}
+      ansible.windows.win_user_profile:
+        name: "{{ item }}"
         state: absent
+        remove_multiple: true
       loop: "{{ local_users_to_remove }}"
 
 - name: Getting and removing stale Domain Admin accounts...
@@ -70,8 +71,21 @@
             state: absent
           loop: "{{ domain_users_to_remove }}"
 
+    - name: Rebooting non-primary DC to close any open sessions...
+      when:
+        - domain_users_to_remove != []
+        - ansible_facts.windows_domain_role != "Primary domain controller"
+      block:
+        - name: Rebooting to close any open sessions...
+          ansible.windows.win_reboot:
+
+        - name: DC post-reboot availability check...
+          ansible.builtin.include_role:
+            name: nova.core.win_dc_post_reboot_check
+
     - name: Removing following user profiles...
-      ansible.windows.win_file:
-        path: C:\Users\{{ item }}
+      ansible.windows.win_user_profile:
+        name: "{{ item }}"
         state: absent
+        remove_multiple: true
       loop: "{{ domain_users_to_remove }}"
