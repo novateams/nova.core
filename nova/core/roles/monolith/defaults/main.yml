@@ -39,7 +39,7 @@ monolith_caddy_self_signed_certificate_subject_alt_name:
 
 # Default Caddy servers for Monolith
 # Pass a custom list of Caddy servers to replace the default ones
-monolith_caddy_servers:
+monolith_default_caddy_servers:
   - caddy_server_name: "{{ monolith_vault_fqdn }}"
     caddy_server_certificate_path: /srv/certs/{{ monolith_vault_certificate_file_name | default(fqdn + '_fullchain') }}.crt
     caddy_server_certificate_key_path: /srv/certs/{{ monolith_vault_certificate_file_name | default(fqdn + '_key') }}.crt
@@ -77,3 +77,7 @@ monolith_caddy_servers:
     caddy_server_reverse_proxy_rewrite: "* /repository/docker-proxy{uri}"
     caddy_server_reverse_proxy_to_address: http://nexus:8081
     caddy_server_request_body_size: 10000M
+
+# Custom Caddy servers to be added to the default ones
+# For an example some extra Docker proxy servers can be added here
+monolith_extra_caddy_servers: []

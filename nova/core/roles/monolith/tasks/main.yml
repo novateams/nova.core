@@ -9,7 +9,7 @@
   vars:
     # Will be used only if no pre-existing certificate is found
     caddy_self_signed_certificate_subject_alt_name: "{{ monolith_caddy_self_signed_certificate_subject_alt_name }}"
-    caddy_servers: "{{ monolith_caddy_servers }}"
+    caddy_servers: "{{ monolith_default_caddy_servers + monolith_extra_caddy_servers }}"
 
 - name: Downloading and trusting self-signed certificate...
   when: caddy_generate_self_signed_certificate is defined
