@@ -1,10 +1,25 @@
 ---
-- name: Including Vault preparation tasks...
-  ansible.builtin.include_tasks: prepare_vault.yml
+- name: Getting Authentication token for {{ secrets_vault_address }}...
+  ansible.builtin.uri:
+    url: "{{ secrets_vault_address }}/v1/auth/ldap/login/{{ vault_username }}"
+    method: POST
+    body:
+      password: "{{ vault_password }}"
+    status_code: 200
+    validate_certs: "{{ validate_vault_certs }}"
+    body_format: json
+  register: auth
+  delegate_to: localhost
+  become: false
+  when: vault_access_token is not defined # This usually comes from nova.core.deploy_vars role
 
 # This usually get's defined in group_vars or host_vars
 - name: Including save pre secrets tasks for secrets...
   ansible.builtin.include_tasks: save_pre_secrets.yml
+  loop: "{{ secrets_to_vault_pre_deploy_secrets }}"
+  loop_control:
+    loop_var: sct
+    label: "{{ sct.key }}"
   when:
     - secrets_to_vault_pre_deploy_secrets != []
     - secrets == []
@@ -12,10 +27,18 @@
 # This usually get's passed as a variable to the role
 - name: Including save secrets tasks for secrets...
   ansible.builtin.include_tasks: save_secrets.yml
+  loop: "{{ secrets }}"
+  loop_control:
+    loop_var: sct
+    label: "{{ sct.key }}"
   when: secrets != []
 
 - name: Including accounts save secrets tasks...
   ansible.builtin.include_tasks: save_account_password.yml
+  loop: "{{ accounts }}"
+  loop_control:
+    loop_var: sct
+    label: "{{ sct.username }}"
   when:
     - secrets == []
     - customization_context == "host" # Alternative is container that doesn't need this task because it's running on the host
