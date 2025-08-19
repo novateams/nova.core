@@ -134,15 +134,11 @@
 
         - name: Skipping disk size expansion for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.debug:
-            msg: SKIPPING DISK SIZE EXPANSION FOR {{ custom_vm_name | default(vm_name) }} BECAUSE IT HAS SNAPSHOTS!
-          when:
-            - current_os_disk_size | int < os_disk_size | int
-            - snapshot_info.guest_snapshots != {}
-
-        - name: Skipping disk size expansion for {{ custom_vm_name | default(vm_name) }}...
-          ansible.builtin.debug:
-            msg: SKIPPING DISK SIZE EXPANSION FOR {{ custom_vm_name | default(vm_name) }} BECAUSE IT IS A LINKED CLONE!
+            msg: |
+              SKIPPING DISK SIZE EXPANSION FOR {{ custom_vm_name | default(vm_name) }} BECAUSE
+              IT HAS SNAPSHOTS OR IS A LINKED CLONE!
           when:
             - current_os_disk_size | int < os_disk_size | int
             - vm_disk_info.instance.config.hardware.device | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk')
-              | map(attribute='backing.deltaDiskFormat') | first != none # This means that the machine is a Linked Clone
+              | map(attribute='backing.deltaDiskFormat') | first != none
+              or snapshot_info.guest_snapshots
