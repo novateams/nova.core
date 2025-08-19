@@ -89,3 +89,4 @@
         state: absent
         remove_multiple: true
       loop: "{{ domain_users_to_remove }}"
+      retries: 3

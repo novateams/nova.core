@@ -92,7 +92,7 @@
         index_var: idx
         label: "{{ item.username }}"
 
-# This is required becuse sometimes the new configuration will apply on upload and Ansible will try to connect to the host again with invalid credentials
+# This is required because sometimes the new configuration will apply on upload and Ansible will try to connect to the host again with invalid credentials
 - name: Restarting {{ inventory_hostname }} to apply configuration in 10 seconds...
   ansible.builtin.shell: sleep 10 && reboot
   changed_when: true
