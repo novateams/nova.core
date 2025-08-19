@@ -15,14 +15,36 @@
     user_profiles_to_remove: "{{ home_profiles.stdout_lines | select('string') | select('regex', '.+')
       | difference(local_accounts_with_password | map(attribute='username')) }}"
 
-- name: Rebooting to close any open sessions...
-  ansible.builtin.raw: reboot
-  changed_when: true
+- name: Removing stale user accounts and profiles...
   when: user_profiles_to_remove != []
+  block:
+    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
 
-- name: Removing following accounts...
-  ansible.builtin.raw: |
-    dscl . -delete "/Users/{{ item }}"
-    rm -rf /Users/{{ item }}
-  loop: "{{ user_profiles_to_remove }}"
-  changed_when: true
+    - name: Waiting until ssh is down for {{ inventory_hostname }}...
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        state: stopped
+        timeout: 300
+      delegate_to: localhost
+      become: false
+
+    - name: Waiting until ssh is up for {{ inventory_hostname }}...
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        state: started
+        timeout: 300
+      delegate_to: localhost
+      become: false
+
+    - name: Removing following accounts...
+      ansible.builtin.raw: |
+        dscl . -delete "/Users/{{ item }}"
+        rm -rf /Users/{{ item }}
+      loop: "{{ user_profiles_to_remove }}"
+      changed_when: true
