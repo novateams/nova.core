@@ -159,6 +159,10 @@ vault_ldap_configuration:
   use_token_groups: true
   userattr: samaccountname
   userdn: "{{ vault_userdn }}"
+  # Default use filter is ({{.UserAttr}}={{.Username}})
+  # Example to only allow specific group members to log in:
+  # "(&(objectClass=user)({{'{{.UserAttr}}'}}={{'{{.Username}}'}})(memberOf:1.2.840.113556.1.4.1941:=CN=Finance,OU=Groups,OU=CORP,DC=corp,DC=falcon20))"
+  userfilter: "{{ vault_user_filter | default('') }}"
   username_as_alias: false
 
 # On 2038-01-19 UNIX epoch will not fit into 32-bit signed integer. This may
