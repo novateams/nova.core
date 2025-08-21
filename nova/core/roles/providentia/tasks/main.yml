@@ -1,4 +1,28 @@
 ---
+- name: DEPRECATED VARIABLES
+  ansible.builtin.fail:
+    msg: |
+      The following variables are deprecated and must be replaced with the new ones:
+
+      {% for variable in deprecated_variables %}
+      {% if vars[variable] is defined %}
+      {{ variable }}
+      {% endif %}
+      {% endfor %}
+
+      For new variables refer to the Permissions groups section in defaults:
+      https://github.com/novateams/nova.core/blob/main/nova/core/roles/providentia/defaults/main.yml
+  vars:
+    deprecated_variables:
+      - providentia_resource_prefix
+      - providentia_resource_login
+      - providentia_resource_superadmin
+      - providentia_resource_env_creator
+  when: providentia_resource_prefix is defined
+    or providentia_resource_login is defined
+    or providentia_resource_superadmin is defined
+    or providentia_resource_env_creator is defined
+
 - name: Installing docker
   ansible.builtin.include_role:
     name: nova.core.docker

@@ -50,16 +50,24 @@ providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/
 providentia_auth_mode: resource_access # One of `resource_access` or `scope`, specifying where in access token the authorization fields are located
 providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
 providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
-providentia_resource_env_creator: Environment_Creator # The role name, which allows creating new environments in Providentia
 providentia_oidc_extra_scopes: "" # list of extra scopes to request from OpenID Connect, eg. "profile email"
-providentia_oidc_authorization_roles_claim: resource_access.Providentia.roles # The claim in the OpenID Connect token that contains the roles, defaults to `resource_access.Providentia.roles` for Keycloak
 
-# The prefix for authorization roles (groups)
-providentia_resource_prefix: Providentia_
+# The claim in the OpenID Connect token that contains the roles, defaults to `resource_access.{{ providentia_oidc_client_id }}.roles` for Keycloak
+providentia_oidc_authorization_roles_claim: resource_access.{{ providentia_oidc_client_id }}.roles
 
-# The suffix of the group name, which allows login access to Providentia eg. Providentia_User
-# This group should be assigned to all users who should have access to Providentia, even Providentia_Super_Admin members
-providentia_resource_login: User
+######################
+# Permissions groups #
+######################
 
-# The suffix of the group name, which allows full administrator access to Providentiua eg. Providentia_Super_Admin
-providentia_resource_superadmin: Super_Admin
+# Permissions groups are used to control access to Providentia.
+# If Keycloak is used with Active Directory (AD) as the user federation provider these will be the AD group names.
+
+# The group is required login to Providentia
+# This group must be assigned to all users need to login to Providentia, even members of the providentia_administrators_group
+providentia_login_group: Providentia_User
+
+# The group that gives full administrator access to Providentia
+providentia_administrators_group: Providentia_Super_Admin
+
+# The group that allows users to create environments in Providentia
+providentia_environment_creator_group: Providentia_Environment_Creator

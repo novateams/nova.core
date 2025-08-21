@@ -37,10 +37,9 @@ services:
       - OIDC_CLIENT_SECRET={{ providentia_oidc_client_secret }}
       - OIDC_EXTRA_SCOPES={{ providentia_oidc_extra_scopes }}
       - OIDC_AUTHORIZATION_ROLES_CLAIM={{ providentia_oidc_authorization_roles_claim }}
-      - OIDC_RESOURCE_PREFIX={{ providentia_resource_prefix }}
-      - OIDC_RESOURCE_LOGIN={{ providentia_resource_login }}
-      - OIDC_RESOURCE_SUPERADMIN={{ providentia_resource_superadmin }}
-      - OIDC_RESOURCE_ENV_CREATOR={{ providentia_resource_env_creator }}
+      - OIDC_RESOURCE_LOGIN={{ providentia_login_group }}
+      - OIDC_RESOURCE_SUPERADMIN={{ providentia_administrators_group }}
+      - OIDC_RESOURCE_ENV_CREATOR={{ providentia_environment_creator_group }}
       - BASE_URI=https://{{ providentia_app_fqdn }}
       - AUTH_MODE={{ providentia_auth_mode }}
       {% if providentia_sentry_dsn %}
