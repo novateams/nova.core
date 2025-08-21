@@ -161,7 +161,7 @@ vault_ldap_configuration:
   userdn: "{{ vault_userdn }}"
   # Default use filter is ({{.UserAttr}}={{.Username}})
   # Example to only allow specific group members to log in:
-  # "(&(objectClass=user)({{'{{.UserAttr}}'}}={{'{{.Username}}'}})(memberOf:1.2.840.113556.1.4.1941:=CN=Finance,OU=Groups,OU=CORP,DC=corp,DC=falcon20))"
+  # "(&(objectClass=user)({{'{{.UserAttr}}'}}={{'{{.Username}}'}})(memberOf:1.2.840.113556.1.4.1941:=CN=GroupName,OU=Groups,DC=example,DC=com))"
   userfilter: "{{ vault_user_filter | default('') }}"
   username_as_alias: false
 

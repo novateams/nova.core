@@ -33,14 +33,14 @@
       delegate_to: localhost
       become: false
 
-    # Something has changed with the PAM module in OPNsense 25.1 that requires this change
+    # Something has changed with the PAM module in OPNsense 25 that requires this change
     # Otherwise, the VMware Tools authentication will not work
     - name: Allowing VMware Tools authentication...
       ansible.builtin.lineinfile:
         path: /usr/local/etc/pam.d/vmtoolsd
         regexp: ^auth.*
         line: auth       sufficient       pam_permit.so
-      when: ("os_opnsense_25_1" in group_names)
+      when: group_names | select('match', '^os_opnsense_25.*') | length > 0
 
 # SSHD Configuration
 # This to avoid errors when someone has more that 6 SSH keys in their agent
