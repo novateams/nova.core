@@ -1,4 +1,35 @@
 ---
 - name: Updating MacOS...
   ansible.builtin.raw: softwareupdate --install --all --agree-to-license --restart
+  register: macos_update_result
   changed_when: true
+  # There's no way to run raw module asynchronously, so we need to handle unreachable errors
+  ignore_unreachable: true
+
+- name: Trying to recover from unreachable error...
+  when:
+    - macos_update_result.unreachable is defined
+    - macos_update_result.unreachable
+  block:
+    - name: Setting rescue loop count...
+      ansible.builtin.set_fact:
+        updates_rescue_loop_count: "{{ updates_rescue_loop_count | default(0) | int + 1 }}"
+
+    - name: MACOS UPDATE ERROR
+      ansible.builtin.fail:
+        msg: |
+          MacOS failed to install updates most likely the of a connection timeout.
+          Check that that the host is up and running and try again.
+      when: updates_rescue_loop_count | int > 3
+
+    - name: Waiting until ssh is up for {{ inventory_hostname }}...
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        state: started
+        timeout: 300
+      delegate_to: localhost
+      become: false
+
+    - name: Re-including MacOS tasks...
+      ansible.builtin.include_tasks: macos.yml
