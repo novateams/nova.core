@@ -17,9 +17,10 @@ accounts_exclusive_ssh_key: true
 # The default lookup paths are Vault's KV v2 secret engine and a secrets name under that.
 pregenerated_password: >-
   {%- if save_secrets_to_vault and item.save_password_to_vault | default(true) -%}
-  {{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
-    | default(environment_name) + '/data/' + secrets_vault_secrets_path | default(project_fullname)
-    + ':' + inventory_hostname + '_' + item.username) }}
+  {{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + item.secrets_vault_engine_path
+    | default(secrets_vault_engine_path) | default(environment_name)
+    + '/data/' + item.secrets_vault_secrets_path | default(secrets_vault_secrets_path)
+    | default(project_fullname) + ':' + inventory_hostname + '_' + item.username) }}
   {%- else -%}
   {{ lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits') }}
   {%- endif -%}
