@@ -5,10 +5,12 @@ $ErrorActionPreference = 'Stop'
 Get-NetIPAddress | Where-Object InterfaceAlias -NotLike Loopback* | Remove-NetIPAddress -Confirm:$false
 Get-NetRoute | Where-Object InterfaceAlias -NotLike Loopback* | Remove-NetRoute -Confirm:$false
 
+$Interfaces = @(Get-NetAdapter | Where-Object { $_.HardwareInterface -eq $true } | Select-Object -ExpandProperty Name | Sort-Object)
+
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
+
     {% set interface_loop = loop.index -1 %}
-    $Interfaces = @(Get-NetAdapter | Select-Object -ExpandProperty Name | Sort-Object)
 
     # If no IP addresses are defined, enable DHCP and Router Discovery
     {% if interface.addresses == [] %}
