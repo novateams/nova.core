@@ -4,14 +4,15 @@
   block:
     - name: Removing sysprep-blocking packages from {{ ansible_distribution }}...
       ansible.windows.win_shell: |
-        Get-AppxPackage Microsoft.OneDriveSync* | Remove-AppPackage
         Get-AppxPackage Microsoft.BingSearch* | Remove-AppPackage
         Get-AppxPackage Microsoft.Copilot* | Remove-AppPackage
-        Get-AppxPackage Microsoft.WidgetsPlatformRuntime* | Remove-AppPackage
-        Get-AppxPackage MicrosoftWindows.Client.WebExperience* | Remove-AppPackage
-        Get-AppxPackage Microsoft.XboxSpeechToTextOverlay* | Remove-AppPackage
+        Get-AppxPackage Microsoft.Edge.GameAssist* | Remove-AppPackage
+        Get-AppxPackage Microsoft.OneDriveSync* | Remove-AppPackage
         Get-AppxPackage Microsoft.TimeTravelDebugging* | Remove-AppPackage
+        Get-AppxPackage Microsoft.WidgetsPlatformRuntime* | Remove-AppPackage
         Get-AppxPackage Microsoft.WinDbg* | Remove-AppPackage
+        Get-AppxPackage Microsoft.XboxSpeechToTextOverlay* | Remove-AppPackage
+        Get-AppxPackage MicrosoftWindows.Client.WebExperience* | Remove-AppPackage
 
     - name: Rebooting...
       ansible.windows.win_reboot:
