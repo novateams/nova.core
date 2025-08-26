@@ -19,33 +19,9 @@
       when: maxauthtries.changed
 
 # AWS
-- name: Cleaning up AWS configurations for {{ inventory_hostname }}...
-  when: infra_env == "aws"
+- name: Cleaning up {{ infra_env }} configurations for {{ inventory_hostname }}...
+  when: infra_env in ["aws", "openstack"]
   block:
-    - name: Removing AWS temp ssh key for {{ hostname }}...
-      ansible.builtin.file:
-        path: "{{ temp_ssh_key_path }}"
-        state: absent
-      delegate_to: localhost
-      become: false
-
-    - name: Checking if {{ aws_template_username }} user exists...
-      ansible.builtin.stat:
-        path: /home/{{ aws_template_username }}
-      register: aws_template_user
-
-    - name: Rebooting and removing {{ aws_template_username }} user...
-      when: aws_template_user.stat.exists
-      block:
-        - name: Rebooting to close any open sessions...
-          ansible.builtin.reboot:
-
-        - name: Removing {{ aws_template_username }} account...
-          ansible.builtin.user:
-            name: "{{ aws_template_username }}"
-            state: absent
-            remove: true
-
     - name: Removing cloud managed hostname...
       ansible.builtin.replace:
         dest: /etc/cloud/cloud.cfg
