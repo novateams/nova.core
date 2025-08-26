@@ -7,5 +7,7 @@
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ aws_template_username | default(template_username) if fresh_deploy else ansible_deployer_username }}"
     ansible_password: "{{ omit if (connection_no_password or fresh_deploy) else ansible_deployer_password }}"
-    ansible_private_key_file: "{{ temp_ssh_key_path if fresh_deploy else omit }}" # Initial connection will be done with temporary SSH key
+
+    # Initial connection will be done with temporary SSH key
+    ansible_private_key_file: "{{ machine_operations_aws_temp_ssh_key_path if fresh_deploy else omit }}"
     ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=yes' if fresh_deploy else omit }}" # To avoid SSH MaxAuthTries limit

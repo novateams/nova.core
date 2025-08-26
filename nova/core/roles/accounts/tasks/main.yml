@@ -62,7 +62,9 @@
       ansible.builtin.set_fact:
         ansible_user: "{{ ansible_deployer_username }}"
         ansible_password: "{{ ansible_deployer_password }}" # Updated ansible_deployer_password
-        ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=no' if (fresh_deploy and infra_env == 'aws') else omit }}" # To avoid SSH MaxAuthTries limit
+
+        # To avoid SSH MaxAuthTries limit in cloud environments with cloud templates
+        ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=no' if (fresh_deploy and infra_env in ['aws', 'openstack']) else omit }}"
 
     - name: Including gather_facts role... # Since the connection account changed and we need to gather facts with the new account
       ansible.builtin.include_role:
@@ -87,6 +89,15 @@
         - name: Including MacOS accounts removal tasks...
           ansible.builtin.include_tasks: macos_remove.yml
           when: ansible_system == "Darwin"
+
+    # Cloud temp keys removal
+    - name: Removing {{ infra_env }} temp ssh key for {{ inventory_hostname }}...
+      ansible.builtin.file:
+        path: "{{ vars['machine_operations_' ~ infra_env ~ '_temp_ssh_key_path'] }}"
+        state: absent
+      delegate_to: localhost
+      become: false
+      when: infra_env in ["aws", "openstack"]
 
 - name: Including following accounts post-roles...
   ansible.builtin.include_role:

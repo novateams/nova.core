@@ -25,6 +25,8 @@
     path: /etc/hosts
     regexp: ^127.0.1.1
     line: 127.0.1.1       {{ fqdn }} {{ hostname }}
+    insertafter: ^127.0.0.1.*
+    state: present
 
 - name: Making sure locale exists...
   community.general.locale_gen:
