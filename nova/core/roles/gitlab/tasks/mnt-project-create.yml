@@ -21,7 +21,7 @@
 
 - name: Set current existing project ID variable..
   ansible.builtin.set_fact:
-    gl_project_id: "{{ gl_matched_projects[0].id | default(None) }}"
+    gl_project_id: "{{ gl_matched_projects[0].id | default('') }}"
 
 - name: Get a list of repositories for project..
   ansible.builtin.uri:
@@ -201,7 +201,7 @@
       delegate_to: localhost
       become: false
 
-    - name: Cleanup {{ gl_tmpdir.path }} tmp folder..
+    - name: Cleanup {{ gl_tmpdir.path | default('') }} tmp folder..
       ansible.builtin.file:
         path: "{{ gl_tmpdir.path }}"
         state: absent

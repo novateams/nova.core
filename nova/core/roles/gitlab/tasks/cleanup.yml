@@ -12,3 +12,5 @@
     path: "{{ item.path }}"
     state: absent
   loop: "{{ temp_configuration_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"

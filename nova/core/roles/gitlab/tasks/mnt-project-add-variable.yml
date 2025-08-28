@@ -8,7 +8,7 @@
 ## This is to be sure that the search is precise, project name in gitlab is not unique
 - name: Search for the project using namespace and project name..
   ansible.builtin.set_fact:
-    gl_matched_projects: "{{ gl_existing_projects.json | selectattr('namespace.full_path', 'equalto', project.namespace)
+    gl_matched_projects: "{{ gl_existing_projects | selectattr('namespace.full_path', 'equalto', project.namespace)
       | selectattr('name', 'equalto', project.name) }}"
 
 - name: Set current existing project ID variable..
