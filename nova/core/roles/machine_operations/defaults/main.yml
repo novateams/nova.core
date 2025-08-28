@@ -10,6 +10,7 @@ role_only_wp: false # Run the deploy starting from customization_pre_vm_role
 machine_operations_pre_roles: [] # Extra roles to include as first step in this one
 machine_operations_post_roles: [] # Extra roles to include as last step in this one
 machine_operations_reconfigure_vm_on_deploy: true # Tries to reconfigure the VMs CPU/RAM/Disk size on deploy if they are updated
+linked_clone_status: false # Set to true to create a linked clone when supported by the hypervisor
 
 ####################
 # vSphere defaults #
@@ -45,7 +46,6 @@ vapp_options: []
 machine_operations_esxi_hostname: # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_module.html#parameter-esxi_hostname
 
 # Linked clones
-linked_clone_status: false
 linked_clone_snapshot_name: LinkedCloneSource # Case sensitive default value
 
 # Video memory
@@ -121,6 +121,7 @@ machine_operations_linode_vm_password:
   "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
   + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_' + admin_account) }}"
 rebuild: false # Use ctp host rebuild-linode-vm <inventory_hostname> command to rebuild the VM with different size but keeping the data
+
 ###########
 # Proxmox #
 ###########
