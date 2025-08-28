@@ -9,6 +9,13 @@
   delegate_to: localhost
   become: false
   block:
+    - name: Removing cloning limiter file...
+      delegate_to: localhost
+      become: false
+      ansible.builtin.file:
+        path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
+        state: absent
+
     - name: Stopping {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.uri:
         url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_exists.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_exists.proxmox_vms[0].vmid }}/status/stop"

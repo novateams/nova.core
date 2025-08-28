@@ -108,7 +108,8 @@ vmware_workstation:
   connection: ssh
   host: host.docker.internal
   local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}
-  local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
+  local_vmx_path:
+    /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
     | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
   python_interpreter: /usr/bin/python3
   shell_type: sh
@@ -152,4 +153,4 @@ proxmox_validate_certs: true
 proxmox_api_url: https://{{ proxmox_defaults.api_host }}:8006/api2/json
 
 # How long to wait for a Proxmox operation (like clone, powerstate and snapshots) to complete
-proxmox_machine_operations_operation_timeout: 300
+proxmox_machine_operations_operation_timeout: 180

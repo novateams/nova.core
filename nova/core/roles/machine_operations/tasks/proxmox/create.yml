@@ -38,6 +38,20 @@
                 vm_template: {{ vm_template }}
           when: proxmox_vm_template.proxmox_vms == []
 
+        # Since Proxmox doesn't support locking or queuing operations, creating a limiter file
+        # to make sure only one host in the batch is cloning at a time
+        # After cloning is done the hosts will go back to the default parallelism
+        - name: Waiting until the previous VM is the batch cloned...
+          when: ansible_play_batch.index(inventory_hostname) != 0
+          delegate_to: localhost
+          become: false
+          ansible.builtin.wait_for:
+            path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{
+              ansible_play_batch[ansible_play_batch.index(inventory_hostname) - 1] }}.done
+            # Timeout is based on the number of hosts in the batch
+            # Increasing the timeout by the operation timeout for each host in the batch
+            timeout: "{{ proxmox_machine_operations_operation_timeout * ansible_play_batch.index(inventory_hostname) }}"
+
         # Cloning needs to happen on the same node where the template is located
         # After that the target node is used to move the VM to the correct node
         - name: Cloning {{ custom_vm_name | default(vm_name) }} VM...
@@ -60,8 +74,26 @@
                 target: "{{ proxmox_node }}"
                 timeout: "{{ proxmox_machine_operations_operation_timeout }}"
 
+            - name: Creating /tmp/proxmox_vm_clone{{ project_fullname | default('') }}_{{ custom_vm_name | default(vm_name) }}.done file...
+              delegate_to: localhost
+              become: false
+              ansible.builtin.file:
+                path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
+                state: touch
+                mode: "0644"
+
           # Using rescue to remove disks left over from failed cloning attempts
           rescue:
+            # When cloning fails first making sure the limiter file is created
+            # so the next host in the batch can proceed with cloning
+            - name: Creating /tmp/proxmox_vm_clone{{ project_fullname | default('') }}_{{ custom_vm_name | default(vm_name) }}.done file...
+              delegate_to: localhost
+              become: false
+              ansible.builtin.file:
+                path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
+                state: touch
+                mode: "0644"
+
             - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
               community.proxmox.proxmox_kvm:
                 name: "{{ custom_vm_name | default(vm_name) }}"
@@ -77,6 +109,13 @@
 
             - name: Including disk_cleanup tasks...
               ansible.builtin.include_tasks: disk_cleanup.yml
+
+            - name: Removing cloning limiter file...
+              delegate_to: localhost
+              become: false
+              ansible.builtin.file:
+                path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
+                state: absent
 
             - name: FAILED CLONING ATTEMPT
               ansible.builtin.fail:
@@ -136,3 +175,10 @@
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
       retries: 6
       delay: 5
+
+    - name: Removing cloning limiter file...
+      delegate_to: localhost
+      become: false
+      ansible.builtin.file:
+        path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
+        state: absent
