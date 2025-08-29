@@ -18,7 +18,7 @@ caddy_api_container_ports:
   - "{{ '127.0.0.1:' if caddy_api_from_localhost_only else '' }}2019:2019" # Caddy API port
 
 caddy_config_folder: /srv/caddy
-caddy_version: 2.10.0
+caddy_version: 2.10.2
 
 # caddy_template_caddyfile mode variables
 caddy_caddyfile_src: caddyfile_src # Will look for the file in templates folder for the role that includes this role
