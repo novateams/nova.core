@@ -30,12 +30,6 @@
     mode: "0600"
   when: not nexus_encryption_file.stat.exists
 
-# This task can be removed after 01.09.2025
-- name: Removing no longer used Dockerfile...
-  ansible.builtin.file:
-    path: "{{ nexus_container_config_folder }}/Dockerfile"
-    state: absent
-
 - name: Composing Nexus on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ nexus_container_config_folder }}"
