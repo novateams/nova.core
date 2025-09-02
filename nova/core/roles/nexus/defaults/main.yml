@@ -59,6 +59,7 @@ nexus_ldap_configuration:
   userMemberOfAttribute: ""
   authPassword: "{{ nexus_bind_dn_password }}" # Password of the service account to connect to LDAP
 
+nexus_remove_unmanaged_repos: true # By default remove repositories that are not in the nexus_repositories list during deploy
 nexus_repositories: "{{ nexus_default_repositories + nexus_extra_repositories }}" # List of repositories to create when nexus_create_repos is set to true
 nexus_extra_repositories: [] # List of extra repositories to be created in addition to the nexus_default_repositories list
 
