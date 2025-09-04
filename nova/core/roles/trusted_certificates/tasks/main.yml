@@ -10,6 +10,10 @@
       ansible.builtin.include_tasks: unix.yml
       when: ansible_system | default(false) in ['Linux', 'FreeBSD']
 
+    - name: Including certificates tasks for MacOS systems...
+      ansible.builtin.include_tasks: macos.yml
+      when: ansible_system | default(false) == 'Darwin'
+
     - name: Including trusted certificates tasks for VyOS systems...
       ansible.builtin.include_tasks: vyos.yml
       when: ansible_network_os | default(false) == "vyos.vyos.vyos"
