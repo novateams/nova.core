@@ -40,5 +40,11 @@
 - name: Setting IP address facts for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
     connection_address: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
+    connection_nic_ipv4: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
+    connection_nic_ipv6: "{{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}"
+    egress_nic_ipv4: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
+    egress_nic_ipv6: "{{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}"
+
+    # Deprecated, to be removed in future releases
     primary_ipv4: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
     primary_ipv6: "{{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}"
