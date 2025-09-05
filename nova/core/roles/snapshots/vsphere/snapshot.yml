@@ -42,5 +42,5 @@
   vars:
     poweron: true
   when:
-    - start_vm_after_snapshot | bool # Because CLI detects extra var as string
-    - not live_snap | bool # Because CLI detects extra var as string
+    - start_vm_after_snapshot | bool # To be able to pass this as a cli extra var -e start_vm_after_snapshot=true/false
+    - not live_snap | bool # To be able to pass this as a cli extra var -e start_vm_after_snapshot=true/false
