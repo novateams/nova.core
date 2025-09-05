@@ -85,3 +85,5 @@
 - name: Setting connection_address...
   ansible.builtin.set_fact:
     connection_address: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
+    connection_nic_ipv4: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
+    egress_nic_ipv4: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"

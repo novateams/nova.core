@@ -43,4 +43,4 @@
     poweron: true
   when:
     - start_vm_after_snapshot | bool # To be able to pass this as a cli extra var -e start_vm_after_snapshot=true/false
-    - not live_snap | bool # To be able to pass this as a cli extra var -e start_vm_after_snapshot=true/false
+    - not live_snap | bool # To be able to pass this as a cli extra var -e live_snap=true/false
