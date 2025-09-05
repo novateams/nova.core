@@ -1,109 +1,52 @@
 ---
-- name: Including Debian OS trusted certificates tasks...
-  when: ansible_os_family == "Debian"
-  block:
-    - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-      loop: "{{ trusted_certificates_list }}"
-      when: not item.src.startswith('http')
-
-    - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.get_url:
-        url: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-        timeout: 60
-        validate_certs: "{{ trusted_certificates_validate_certs }}"
-      loop: "{{ trusted_certificates_list }}"
-      when: item.src.startswith('http')
-
-    - name: Updating CA certificates...
-      ansible.builtin.command: update-ca-certificates --fresh
-      changed_when: true
-
-- name: Adding trusted certificates for Archlinux based OS...
-  when: ansible_os_family == "Archlinux"
-  block:
-    - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-      loop: "{{ trusted_certificates_list }}"
-      when: not item.src.startswith('http')
-
-    - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.get_url:
-        url: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-        timeout: 60
-        validate_certs: "{{ trusted_certificates_validate_certs }}"
-      loop: "{{ trusted_certificates_list }}"
-      when: item.src.startswith('http')
-
-    - name: Trusting installed certificates...
-      ansible.builtin.command: trust extract-compat
-      changed_when: true
-
-- name: Including RedHat trusted certificates tasks...
-  when: ansible_os_family == "RedHat"
-  block:
-    - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-      loop: "{{ trusted_certificates_list }}"
-      when: not item.src.startswith('http')
-
-    - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.get_url:
-        url: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-        timeout: 60
-        validate_certs: "{{ trusted_certificates_validate_certs }}"
-      loop: "{{ trusted_certificates_list }}"
-      when: item.src.startswith('http')
-
-    - name: Updating CA certificates...
-      ansible.builtin.command: update-ca-trust extract
-      changed_when: true
-
-- name: Adding trusted certificates for FreeBSD based OS...
+- name: Creating folder - {{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}...
+  ansible.builtin.file:
+    path: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}"
+    state: directory
+    mode: "0755"
   when: ansible_os_family == "FreeBSD"
-  block:
-    - name: Creating folder - {{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}...
-      ansible.builtin.file:
-        path: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}"
-        state: directory
-        mode: "0755"
 
-    - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-      loop: "{{ trusted_certificates_list }}"
-      when: not item.src.startswith('http')
+- name: Copying trusted certificates(s) to {{ inventory_hostname }}...
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+    mode: "0644"
+  loop: "{{ trusted_certificates_list }}"
+  loop_control:
+    label: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+  when: not item.src.startswith('http')
 
-    - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
-      ansible.builtin.get_url:
-        url: "{{ item.src }}"
-        dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
-        mode: "0644"
-        timeout: 60
-        validate_certs: "{{ trusted_certificates_validate_certs }}"
-      loop: "{{ trusted_certificates_list }}"
-      when: item.src.startswith('http')
+- name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
+  ansible.builtin.get_url:
+    url: "{{ item.src }}"
+    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+    mode: "0644"
+    timeout: 60
+    validate_certs: "{{ trusted_certificates_validate_certs }}"
+  loop: "{{ trusted_certificates_list }}"
+  loop_control:
+    label: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+  when: item.src.startswith('http')
 
-    - name: Updating CA certificates...
-      ansible.builtin.command: certctl rehash
-      changed_when: true
+- name: Updating CA certificates...
+  ansible.builtin.command: update-ca-certificates --fresh
+  changed_when: true
+  when: ansible_os_family == "Debian"
+
+- name: Trusting installed certificates...
+  ansible.builtin.command: trust extract-compat
+  changed_when: true
+  when: ansible_os_family == "Archlinux"
+
+- name: Updating CA certificates...
+  ansible.builtin.command: update-ca-trust extract
+  changed_when: true
+  when: ansible_os_family == "RedHat"
+
+- name: Updating CA certificates...
+  ansible.builtin.command: certctl rehash
+  changed_when: true
+  when: ansible_os_family == "FreeBSD"
 
 - name: Adding trusted certificate(s) to Java keystore(s)...
   when: trusted_certificates_to_jks
