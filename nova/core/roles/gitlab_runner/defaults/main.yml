@@ -19,7 +19,7 @@ gitlab_runner_docker_privileged: false
 gitlab_runner_docker_disable_cache: false
 gitlab_runner_docker_extra_volumes: []
 gitlab_runner_docker_extra_hosts:
-  - "{{ gitlab_runner_gitlab_fqdn }}:{{ hostvars[gitlab_runner_gitlab_inventory_hostname].primary_ipv4 }}"
+  - "{{ gitlab_runner_gitlab_fqdn }}:{{ hostvars[gitlab_runner_gitlab_inventory_hostname].egress_nic_ipv4 }}"
 gitlab_runner_docker_executor_volumes:
   - /cache
   - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
