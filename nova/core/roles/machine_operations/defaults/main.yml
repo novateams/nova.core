@@ -61,8 +61,8 @@ template_description: Created on {{ ansible_date_time.iso8601 }}
 # VMWare workstation #
 ######################
 
-# If the local template is older than this interval it will re-downloaded during deploy, default is 30 days
-machine_operations_vmware_workstation_template_update_interval: 2592000
+# If the local template is older than this interval it will re-downloaded during deploy
+machine_operations_vmware_workstation_template_update_interval_days: 90
 
 # Set to false to ignore the template update interval and never update the template
 machine_operations_vmware_workstation_template_update: true

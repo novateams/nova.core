@@ -35,7 +35,7 @@
         - name: Downloading or updating VM template...
           when:
             - not vm_template_presence.stat.exists or ((ansible_date_time.epoch | int) - (vm_template_presence.stat.ctime | round)
-              >= machine_operations_vmware_workstation_template_update_interval)
+              >= machine_operations_vmware_workstation_template_update_interval_days * 86400)
             - not role_only
             - not role_only_wp
           block:
