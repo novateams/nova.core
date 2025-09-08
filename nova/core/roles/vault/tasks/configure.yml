@@ -140,7 +140,7 @@
     - name: Creating auto-unseal cron job...
       ansible.builtin.cron:
         name: Vault auto-unseal
-        special_time: reboot
+        minute: "*/1"
         job: "{{ vault_config_folder }}/config/unseal-vault.sh"
         user: root
 
