@@ -26,3 +26,7 @@
   changed_when: true
   become: true
   become_user: "{{ 'root' if tuoni_install_as_root else ansible_user }}"
+
+- name: Including Tuoni plugins tasks...
+  ansible.builtin.include_tasks: plugins.yml
+  when: tuoni_licence_key != {}

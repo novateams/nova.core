@@ -18,8 +18,8 @@
     - name: MACOS UPDATE ERROR
       ansible.builtin.fail:
         msg: |
-          MacOS failed to install updates most likely the of a connection timeout.
-          Check that that the host is up and running and try again.
+          MacOS failed to install updates most likely because of a connection timeout.
+          Check that the host is up and running and try again.
       when: updates_rescue_loop_count | int > 3
 
     - name: Waiting until ssh is up for {{ inventory_hostname }}...

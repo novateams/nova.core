@@ -46,7 +46,3 @@
 - name: Including Tuoni listeners tasks...
   ansible.builtin.include_tasks: listeners.yml
   when: tuoni_listeners != []
-
-- name: Including Tuoni plugins tasks...
-  ansible.builtin.include_tasks: plugins.yml
-  when: tuoni_licence_key != {}

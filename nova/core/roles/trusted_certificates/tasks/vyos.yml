@@ -9,6 +9,8 @@
     dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
     mode: "0644"
   loop: "{{ trusted_certificates_list }}"
+  loop_control:
+    label: /usr/local/share/ca-certificates/{{ item.name }}.crt
   become: true
   when: not item.src.startswith('http')
 
@@ -20,6 +22,8 @@
     timeout: 60
     validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
+  loop_control:
+    label: /usr/local/share/ca-certificates/{{ item.name }}.crt
   become: true
   when: item.src.startswith('http')
 

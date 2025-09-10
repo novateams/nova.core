@@ -16,8 +16,6 @@ configure_networking_post_roles: [] # List of roles to include after finishing t
 reconfigure_network: false
 mgmt_ip: {}
 netplan_renderer: {}
-primary_ipv4: false # False means that DHCP is used or IP is not present
-primary_ipv6: false # False means that DHCP is used or IP is not present
 
 # VMWare REST API defaults
 # Using this method allows not defining password key in accounts lists

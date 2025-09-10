@@ -1,0 +1,67 @@
+---
+- name: Getting trusted certificates...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Reading trusted certificates list...
+      ansible.builtin.slurp:
+        src: "{{ item.src }}"
+      loop: "{{ trusted_certificates_list }}"
+      when: not item.src.startswith('http')
+      register: slurp_trusted_certificates
+
+    - name: Downloading trusted certificates(s) to localhost...
+      ansible.builtin.get_url:
+        url: "{{ item.src }}"
+        dest: /tmp/{{ project_fullname | default('') }}_{{ item.name }}.crt
+        mode: "0644"
+        timeout: 60
+        validate_certs: "{{ trusted_certificates_validate_certs }}"
+      delegate_to: localhost
+      become: false
+      loop: "{{ trusted_certificates_list }}"
+      when: item.src.startswith('http')
+      register: download_trusted_certificates
+
+    - name: Reading downloaded certificates...
+      ansible.builtin.slurp:
+        src: "{{ item.dest }}"
+      loop: "{{ download_trusted_certificates.results }}"
+      loop_control:
+        label: "{{ item.dest | default('') }}"
+      when: item.dest is defined
+      register: slurp_downloaded_certificates
+
+- name: Creating the /usr/local/etc/certs/ directory...
+  ansible.builtin.raw: mkdir -p /usr/local/etc/certs/
+  changed_when: true
+
+- name: Saving certificates to {{ inventory_hostname }}...
+  ansible.builtin.raw: echo "{{ read_cert.content | b64decode }}" > /usr/local/etc/certs/{{ read_cert.item.name | default(read_cert.item.item.name) }}.crt
+  changed_when: true
+  loop: "{{ slurp_trusted_certificates.results | default([]) + slurp_downloaded_certificates.results | default([]) }}"
+  loop_control:
+    loop_var: read_cert
+    label: /usr/local/etc/certs/{{ read_cert.item.name | default(read_cert.item.item.name) }}.crt
+  register: save_local_certs
+  when: read_cert.content is defined
+
+# On MacOS there is no way to add trusted certificates via command line without user interaction or using an MDM solution
+- name: Displaying commands for adding trusted certificates...
+  when: slurp_trusted_certificates.results | default([]) + slurp_downloaded_certificates.results | default([]) != []
+  block:
+    - name: Manually run the following commands from an interactive session on {{ inventory_hostname }} to add the trusted certificates...
+      ansible.builtin.debug:
+        msg: sudo security add-trusted-cert -d -r trustRoot -k
+          /Library/Keychains/System.keychain /usr/local/etc/certs/{{ read_cert.item.name | default(read_cert.item.item.name) }}.crt
+      loop: "{{ slurp_trusted_certificates.results | default([]) + slurp_downloaded_certificates.results | default([]) }}"
+      loop_control:
+        loop_var: read_cert
+        label: /usr/local/etc/certs/{{ read_cert.item.name | default(read_cert.item.item.name) }}.crt
+      when: read_cert.content is defined
+
+    - name: Giving time to read the above commands...
+      ansible.builtin.wait_for:
+        timeout: 10
+      delegate_to: localhost
+      become: false

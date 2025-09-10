@@ -9,7 +9,7 @@ nexus_configure_ldap: false # Set to true to also configure LDAP after installat
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
 nexus_active_encryption_key_id: Primary Encryption Key # Name of the active encryption key that comes with this role
-nexus_version: 3.83.1 # Nexus version to install
+nexus_version: 3.83.2 # Nexus version to install
 
 # Default is the built-in Nexus admin user. If set to a different value than admin, the role will create the user.
 nexus_admin_username: admin
@@ -59,6 +59,7 @@ nexus_ldap_configuration:
   userMemberOfAttribute: ""
   authPassword: "{{ nexus_bind_dn_password }}" # Password of the service account to connect to LDAP
 
+nexus_remove_unmanaged_repos: true # By default remove repositories that are not in the nexus_repositories list during deploy
 nexus_repositories: "{{ nexus_default_repositories + nexus_extra_repositories }}" # List of repositories to create when nexus_create_repos is set to true
 nexus_extra_repositories: [] # List of extra repositories to be created in addition to the nexus_default_repositories list
 
@@ -82,7 +83,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       nugetProxy:
         queryCacheItemMaxAge: 3600
         nugetVersion: V2
@@ -107,7 +108,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       docker:
         v1Enabled: false
         forceBasicAuth: false
@@ -135,7 +136,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       cleanup:
         policyNames:
           - default-cleanup-policy
@@ -159,7 +160,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: main
         flat: false
@@ -176,7 +177,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -184,7 +185,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: noble-backports
         flat: false
@@ -201,7 +202,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: http://security.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -209,7 +210,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: noble-security
         flat: false
@@ -226,7 +227,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -234,7 +235,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: noble-updates
         flat: false
@@ -251,7 +252,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -259,7 +260,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: noble
         flat: false
@@ -276,7 +277,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -284,7 +285,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: jammy-backports
         flat: false
@@ -301,7 +302,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: http://security.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -309,7 +310,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: jammy-security
         flat: false
@@ -326,7 +327,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -334,7 +335,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: jammy-updates
         flat: false
@@ -351,7 +352,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -359,7 +360,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: jammy
         flat: false
@@ -376,7 +377,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -384,7 +385,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: focal-backports
         flat: false
@@ -401,7 +402,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: http://security.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -409,7 +410,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: focal-security
         flat: false
@@ -426,7 +427,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -434,7 +435,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: focal-updates
         flat: false
@@ -451,7 +452,7 @@ nexus_default_repositories:
         blobStoreName: default
         strictContentTypeValidation: true
       proxy:
-        remoteUrl: http://archive.ubuntu.com/ubuntu
+        remoteUrl: https://archive.ubuntu.com/ubuntu
         contentMaxAge: 15
         metadataMaxAge: 15
       negativeCache:
@@ -459,7 +460,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: focal
         flat: false
@@ -484,7 +485,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bullseye
         flat: false
@@ -509,7 +510,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bullseye-security
         flat: false
@@ -534,7 +535,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bullseye-updates
         flat: false
@@ -559,7 +560,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bookworm
         flat: false
@@ -584,7 +585,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bookworm-security
         flat: false
@@ -609,7 +610,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bookworm-updates
         flat: false
@@ -634,7 +635,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: trixie
         flat: false
@@ -659,7 +660,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: trixie-security
         flat: false
@@ -684,7 +685,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: trixie-updates
         flat: false
@@ -713,7 +714,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: noble
         flat: false
@@ -738,7 +739,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: jammy
         flat: false
@@ -763,7 +764,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: focal
         flat: false
@@ -788,7 +789,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bookworm
         flat: false
@@ -813,7 +814,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: false
+        autoBlock: true
       apt:
         distribution: bullseye
         flat: false

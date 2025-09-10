@@ -29,7 +29,9 @@
   loop_control:
     loop_var: repo
   loop: "{{ all_repos.json | map(attribute='name') }}"
-  when: repo not in nexus_repositories | map(attribute='repo_body.name')
+  when:
+    - nexus_remove_unmanaged_repos
+    - repo not in nexus_repositories | map(attribute='repo_body.name')
 
 - name: Configuring following repositories...
   ansible.builtin.uri:
