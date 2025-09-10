@@ -1,58 +1,50 @@
 ---
-- name: Setting gather facts conditions for Network OS...
-  when: ansible_network_os is defined
-  block:
-    - name: Gathering RouterOS facts...
-      community.routeros.facts:
-      retries: 3
-      when: ansible_network_os == 'community.routeros.routeros'
+- name: Gathering RouterOS facts...
+  community.routeros.facts:
+  retries: 3
+  when: ansible_network_os | default(false) == 'community.routeros.routeros'
 
-    - name: Gathering VyOS facts...
-      vyos.vyos.vyos_facts:
-      when: ansible_network_os == 'vyos.vyos.vyos'
+- name: Gathering VyOS facts...
+  vyos.vyos.vyos_facts:
+  when: ansible_network_os | default(false) == 'vyos.vyos.vyos'
 
-    - name: Gathering Cisco IOS facts...
-      cisco.ios.ios_facts:
-      when: ansible_network_os == 'cisco.ios.ios'
+- name: Gathering Cisco IOS facts...
+  cisco.ios.ios_facts:
+  when: ansible_network_os | default(false) == 'cisco.ios.ios'
 
-    - name: Gathering facts for FortiOS...
-      fortinet.fortios.fortios_configuration_fact:
-        access_token: "{{ fortios_access_token }}"
-        selector: system_global
-      when: ansible_network_os == 'fortinet.fortios.fortios'
+- name: Gathering facts for FortiOS...
+  fortinet.fortios.fortios_configuration_fact:
+    access_token: "{{ fortios_access_token }}"
+    selector: system_global
+  when: ansible_network_os | default(false) == 'fortinet.fortios.fortios'
 
-    - name: Gathering facts for pfSense...
-      ansible.builtin.setup:
-      when: ansible_network_os == 'pfsense'
+- name: Gathering facts for pfSense/OPNsense...
+  ansible.builtin.setup:
+  when: ansible_network_os | default([]) in ['pfsense', 'opnsense']
 
-    - name: Gathering facts for Opnsense...
-      ansible.builtin.setup:
-      when: ansible_network_os == 'opnsense'
-
-    - name: Gathering facts for PanOS...
-      paloaltonetworks.panos.panos_facts:
-        provider: "{{ panos_connection_params }}"
-        gather_subset: all
-      register: panos_facts
-      until: panos_facts is succeeded # To avoid first run failures when the device is not ready yet
-      retries: 20
-      delay: 3
-      delegate_to: localhost
-      become: false
-      when: ansible_network_os == 'panos'
+- name: Gathering facts for PanOS...
+  paloaltonetworks.panos.panos_facts:
+    provider: "{{ panos_connection_params }}"
+    gather_subset: all
+  register: panos_facts
+  until: panos_facts is succeeded # To avoid first run failures when the device is not ready yet
+  retries: 20
+  delay: 3
+  delegate_to: localhost
+  become: false
+  when: ansible_network_os | default(false) == 'panos'
 
 - name: Gathering facts for {{ inventory_hostname }}...
   ansible.builtin.setup:
   when:
-    - ansible_system is defined
-    - ansible_system == "Darwin"
+    - ansible_system | default(false) == "Darwin"
     - macos_has_python
 
 - name: Gathering facts for {{ inventory_hostname }}...
   ansible.builtin.setup:
   when:
     - ansible_network_os is not defined
-    - (ansible_system is not defined or ansible_system != "Darwin")
+    - ansible_system is not defined or ansible_system != "Darwin"
 # # Useful when debugging facts gathered from different operating systems
 # - name: Saving ansible_facts to file...
 #   ansible.builtin.copy:
