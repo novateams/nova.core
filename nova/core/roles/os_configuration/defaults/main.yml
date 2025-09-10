@@ -29,7 +29,8 @@ ntp_servers:
   - "0.pool.ntp.org"
   - "1.pool.ntp.org"
 
-os_configuration_increase_unix_ssh_maxauthtries: true # Set to false to disable increasing SSHD MaxAuthTries for Unix systems
+os_configuration_configure_ssh_maxauthtries: true # Set to false to disable increasing SSHD MaxAuthTries on cloud machines
+os_configuration_ssh_maxauthtries: 20 # Value to set for SSHD MaxAuthTries on cloud machines
 
 # Since different OS families have different service names the sshd service name is set here
 os_configuration_os_family_service_name:

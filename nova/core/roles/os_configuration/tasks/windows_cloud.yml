@@ -6,3 +6,21 @@
     data: PowerShell.exe -NoExit
     type: string
   when: ansible_os_installation_type == 'Server Core'
+
+# SSHD Configuration
+# This to avoid errors when someone has more that 6 SSH keys in their agent
+- name: Updating SSHD MaxAuthTries for Cloud {{ inventory_hostname }}...
+  when: os_configuration_configure_ssh_maxauthtries
+  block:
+    - name: Increasing SSHD MaxAuthTries to {{ os_configuration_ssh_maxauthtries }}...
+      community.windows.win_lineinfile:
+        path: C:\ProgramData\ssh\sshd_config
+        regexp: .*MaxAuthTries.*
+        line: MaxAuthTries {{ os_configuration_ssh_maxauthtries }}
+      register: maxauthtries
+
+    - name: Restarting SSHD... # noqa: no-handler
+      ansible.windows.win_service:
+        name: sshd
+        state: restarted
+      when: maxauthtries.changed
