@@ -10,5 +10,4 @@
   ansible.builtin.package:
     name:
       - gnome-initial-setup
-      - cloud-init # This keeps trying wo write it's own config like hostname
     state: absent
