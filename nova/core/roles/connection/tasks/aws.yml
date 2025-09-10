@@ -1,13 +1,23 @@
 ---
 - name:
-    Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
-    | upper }} over {{ connection_address_custom | default(connection_address) }}... # noqa: name[template]
+    Connecting as {{ aws_template_username | default(template_username) if fresh_deploy else ansible_deployer_username
+    }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper
+    }} over {{ connection_address_custom | default(connection_address) }}... # noqa: name[template]
   ansible.builtin.set_fact:
     ansible_host: "{{ connection_address_custom | default(connection_address) }}"
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ aws_template_username | default(template_username) if fresh_deploy else ansible_deployer_username }}"
-    ansible_password: "{{ omit if (connection_no_password or fresh_deploy) else ansible_deployer_password }}"
-
+    ansible_password: >-
+      {%- if 'os_windows' in group_names and fresh_deploy -%}
+        {{ template_password }}
+      {%- elif connection_no_password or fresh_deploy -%}
+        {{ omit }}
+      {%- else -%}
+        {{ ansible_deployer_password }}
+      {%- endif -%}
     # Initial connection will be done with temporary SSH key
     ansible_private_key_file: "{{ machine_operations_aws_temp_ssh_key_path if fresh_deploy else omit }}"
-    ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=yes' if fresh_deploy else omit }}" # To avoid SSH MaxAuthTries limit
+    # To avoid SSH MaxAuthTries limit
+    ansible_ssh_extra_args: "{{ connection_custom_ansible_ssh_extra_args
+      | default('-o PreferredAuthentications=password' if fresh_deploy and 'os_windows' in group_names else
+      '-o IdentitiesOnly=yes' if fresh_deploy and 'os_windows' not in group_names else omit) }}"
