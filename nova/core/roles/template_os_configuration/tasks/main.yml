@@ -17,8 +17,7 @@
   ansible.builtin.meta: flush_handlers
 
 - name: Configuring non-Network OS...
-  when:
-    - ansible_network_os is not defined
+  when: ansible_network_os is not defined
   block:
     - name: Configure Windows machine
       ansible.builtin.include_tasks: windows.yml
@@ -30,8 +29,7 @@
         - ansible_system in ["Linux", "FreeBSD"]
 
 - name: Configuring Network OS...
-  when:
-    - ansible_network_os is defined
+  when: ansible_network_os is defined
   block:
     - name: Configure RouterOS machine
       ansible.builtin.include_tasks: routeros.yml
