@@ -38,37 +38,23 @@
     - ansible_network_os is defined
     - ansible_network_os == "panos"
 
-- name: Waiting for connection to {{ inventory_hostname }}...
-  ansible.builtin.wait_for_connection:
-    timeout: 300
+- name: Running different wait_for_connection methods based on OS...
   when:
     - not role_only
     - not role_only_wp
-    - ansible_system is not defined
-
-- name: Setting wait for connection parameters for MacOS...
-  when:
-    - ansible_system is defined
-    - ansible_system == "Darwin"
   block:
+    - name: Waiting for connection to {{ inventory_hostname }}...
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+      when: ansible_system is not defined # Meaning gether facts hasn't run yet so we don't know the OS
+
     - name: Waiting for connection to {{ inventory_hostname }}...
       ansible.builtin.raw: echo " "
       changed_when: true
       retries: 30
       delay: 5
       until: true
-      when:
-        - not role_only
-        - not role_only_wp
-        - not macos_has_python
-
-    - name: Waiting for connection to {{ inventory_hostname }}...
-      ansible.builtin.wait_for_connection:
-        timeout: 300
-      when:
-        - not role_only
-        - not role_only_wp
-        - macos_has_python
+      when: ansible_system | default(false) == "Darwin" # Since MacOS does not have Python installed by default ansible_system is defined in OS group var
 
 - name: Including connect role...
   ansible.builtin.include_role:
