@@ -115,11 +115,6 @@ machine_operations_aws_security_group_rules:
 ###################
 
 linode_api_token: {} # Can be defined in your Ansible Vault
-
-# The default root password for Linode VM
-machine_operations_linode_vm_password:
-  "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
-  + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_' + admin_account) }}"
 rebuild: false # Use ctp host rebuild-linode-vm <inventory_hostname> command to rebuild the VM with different size but keeping the data
 
 ###########
