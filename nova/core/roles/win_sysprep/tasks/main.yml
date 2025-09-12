@@ -21,19 +21,13 @@
 - name: Recompiling DLLs after .NET updates
   community.windows.win_dotnet_ngen:
 
-- name: Encoding Administrator's password...
-  ansible.windows.win_shell: "{{ lookup('template', 'Encode-UnattendPassword.ps1') }}"
-  register: win_shell
+- name: Including sysprep tasks...
+  ansible.builtin.include_tasks: sysprep.yml
+  when: not win_sysprep_use_cloudbase_init | bool
 
-- name: Templating Unattend.xml to machine...
-  ansible.windows.win_template:
-    src: Unattend.xml
-    dest: C:/Windows/System32/Sysprep/Unattend.xml
-
-- name: Running sysprep...
-  ansible.windows.win_shell: "{{ lookup('template', 'Windows-Sysprep.ps1') }}"
-  async: 60
-  poll: 0
+- name: Including cloudbase-init tasks...
+  ansible.builtin.include_tasks: cloudbase_init.yml
+  when: win_sysprep_use_cloudbase_init | bool
 
 - name: Including vSphere environment tasks...
   ansible.builtin.include_tasks: vsphere.yml
