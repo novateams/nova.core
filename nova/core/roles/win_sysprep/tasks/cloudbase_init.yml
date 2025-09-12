@@ -1,0 +1,17 @@
+---
+- name: Installing cloudbase-init...
+  ansible.windows.win_package:
+    path: "{{ win_sysprep_cloudbase_init_installer_path }}"
+    product_id: "{ED85F19F-057A-4EE6-BC8D-F576DEACE78D}"
+    arguments: USERNAME={{ win_sysprep_cloudbase_init_user }}
+
+- name: Copying cloudbase-init unattend.xml...
+  ansible.windows.win_copy:
+    src: C:\Program Files\Cloudbase Solutions\Cloudbase-Init\conf\Unattend.xml
+    dest: C:/Windows/System32/Sysprep/Unattend.xml
+    remote_src: true
+
+- name: Running sysprep...
+  ansible.windows.win_shell: "{{ lookup('template', 'Windows-Sysprep.ps1') }}"
+  async: 60
+  poll: 0

@@ -15,9 +15,7 @@
       vmware.vmware_rest.vcenter_vm_guest_power_info:
         vm: "{{ vcenter_vm_info.value[0].vm }}"
       register: poweroff_status
-      until:
-        - poweroff_status.value.state is defined
-        - poweroff_status.value.state == "NOT_RUNNING"
+      until: poweroff_status.value.state | default(false) == "NOT_RUNNING"
       retries: 90
       delay: 10
       delegate_to: localhost
