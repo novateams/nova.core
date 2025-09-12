@@ -1,19 +1,4 @@
 ---
-- name: Checking if {{ custom_vm_name | default(vm_name) }} exists in Linode...
-  linode.cloud.instance_list:
-    api_token: "{{ linode_api_token }}"
-    filters:
-      - name: label
-        values: "{{ custom_vm_name | default(vm_name) }}"
-  delegate_to: localhost
-  become: false
-  register: linode_vm_list
-
-- name: Setting fresh_deploy as fact...
-  ansible.builtin.set_fact:
-    fresh_deploy: true
-  when: linode_vm_list.instances == []
-
 - name: Checking for the correct deploy mode...
   ansible.builtin.fail:
     msg: |
@@ -21,22 +6,6 @@
   when:
     - fresh_deploy
     - role_only or role_only_wp or single_role is defined
-
-- name: Setting template_password as fact...
-  ansible.builtin.set_fact:
-    template_password: >-
-      {%- if save_secrets_to_vault and admin_accounts | selectattr('username', 'equalto', admin_account)
-        | map(attribute='save_password_to_vault') | first | default(true) -%}
-      {{ lookup('community.hashi_vault.hashi_vault',
-        vault_lookup_fragment + 'secret=' +
-        (secrets_vault_engine_path | default(environment_name)) +
-        '/data/' +
-        (secrets_vault_secrets_path | default(project_fullname)) +
-        ':' + inventory_hostname + '_' + admin_account) }}
-      {%- else -%}
-      {{ predefined_linode_vm_password | default(lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits')) }}
-      {%- endif -%}
-  when: fresh_deploy
 
 - name: Configuring {{ custom_vm_name | default(vm_name) }} in Linode...
   linode.cloud.instance:
