@@ -11,6 +11,7 @@ machine_operations_pre_roles: [] # Extra roles to include as first step in this 
 machine_operations_post_roles: [] # Extra roles to include as last step in this one
 machine_operations_reconfigure_vm_on_deploy: true # Tries to reconfigure the VMs CPU/RAM/Disk size on deploy if they are updated
 linked_clone_status: false # Set to true to create a linked clone when supported by the hypervisor
+vm_name: "{{ inventory_hostname }}" # Defaults to inventory_hostname if nothing else is defined
 
 ####################
 # vSphere defaults #

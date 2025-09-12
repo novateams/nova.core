@@ -1,4 +1,12 @@
 ---
+- name: MISSING REQUIRED VARIABLE(S)
+  ansible.builtin.fail:
+    msg: |
+      The ansible_deployer_username variable is required but not defined.
+      It's the account used to connect to the hosts with
+      Please define it in your inventory or group_vars file.
+  when: ansible_deployer_username | default(false) is ansible.builtin.falsy
+
 - name: Including following machine_operations pre-roles...
   ansible.builtin.include_role:
     name: "{{ item }}"

@@ -1,6 +1,5 @@
 ---
 infra_env: {}
-admin_accounts: []
 user_accounts: []
 domain_user_accounts: []
 domain_groups: []

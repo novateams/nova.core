@@ -1,10 +1,34 @@
 ---
-- name: Missing required variables...
+- name: MISSING SECRETS
   ansible.builtin.fail:
     msg: |
-      Following variables are required to run this role:
+      You are missing following secrets:
+      {% for variable in required_variables %}
+      {% if vars[variable] is not defined or vars[variable] == none %}
+        - {{ variable }}
+      {% endif %}
+      {% endfor %}
+
+      You can add them to your Ansible Vault file or define external lookups in your group_vars/host_vars files.
+  vars:
+    required_variables:
       - aws_access_key
-  when: aws_access_key == {}
+      - aws_access_key_id
+  when: aws_access_key_id | default(false) is ansible.builtin.falsy
+    or aws_access_key | default(false) is ansible.builtin.falsy
+
+- name: MISSING DEPLOYER SSH KEY
+  ansible.builtin.fail:
+    msg: |
+      You are missing the ssh key for user {{ ansible_deployer_username }}.
+      Please define the ssh_key attribute for this user in your admin_accounts list.
+      Example:
+      admin_accounts:
+        - username: {{ ansible_deployer_username }}
+          ssh_key: <ssh key here>
+
+      AWS EC2 instances require the ssh key to be able to connect to the instance after it's created.
+  when: admin_accounts | default([]) | selectattr('username', 'equalto', ansible_deployer_username) | selectattr('ssh_key', 'defined') == []
 
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml

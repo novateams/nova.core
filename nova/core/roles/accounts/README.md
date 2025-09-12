@@ -44,7 +44,7 @@ admin_accounts:
 
   - username: admin2
     ssh_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIB8J
-    save_password_to_vault: false # This will not save a random generated the password to the vault, ssh is needed for authentication
+    save_password_to_vault: false # This will not save a random generated the password to the vault, ssh key is needed for authentication then
 ```
 
 ```yaml

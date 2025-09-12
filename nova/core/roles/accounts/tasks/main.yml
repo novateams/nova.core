@@ -1,4 +1,14 @@
 ---
+- name: MISSING REQUIRED VARIABLE(S)
+  ansible.builtin.fail:
+    msg: |
+      The ansible_deployer_password variable or admin_accounts list is required.
+      If you don't want to configure admin (root/Administrator/etc.) accounts machine you can just define an empty list - admin_accounts: []
+      Refer to the {{ role_path }}/README.md for examples.
+  when:
+    - ansible_deployer_password | default(false) is ansible.builtin.falsy
+    - admin_accounts is not defined
+
 - name: Including following accounts pre-roles...
   ansible.builtin.include_role:
     name: "{{ account_pre_role }}"
