@@ -61,7 +61,7 @@
     - name: Setting {{ ansible_deployer_username }} as connection user...
       ansible.builtin.set_fact:
         ansible_user: "{{ ansible_deployer_username }}"
-        ansible_password: "{{ ansible_deployer_password }}" # Updated ansible_deployer_password
+        ansible_password: "{{ ansible_deployer_password | default(omit) }}" # Updated ansible_deployer_password
 
         # To avoid SSH MaxAuthTries limit in cloud environments with cloud templates
         ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=no' if (fresh_deploy and infra_env in ['aws', 'openstack']) else omit }}"
