@@ -6,7 +6,7 @@
     ansible_host: "{{ connection_address_custom | default(connection_address) }}"
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
-    ansible_password: "{{ omit if connection_no_password else machine_operations_linode_vm_password if fresh_deploy else ansible_deployer_password }}"
+    ansible_password: "{{ template_password if fresh_deploy else omit if connection_no_password else ansible_deployer_password }}"
 
     # Initial connection will forced to password to avoid SSH MaxAuthTries limit
     ansible_ssh_extra_args: "{{ connection_custom_ansible_ssh_extra_args
