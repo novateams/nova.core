@@ -3,16 +3,18 @@
 # General #
 ###########
 
+fqdn: "{{ hostname }}.{{ domain | default('localdomain') }}" # Fully qualified domain name to be set if fqdn is not defined in host or group vars
+hostname: "{{ inventory_hostname }}" # Defaults to inventory_hostname if nothing else is defined
+hosts_file_values: [] # Custom hosts file entries to be added.
+install_trusted_certificates: true # Set to false to skip trusted certificates installation with nova.core.trusted_certificates role
 os_configuration_locale: en_US.UTF-8 # Default locale to be set
 os_configuration_post_roles: [] # List of extra roles to be included as one of the last steps of this role
-install_trusted_certificates: true # Set to false to skip trusted certificates installation with nova.core.trusted_certificates role
-hosts_file_values: [] # Custom hosts file entries to be added.
+os_configuration_timezone: UTC # The default timezone to be set where applicable
 resolv_conf_dns_servers: []
-wait_for_host: false # Set true to wait for external connection before moving on
 wait_for_address: 1.1.1.1 # Host to check in Waiting for internet... task
+wait_for_host: false # Set true to wait for external connection before moving on
 wait_for_port: 53 # Port to check in Waiting for internet... task
 wait_for_timeout: 300 # How many seconds to wait for wait_for_host
-os_configuration_timezone: UTC # The default timezone to be set where applicable
 
 # Creates a snapshot when just_clone is true, set do false to skip snapshot creation
 os_configuration_create_snapshot_with_just_clone: true
