@@ -30,6 +30,8 @@ services:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
     environment:
       - RAILS_ENV=production
+      - RAILS_MAX_THREADS={{ providentia_threads_per_process }}
+      - WEB_CONCURRENCY={{ providentia_concurrent_processes }}
       - SECRET_KEY_BASE={{ providentia_secret_key_base }}
       - DATABASE_URL={{ providentia_db_url }}
       - OIDC_ISSUER={{ providentia_oidc_issuer }}
