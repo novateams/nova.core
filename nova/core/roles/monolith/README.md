@@ -30,7 +30,7 @@ save_secrets_to_vault: false # By default  not saving secrets to vault because w
 # Remove this list if globally trusted CA certificates are used also for LDAPs.
 trusted_certificates_list:
   - name: LDAPS
-    src: "{{ inventory_dir }}/files/LDAPS.crt"
+    src: "{{ playbook_dir }}/files/LDAPS.crt"
 
 connection_address: 10.10.10.10 # This is the IP address of the host where monolith will be installed
 ansible_deployer_username: # This is the username that will be used to connect to the host
