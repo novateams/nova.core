@@ -8,6 +8,10 @@ providentia_external_docker_network_config:
       name: local-network # Comes from nova.core.docker
       external: true
 
+# parallelism
+providentia_threads_per_process: 5
+providentia_concurrent_processes: "{{ ansible_processor_vcpus }}"
+
 # dependencies
 providentia_builtin_keycloak: true # Should keycloak instance be deployed with Providentia
 providentia_builtin_database: true # Should postgres instance be deployed with Providentia
