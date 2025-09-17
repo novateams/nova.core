@@ -1,0 +1,28 @@
+---
+- name: Checking for required variables...
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - openstack_auth_url
+      - openstack_username
+      - openstack_password
+      - openstack_project_id
+  when: >
+    openstack_defaults.auth.auth_url is ansible.builtin.falsy
+    or openstack_defaults.auth.username is ansible.builtin.falsy
+    or openstack_defaults.auth.password is ansible.builtin.falsy
+    or openstack_defaults.auth.project_id is ansible.builtin.falsy
+
+- name: Checking if {{ custom_vm_name | default(vm_name) }} exists...
+  openstack.cloud.server_info:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+  delegate_to: localhost
+  become: false
+  register: openstack_vm_exists
+
+- name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
+  ansible.builtin.include_tasks: remove.yml
+  when: deploy_mode in ['undeploy', 'redeploy']
+
+- name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
+  ansible.builtin.include_tasks: create.yml
