@@ -49,6 +49,10 @@
       ansible.builtin.include_tasks: linode/main.yml
       when: infra_env == 'linode'
 
+    - name: Including Azure environment tasks...
+      ansible.builtin.include_tasks: azure/main.yml
+      when: infra_env == 'azure'
+
     - name: Including Proxmox environment tasks...
       ansible.builtin.include_tasks: proxmox/main.yml
       when: infra_env == 'proxmox'

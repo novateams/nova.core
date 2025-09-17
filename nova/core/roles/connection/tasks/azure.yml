@@ -1,0 +1,13 @@
+---
+- name:
+    Connecting as {{ azure_template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
+    | upper }} over {{ connection_address_custom | default(connection_address) }}... # noqa: name[template]
+  ansible.builtin.set_fact:
+    ansible_host: "{{ connection_address_custom | default(connection_address) }}"
+    ansible_connection: "{{ default_connection_plugin }}"
+    ansible_user: "{{ azure_template_username if fresh_deploy else ansible_deployer_username }}"
+    ansible_password: "{{ template_password if fresh_deploy else omit if connection_no_password else ansible_deployer_password }}"
+
+    # Initial connection will forced to password to avoid SSH MaxAuthTries limit
+    ansible_ssh_extra_args: "{{ connection_custom_ansible_ssh_extra_args
+      | default('-o PreferredAuthentications=password' if fresh_deploy else omit) }}"

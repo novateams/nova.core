@@ -15,6 +15,10 @@
   ansible.builtin.include_tasks: aws.yml
   when: infra_env == 'aws'
 
+- name: Configuring connection in Azure environment...
+  ansible.builtin.include_tasks: azure.yml
+  when: infra_env == 'azure'
+
 - name: Configuring connection in Linode environment...
   ansible.builtin.include_tasks: linode.yml
   when: infra_env == 'linode'

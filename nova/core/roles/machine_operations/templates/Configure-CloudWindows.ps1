@@ -1,4 +1,6 @@
+{% if infra_env == "aws" %}
 <powershell>
+{% endif %}
 $ErrorActionPreference = 'Stop'
 
 $LogPath = "C:\Windows\Temp\install.log"
@@ -11,10 +13,16 @@ $SSHDownloadLink = "https://github.com/PowerShell/Win32-OpenSSH/releases/downloa
 
 Start-Transcript -Path $LogPath
 
+{% if infra_env == "aws" %}
 Write-Host "Setting Administrator password"
 $Password = "{{ template_password }}"
 $SecurePassword = ConvertTo-SecureString $Password -AsPlainText -Force
 Set-LocalUser -Name "Administrator" -Password $SecurePassword
+{% endif %}
+
+{% if infra_env == "azure" %}
+Rename-LocalUser -Name "azureadmin" -NewName "Administrator"
+{% endif %}
 
 Write-Host "Checking that $RemoteConnectivityHost is reachable"
 while($true) {
@@ -53,4 +61,6 @@ Get-NetFirewallRule | Where-object DisplayName -like "*OpenSSH*" | Set-NetFirewa
 Remove-item C:\Windows\Temp\OpenSSH.msi -Force
 
 Stop-Transcript
+{% if infra_env == "aws" %}
 </powershell>
+{% endif %}
