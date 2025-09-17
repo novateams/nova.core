@@ -29,3 +29,9 @@ Or with Catapult:
 ```bash
 ctp host connect <TAB>
 ```
+
+Or with Catapult with custom user root instead of the default ansible_user:
+
+```bash
+ctp host connect <TAB> -e connect_user=root
+```
