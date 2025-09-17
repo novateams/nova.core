@@ -74,7 +74,8 @@
         ansible_password: "{{ ansible_deployer_password | default(omit) }}" # Updated ansible_deployer_password
 
         # To avoid SSH MaxAuthTries limit in cloud environments with cloud templates
-        ansible_ssh_extra_args: "{{ '-o IdentitiesOnly=no' if (fresh_deploy and infra_env in ['aws', 'openstack']) else omit }}"
+        ansible_ssh_extra_args: "{{ accounts_custom_ansible_ssh_extra_args
+          | default('-o IdentitiesOnly=no' if (fresh_deploy and infra_env in ['aws', 'openstack']) else omit) }}"
 
     - name: Including gather_facts role... # Since the connection account changed and we need to gather facts with the new account
       ansible.builtin.include_role:
