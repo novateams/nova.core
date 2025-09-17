@@ -1,11 +1,11 @@
 namespace: nova
 name: core
-version: 5.12.18
+version: 5.14.0
 readme: README.md
 authors:
   - https://github.com/novateams
 description:
-  This is a collection of public roles nad plugins that are developed by the Nova team.
+  This is a collection of public roles and plugins that are developed by the Nova team.
   These roles go very well with Catapult https://github.com/ClarifiedSecurity/catapult but can be used separately.
 license:
   - AGPL-3.0-or-later

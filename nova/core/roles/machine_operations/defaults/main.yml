@@ -118,6 +118,37 @@ machine_operations_aws_security_group_rules:
 linode_api_token: {} # Can be defined in your Ansible Vault
 rebuild: false # Use ctp host rebuild-linode-vm <inventory_hostname> command to rebuild the VM with different size but keeping the data
 
+##################
+# Azure defaults #
+##################
+
+# Attaches a public IP address to the connection interfaces from the interfaces list when creating a VM
+machine_operations_azure_attach_public_ip: true
+
+# Will try and pre-create the network for a VM based on the interfaces variable
+# Set to false if network(s) are already pre-created by other means
+machine_operations_azure_create_network: true
+
+# This default allow all rule should only be used for testing
+# Use the following link to create custom rules per host/group:
+# https://docs.ansible.com/ansible/latest/collections/azure/azcollection/azure_rm_securitygroup_module.html#parameter-rules
+machine_operations_azure_security_group_rules:
+  - name: AllowAllInboundIPv4
+    protocol: "*"
+    source_address_prefix:
+      - "0.0.0.0/0"
+    priority: 100
+  - name: AllowAllInboundIPv6
+    protocol: "*"
+    source_address_prefix:
+      - "::/0"
+    priority: 110
+
+# The default managed disk type to use for the VM
+# All options are listed here:
+# https://docs.ansible.com/ansible/latest/collections/azure/azcollection/azure_rm_virtualmachine_module.html#parameter-data_disks/managed_disk_type
+machine_operations_azure_vm_managed_disk_type: StandardSSD_LRS
+
 ###########
 # Proxmox #
 ###########

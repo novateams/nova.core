@@ -1,0 +1,28 @@
+---
+- name: NO UNDEPLOY
+  ansible.builtin.fail:
+    msg: "{{ inventory_hostname }} Has no_undeploy set and won't be removed"
+  when: no_undeploy or ['no_undeploy', 'custom_no_undeploy'] | intersect(group_names) | length > 0
+
+- name: Removing VM and it's resources...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Removing {{ custom_vm_name | default(vm_name) }} VM from Azure...
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        force: true
+        remove_on_absent:
+          - all
+        state: absent
+
+    - name: Removing {{ custom_vm_name | default(vm_name) }}-nsg security group...
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_nsg"
+        state: absent
+
+- name: Stopping play...
+  ansible.builtin.meta: end_host
+  when: deploy_mode == 'undeploy'

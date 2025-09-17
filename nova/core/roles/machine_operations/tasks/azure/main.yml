@@ -1,0 +1,62 @@
+---
+- name: MISSING SECRETS
+  ansible.builtin.fail:
+    msg: |
+      You are missing following secrets:
+      {% for variable in required_variables %}
+      {% if vars[variable] is not defined or vars[variable] == none %}
+        - {{ variable }}
+      {% endif %}
+      {% endfor %}
+
+      You can add them to your Ansible Vault file or define external lookups in your group_vars/host_vars files.
+  vars:
+    required_variables:
+      - azure_client_id
+      - azure_service_principal_secret
+      - azure_subscription_id
+      - azure_tenant_id
+  when: azure_client_id | default(false) is ansible.builtin.falsy
+    or azure_service_principal_secret | default(false) is ansible.builtin.falsy
+    or azure_subscription_id | default(false) is ansible.builtin.falsy
+    or azure_tenant_id | default(false) is ansible.builtin.falsy
+
+- name: Checking for resource group and VM existence...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Checking if resource group {{ azure_resource_group }} exists in Azure...
+      azure.azcollection.azure_rm_resourcegroup_info:
+        name: "{{ azure_resource_group }}"
+      register: resource_group_info
+
+    - name: Creating {{ azure_resource_group }} resource group...
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ azure_resource_group }}"
+        location: "{{ azure_location }}"
+      when: resource_group_info.resourcegroups == []
+
+    - name: Checking if {{ custom_vm_name | default(vm_name) }} VM already exists in Azure...
+      azure.azcollection.azure_rm_virtualmachine_info:
+        resource_group: "{{ azure_resource_group }}"
+        tags:
+          - vm_name:{{ custom_vm_name | default(vm_name) }}
+      register: azure_vm_info
+
+    - name: Setting fresh_deploy as fact...
+      ansible.builtin.set_fact:
+        fresh_deploy: true
+      when: azure_vm_info.vms == [] or deploy_mode == "redeploy"
+
+- name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
+  ansible.builtin.include_tasks: remove.yml
+  when: deploy_mode in ['undeploy', 'redeploy']
+
+- name: Including network creation tasks...
+  ansible.builtin.include_tasks: create_network.yml
+  when:
+    - machine_operations_azure_create_network
+    - single_role is not defined
+
+- name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
+  ansible.builtin.include_tasks: create.yml

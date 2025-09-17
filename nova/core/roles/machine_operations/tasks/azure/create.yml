@@ -1,0 +1,144 @@
+---
+- name: MISSING RESOURCE GROUP
+  ansible.builtin.fail:
+    msg: |
+      The variable 'azure_resource_group' is required to create virtual machines in Azure.
+      Please define it in your project group or host vars
+  when: azure_resource_group is ansible.builtin.falsy
+
+- name: Checking for the correct deploy mode...
+  ansible.builtin.fail:
+    msg: |
+      Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
+  when:
+    - fresh_deploy is ansible.builtin.truthy
+    - role_only is ansible.builtin.truthy
+      or role_only_wp is ansible.builtin.truthy
+      or single_role is defined
+
+# For Windows templates the Administrator account gets restored with post-script since it's not allowed to be used when creating the VM
+# For Linux templates new user gets added so already using the ansible_deployer_username there
+- name: Setting template_username value based on OS...
+  ansible.builtin.set_fact:
+    azure_template_username: "{{ 'Administrator' if 'os_windows' in group_names else ansible_deployer_username }}"
+
+- name: Creating a resource group and a VM in Azure...
+  become: false
+  delegate_to: localhost
+  when: single_role is not defined
+  block:
+    - name: Creating a security group for {{ custom_vm_name | default(vm_name) }}...
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_nsg"
+        purge_rules: true
+        rules: "{{ machine_operations_azure_security_group_rules }}"
+
+    - name: Creating following network interface(s) for {{ custom_vm_name | default(vm_name) }}...
+      azure.azcollection.azure_rm_networkinterface:
+        name: "{{ custom_vm_name | default(vm_name) }}_nic{{ '%02d' | format(index + 1) }}"
+        resource_group: "{{ azure_resource_group }}"
+        virtual_network: "{{ item.cloud_id }}"
+        subnet_name: "{{ item.cloud_id }}"
+        security_group: "{{ custom_vm_name | default(vm_name) }}_nsg"
+        ip_configurations:
+          "{{ [{'name': 'public_ip', 'public_ip_address_name': custom_vm_name | default(vm_name) + '_pip'}]
+          if item.connection and machine_operations_azure_attach_public_ip else [] }}"
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: index
+        label: "{{ item.cloud_id }}"
+
+    - name: Creating a list of interface names for {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.set_fact:
+        azure_vm_network_interface_names:
+          "{{ azure_vm_network_interface_names | default([])
+          + [custom_vm_name | default(vm_name) + '_nic' + ('%02d' | format(index + 1))] }}"
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: index
+        label: "{{ item.cloud_id }}"
+
+    - name: Setting template_password as fact...
+      ansible.builtin.set_fact:
+        template_password: >-
+          {%- if save_secrets_to_vault and admin_accounts | selectattr('username', 'equalto', admin_account)
+            | map(attribute='save_password_to_vault') | first | default(true) -%}
+          {{ lookup('community.hashi_vault.hashi_vault',
+            vault_lookup_fragment + 'secret=' +
+            (secrets_vault_engine_path | default(environment_name)) +
+            '/data/' +
+            (secrets_vault_secrets_path | default(project_fullname)) +
+            ':' + inventory_hostname + '_' + admin_account) }}
+          {%- else -%}
+          {{ predefined_azure_vm_password | default(lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits')) }}
+          {%- endif -%}
+      when: deploy_mode != "undeploy"
+
+    - name: Creating {{ custom_vm_name | default(vm_name) }} VM in Azure...
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        short_hostname: "{{ hostname }}"
+        network_interface_names: "{{ azure_vm_network_interface_names }}"
+        vm_size: "{{ azure_vm_size }}"
+        managed_disk_type: "{{ machine_operations_azure_vm_managed_disk_type }}"
+        admin_username: "{{ 'azureadmin' if 'os_windows' in group_names else azure_template_username }}"
+        admin_password: "{{ template_password }}"
+        os_type: "{{ 'Windows' if 'os_windows' in group_names else omit }}"
+        state: present
+        image: "{{ azure_vm_image }}"
+        tags:
+          vm_name: "{{ custom_vm_name | default(vm_name) }}"
+
+    - name: Enabling SSH on Windows via CustomScriptExtension...
+      when:
+        - ("os_windows" in group_names)
+        - fresh_deploy
+      block:
+        - name: Installing SSH...
+          ansible.builtin.debug:
+            msg: |
+              Installing and enabling SSH for {{ custom_vm_name | default(vm_name) }}...
+              This may take a few minutes to complete.
+
+        - name: Enabling SSH for Windows...
+          azure.azcollection.azure_rm_virtualmachineextension:
+            resource_group: "{{ azure_resource_group }}"
+            virtual_machine_name: "{{ custom_vm_name | default(vm_name) }}"
+            name: install_ssh_server
+            publisher: Microsoft.Compute
+            virtual_machine_extension_type: CustomScriptExtension
+            type_handler_version: 1.10
+            auto_upgrade_minor_version: true
+            settings:
+              commandToExecute: >-
+                powershell.exe -NoProfile -NonInteractive -EncodedCommand {{ lookup('template', 'Configure-CloudWindows.ps1')
+                | b64encode(encoding='utf-16-le') }}
+
+        - name: Removing the enable SSH extension...
+          azure.azcollection.azure_rm_virtualmachineextension:
+            resource_group: "{{ azure_resource_group }}"
+            virtual_machine_name: "{{ custom_vm_name | default(vm_name) }}"
+            name: install_ssh_server
+            state: absent
+          async: 0
+          poll: 0
+
+- name: Getting public IP and setting it as connection_address...
+  when: machine_operations_azure_attach_public_ip
+  block:
+    - name: Getting public IP address for {{ custom_vm_name | default(vm_name) }}...
+      azure.azcollection.azure_rm_publicipaddress_info:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_pip"
+      until: public_ip_facts.publicipaddresses[0].ip_address != none
+      retries: 24
+      delay: 5
+      register: public_ip_facts
+      become: false
+      delegate_to: localhost
+
+    - name: Setting IP address facts for {{ inventory_hostname }}...
+      ansible.builtin.set_fact:
+        connection_address: "{{ public_ip_facts.publicipaddresses[0].ip_address }}"

@@ -32,6 +32,6 @@
   ansible.builtin.include_tasks: windows_cloud.yml
   when: infra_env in os_configuration_cloud_envs
 
-- name: Including Windows on VMware Worksataion configuration tasks...
+- name: Including Windows on VMware Workstation configuration tasks...
   ansible.builtin.include_tasks: windows_vmware_workstation.yml
   when: infra_env == "vmware_workstation"
