@@ -1,0 +1,16 @@
+---
+- name:
+    Connecting as {{ openstack_template_username | default(template_username) if fresh_deploy else ansible_deployer_username
+    }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper
+    }} over {{ connection_address_custom | default(connection_address) }}... # noqa: name[template]
+  ansible.builtin.set_fact:
+    ansible_host: "{{ connection_address_custom | default(connection_address) }}"
+    ansible_connection: "{{ default_connection_plugin }}"
+    ansible_user: "{{ openstack_template_username | default(template_username) if fresh_deploy else ansible_deployer_username }}"
+    ansible_password: "{{ openstack_template_password | default(template_password) if fresh_deploy else ansible_deployer_password }}"
+
+    # Initial connection will be done with temporary SSH key
+    ansible_private_key_file: "{{ machine_operations_openstack_temp_ssh_key_path if fresh_deploy else omit }}"
+    # To avoid SSH MaxAuthTries limit
+    ansible_ssh_extra_args: "{{ connection_custom_ansible_ssh_extra_args
+      | default('-o IdentitiesOnly=yes' if fresh_deploy else omit) }}"

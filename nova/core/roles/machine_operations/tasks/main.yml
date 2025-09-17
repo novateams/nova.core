@@ -57,6 +57,10 @@
       ansible.builtin.include_tasks: proxmox/main.yml
       when: infra_env == 'proxmox'
 
+    - name: Including OpenStack environment tasks...
+      ansible.builtin.include_tasks: openstack/main.yml
+      when: infra_env == 'openstack'
+
     - name: Including external environment tasks...
       ansible.builtin.include_tasks: external/main.yml
       when: infra_env == 'external'

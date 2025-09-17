@@ -1,0 +1,29 @@
+---
+- name: NO UNDEPLOY
+  ansible.builtin.fail:
+    msg: "{{ inventory_hostname }} Has no_undeploy set and won't be removed"
+  when: no_undeploy or ['no_undeploy', 'custom_no_undeploy'] | intersect(group_names) | length > 0
+
+- name: Removing {{ custom_vm_name | default(vm_name) }} and related configuration...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
+      openstack.cloud.server:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        delete_ips: true
+        state: absent
+
+    - name: Removing any lingering volumes for {{ custom_vm_name | default(vm_name) }} VM...
+      openstack.cloud.volume:
+        name: "{{ custom_vm_name | default(vm_name) }}_volume"
+        state: absent
+
+    - name: Removing existing keypair for {{ machine_operations_openstack_temp_ssh_key_name }}...
+      openstack.cloud.keypair:
+        name: "{{ machine_operations_openstack_temp_ssh_key_name }}"
+        state: absent
+
+- name: Stopping play...
+  ansible.builtin.meta: end_host
+  when: deploy_mode == 'undeploy'
