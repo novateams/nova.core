@@ -92,7 +92,7 @@ machine_operations_vmware_workstation_custom_params: []
 aws_access_key: {} # Can be defined in your Ansible Vault
 
 # Temporary ssh key path on your container
-temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_aws_key
+machine_operations_aws_temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_aws_key
 
 # Will create a matching security group for host when deployed
 # Set to false when pre-created custom security group is used
