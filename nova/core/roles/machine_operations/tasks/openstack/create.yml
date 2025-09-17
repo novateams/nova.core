@@ -68,7 +68,8 @@
         state: present
         terminate_volume: true
         volume_size: "{{ hardware_primary_disk_size }}"
-        key_name: "{{ machine_operations_openstack_key_name if machine_operations_openstack_key_name != {}
+        key_name:
+          "{{ machine_operations_openstack_key_name if machine_operations_openstack_key_name != {}
           else machine_operations_openstack_temp_ssh_key_name if machine_operations_openstack_use_keypair else omit }}"
         security_groups: "{{ openstack_security_groups | default(['default']) }}"
         nics: "{{ openstack_nics }}"
@@ -78,7 +79,8 @@
       openstack.cloud.floating_ip:
         server: "{{ custom_vm_name | default(vm_name) }}"
         network: "{{ machine_operations_openstack_floating_ip_pool_name }}"
-        nat_destination: "{{ omit if machine_operations_openstack_floating_ip_nat_destination is ansible.builtin.falsy
+        nat_destination:
+          "{{ omit if machine_operations_openstack_floating_ip_nat_destination is ansible.builtin.falsy
           else machine_operations_openstack_floating_ip_nat_destination }}"
       when: machine_operations_openstack_floating_ip_pool_name is ansible.builtin.truthy
 

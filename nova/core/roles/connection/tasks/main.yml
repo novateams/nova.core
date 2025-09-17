@@ -27,6 +27,10 @@
   ansible.builtin.include_tasks: proxmox.yml
   when: infra_env == 'proxmox'
 
+- name: Configuring connection in OpenStack environment...
+  ansible.builtin.include_tasks: openstack.yml
+  when: infra_env == 'openstack'
+
 - name: Configuring connection for external or pre-existing machine...
   ansible.builtin.include_tasks: external.yml
   when: infra_env == 'external'
