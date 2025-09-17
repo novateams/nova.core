@@ -32,8 +32,13 @@
         - name: Creating a temp ssh key for {{ custom_vm_name | default(vm_name) }}...
           amazon.aws.ec2_key:
             name: "{{ custom_vm_name | default(vm_name) }}"
-            key_type: ed25519
-            file_name: "{{ temp_ssh_key_path }}"
+            key_type: rsa
+            file_name: "{{ machine_operations_aws_temp_ssh_key_path }}"
+
+        - name: Generating {{ aws_template_username | default(template_username) }} user account password...
+          ansible.builtin.set_fact:
+            template_password: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+          when: ("os_windows" in group_names)
 
     - name: Configuring AWS EC2 instance for {{ inventory_hostname }}...
       when:
@@ -68,13 +73,11 @@
             instance_type: "{{ aws_vm_size | default('t3.micro') }}"
             security_group: "{{ machine_operations_aws_security_group | default(custom_vm_name) | default(vm_name) }}"
             image_id: "{{ all_images[-1].image_id }}"
+            user_data: "{{ lookup('ansible.builtin.template', 'Configure-CloudWindows.ps1') if 'os_windows' in group_names and fresh_deploy else omit }}"
             tags:
               inventory_hostname: "{{ inventory_hostname }}"
               project_fullname: "{{ project_fullname | default('undefined_project') }}"
           register: created_ec2_instance
-          until: created_ec2_instance.instances[0].public_ip_address is defined
-          retries: 10
-          delay: 3
 
         # If for some reason it was present from previous deploy
         - name: Removing existing ssh temp key for {{ custom_vm_name | default(vm_name) }}...
@@ -87,3 +90,12 @@
     connection_address: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
     connection_nic_ipv4: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
     egress_nic_ipv4: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
+
+- name: Waiting until SSH is up for "{{ custom_vm_name | default(vm_name) }}"...
+  ansible.builtin.wait_for:
+    host: "{{ connection_address }}"
+    port: 22
+    state: started
+    timeout: 300
+  delegate_to: localhost
+  become: false

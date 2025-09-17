@@ -1,6 +1,7 @@
 ---
 skip_network_configuration: false # Skip network configuration tasks
 fresh_deploy: false
+interfaces: []
 dns_domain: {}
 dns_search: []
 dns_servers: []

@@ -4,51 +4,47 @@
     msg: "{{ inventory_hostname }} Has no_undeploy set and won't be removed"
   when: no_undeploy or ['no_undeploy', 'custom_no_undeploy'] | intersect(group_names) | length > 0
 
-- name: Getting {{ custom_vm_name | default(vm_name) }} info...
-  linode.cloud.instance_info:
-    api_token: "{{ linode_api_token }}"
-    label: "{{ custom_vm_name | default(vm_name) }}"
-  register: linode_vm
+- name: Rebuilding {{ custom_vm_name | default(vm_name) }} instance...
   delegate_to: localhost
   become: false
+  block:
+    - name: Getting {{ custom_vm_name | default(vm_name) }} info...
+      linode.cloud.instance_info:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ custom_vm_name | default(vm_name) }}"
+      register: linode_vm
 
-- name: Rebuilding {{ custom_vm_name | default(vm_name) }}...
-  ansible.builtin.uri:
-    url: https://api.linode.com/v4/linode/instances/{{ linode_vm.instance.id }}/rebuild
-    method: POST
-    headers:
-      Content-Type: application/json
-      Authorization: Bearer {{ linode_api_token }}
-    body:
-      image: "{{ linode_image }}"
-      root_pass: "{{ machine_operations_linode_vm_password }}"
-    body_format: json
-  delegate_to: localhost
-  become: false
+    - name: Rebuilding {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: https://api.linode.com/v4/linode/instances/{{ linode_vm.instance.id }}/rebuild
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: Bearer {{ linode_api_token }}
+        body:
+          image: "{{ linode_image }}"
+          root_pass: "{{ template_password }}"
+        body_format: json
 
-# This is required because there's a delay after the POST request and actual rebuild
-- name: Waiting until {{ custom_vm_name | default(vm_name) }} starts rebuilding...
-  linode.cloud.instance_info:
-    api_token: "{{ linode_api_token }}"
-    label: "{{ custom_vm_name | default(vm_name) }}"
-  register: linode_rebuild
-  until: linode_rebuild.instance.status == "rebuilding"
-  retries: 60
-  delay: 1
-  delegate_to: localhost
-  become: false
+    # This is required because there's a delay after the POST request and actual rebuild
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} starts rebuilding...
+      linode.cloud.instance_info:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ custom_vm_name | default(vm_name) }}"
+      register: linode_rebuild
+      until: linode_rebuild.instance.status == "rebuilding"
+      retries: 60
+      delay: 1
 
-- name: Waiting until {{ custom_vm_name | default(vm_name) }} rebuilding is complete...
-  linode.cloud.instance_info:
-    api_token: "{{ linode_api_token }}"
-    label: "{{ custom_vm_name | default(vm_name) }}"
-  register: linode_rebuild_state
-  until: linode_rebuild_state.instance.status == "running"
-  retries: 60
-  delay: 1
-  delegate_to: localhost
-  become: false
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} rebuilding is complete...
+      linode.cloud.instance_info:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ custom_vm_name | default(vm_name) }}"
+      register: linode_rebuild_state
+      until: linode_rebuild_state.instance.status == "running"
+      retries: 60
+      delay: 1
 
-- name: Setting fresh_deploy fact...
-  ansible.builtin.set_fact:
-    fresh_deploy: true
+    - name: Setting fresh_deploy fact...
+      ansible.builtin.set_fact:
+        fresh_deploy: true

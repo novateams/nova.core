@@ -1,2 +1,7 @@
 ---
 win_sysprep_administrator_password: "{{ ansible_password }}" # Password to be set for the Administrator account after sysprep
+
+# Cloudbase Init settings
+win_sysprep_use_cloudbase_init: false # Whether to install and configure cloudbase-init
+win_sysprep_cloudbase_init_installer_path: https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi
+win_sysprep_cloudbase_init_user: Administrator # User to be set as owner of the machine after sysprep

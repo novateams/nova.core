@@ -120,12 +120,12 @@
                 - descr: MGMT
       when: interfaces | selectattr('egress', 'equalto', true) | first == interfaces | selectattr('connection', 'equalto', true) | first
 
-    - name: Getting {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml file info...
+    - name: Getting /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml file info...
       ansible.builtin.stat:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
       register: file_size
 
-    - name: Preparing {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml file upload...
+    - name: Preparing /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml file upload...
       ansible.builtin.uri:
         url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
           | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
@@ -144,7 +144,7 @@
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       register: file_upload_prep
 
-    - name: Uploading {{ inventory_dir }}/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml file...
+    - name: Uploading /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml file...
       ansible.builtin.uri:
         url: "{{ file_upload_prep.json }}"
         method: PUT

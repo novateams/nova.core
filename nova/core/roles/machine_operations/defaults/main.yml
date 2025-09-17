@@ -11,6 +11,7 @@ machine_operations_pre_roles: [] # Extra roles to include as first step in this 
 machine_operations_post_roles: [] # Extra roles to include as last step in this one
 machine_operations_reconfigure_vm_on_deploy: true # Tries to reconfigure the VMs CPU/RAM/Disk size on deploy if they are updated
 linked_clone_status: false # Set to true to create a linked clone when supported by the hypervisor
+vm_name: "{{ inventory_hostname }}" # Defaults to inventory_hostname if nothing else is defined
 
 ####################
 # vSphere defaults #
@@ -61,8 +62,8 @@ template_description: Created on {{ ansible_date_time.iso8601 }}
 # VMWare workstation #
 ######################
 
-# If the local template is older than this interval it will re-downloaded during deploy, default is 30 days
-machine_operations_vmware_workstation_template_update_interval: 2592000
+# If the local template is older than this interval it will re-downloaded during deploy
+machine_operations_vmware_workstation_template_update_interval_days: 90
 
 # Set to false to ignore the template update interval and never update the template
 machine_operations_vmware_workstation_template_update: true
@@ -115,11 +116,6 @@ machine_operations_aws_security_group_rules:
 ###################
 
 linode_api_token: {} # Can be defined in your Ansible Vault
-
-# The default root password for Linode VM
-machine_operations_linode_vm_password:
-  "{{ lookup('community.hashi_vault.hashi_vault', vault_lookup_fragment + 'secret=' + secrets_vault_engine_path
-  + '/data/' + secrets_vault_secrets_path + ':' + inventory_hostname + '_' + admin_account) }}"
 rebuild: false # Use ctp host rebuild-linode-vm <inventory_hostname> command to rebuild the VM with different size but keeping the data
 
 ###########

@@ -24,8 +24,7 @@
         method: GET
         validate_certs: "{{ proxmox_validate_certs }}"
       register: proxmox_vm_current_status
-      until:
-        - proxmox_vm_current_status.json.data.status == 'stopped'
+      until: proxmox_vm_current_status.json.data.status == 'stopped'
       retries: 90
       delay: 10
       delegate_to: localhost

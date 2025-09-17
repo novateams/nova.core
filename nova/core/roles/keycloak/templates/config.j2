@@ -207,6 +207,9 @@ clients:
     {% endif %}
     {% if 'client_session_max_lifespan' in client or 'client_session_idle_timeout' in client %}
     attributes:
+       {% if 'access_token_lifespan' in client %}
+       access.token.lifespan: {{ client.access_token_lifespan }}
+       {% endif %}
        {% if 'client_session_max_lifespan' in client %}
        client.session.max.lifespan: {{ client.client_session_max_lifespan }}
        {% endif %}
