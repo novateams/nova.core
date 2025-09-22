@@ -1,4 +1,21 @@
 ---
+# This required so this role can clean up the default cloud users if they are not in the local_accounts_with_password list
+- name: Adding source creation flag for default cloud account...
+  when: vars[infra_env ~ '_template_username'] | default('') not in [admin_account, '']
+  block:
+    - name: Checking if {{ vars[infra_env ~ '_template_username'] | default('') }} user exists...
+      ansible.windows.win_stat:
+        path: C:\Users\{{ vars[infra_env ~ '_template_username'] | default('') }}
+      register: template_user
+
+    - name: Adding account creation source flag for {{ vars[infra_env ~ '_template_username'] | default('') }}...
+      community.windows.win_lineinfile:
+        path: C:\Users\{{ vars[infra_env ~ '_template_username'] | default('') }}\.created
+        line: This account was created with {{ ansible_role_name }} role
+        state: present
+        create: true
+      when: template_user.stat.exists
+
 - name: Configuring Domain Organizational Units...
   ansible.builtin.include_tasks: create_domain_ous.yml
   when: ansible_windows_domain_role == "Primary domain controller"
@@ -30,7 +47,8 @@
       ansible.builtin.set_fact:
         ansible_deployer_password: "{{ admin_accounts_with_password
           | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-      when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+      when:
+        created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
         | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Checking and creating domain accounts...
@@ -66,7 +84,8 @@
       ansible.builtin.set_fact:
         ansible_deployer_password: "{{ admin_accounts_with_password
           | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-      when: win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+      when:
+        win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
         | list | intersect([ansible_deployer_username]) | length > 0
 
 # To make sure that we are setting the password for the correct account on non-primary domain controller

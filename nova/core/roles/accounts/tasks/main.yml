@@ -75,7 +75,7 @@
 
         # To avoid SSH MaxAuthTries limit in cloud environments with cloud templates
         ansible_ssh_extra_args: "{{ accounts_custom_ansible_ssh_extra_args
-          | default('-o IdentitiesOnly=no' if (fresh_deploy and infra_env in ['aws', 'openstack']) else omit) }}"
+          | default('-o IdentitiesOnly=no' if fresh_deploy else omit) }}"
 
     - name: Including gather_facts role... # Since the connection account changed and we need to gather facts with the new account
       ansible.builtin.include_role:
@@ -108,7 +108,7 @@
         state: absent
       delegate_to: localhost
       become: false
-      when: infra_env in ["aws", "openstack"]
+      when: vars['machine_operations_' ~ infra_env ~ '_temp_ssh_key_path'] is defined
 
 - name: Including following accounts post-roles...
   ansible.builtin.include_role:
