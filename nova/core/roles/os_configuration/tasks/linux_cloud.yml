@@ -18,7 +18,7 @@
 
 # AWS
 - name: Cleaning up {{ infra_env }} configurations for {{ inventory_hostname }}...
-  when: infra_env in ["aws", "openstack"]
+  when: infra_env in os_configuration_cloud_envs
   block:
     - name: Removing cloud managed hostname...
       ansible.builtin.replace:

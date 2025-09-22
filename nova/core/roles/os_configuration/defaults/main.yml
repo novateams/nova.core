@@ -40,6 +40,13 @@ os_configuration_os_family_service_name:
   RedHat: sshd
   Archlinux: sshd
 
+# List of cloud environments where this role will perform cloud specific tasks
+os_configuration_cloud_envs:
+  - aws
+  - azure
+  - linode
+  - openstack
+
 ###########
 # Windows #
 ###########

@@ -10,7 +10,7 @@
 
 # This required so this role can clean up the default cloud users if they are not in the local_accounts_with_password list
 - name: Adding source creation flag for default cloud account...
-  when: infra_env in ['aws', 'openstack']
+  when: vars[infra_env ~ '_template_username'] | default('') not in [admin_account, '']
   block:
     - name: Checking if {{ vars[infra_env ~ '_template_username'] | default('') }} user exists...
       ansible.builtin.stat:
@@ -47,7 +47,8 @@
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ local_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-  when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+  when:
+    created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
     | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Adding account creation source flag...
