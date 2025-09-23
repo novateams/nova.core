@@ -42,9 +42,14 @@ machine_operations_vsphere_disk_config:
     controller_number: 0
     unit_number: 0
 
-# Deployment
+# Name of the content library where the template is stored
+# When this is set content library will be used instead of traditional templates
+machine_operations_vsphere_content_library_name: {}
+
+# https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_module.html#parameter-esxi_hostname
+machine_operations_esxi_hostname:
+
 vapp_options: []
-machine_operations_esxi_hostname: # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_module.html#parameter-esxi_hostname
 
 # Linked clones
 linked_clone_snapshot_name: LinkedCloneSource # Case sensitive default value

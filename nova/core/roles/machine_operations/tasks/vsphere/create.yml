@@ -41,34 +41,63 @@
     - name: Missing Operating System...
       ansible.builtin.fail:
         msg: Cannot find vm_template or base_vm_template variable! Did define the Operating System in the inventory?
-      when:
-        - vm_template is not defined
-        - base_vm_template is not defined
+      when: vm_template is not defined
+        or base_vm_template is not defined
 
-    - name: Looking up the VM template...
-      vmware.vmware_rest.vcenter_vm_info:
-        filter_names: "{{ vm_template if not template else base_vm_template }}"
-      register: template_search_result
-      until: not template_search_result.failed
-      retries: 5
-      delay: 2
+    - name: Looking up template from Content Library...
+      when: machine_operations_vsphere_content_library_name != {}
+      block:
+        - name: Getting {{ vm_template }} info from content library...
+          vmware.vmware.content_library_item_info:
+            library_name: "{{ machine_operations_vsphere_content_library_name }}"
+            library_item_name: "{{ vm_template }}"
+          register: vm_template_info
 
-    - name: Missing VM template...
-      ansible.builtin.fail:
-        msg: Cannot find template - {{ vm_template if not template else base_vm_template }}
-      when: template_search_result.value == []
+        - name: MISSING TEMPLATE IN CONTENT LIBRARY...
+          ansible.builtin.fail:
+            msg: |
+              Cannot find the template in the content library!
+              Template name: {{ vm_template }}
+              Content library name: {{ machine_operations_vsphere_content_library_name }}
+          when: vm_template_info.library_item_info == []
 
-    - name: Getting information about the VM template...
-      vmware.vmware_rest.vcenter_vm_info:
-        vm: "{{ template_search_result.value[0].vm }}"
-      register: vm_template_information
-      until: not vm_template_information.failed
-      retries: 5
-      delay: 2
+        - name: Cloning {{ custom_vm_name | default(vm_name) }} VM from content library...
+          vmware.vmware.deploy_content_library_template:
+            cluster: "{{ cluster }}"
+            datacenter: "{{ datacenter }}"
+            datastore: "{{ datastore }}"
+            library_item_name: "{{ vm_template }}"
+            library_name: "{{ machine_operations_vsphere_content_library_name }}"
+            vm_folder: "{{ folder }}"
+            vm_name: "{{ custom_vm_name | default(vm_name) }}"
 
-    - name: Getting template OS disk size...
-      ansible.builtin.set_fact:
-        template_disk_size: "{{ vm_template_information.value.disks[(vm_template_information.value.disks | first)].capacity // (1024 * 1024) | int }}"
+    - name: Looking up template from exiting VMs...
+      when: machine_operations_vsphere_content_library_name == {}
+      block:
+        - name: Looking up the VM template...
+          vmware.vmware_rest.vcenter_vm_info:
+            filter_names: "{{ vm_template if not template else base_vm_template }}"
+          register: template_search_result
+          until: not template_search_result.failed
+          retries: 5
+          delay: 2
+
+        - name: Missing VM template...
+          ansible.builtin.fail:
+            msg: Cannot find template - {{ vm_template if not template else base_vm_template }}
+          when: template_search_result.value == []
+
+        - name: Getting information about the VM template...
+          vmware.vmware_rest.vcenter_vm_info:
+            vm: "{{ template_search_result.value[0].vm }}"
+          register: vm_template_information
+          until: not vm_template_information.failed
+          retries: 5
+          delay: 2
+
+        - name: Getting template OS disk size...
+          ansible.builtin.set_fact:
+            template_disk_size: "{{ vm_template_information.value.disks[(vm_template_information.value.disks | first)].capacity // (1024 * 1024) | int }}"
 
     # This task can be removed when local inventories are moved to Providentia
     - name: Setting OS disk size...
@@ -83,33 +112,37 @@
         os_disk_size: "{{ hardware_primary_disk_size * 1024 }}"
       when: hardware_primary_disk_size is defined
 
-    - name: Setting OS disk size...
-      ansible.builtin.set_fact:
-        os_disk_size: "{{ template_disk_size }}"
-      when:
-        - os_disk_size_gb is not defined
-        - hardware_primary_disk_size is not defined
-
-    - name: ERROR...
-      ansible.builtin.debug:
-        msg: Your OS disk size {{ os_disk_size }}MB cannot be smaller than the template {{ template_disk_size }}MB!
-      when: template_disk_size | int > os_disk_size | int
-      failed_when: template_disk_size | int > os_disk_size | int
-
-    - name: Checking if linked clone is possible...
-      when:
-        - linked_clone_status
-        - template_disk_size | int < os_disk_size | int
+    # This is only done for non-content library templates since content library templates do not report the actual disk size
+    - name: Checking for template compatibility when template disk size is defined...
+      when: template_disk_size is defined
       block:
-        - name: Info...
-          ansible.builtin.debug:
-            msg: |
-              Your OS disk size {{ os_disk_size }}MB is bigger than the template {{ template_disk_size }}MB.
-              Disabling linked clone.
-
-        - name: Disabling linked clone...
+        - name: Setting OS disk size...
           ansible.builtin.set_fact:
-            linked_clone_status: false
+            os_disk_size: "{{ template_disk_size }}"
+          when:
+            - os_disk_size_gb is not defined
+            - hardware_primary_disk_size is not defined
+
+        - name: ERROR...
+          ansible.builtin.debug:
+            msg: Your OS disk size {{ os_disk_size }}MB cannot be smaller than the template {{ template_disk_size }}MB!
+          when: template_disk_size | int > os_disk_size | int
+          failed_when: template_disk_size | int > os_disk_size | int
+
+        - name: Checking if linked clone is possible...
+          when:
+            - linked_clone_status
+            - template_disk_size | int < os_disk_size | int
+          block:
+            - name: Info...
+              ansible.builtin.debug:
+                msg: |
+                  Your OS disk size {{ os_disk_size }}MB is bigger than the template {{ template_disk_size }}MB.
+                  Disabling linked clone.
+
+            - name: Disabling linked clone...
+              ansible.builtin.set_fact:
+                linked_clone_status: false
 
     - name: Getting the time...
       ansible.builtin.setup:
@@ -119,7 +152,7 @@
       community.vmware.vmware_guest:
         datacenter: "{{ datacenter }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
-        template: "{{ base_vm_template if template else vm_template }}"
+        template: "{{ omit if machine_operations_vsphere_content_library_name != {} else base_vm_template if template else vm_template }}"
         folder: "{{ folder }}"
         state: "{{ 'poweredoff' if fresh_deploy else 'present' }}"
         esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
@@ -133,7 +166,7 @@
           memory_reservation_lock: false
           mem_reservation: 0
         cdrom: "{{ machine_operations_vsphere_cdrom_config }}"
-        disk: "{{ machine_operations_vsphere_disk_config }}"
+        disk: "{{ omit if os_disk_size is not defined else machine_operations_vsphere_disk_config }}"
         advanced_settings:
           - key: isolation.tools.copy.disable
             value: "FALSE"
@@ -141,8 +174,8 @@
             value: "FALSE"
           - key: isolation.tools.setGUIOptions.enable
             value: "TRUE"
-        linked_clone: "{{ linked_clone_status }}"
-        snapshot_src: "{{ linked_clone_snapshot_name if linked_clone_status else omit }}"
+        linked_clone: "{{ false if machine_operations_vsphere_content_library_name != {} else linked_clone_status }}"
+        snapshot_src: "{{ linked_clone_snapshot_name if linked_clone_status and machine_operations_vsphere_content_library_name == {} else omit }}"
         annotation: "{{ template_description if template else vm_description }}"
         vapp_properties: "{{ vapp_options }}"
       register: cloned_vmware_vm
