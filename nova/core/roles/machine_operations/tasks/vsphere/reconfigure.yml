@@ -9,11 +9,9 @@
       register: vsphere_vm_info
 
     # When Providentia is used hardware_cpu and hardware_ram are always defined
-    # For local inventories both need to be defined in order to reconfigure them
+    # For local inventories, either hardware_cpu or hardware_ram needs to be defined to trigger this block.
     - name: Reconfiguring CPU and RAM values...
-      when:
-        - hardware_cpu != none
-        - hardware_ram != none
+      when: hardware_cpu != none or hardware_ram != none
       block:
         - name: Trying to configure {{ custom_vm_name | default(vm_name) }} CPU & RAM values when it's powered on...
           block:
@@ -21,7 +19,9 @@
               vmware.vmware_rest.vcenter_vm_hardware_cpu:
                 vm: "{{ vcenter_vm_info.value[0].vm }}"
                 count: "{{ hardware_cpu }}"
-              when: vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
+              when:
+                - hardware_cpu != none
+                - vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
               retries: 2
               delay: 2
 
@@ -29,7 +29,9 @@
               vmware.vmware_rest.vcenter_vm_hardware_memory:
                 vm: "{{ vcenter_vm_info.value[0].vm }}"
                 size_MiB: "{{ hardware_ram * 1024 }}"
-              when: vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
+              when:
+                - hardware_ram != none
+                - vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
               retries: 2
               delay: 2
 
@@ -48,7 +50,9 @@
                   vmware.vmware_rest.vcenter_vm_hardware_cpu:
                     vm: "{{ vcenter_vm_info.value[0].vm }}"
                     count: "{{ hardware_cpu }}"
-                  when: vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
+                  when:
+                    - hardware_cpu != none
+                    - vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
                   retries: 2
                   delay: 2
 
@@ -56,7 +60,9 @@
                   vmware.vmware_rest.vcenter_vm_hardware_memory:
                     vm: "{{ vcenter_vm_info.value[0].vm }}"
                     size_MiB: "{{ hardware_ram * 1024 }}"
-                  when: vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
+                  when:
+                    - hardware_ram != none
+                    - vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
                   retries: 2
                   delay: 2
 
@@ -116,7 +122,8 @@
 
         - name: Setting current disk size as fact...
           ansible.builtin.set_fact:
-            current_os_disk_size: "{{ (vm_disk_info.instance.config.hardware.device
+            current_os_disk_size:
+              "{{ (vm_disk_info.instance.config.hardware.device
               | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk') | map(attribute='capacityInKB') | first / 1024) | int }}"
 
         - name: Setting {{ custom_vm_name | default(vm_name) }} disk size to {{
