@@ -33,6 +33,6 @@
   when:
     - not role_only_wp # Not reconfiguring when running from pre_vm_role
     - not role_only # Not reconfiguring on role only
-    - not fresh_deploy # Not configuring on first deploy
+    - not fresh_deploy or machine_operations_vsphere_content_library_name != {} # Configuring when not fresh_deploy or content library is used
     - machine_operations_reconfigure_vm_on_deploy
     - vcenter_vm_info.value != [] # Only reconfigure if VM exists
