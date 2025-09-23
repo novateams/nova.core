@@ -101,7 +101,7 @@ nexus_default_repositories:
         strictContentTypeValidation: true
       proxy:
         remoteUrl: https://registry-1.docker.io/
-        contentMaxAge: 15
+        contentMaxAge: -1
         metadataMaxAge: 15
       negativeCache:
         enabled: true
@@ -110,11 +110,41 @@ nexus_default_repositories:
         blocked: false
         autoBlock: true
       docker:
-        v1Enabled: false
         forceBasicAuth: false
+        pathEnabled: "true"
+        v1Enabled: false
       dockerProxy:
-        indexType: HUB
-        indexUrl: https://index.docker.io/
+        cacheForeignLayers: false
+        indexType: REGISTRY
+      cleanup:
+        policyNames:
+          - default-cleanup-policy
+
+  # GitHub Container Registry proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: ghcr-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://ghcr.io/
+        contentMaxAge: -1
+        metadataMaxAge: 1440
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: true
+      docker:
+        forceBasicAuth: false
+        pathEnabled: "true"
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: false
+        indexType: REGISTRY
       cleanup:
         policyNames:
           - default-cleanup-policy
