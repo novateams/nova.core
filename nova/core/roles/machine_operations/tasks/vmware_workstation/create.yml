@@ -219,4 +219,5 @@
     - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
       ansible.builtin.set_fact:
         ansible_host: "{{ vmip.stdout }}"
-        primary_ipv4: "{{ vmip.stdout }}"
+        connection_address: "{{ vmip.stdout }}"
+        connection_nic_ipv4: "{{ vmip.stdout }}"
