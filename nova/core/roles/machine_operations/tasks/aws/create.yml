@@ -63,21 +63,49 @@
             description: Security group for {{ custom_vm_name | default(vm_name) }}
             rules: "{{ machine_operations_aws_security_group_rules }}"
             state: present
+            vpc_id: "{{ aws_vpc_id | default(omit) }}"
+          register: created_security_group
           when: machine_operations_create_aws_security_group
 
         - name: Launching {{ hostname }} EC2 instance...
           amazon.aws.ec2_instance:
             name: "{{ custom_vm_name | default(vm_name) }}"
             key_name: "{{ custom_vm_name | default(vm_name) }}"
-            vpc_subnet_id: "{{ ec2_subnet_id | default(omit) }}"
+            network_interfaces: >-
+              [
+                {% if interfaces == [] %}
+                {
+                  "assign_public_ip": false
+                }
+                {% endif %}
+                {% for iface in interfaces %}
+                {
+                  "subnet_id": "{{ iface.cloud_id }}",
+                  "assign_public_ip": false,
+                  "device_index": {{ loop.index0 }},
+                  "ipv6_addresses": {{ iface.addresses | selectattr('mode', 'equalto', 'ipv6_static')
+                    | map(attribute='address') | ansible.utils.ipaddr('address') }},
+                  "private_ip_addresses": [
+                    {% for ip in iface.addresses | selectattr('mode', 'equalto', 'ipv4_static')
+                      | map(attribute='address') | ansible.utils.ipaddr('address') %}
+                      {
+                        "private_ip_address": "{{ ip }}",
+                        "primary": {{ 'true' if loop.first else 'false' }}
+                      }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                  ]
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+              ]
             instance_type: "{{ aws_vm_size | default('t3.micro') }}"
-            security_group: "{{ machine_operations_aws_security_group | default(custom_vm_name) | default(vm_name) }}"
+            security_group: "{{ aws_security_group_id | default(created_security_group.group_id) }}"
             image_id: "{{ all_images[-1].image_id }}"
             user_data: "{{ lookup('ansible.builtin.template', 'Configure-CloudWindows.ps1') if 'os_windows' in group_names and fresh_deploy else omit }}"
             tags:
               inventory_hostname: "{{ inventory_hostname }}"
               project_fullname: "{{ project_fullname | default('undefined_project') }}"
           register: created_ec2_instance
+          when: fresh_deploy
 
         # If for some reason it was present from previous deploy
         - name: Removing existing ssh temp key for {{ custom_vm_name | default(vm_name) }}...
@@ -85,13 +113,30 @@
             name: "{{ custom_vm_name | default(vm_name) }}"
             state: absent
 
-- name: Setting connection_address...
-  ansible.builtin.set_fact:
-    connection_address: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
-    connection_nic_ipv4: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
-    egress_nic_ipv4: "{{ created_ec2_instance.instances[0].public_ip_address | default(existing_instances[-1].public_ip_address) }}"
+    - name: Configuring public IP for {{ custom_vm_name | default(vm_name) }}...
+      amazon.aws.ec2_eip:
+        device_id:
+          "{{ (created_ec2_instance.instances[0] | default(existing_instances[-1])).network_interfaces[(interfaces
+          | map(attribute='connection') | list).index(True) if interfaces != [] else 0].network_interface_id }}"
+        in_vpc: true
+        release_on_disassociation: true
+        state: present
+        tags:
+          inventory_hostname: "{{ inventory_hostname }}"
+          project_fullname: "{{ project_fullname | default('undefined_project') }}"
+      register: eip_info
+      when: machine_operations_aws_assign_public_ip
 
-- name: Waiting until SSH is up for "{{ custom_vm_name | default(vm_name) }}"...
+- name: Setting connection address to {{ eip_info.public_ip
+    | default(created_ec2_instance.instances[0].public_ip_address)
+    | default(existing_instances[-1].public_ip_address) }}
+  ansible.builtin.set_fact:
+    connection_address: "{{ eip_info.public_ip
+      | default(created_ec2_instance.instances[0].public_ip_address)
+      | default(existing_instances[-1].public_ip_address) }}"
+  when: machine_operations_aws_assign_public_ip
+
+- name: Waiting until SSH is up for {{ custom_vm_name | default(vm_name) }} over {{ connection_address }}...
   ansible.builtin.wait_for:
     host: "{{ connection_address }}"
     port: 22
