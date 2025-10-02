@@ -1,14 +1,18 @@
 ---
-- name: Getting {{ fqdn }} IP...
-  amazon.aws.ec2_instance_info:
+- name: Getting IP for {{ custom_vm_name | default(vm_name) }}...
+  amazon.aws.ec2_eip_info:
     filters:
-      "tag:Name": "{{ custom_vm_name | default(vm_name) }}"
-  register: ec2_instance_info
+      tag:inventory_hostname: "{{ inventory_hostname }}"
+      tag:project_fullname: "{{ project_fullname | default('undefined_project') }}"
+  register: eip_list
   delegate_to: localhost
   become: false
+  when: machine_operations_aws_assign_public_ip
 
 - name: Printing {{ inventory_hostname }} IPs...
   ansible.builtin.debug:
     msg: |
-      {{ fqdn | default('NA') }}
-      IPv4 - {{ ec2_instance_info.instances | selectattr('state.name', 'equalto', 'running') | map(attribute='public_ip_address') | first }}
+      FQDN - {{ fqdn | default('NA') }}
+      IPv4 - {{ egress_nic_ipv4 }}
+      IPv6 - {{ egress_nic_ipv6 }}
+      Connection - {{ eip_list.addresses[0].public_ip | default(ansible_host if ansible_host is ansible.utils.ip else connection_address) }}

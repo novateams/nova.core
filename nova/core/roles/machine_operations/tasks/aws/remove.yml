@@ -11,17 +11,35 @@
     - name: Deleting {{ custom_vm_name | default(vm_name) }} EC2 instance...
       amazon.aws.ec2_instance:
         name: "{{ custom_vm_name | default(vm_name) }}"
+        filters:
+          tag:Name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
 
     - name: Deleting AWS security group for {{ custom_vm_name | default(vm_name) }}..."
       amazon.aws.ec2_security_group:
         name: "{{ custom_vm_name | default(vm_name) }}"
+        vpc_id: "{{ aws_vpc_id | default(omit) }}"
         state: absent
 
     - name: Removing ssh key for {{ custom_vm_name | default(vm_name) }}...
       amazon.aws.ec2_key:
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
+
+    - name: Listing elastic IPs for {{ custom_vm_name | default(vm_name) }}...
+      amazon.aws.ec2_eip_info:
+        filters:
+          tag:inventory_hostname: "{{ inventory_hostname }}"
+          tag:project_fullname: "{{ project_fullname | default('undefined_project') }}"
+      register: eip_list
+
+    - name: Releasing Elastic IP attached to {{ custom_vm_name | default(vm_name) }}...
+      amazon.aws.ec2_eip:
+        public_ip: "{{ item.public_ip }}"
+        state: absent
+      loop: "{{ eip_list.addresses }}"
+      loop_control:
+        label: "{{ item.public_ip }}"
 
 - name: Stopping play...
   ansible.builtin.meta: end_host
