@@ -27,50 +27,50 @@
 pfsense_interfaces:
 {% for interface in interfaces %}
 {% if interface.addresses != [] %}
-    {% if interface.egress %}
-    - wan:
-    {% elif interface.connection %}
-    - lan:
-    {% else %}
-    - {{ interface.network_id | replace("-", "_") }}{{ loop.index }}:
-    {% endif %}
-        _:
-          - if: {{ nic_map[loop.index - 1] | replace("-", "_") }}
-          - enable:
-          - descr: {{ interface.network_id | replace("-", "_") }}
-          {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
-          - ipaddr: "dhcp"
-          {% endif %}
-          {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp']) %}
-          - ipaddrv6: "dhcp6"
-          {% endif %}
-          {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_slaac']) %}
-          - ipaddrv6: "slaac"
-          {% endif %}
-          {% for ip_address in interface.addresses %}
-          {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("default.*")) %}
-          - ipaddr: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
-          - subnet: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
-          {% endif %}
-          {% if (ip_address.mode == "ipv4_static") and (ip_address.gateway != none) %}
-          - gateway: WANGWv4
-          {% endif %}
-          {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("default.*")) %}
-          - ipaddrv6: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
-          - subnetv6: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
-          {% endif %}
-          {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway != none) %}
-          - gatewayv6: WANGWv6
-          {% endif %}
-          {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("mgmt.*")) %}
-          - ipaddr: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
-          - subnet: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
-          {% endif %}
-          {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("mgmt.*")) %}
-          - ipaddrv6: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
-          - subnetv6: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
-          {% endif %}
-          {% endfor %}
+  {% if interface.egress %}
+  - wan:
+  {% elif interface.connection %}
+  - lan:
+  {% else %}
+  - {{ interface_names[loop.index0] }}:
+  {% endif %}
+      _:
+        - if: {{ nic_map[loop.index0] }}
+        - enable:
+        - descr: {{ interface_names[loop.index0] }}
+        {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
+        - ipaddr: "dhcp"
+        {% endif %}
+        {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp']) %}
+        - ipaddrv6: "dhcp6"
+        {% endif %}
+        {% if interface.addresses | map(attribute='mode') | intersect(['ipv6_slaac']) %}
+        - ipaddrv6: "slaac"
+        {% endif %}
+        {% for ip_address in interface.addresses %}
+        {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("default.*")) %}
+        - ipaddr: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+        - subnet: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+        {% endif %}
+        {% if (ip_address.mode == "ipv4_static") and (ip_address.gateway != none) %}
+        - gateway: WANGWv4
+        {% endif %}
+        {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("default.*")) %}
+        - ipaddrv6: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+        - subnetv6: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+        {% endif %}
+        {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway != none) %}
+        - gatewayv6: WANGWv6
+        {% endif %}
+        {% if (ip_address.mode == "ipv4_static") and (ip_address.pool_id | regex_search("mgmt.*")) %}
+        - ipaddr: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+        - subnet: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+        {% endif %}
+        {% if (ip_address.mode == "ipv6_static") and (ip_address.pool_id | regex_search("mgmt.*")) %}
+        - ipaddrv6: "{{ ip_address.address | ansible.utils.ipaddr('address') }}"
+        - subnetv6: "{{ ip_address.address | ansible.utils.ipaddr('prefix') }}"
+        {% endif %}
+        {% endfor %}
 {% endif %}
 {% endfor %}
 
