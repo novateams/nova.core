@@ -99,6 +99,9 @@ aws_access_key: {} # Can be defined in your Ansible Vault
 # Temporary ssh key path on your container
 machine_operations_aws_temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_aws_key
 
+# Assign a public IP to the instances connection interface
+machine_operations_aws_assign_public_ip: true
+
 # Will create a matching security group for host when deployed
 # Set to false when pre-created custom security group is used
 machine_operations_create_aws_security_group: true
