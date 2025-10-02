@@ -2,4 +2,4 @@
 MACAddress={{ configure_networking_mac_addresses[interface_index] }}
 
 [Link]
-Name={{ item.network_id }}
+Name={{ interface_names[interface_index] }}

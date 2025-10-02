@@ -1,10 +1,10 @@
 [Match]
-Name={{ item.network_id }}
+Name={{ interface_names[interface_index] }}
 
 {# Link option #}
-{% if additional_network_params[item.network_id]['networkd_extra_link_params'] is defined %}
+{% if additional_network_params[interface_names[interface_index]]['networkd_extra_link_params'] is defined %}
 [Link]
-{% for param in (additional_network_params[item.network_id]['networkd_extra_link_params'] | default([])) %}
+{% for param in (additional_network_params[interface_names[interface_index]]['networkd_extra_link_params'] | default([])) %}
 {% for key, val in param.items() %}
 {{ key }}={{ val }}
 {% endfor %}
@@ -12,7 +12,7 @@ Name={{ item.network_id }}
 {% endif %}
 
 [Network]
-Description={{ item.network_id }}
+Description={{ interface_names[interface_index] }}
 DHCP={{ 'yes' if item.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) else 'no' }}
 IPv6AcceptRouterAdvertisements={{ 'yes' if item.addresses | map(attribute='mode') | intersect(['ipv6_dhcp','ipv6_slaac']) else 'no' }}
 {% if item.addresses != [] %}
@@ -27,7 +27,7 @@ Address={{ ip_address.address }}
 {% endif %}
 
 {# Network option #}
-{% for param in (additional_network_params[item.network_id]['networkd_extra_network_params'] | default([])) %}
+{% for param in (additional_network_params[interface_names[interface_index]]['networkd_extra_network_params'] | default([])) %}
 {% for key, val in param.items() %}
 {{ key }}={{ val }}
 {% endfor %}
@@ -50,7 +50,7 @@ Gateway={{ ip_address.gateway }}
 {% endif %}
 
 {# Extra sections #}
-{% for section in (additional_network_params[item.network_id]['networkd_extra_sections'] | default([])) %}
+{% for section in (additional_network_params[interface_names[interface_index]]['networkd_extra_sections'] | default([])) %}
 {% for sectionname, options in section.items() %}
 
 [{{ sectionname }}]

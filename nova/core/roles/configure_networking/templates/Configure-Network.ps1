@@ -10,7 +10,7 @@ $Interfaces = @(Get-NetAdapter | Where-Object { $_.HardwareInterface -eq $true }
 # Looping over Providentia interfaces
 {% for interface in interfaces %}
 
-    {% set interface_loop = loop.index -1 %}
+    {% set interface_loop = loop.index0 %}
 
     # If no IP addresses are defined, enable DHCP and Router Discovery
     {% if interface.addresses == [] %}

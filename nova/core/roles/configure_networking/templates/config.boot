@@ -19,7 +19,7 @@ source /opt/vyatta/etc/functions/script-template
 {% for interface in interfaces %}
     MAC_ADDRESS="{{ configure_networking_mac_addresses[loop.index - 1] }}"
     INTERFACE_NAME="eth{{ loop.index -1 }}"
-    set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
+    set interface ethernet $INTERFACE_NAME description '{{ interface_names[loop.index0] }}'
     set interface ethernet $INTERFACE_NAME hw-id $MAC_ADDRESS
     set interface ethernet $INTERFACE_NAME mac $MAC_ADDRESS
     {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}

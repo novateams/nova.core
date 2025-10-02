@@ -22,7 +22,7 @@ source /opt/vyatta/etc/functions/script-template
 
     MAC_ADDRESS="{{ configure_networking_mac_addresses[loop.index - 1] }}"
     INTERFACE_NAME=$( ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs | grep . | ip addr | grep -B1 "$MAC_ADDRESS" | cut -f2 -d":" | grep eth | xargs)
-    set interface ethernet $INTERFACE_NAME description '{{ interface.network_id }}'
+    set interface ethernet $INTERFACE_NAME description '{{ interface_names[loop.index0] }}'
 
     {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
 
