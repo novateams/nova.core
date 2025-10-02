@@ -279,7 +279,7 @@
       loop: "{{ interfaces[1:] }}"
       loop_control:
         index_var: idx
-        label: "{{ item.network_id }}"
+        label: "{{ interface_names[idx] }}"
       when: not fresh_deploy
 
     - name: Configuring IPv4 for following interfaces(s)...
@@ -293,7 +293,7 @@
       loop: "{{ interfaces[1:] }}"
       loop_control:
         index_var: idx
-        label: "{{ item.network_id }}"
+        label: "{{ interface_names[idx] }}"
       when: item.addresses != []
 
     # Using templates task for IPv6 because paloaltonetworks.panos.panos_ipv6_address does not support list of addresses

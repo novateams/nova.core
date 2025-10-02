@@ -13,7 +13,7 @@ fi
 {% if interface.addresses != [] %}
 
     # The maximum interfaces name length is 15 characters
-    LOCAL_INTERFACE_NAME="eth{{ loop.index -1 }}-{{ interface.network_id[:10] }}"
+    LOCAL_INTERFACE_NAME="{{ interface_names[loop.index0] }}"
     nmcli connection add type ethernet ifname $LOCAL_INTERFACE_NAME con-name $LOCAL_INTERFACE_NAME
 
     {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
@@ -54,17 +54,17 @@ fi
 
     {% endfor %}
 
-    {% if extra_ipv4[ interface.network_id ] is defined %}
+    {% if extra_ipv4[interface_names[loop.index0]] is defined %}
 
         # Adding extra ipv4 addresses for connection interface
-        nmcli con modify $LOCAL_INTERFACE_NAME ipv4.method manual +ipv4.addresses "{{ extra_ipv4[ interface.network_id ] | join(', ') }}"
+        nmcli con modify $LOCAL_INTERFACE_NAME ipv4.method manual +ipv4.addresses "{{ extra_ipv4[interface_names[loop.index0]] | join(', ') }}"
 
     {% endif %}
 
-    {% if extra_ipv6[ interface.network_id ] is defined %}
+    {% if extra_ipv6[interface_names[loop.index0]] is defined %}
 
         # Adding extra ipv6 addresses for connection interface
-        nmcli con modify $LOCAL_INTERFACE_NAME ipv6.method manual +ipv6.addresses "{{ extra_ipv6[ interface.network_id ] | join(', ') }}"
+        nmcli con modify $LOCAL_INTERFACE_NAME ipv6.method manual +ipv6.addresses "{{ extra_ipv6[interface_names[loop.index0]] | join(', ') }}"
 
     {% endif %}
 
