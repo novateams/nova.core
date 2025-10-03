@@ -55,6 +55,7 @@
                     - vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
                   retries: 2
                   delay: 2
+                  register: cpu_change_result
 
                 - name: Setting {{ custom_vm_name | default(vm_name) }} RAM to {{ hardware_ram }}GB...
                   vmware.vmware_rest.vcenter_vm_hardware_memory:
@@ -65,6 +66,15 @@
                     - vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
                   retries: 2
                   delay: 2
+                  register: ram_change_result
+
+                - name: RESOURCE UPDATE FAILED
+                  ansible.builtin.fail:
+                    msg: |
+                      Unable to update resources for {{ custom_vm_name | default(vm_name) }}
+                      CPU change result: {{ cpu_change_result }}
+                      RAM change result: {{ ram_change_result }}
+                  when: cpu_change_result is failed or ram_change_result is failed
 
                 - name: Including nova.core.powerstate role...
                   ansible.builtin.include_role:
@@ -122,8 +132,7 @@
 
         - name: Setting current disk size as fact...
           ansible.builtin.set_fact:
-            current_os_disk_size:
-              "{{ (vm_disk_info.instance.config.hardware.device
+            current_os_disk_size: "{{ (vm_disk_info.instance.config.hardware.device
               | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk') | map(attribute='capacityInKB') | first / 1024) | int }}"
 
         - name: Setting {{ custom_vm_name | default(vm_name) }} disk size to {{
