@@ -5,9 +5,5 @@ infra_env: {}
 sudo_requires_password: true
 connection_no_password: false # Set this to true if you are using SSH keys and do not want to use ansible_deployer_password for connection (example Ciso IOS)
 
-# Deploy methods
-role_only: false # Includes customization role and then stops, great for developing roles
-role_only_wp: false # Run the deploy starting from customization_pre_vm_role
-
 # Misc
 connection_connect: false # Can be used to include the connect role that will connect to the inventory_hostname
