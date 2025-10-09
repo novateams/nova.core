@@ -1,7 +1,34 @@
 ---
-- name: INFO
-  ansible.builtin.debug:
-    msg: "Powerstate not implemented for {{ infra_env | upper }}"
+- name: Checking and setting EC2 powerstate...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Checking if {{ custom_vm_name | default(vm_name) }} exists...
+      amazon.aws.ec2_instance_info:
+        filters:
+          tag:Name: "{{ custom_vm_name | default(vm_name) }}"
+          instance-state-name:
+            ["pending", "running", "shutting-down", "stopping", "stopped"]
+      register: ec2_instance_info
 
-- name: Stopping play...
-  ansible.builtin.meta: end_host
+    - name: MISSING INSTANCE
+      ansible.builtin.debug:
+        msg: Instance {{ custom_vm_name | default(vm_name) }} does not exist, skipping powerstate change.
+      when: ec2_instance_info.instances == []
+
+    - name:
+        Setting {{ custom_vm_name | default(vm_name) }} EC2 instance state - {{ 'started' if poweron | bool
+        else 'restarted' if restart | bool
+        else 'stopped' if poweroff | bool or shutdown | bool }}...
+      amazon.aws.ec2_instance:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: "{{ 'started' if poweron | bool
+          else 'restarted' if restart | bool
+          else 'stopped' if poweroff | bool or shutdown | bool }}"
+        instance_ids:
+          - "{{ ec2_instance_info.instances[0].instance_id }}"
+        tags:
+          inventory_hostname: "{{ inventory_hostname }}"
+          project_fullname: "{{ project_fullname | default('undefined_project') }}"
+        wait: false
+      when: ec2_instance_info.instances != []
