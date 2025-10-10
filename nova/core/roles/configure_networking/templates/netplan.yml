@@ -8,9 +8,9 @@ network:
       match:
         macaddress: {{ configure_networking_mac_addresses[interface_loop] }}
       {% if interface.addresses == [] %}
-      dhcp4: true
-      dhcp6: true
-      accept-ra: true
+      dhcp4: false
+      dhcp6: false
+      accept-ra: false
       {% else %}
       dhcp4: {{ true | lower if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) else false | lower }}
       dhcp6: {{ true | lower if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp','ipv6_slaac']) else false | lower }}
@@ -18,7 +18,7 @@ network:
       {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_static', 'ipv6_static']) | list | length > 0 %}
       addresses:
         {% for ip_address in interface.addresses %}
-        {% if ip_address.address != none %}
+        {% if ip_address.mode in ['ipv4_static', 'ipv6_static'] and ip_address.address != none %}
         - {{ ip_address.address }}
         {% endif %}
         {% endfor %}
