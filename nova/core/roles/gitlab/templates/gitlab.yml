@@ -3,7 +3,7 @@ services:
   gitlab:
     container_name: gitlab
     hostname: gitlab-container
-    image: gitlab/gitlab-ee:{{ gitlab_version | default('latest') }}
+    image: gitlab/gitlab-ee:{{ gitlab_version }}
     pull_policy: always
     restart: always
     ports:
