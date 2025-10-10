@@ -83,6 +83,8 @@
                   "subnet_id": "{{ iface.cloud_id }}",
                   "assign_public_ip": false,
                   "device_index": {{ loop.index0 }},
+                  "delete_on_termination": true,
+                  "description": "{{ custom_vm_name | default(vm_name) }}-{{ iface.network_id }}",
                   "ipv6_addresses": {{ iface.addresses | selectattr('mode', 'equalto', 'ipv6_static')
                     | map(attribute='address') | ansible.utils.ipaddr('address') }},
                   "private_ip_addresses": [
@@ -113,11 +115,12 @@
             name: "{{ custom_vm_name | default(vm_name) }}"
             state: absent
 
+    # Interfaces are sorted by device_index since they are not guaranteed to be in the same order as provided when creating the instance
     - name: Configuring public IP for {{ custom_vm_name | default(vm_name) }}...
       amazon.aws.ec2_eip:
-        device_id:
-          "{{ (created_ec2_instance.instances[0] | default(existing_instances[-1])).network_interfaces[(interfaces
-          | map(attribute='connection') | list).index(True) if interfaces != [] else 0].network_interface_id }}"
+        device_id: "{{ ((created_ec2_instance.instances[0] | default(existing_instances[-1])).network_interfaces
+          | sort(attribute='attachment.device_index'))[(interfaces | map(attribute='connection')
+          | list).index(True) if interfaces != [] else 0].network_interface_id }}"
         in_vpc: true
         release_on_disassociation: true
         state: present
