@@ -1,8 +1,5 @@
 network:
   version: 2
-  {% if netplan_renderer != {} %}
-  renderer: {{ netplan_renderer }}
-  {% endif %}
   ethernets:
   {% for interface in interfaces %}
   {% set interface_loop = loop.index0 %}
