@@ -12,6 +12,7 @@
     - customization_context == "host"
     - fresh_deploy or reconfigure_network | bool
     - not skip_network_configuration | bool
+    - interfaces != []
   block:
     - name: Saving the original interfaces list...
       ansible.builtin.set_fact:
@@ -26,8 +27,7 @@
     # Different OSs can use the same list and logic for interface naming
     - name: Building a list of unique names from following interfaces...
       ansible.builtin.set_fact:
-        interface_names:
-          "{{ interface_names | default([]) + [item | regex_replace('[^A-Za-z0-9_]', '_')
+        interface_names: "{{ interface_names | default([]) + [item | regex_replace('[^A-Za-z0-9_]', '_')
           if item not in interface_names | default([]) else item + idx | string] }}"
       loop: "{{ interfaces | map(attribute='network_id') }}"
       loop_control:
@@ -40,6 +40,10 @@
     - name: Configuring VM network in Proxmox environment...
       ansible.builtin.include_tasks: proxmox/main.yml
       when: infra_env == 'proxmox'
+
+    - name: Configuring VM network in AWS environment...
+      ansible.builtin.include_tasks: aws/main.yml
+      when: infra_env == 'aws'
 
     # This is to restore the original interfaces list so it can be used in later roles
     - name: Restoring the original interfaces list...
