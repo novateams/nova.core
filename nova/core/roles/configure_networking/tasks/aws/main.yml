@@ -1,0 +1,14 @@
+---
+- name: Including connection role...
+  ansible.builtin.include_role:
+    name: nova.core.connection
+
+- name: Creating a list of MAC addresses...
+  ansible.builtin.set_fact:
+    configure_networking_mac_addresses:
+      "{{ (created_ec2_instance.instances[0] | default(existing_instances[-1])).network_interfaces
+      | sort(attribute='attachment.device_index')
+      | map(attribute='mac_address') }}"
+
+- name: Including {{ customization_method }} network configuration tasks...
+  ansible.builtin.include_tasks: "{{ customization_method }}.yml"
