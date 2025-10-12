@@ -128,6 +128,8 @@
           inventory_hostname: "{{ inventory_hostname }}"
           project_fullname: "{{ project_fullname | default('undefined_project') }}"
       register: eip_info
+      retries: 3
+      delay: 10
       when: machine_operations_aws_assign_public_ip
 
 - name: Setting connection address to {{ eip_info.public_ip

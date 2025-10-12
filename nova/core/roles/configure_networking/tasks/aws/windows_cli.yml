@@ -1,0 +1,20 @@
+---
+# This step is not actually very useful for debugging
+- name: Templating network configuration script...
+  ansible.builtin.template:
+    src: Configure-Network.ps1
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1
+    mode: "0644"
+    lstrip_blocks: true
+  become: false
+  delegate_to: localhost
+
+- name: Copying network configuration to {{ custom_vm_name | default(vm_name) }}...
+  ansible.windows.win_copy:
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1
+    dest: C:\Windows\Temp\Configure-Network.ps1
+
+- name: Running network configuration script...
+  ansible.windows.win_shell: C:\Windows\Temp\Configure-Network.ps1
+  async: 10
+  poll: 0
