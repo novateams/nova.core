@@ -6,9 +6,14 @@
   register: linode_vm
   delegate_to: localhost
 
+- name: Setting connection_address fact...
+  ansible.builtin.set_fact:
+    connection_address: "{{ linode_vm.instance.ipv4[0] }}"
+
 - name: Printing {{ inventory_hostname }} IPs...
   ansible.builtin.debug:
     msg: |
       {{ fqdn | default('NA') }}
-      IPv4 - {{ linode_vm.instance.ipv4[0] }}
+      IPv4 - {{ connection_address }}
       IPv6 - {{ linode_vm.instance.ipv6 | ansible.utils.ipaddr('address') }}
+      Connection - {{ connection_address }}
