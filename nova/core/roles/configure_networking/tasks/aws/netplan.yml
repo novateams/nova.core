@@ -1,0 +1,33 @@
+---
+- name: Cleaning up old network configuration files...
+  ansible.builtin.shell: |
+    rm -rf /etc/systemd/network/*
+    rm -rf /etc/netplan/*
+  changed_when: true
+  become: true
+
+# This step is not actually needed as netplan but is very useful for debugging
+- name: Templating network configuration to localhost...
+  ansible.builtin.template:
+    src: netplan.yml
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+    lstrip_blocks: true
+    mode: "0644"
+  become: false
+  delegate_to: localhost
+
+- name: Copying netplan configuration to {{ custom_vm_name | default(vm_name) }}...
+  ansible.builtin.copy:
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+    dest: /etc/netplan/01-netcfg.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  register: netplan_config
+  become: true
+
+- name: Applying netplan configuration... # noqa: no-handler
+  ansible.builtin.command: netplan apply
+  changed_when: true
+  become: true
+  when: netplan_config.changed
