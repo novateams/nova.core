@@ -1,21 +1,11 @@
 ---
-- name: Looking up the VM...
-  vmware.vmware_rest.vcenter_vm_info:
-    filter_names: "{{ custom_vm_name | default(vm_name) }}"
-  register: vcenter_vm_info
-  until: not vcenter_vm_info.failed
-  retries: 5
-  delay: 2
-  delegate_to: localhost
-  become: false
-
 - name: Waiting for Sysprep to finish...
   block:
     - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
-      vmware.vmware_rest.vcenter_vm_guest_power_info:
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: poweroff_status
-      until: poweroff_status.value.state | default(false) == "NOT_RUNNING"
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_tools
+      until: vm_tools.guests[0].hw_power_status == "poweredOff"
       retries: 90
       delay: 10
       delegate_to: localhost

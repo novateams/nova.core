@@ -9,12 +9,10 @@
         datacenter: "{{ datacenter }}"
         state: shutdown-guest
 
-    - name: Waiting for {{ custom_vm_name | default(vm_name) }} shutdown...
-      vmware.vmware_rest.vcenter_vm_guest_power_info:
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: shutdown_status
-      until:
-        - shutdown_status.value.state is defined
-        - shutdown_status.value.state == "NOT_RUNNING"
-      retries: "{{ (powerstate_shutdown_timeout if powerstate_poweron_timeout >= 5 else 5) / 5 }}"
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_tools
+      until: vm_tools.guests[0].hw_power_status == "poweredOff"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) / 5 }}"
       delay: 5

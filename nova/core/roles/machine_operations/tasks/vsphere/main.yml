@@ -10,14 +10,10 @@
     or vmware_defaults.username is ansible.builtin.falsy
     or vmware_defaults.password is ansible.builtin.falsy
 
-# All of the vmware.vmware_rest have retries for stability
-- name: Checking if {{ custom_vm_name | default(vm_name) }} already exists...
-  vmware.vmware_rest.vcenter_vm_info:
-    filter_names: "{{ custom_vm_name | default(vm_name) }}"
+- name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
+  vmware.vmware.guest_info:
+    guest_name: "{{ custom_vm_name | default(vm_name) }}"
   register: vcenter_vm_info
-  until: not vcenter_vm_info.failed
-  retries: 5
-  delay: 2
   delegate_to: localhost
   become: false
 
@@ -35,4 +31,4 @@
     - not role_only # Not reconfiguring on role only
     - not fresh_deploy or machine_operations_vsphere_content_library_name != {} # Configuring when not fresh_deploy or content library is used
     - machine_operations_reconfigure_vm_on_deploy
-    - vcenter_vm_info.value != [] # Only reconfigure if VM exists
+    - vcenter_vm_info.guests != [] # Only reconfigure if VM exists

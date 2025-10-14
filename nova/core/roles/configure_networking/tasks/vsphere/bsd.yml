@@ -17,8 +17,7 @@
 
     - name: Preparing file upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -47,8 +46,7 @@
 
     - name: Configuring network...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"

@@ -1,6 +1,6 @@
 ---
 - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
-  when: vcenter_vm_info.value != [] # Only remove if the VM exists
+  when: vcenter_vm_info.guests != [] # Only remove if the VM exists
   block:
     - name: NO UNDEPLOY
       ansible.builtin.fail:

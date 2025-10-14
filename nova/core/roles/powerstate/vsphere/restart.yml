@@ -1,18 +1,8 @@
 ---
-- name: Delegating restart tasks to localhost...
+- name: Restarting {{ custom_vm_name | default(vm_name) }}...
+  vmware.vmware.vm_powerstate:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    datacenter: "{{ datacenter }}"
+    state: "{{ 'reboot-guest' if powerstate_vcenter_vm_info.guests[0].hw_power_status == 'poweredOn' else 'powered-on' }}"
   delegate_to: localhost
   become: false
-  block:
-    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm_powerstate:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        datacenter: "{{ datacenter }}"
-        state: powered-on
-      when: vcenter_vm_info.value[0].power_state == "POWERED_OFF"
-
-    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm_powerstate:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        datacenter: "{{ datacenter }}"
-        state: reboot-guest
-      when: vcenter_vm_info.value[0].power_state != "POWERED_OFF"

@@ -4,31 +4,27 @@
   become: false
   block:
     - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
-      vmware.vmware_rest.vcenter_vm_info:
-        filter_names: "{{ custom_vm_name | default(vm_name) }}"
-      register: vcenter_vm_info
-      until: not vcenter_vm_info.failed
-      retries: 5
-      delay: 2
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: powerstate_vcenter_vm_info
 
     - name: ERROR
       ansible.builtin.fail:
         msg: "{{ custom_vm_name | default(vm_name) }} VM not found!"
-      when: vcenter_vm_info.value == []
+      when: powerstate_vcenter_vm_info.guests == []
 
     - name: Waiting until VMTools are running on {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware_rest.vcenter_vm_tools_info:
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
       register: vm_tools
-      until:
-        - vm_tools.value.run_state is defined
-        - vm_tools.value.run_state == "RUNNING"
+      until: vm_tools.guests[0].guest_tools_status == "guestToolsRunning"
       retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) / 5 }}"
       delay: 5
       when:
-        - vcenter_vm_info.value[0].power_state != "POWERED_OFF"
-        - vcenter_vm_info.value[0].power_state != "SUSPENDED"
+        - powerstate_vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
+        - powerstate_vcenter_vm_info.guests[0].hw_power_status != "suspended"
         - not reset and not poweroff
+        - shutdown and powerstate_vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
 
     - name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
       ansible.builtin.include_tasks: poweroff.yml

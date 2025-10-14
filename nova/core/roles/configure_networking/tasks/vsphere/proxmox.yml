@@ -5,6 +5,91 @@
   # DHCP is not supported or recommended for Proxmox management interface
   when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
   block:
+    ########
+    # Udev #
+    ########
+
+    # Using Udev to set persistent interface names based on MAC addresses since otherwise with multi-NIC the interface names are randomly out of order
+    # Unfortunately Proxmox 8 will break when changing interface names so only do this for Trixie (Proxmox 9)
+    - name: Reconfiguring interface names...
+      when: not vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'] is search("bookworm")
+      block:
+        - name: Templating udev rules...
+          ansible.builtin.template:
+            src: 70-persistent-net.rules
+            dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+            mode: "0644"
+            lstrip_blocks: true
+
+        - name: Getting file info...
+          ansible.builtin.stat:
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+          register: file_size
+
+        - name: Preparing file upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ file_size.stat.size }}"
+                path: /etc/udev/rules.d/70-persistent-net.rules
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: file_upload_prep
+
+        - name: Uploading file...
+          ansible.builtin.uri:
+            url: "{{ file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+
+        - name: Updating initramfs...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "update-initramfs -k all -u"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            shutdown: true
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
+
+        - name: Waiting for VMware tools to become available...
+          community.vmware.vmware_guest_tools_wait:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+
     - name: Templating network configuration script...
       ansible.builtin.template:
         src: proxmox.sh
@@ -19,9 +104,7 @@
 
     - name: Preparing file upload...
       ansible.builtin.uri:
-        url:
-          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -62,9 +145,7 @@
 
     - name: Preparing resolv.conf upload...
       ansible.builtin.uri:
-        url:
-          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -93,9 +174,7 @@
 
     - name: Configuring network...
       ansible.builtin.uri:
-        url:
-          https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
