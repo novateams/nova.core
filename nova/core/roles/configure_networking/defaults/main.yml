@@ -6,6 +6,7 @@ dns_domain: {}
 dns_search: []
 dns_servers: []
 dns_servers6: []
+resolv_options: []
 ntp_servers:
   - "0.pool.ntp.org"
   - "1.pool.ntp.org"

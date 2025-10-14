@@ -1,9 +1,4 @@
 ---
-- name: Creating a list of MAC addresses...
-  ansible.builtin.set_fact:
-    # Skipping the first MAC address as it is the loopback interface.
-    configure_networking_mac_addresses: "{{ (proxmox_vm_info.proxmox_vms[0].network | map(attribute='hardware-address') | list)[1:] }}"
-
 - name: Configuring netplan on Proxmox VM...
   become: false
   delegate_to: localhost
