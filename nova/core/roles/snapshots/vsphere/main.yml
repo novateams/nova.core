@@ -3,13 +3,26 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Getting VM info...
-      vmware.vmware_rest.vcenter_vm_info:
-        filter_names: "{{ custom_vm_name | default(vm_name) }}"
-      register: vmware_guest_info
-      until: not vmware_guest_info.failed
-      retries: 5
-      delay: 2
+    - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+
+    - name: ERROR
+      ansible.builtin.fail:
+        msg: "{{ custom_vm_name | default(vm_name) }} VM not found!"
+      when: vcenter_vm_info.guests == []
+
+    - name: Waiting until VMTools are running on {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_tools
+      until: vm_tools.guests[0].guest_tools_status == "guestToolsRunning"
+      retries: "{{ (snapshots_agent_info_timeout if snapshots_agent_info_timeout >= 5 else 5) / 5 }}"
+      delay: 5
+      when:
+        - vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
+        - snapshot_mode != 'revert'
 
     - name: Getting info about {{ custom_vm_name | default(vm_name) }} snapshots...
       community.vmware.vmware_guest_snapshot_info:
@@ -17,19 +30,6 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         folder: "{{ folder }}"
       register: snapshot_info
-
-    - name: Waiting until VMTools are running...
-      vmware.vmware_rest.vcenter_vm_tools_info:
-        vm: "{{ vmware_guest_info.value[0].vm }}"
-      register: vm_tools
-      until:
-        - vm_tools.value.run_state is defined
-        - vm_tools.value.run_state == "RUNNING"
-      retries: "{{ snapshots_vmtools_retries }}"
-      delay: "{{ snapshots_vmtools_delay }}"
-      when:
-        - vmware_guest_info.value[0].power_state != "POWERED_OFF"
-        - snapshot_mode != 'revert'
 
 - name: Including powerstate role...
   ansible.builtin.include_role:
@@ -39,7 +39,7 @@
   when:
     - snapshot_mode == 'clean-snap' or snapshot_mode == 're-snap' or snapshot_mode == 'snap'
     - not live_snap | bool
-    - vmware_guest_info.value[0].power_state != "POWERED_OFF"
+    - vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
 
 - name: Including snapshot task...
   ansible.builtin.include_tasks: snapshot.yml

@@ -17,8 +17,7 @@
 
     - name: Preparing config.wipe upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -34,8 +33,6 @@
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       register: file_upload_prep
       until: file_upload_prep.status == 201
-      retries: 30
-      delay: 3
 
     - name: Uploading config.wipe...
       ansible.builtin.uri:
@@ -50,8 +47,7 @@
 
     - name: Configuring VyOS network for {{ inventory_hostname }}...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -73,7 +69,17 @@
       ansible.builtin.include_role:
         name: nova.core.powerstate
       vars:
-        restart: true
+        shutdown: true
+
+    - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        poweron: true
+
+    - name: Waiting for VMware tools to become available...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
 
     - name: Templating network configuration script...
       ansible.builtin.template:
@@ -89,8 +95,7 @@
 
     - name: Preparing config.boot upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -106,8 +111,6 @@
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       register: file_upload_prep
       until: file_upload_prep.status == 201
-      retries: 30
-      delay: 3
 
     - name: Uploading config.boot...
       ansible.builtin.uri:
@@ -122,8 +125,7 @@
 
     - name: Configuring VyOS network for {{ inventory_hostname }}...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"

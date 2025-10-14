@@ -17,8 +17,7 @@
 
     - name: Preparing file upload...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -32,13 +31,11 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
-      retries: 3
       register: file_upload_prep
 
     - name: Removing existing netplan configuration file(s)...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -51,7 +48,6 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
-      retries: 3
       register: network_config_command
 
     - name: Including command run check task...
@@ -67,12 +63,10 @@
         status_code: 200
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
-      retries: 3
 
     - name: Configuring network...
       ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
         method: POST
         headers:
           vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -85,7 +79,6 @@
         status_code: 201
         body_format: json
         validate_certs: "{{ validate_vmware_certs }}"
-      retries: 3
       register: network_config_command
 
     - name: Including command run check task...
@@ -99,8 +92,7 @@
       block:
         - name: Disabling systemd-resolved service...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-              | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
             method: POST
             headers:
               vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -112,7 +104,6 @@
             status_code: 201
             body_format: json
             validate_certs: "{{ validate_vmware_certs }}"
-          retries: 3
           register: network_config_command
 
         - name: Including command run check task...
@@ -120,8 +111,7 @@
 
         - name: Removing existing resolv.conf file...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-              | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
             method: POST
             headers:
               vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -133,7 +123,6 @@
             status_code: 201
             body_format: json
             validate_certs: "{{ validate_vmware_certs }}"
-          retries: 3
           register: network_config_command
 
         - name: Including command run check task...
@@ -153,8 +142,7 @@
 
         - name: Preparing resolv.conf upload...
           ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
-              | default(vcenter_vm_info.value[0].vm) }}/guest/filesystem?action=create
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
             method: POST
             headers:
               vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
@@ -168,7 +156,6 @@
             status_code: 201
             body_format: json
             validate_certs: "{{ validate_vmware_certs }}"
-          retries: 3
           register: resolv_file_upload_prep
 
         - name: Uploading resolv.conf...

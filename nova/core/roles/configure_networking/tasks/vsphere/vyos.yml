@@ -1,7 +1,7 @@
 ---
 - name: Setting OS as fact...
   ansible.builtin.set_fact:
-    configure_networking_os: "{{ (vmware_tools_information.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
+    configure_networking_os: "{{ (vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
 
 - name: Including legacy VyOS network configuration tasks...
   ansible.builtin.include_tasks: vyos_legacy.yml

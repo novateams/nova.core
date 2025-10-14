@@ -6,11 +6,12 @@
     - name: Waiting for VMware tools to become available...
       community.vmware.vmware_guest_tools_wait:
         name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vmware_tools_information
+      register: vcenter_vm_info
 
-    - name: Creating a list of MAC addresses...
+    - name: Setting VM ID fact and creating a list of MAC addresses...
       ansible.builtin.set_fact:
-        configure_networking_mac_addresses: "{{ vmware_tools_information.instance | dict2items
+        configure_networking_vsphere_vm_id: "{{ vcenter_vm_info.instance.moid }}"
+        configure_networking_mac_addresses: "{{ vcenter_vm_info.instance | dict2items
           | selectattr('key', 'match', '^hw_eth[0-9]+$') | map(attribute='value.macaddress') | list }}"
 
     - name: Getting REST API token...
