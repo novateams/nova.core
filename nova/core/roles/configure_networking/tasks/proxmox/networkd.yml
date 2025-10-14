@@ -1,0 +1,253 @@
+---
+- name: Including networkd configuration tasks...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Removing any existing network configurations...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          command:
+            - sh
+            - -c
+            - "rm -rf /etc/systemd/network/* && rm -rf /etc/netplan/*"
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Templating interface configuration file(s)...
+      ansible.builtin.template:
+        src: networkd.network
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.network_networkd
+        lstrip_blocks: true
+        mode: "0644"
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ interface_names[interface_index] }}"
+
+    - name: Getting interface configuration file(s) info...
+      ansible.builtin.slurp:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.network_networkd
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ interface_names[interface_index] }}"
+      register: file_contents
+
+    - name: Writing networkd configuration to {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          content: "{{ item.content | b64decode }}"
+          file: /etc/systemd/network/10-{{ interface_names[interface_index] }}.network
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      loop: "{{ file_contents.results }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ interface_names[interface_index] }}"
+
+    - name: Templating link file(s)...
+      ansible.builtin.template:
+        src: networkd.link
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
+        lstrip_blocks: true
+        mode: "0644"
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ interface_names[interface_index] }}"
+
+    - name: Getting link file(s) info...
+      ansible.builtin.slurp:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
+      register: file_contents
+      loop: "{{ interfaces }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ interface_names[interface_index] }}"
+
+    - name: Writing networkd links to {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          content: "{{ item.content | b64decode }}"
+          file: /etc/systemd/network/10-{{ interface_names[interface_index] }}.link
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      loop: "{{ file_contents.results }}"
+      loop_control:
+        index_var: interface_index
+        label: "{{ interface_names[interface_index] }}"
+
+    - name: Starting networkd & udev services...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          command:
+            - sh
+            - -c
+            - "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
+              systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Templating resolv.conf configuration script...
+      ansible.builtin.template:
+        src: resolv.conf
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        lstrip_blocks: true
+        mode: "0644"
+
+    - name: Getting resolv.conf file info...
+      ansible.builtin.slurp:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+      register: resolv_file
+
+    - name: Writing resolv.conf to {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          content: "{{ resolv_file.content | b64decode }}"
+          file: /etc/resolv.conf
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+
+    - name: Getting OS type...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid
+          }}/agent/file-read?file=/etc/os-release"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+
+    - name: Setting OS type variable
+      ansible.builtin.set_fact:
+        configure_networking_os: >-
+          {% if 'ID=debian' in network_config_command.json.data['content'] | trim %}
+          Debian
+          {% elif 'ID=arch' in network_config_command.json.data['content'] | trim %}
+          Arch
+          {% else %}
+          Unknown
+          {% endif %}
+
+    - name: Applying network configuration on Debian...
+      when: configure_networking_os is search('Debian')
+      block:
+        - name: Configuring network interface(s) names on Debian...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body:
+              command:
+                - sh
+                - -c
+                - "update-initramfs -k all -u"
+            body_format: json
+            validate_certs: "{{ proxmox_validate_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+        - name: Getting DNS from DHCP...
+          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+          block:
+            - name: Getting DNS from DHCP...
+              ansible.builtin.uri:
+                url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+                headers:
+                  Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+                method: POST
+                body:
+                  command:
+                    - sh
+                    - -c
+                    - 'if [ -x "$(command -v dhclient)" ]; then dhclient; else :; fi'
+                body_format: json
+                validate_certs: "{{ proxmox_validate_certs }}"
+              register: network_config_command
+
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Applying network configuration on Debian...
+      when: configure_networking_os is search('Arch')
+      block:
+        - name: Configuring network interface(s) names on Arch...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body:
+              command:
+                - sh
+                - -c
+                - "mkinitcpio -P"
+            body_format: json
+            validate_certs: "{{ proxmox_validate_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
+      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+
+    # For DHCP doing shutdown and start otherwise there will be a a race condition where incorrect IP is reported by the VM
+    - name: Shutting down and starting {{ custom_vm_name | default(vm_name) }} VM...
+      when:
+        - configure_networking_os is search('Debian')
+        - connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+      block:
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            shutdown: true
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
