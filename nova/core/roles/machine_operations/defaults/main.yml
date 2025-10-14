@@ -53,10 +53,10 @@ vapp_options: []
 linked_clone_snapshot_name: LinkedCloneSource # Case sensitive default value
 
 # Video memory
-video_increase_memory: false
-video_memory: 64
-video_3d: false
-video_3d_memory: 256
+machine_operations_vsphere_increase_video_memory: false
+machine_operations_vsphere_video_memory: 64
+machine_operations_vsphere_video_3d: false
+machine_operations_vsphere_video_3d_memory: 256
 
 vm_description: Created on {{ ansible_date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }} - {{ inventory_hostname }}
 template_description: Created on {{ ansible_date_time.iso8601 }}

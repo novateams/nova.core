@@ -10,12 +10,10 @@
         state: powered-on
         force: true # Required to power on a VM that is in a suspended state
 
-    - name: Waiting for {{ custom_vm_name | default(vm_name) }} poweron...
-      vmware.vmware_rest.vcenter_vm_guest_power_info:
-        vm: "{{ vcenter_vm_info.value[0].vm }}"
-      register: poweron_status
-      until:
-        - poweron_status.value.state is defined
-        - poweron_status.value.state == "RUNNING"
-      retries: "{{ (powerstate_poweron_timeout if powerstate_poweron_timeout >= 5 else 5) / 5 }}"
+    - name: Waiting for {{ custom_vm_name | default(vm_name) }} to power on...
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_tools
+      until: vm_tools.guests[0].hw_power_status == "poweredOn"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) / 5 }}"
       delay: 5

@@ -2,7 +2,7 @@
 - name: Setting fresh_deploy fact...
   ansible.builtin.set_fact:
     fresh_deploy: true
-  when: vcenter_vm_info.value == [] or deploy_mode == "redeploy"
+  when: vcenter_vm_info.guests == [] or deploy_mode == "redeploy"
 
 - name: Checking for the correct deploy mode...
   ansible.builtin.fail:
@@ -24,7 +24,7 @@
     - name: Checking for Network...
       ansible.builtin.fail:
         msg: |
-          Missing networking configuration for {{ inventory_hostname }}!!!
+          Missing networking configuration for {{ inventory_hostname }}!
           Check that you have the following configuration set:
             * {{ inventory_hostname }} machine has at least network interface defined
             * {{ inventory_hostname }} machine interface has the connection flag set to true
@@ -75,30 +75,25 @@
     - name: Looking up template from exiting VMs...
       when: machine_operations_vsphere_content_library_name == {}
       block:
-        - name: Looking up the VM template...
-          vmware.vmware_rest.vcenter_vm_info:
-            filter_names: "{{ vm_template if not template else base_vm_template }}"
+        - name: Getting {{ custom_vm_name | default(vm_name) }} VM CPU & RAM info...
+          vmware.vmware.guest_info:
+            name: "{{ vm_template if not template else base_vm_template }}"
           register: template_search_result
-          until: not template_search_result.failed
-          retries: 5
-          delay: 2
 
         - name: Missing VM template...
           ansible.builtin.fail:
             msg: Cannot find template - {{ vm_template if not template else base_vm_template }}
-          when: template_search_result.value == []
+          when: template_search_result.guests == []
 
-        - name: Getting information about the VM template...
-          vmware.vmware_rest.vcenter_vm_info:
-            vm: "{{ template_search_result.value[0].vm }}"
-          register: vm_template_information
-          until: not vm_template_information.failed
-          retries: 5
-          delay: 2
+        - name: Getting VM template disk info...
+          community.vmware.vmware_guest_disk_info:
+            datacenter: "{{ datacenter }}"
+            moid: "{{ template_search_result.guests[0].moid }}"
+          register: template_disk_info
 
         - name: Getting template OS disk size...
           ansible.builtin.set_fact:
-            template_disk_size: "{{ vm_template_information.value.disks[(vm_template_information.value.disks | first)].capacity // (1024 * 1024) | int }}"
+            template_disk_size: "{{ (template_disk_info.guest_disk_info | dict2items | first).value.capacity_in_kb // 1024 | int }}"
 
     # This task can be removed when local inventories are moved to Providentia
     - name: Setting OS disk size...
@@ -186,12 +181,12 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         folder: "{{ folder }}"
         datacenter: "{{ datacenter }}"
-        video_memory_mb: "{{ video_memory }}"
-        enable_3D: "{{ video_3d }}"
-        memory_3D_mb: "{{ video_3d_memory if video_3d else omit }}"
-        renderer_3D: "{{ 'automatic' if video_3d else omit }}"
+        video_memory_mb: "{{ machine_operations_vsphere_video_memory }}"
+        enable_3D: "{{ machine_operations_vsphere_video_3d }}"
+        memory_3D_mb: "{{ machine_operations_vsphere_video_3d_memory if machine_operations_vsphere_video_3d else omit }}"
+        renderer_3D: "{{ 'automatic' if machine_operations_vsphere_video_3d else omit }}"
         use_auto_detect: false
-      when: video_increase_memory
+      when: machine_operations_vsphere_increase_video_memory
 
     - name: Add vGPU profile to VM...
       community.vmware.vmware_guest_vgpu:
@@ -201,137 +196,56 @@
         vgpu: "{{ machine_operations_vgpu }}"
       when: machine_operations_vgpu != none
 
-    - name: Looking up the cloned VM...
-      vmware.vmware_rest.vcenter_vm_info:
-        filter_names: "{{ custom_vm_name | default(vm_name) }}"
-      register: created_vm_info
-      until: not created_vm_info.failed
-      retries: 5
-      delay: 2
-
-    - name: Getting {{ custom_vm_name | default(vm_name) }} interfaces...
-      vmware.vmware_rest.vcenter_vm_hardware_ethernet_info:
-        vm: "{{ created_vm_info.value[0].vm }}"
-      register: existing_nic
-      until: not existing_nic.failed
-      retries: 5
-      delay: 2
-
-    - name: Getting the {{ default_interface[0].name }} network info...
-      vmware.vmware_rest.vcenter_network_info:
-        filter_names: "{{ default_interface[0].name }}"
-      register: default_network
-      until: not default_network.failed
-      retries: 5
-      delay: 2
-
-    - name: ERROR...
-      ansible.builtin.fail:
-        msg: |
-          Cannot find network - {{ default_interface[0].name }}
-          The network does not exist or you do not have permissions to access it.
-      when: default_network.value == []
-
-    - name: Attaching the {{ default_interface[0].name }} interface...
-      vmware.vmware_rest.vcenter_vm_hardware_ethernet:
-        vm: "{{ created_vm_info.value[0].vm }}"
-        type: "{{ default_interface[0].device_type | upper }}"
-        nic: "{{ existing_nic.value[0].nic }}"
-        backing:
-          type: "{{ default_network.value[0].type }}"
-          network: "{{ default_network.value[0].network }}"
-        start_connected: true
-        state: present
-      register: add_default_nic
-      until: not add_default_nic.failed
-      retries: 5
-      delay: 2
-
-    # Removing interfaces that don't have a cloud_id set in Providentia
-    - name: Creating a list of extra NICs...
-      ansible.builtin.set_fact:
-        extra_network_interfaces: "{{ extra_network_interfaces + [merged] }}"
-      loop: "{{ interfaces[1:] | rejectattr('cloud_id', 'in', ['', none]) }}"
-      loop_control:
-        label: "{{ item.cloud_id }}"
-      vars:
-        merged:
-          name: "{{ item.cloud_id }}"
-          device_type: "{{ vmware_nic_type }}"
-      when: interfaces | length > 1
-
-    - name: Configuring extra interfaces..
-      when: extra_network_interfaces != []
-      block:
-        - name: Getting info for the following interfaces...
-          vmware.vmware_rest.vcenter_network_info:
-            filter_names: "{{ item }}"
-          register: extra_interfaces_search
-          loop: "{{ extra_network_interfaces | map(attribute='name') }}"
-          until: not extra_interfaces_search.failed
-          retries: 5
-          delay: 2
-
-        - name: Adding the following network interfaces to {{ inventory_hostname }}...
-          vmware.vmware_rest.vcenter_vm_hardware_ethernet:
-            vm: "{{ created_vm_info.value[0].vm }}"
-            type: "{{ extra_network_interfaces[loop_index].device_type | upper | default('VMXNET3') }}"
-            backing:
-              type: "{{ item.value[0].type }}"
-              network: "{{ item.value[0].network }}"
-            start_connected: true
-          loop: "{{ extra_interfaces_search.results }}"
-          loop_control:
-            index_var: loop_index
-            label: "{{ item.value[0].name | default(omit) }}" # Omit is required to avoid error when this block is skipped
-          register: extra_interfaces_add
-          until: not extra_interfaces_add.failed
-          retries: 5
-          delay: 2
-
-        - name: Listing all interfaces on {{ custom_vm_name | default(vm_name) }}...
-          vmware.vmware_rest.vcenter_vm_hardware_ethernet_info:
-            vm: "{{ created_vm_info.value[0].vm }}"
-          register: list_added_interfaces
-          until: not list_added_interfaces.failed
-          retries: 5
-          delay: 2
-
-        # All vmware.vmware_rest have retries for stability
-        # This compares the expected number of interfaces with the actual number of interfaces to make sure no extra interfaces are added in previous steps
-        # The reason for this is that the to avoid the loop retries from adding the same interface multiple times when retry is triggered
-        - name: Incorrect nr of interfaces...
-          ansible.builtin.fail:
-            msg: |
-              The number of interfaces on {{ custom_vm_name | default(vm_name) }} is not correct!
-              Expected: {{ (cloned_vmware_vm.instance.hw_interfaces | length) + (extra_network_interfaces | length) }}
-              Actual: {{ list_added_interfaces.value | length }}
-              Try to redeploy the machine to fix the issue.
-          when: (cloned_vmware_vm.instance.hw_interfaces | length) + (extra_network_interfaces | length) != list_added_interfaces.value | length
-
-- name: Starting VM & Connecting the {{ default_interface[0].name }} interface...
+# Using a separate block for attaching network interfaces since
+# community.vmware.vmware_guest automatically triggers customization if networks key is used
+- name: Connecting network interfaces and starting VM...
   delegate_to: localhost
   become: false
   when:
-    - fresh_deploy or vcenter_vm_info.value[0].power_state != "POWERED_ON"
-    - not just_create
+    - role_only is ansible.builtin.falsy
+    - role_only_wp is ansible.builtin.falsy
+    - single_role is not defined
   block:
-    - name: Including nova.core.powerstate role...
-      ansible.builtin.include_role:
-        name: nova.core.powerstate
-      vars:
-        poweron: true
+    - name: Getting {{ custom_vm_name | default(vm_name) }} interfaces...
+      community.vmware.vmware_guest_info:
+        datacenter: "{{ datacenter }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: existing_vm_info
 
-    # Connect is required when cloning to a cluster that does not have the template network available
-    - name: Connecting the {{ default_interface[0].name }} interface...
-      vmware.vmware_rest.vcenter_vm_hardware_ethernet:
-        vm: "{{ created_vm_info.value[0].vm }}"
-        nic: "{{ existing_nic.value[0].nic }}"
-        state: connect
-      register: connect_default_nic
-      until: not connect_default_nic.failed
-      retries: 5
-      delay: 2
+    - name: Creating a list of existing network interfaces...
+      ansible.builtin.set_fact:
+        existing_interfaces: "{{ existing_vm_info.instance | dict2items | selectattr('key', 'match', '^hw_eth[0-9]+$') | list }}"
+
+    # If the number of existing interfaces is different than the desired interfaces after initial deploy then remove all existing interfaces and re-add them
+    - name: Removing existing network interfaces from {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_network:
+        datacenter: "{{ datacenter }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: absent
+        mac_address: "{{ item.value.macaddress }}"
+      loop: "{{ existing_interfaces }}"
+      loop_control:
+        label: "{{ item.value.label }}"
       when:
-        - fresh_deploy
-        - not manual_fresh_deploy # Since this block can only be ran once during clone
+        - not fresh_deploy
+        - existing_interfaces | length != interfaces | length
+
+    - name: Attaching following network interfaces to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_network:
+        datacenter: "{{ datacenter }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: present
+        force: true
+        network_name: "{{ item.cloud_id }}"
+        device_type: "{{ machine_operations_vsphere_nic_type | default('vmxnet3') }}"
+        mac_address: "{{ existing_interfaces[idx].value.macaddress | default(omit) }}"
+      loop: "{{ interfaces }}"
+      loop_control:
+        label: "{{ item.cloud_id }}"
+        index_var: idx
+
+- name: Including nova.core.powerstate role...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true

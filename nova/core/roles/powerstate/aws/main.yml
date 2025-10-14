@@ -7,8 +7,7 @@
       amazon.aws.ec2_instance_info:
         filters:
           tag:Name: "{{ custom_vm_name | default(vm_name) }}"
-          instance-state-name:
-            ["pending", "running", "shutting-down", "stopping", "stopped"]
+          instance-state-name: ["pending", "running", "shutting-down", "stopping", "stopped"]
       register: ec2_instance_info
 
     - name: MISSING INSTANCE
@@ -16,8 +15,7 @@
         msg: Instance {{ custom_vm_name | default(vm_name) }} does not exist, skipping powerstate change.
       when: ec2_instance_info.instances == []
 
-    - name:
-        Setting {{ custom_vm_name | default(vm_name) }} EC2 instance state - {{ 'started' if poweron | bool
+    - name: Setting {{ custom_vm_name | default(vm_name) }} EC2 instance state - {{ 'started' if poweron | bool
         else 'restarted' if restart | bool
         else 'stopped' if poweroff | bool or shutdown | bool }}...
       amazon.aws.ec2_instance:
