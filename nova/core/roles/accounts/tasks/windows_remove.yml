@@ -23,7 +23,9 @@
 
     - name: Rebooting to clear any open sessions...
       ansible.windows.win_reboot:
-      when: local_users_to_remove != []
+      when:
+        - local_users_to_remove != []
+        - accounts_reboot_before_remove | bool
 
     - name: Removing following local accounts...
       ansible.windows.win_user:
@@ -58,12 +60,15 @@
                 enabled: false
               loop: "{{ domain_users_to_remove }}"
 
-            - name: Rebooting to close any open sessions...
-              ansible.windows.win_reboot:
+            - name: Handling reboot before removing domain accounts...
+              when: accounts_reboot_before_remove | bool
+              block:
+                - name: Rebooting to close any open sessions...
+                  ansible.windows.win_reboot:
 
-            - name: DC post-reboot availability check...
-              ansible.builtin.include_role:
-                name: nova.core.win_dc_post_reboot_check
+                - name: DC post-reboot availability check...
+                  ansible.builtin.include_role:
+                    name: nova.core.win_dc_post_reboot_check
 
         - name: Removing following domain accounts...
           microsoft.ad.user:
@@ -75,6 +80,7 @@
       when:
         - domain_users_to_remove != []
         - ansible_facts.windows_domain_role != "Primary domain controller"
+        - accounts_reboot_before_remove | bool
       block:
         - name: Rebooting to close any open sessions...
           ansible.windows.win_reboot:
