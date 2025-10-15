@@ -15,7 +15,9 @@
 
 - name: Rebooting to close any open sessions...
   ansible.builtin.reboot:
-  when: user_profiles_to_remove != []
+  when:
+    - user_profiles_to_remove != []
+    - accounts_reboot_before_remove | bool
 
 - name: Removing following accounts...
   ansible.builtin.user:
