@@ -29,3 +29,12 @@ updates_category_names: "*"
 
 # Default value for reboot_on_finalize variable that is used to reboot the system during `nova.core.finalize` role
 reboot_on_finalize: false
+
+###########
+# FreeBSD #
+###########
+
+# FreeBSD does not have an automatic way of detecting if a reboot is required after updates
+# This variable can be set to true to always reboot after updates are applied
+# This is required because some updates will stop services like VMTools or QEMU Guest Agent from working properly until the system is rebooted
+updates_freebsd_reboot_after_updates: true
