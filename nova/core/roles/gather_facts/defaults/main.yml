@@ -1,7 +1,3 @@
 ---
 # By default MacOS does not have Python installed so it cannot use ansible.builtin.setup
 macos_has_python: false
-
-# Deploy methods
-role_only: false # Includes customization role and then stops, great for developing roles
-role_only_wp: false # Run the deploy starting from customization_pre_vm_role

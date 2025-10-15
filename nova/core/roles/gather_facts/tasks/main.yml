@@ -20,6 +20,7 @@
 
 - name: Gathering facts for pfSense/OPNsense...
   ansible.builtin.setup:
+    gather_timeout: 60
   when: ansible_network_os | default([]) in ['pfsense', 'opnsense']
 
 - name: Gathering facts for PanOS...
@@ -36,12 +37,14 @@
 
 - name: Gathering facts for {{ inventory_hostname }}...
   ansible.builtin.setup:
+    gather_timeout: 60
   when:
     - ansible_system | default(false) == "Darwin"
     - macos_has_python
 
 - name: Gathering facts for {{ inventory_hostname }}...
   ansible.builtin.setup:
+    gather_timeout: 60
   when:
     - ansible_network_os is not defined
     - ansible_system is not defined or ansible_system != "Darwin"

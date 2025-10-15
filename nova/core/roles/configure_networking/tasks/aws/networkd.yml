@@ -1,0 +1,103 @@
+---
+- name: Cleaning up old network configuration files...
+  ansible.builtin.shell: |
+    rm -rf /etc/systemd/network/*
+    rm -rf /etc/netplan/*
+  changed_when: true
+  become: true
+
+# This step is not actually very useful for debugging
+- name: Templating interface(s) configuration(s)...
+  ansible.builtin.template:
+    src: networkd.network
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.network
+    lstrip_blocks: true
+    mode: "0644"
+  loop: "{{ interfaces }}"
+  loop_control:
+    index_var: interface_index
+    label: "{{ interface_names[interface_index] }}"
+  become: false
+  delegate_to: localhost
+
+- name: Templating link(s) configuration(s)...
+  ansible.builtin.template:
+    src: networkd.link
+    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link
+    lstrip_blocks: true
+    mode: "0644"
+  loop: "{{ interfaces }}"
+  loop_control:
+    index_var: interface_index
+    label: "{{ interface_names[interface_index] }}"
+  become: false
+  delegate_to: localhost
+
+- name: Copying interface(s) configuration to {{ custom_vm_name | default(vm_name) }}...
+  ansible.builtin.copy:
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.network
+    dest: /etc/systemd/network/10-{{ interface_names[interface_index] }}.network
+    mode: "0644"
+  loop: "{{ interfaces }}"
+  loop_control:
+    index_var: interface_index
+    label: "{{ interface_names[interface_index] }}"
+  become: true
+
+- name: Copying link(s) configuration to {{ custom_vm_name | default(vm_name) }}...
+  ansible.builtin.copy:
+    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link
+    dest: /etc/systemd/network/10-{{ interface_names[interface_index] }}.link
+    mode: "0644"
+  loop: "{{ interfaces }}"
+  loop_control:
+    index_var: interface_index
+    label: "{{ interface_names[interface_index] }}"
+  become: true
+
+- name: Templating resolv.conf configuration script...
+  ansible.builtin.template:
+    src: resolv.conf
+    dest: /etc/resolv.conf
+    mode: "0644"
+    lstrip_blocks: true
+  become: true
+
+- name: Starting networkd & udev services...
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+  loop:
+    - systemd-networkd
+    - systemd-udev-trigger
+  become: true
+
+- name: Applying network configuration on Debian...
+  become: true
+  when: ansible_distribution | default(false) == "Debian"
+  block:
+    - name: Configuring network interface(s) names on Debian...
+      ansible.builtin.command: update-initramfs -k all -u
+      changed_when: true
+
+    - name: Getting DNS from DHCP...
+      ansible.builtin.shell: |
+        if [ -x "$(command -v dhclient)" ]; then
+          dhclient
+        else
+          echo "NO"
+        fi
+      register: dhclient_output
+      changed_when: dhclient_output.stdout != "NO"
+      when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+
+- name: Applying network configuration on Arch...
+  ansible.builtin.command: mkinitcpio -P
+  changed_when: true
+  become: true
+  when: ansible_distribution | default(false) == "Archlinux"
+
+- name: Rebooting...
+  ansible.builtin.reboot:
+  become: true

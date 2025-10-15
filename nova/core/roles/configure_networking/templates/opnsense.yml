@@ -32,12 +32,12 @@ opnsense_interfaces:
   {% elif interface.connection %}
   - lan:
   {% else %}
-  - {{ interface.network_id | replace("-", "_") }}{{ loop.index }}:
+  - {{ interface_names[loop.index0] }}:
   {% endif %}
       _:
-        - if: {{ nic_map[loop.index - 1] | replace("-", "_") }}
+        - if: {{ nic_map[loop.index0] }}
         - enable: "1"
-        - descr: {{ interface.network_id | replace("-", "_") }}
+        - descr: {{ interface_names[loop.index0] }}
         {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) %}
         - ipaddr: "dhcp"
         {% endif %}

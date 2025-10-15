@@ -1,18 +1,16 @@
 network:
   version: 2
-  {% if netplan_renderer != {} %}
-  renderer: {{ netplan_renderer }}
-  {% endif %}
   ethernets:
   {% for interface in interfaces %}
-    {{ interface.network_id | replace(" ", "-") }}:
-      set-name: {{ interface.network_id | replace(" ", "-") }}
+  {% set interface_loop = loop.index0 %}
+    {{ interface_names[interface_loop] }}:
+      set-name: {{ interface_names[interface_loop] }}
       match:
-        macaddress: {{ configure_networking_mac_addresses[loop.index - 1] }}
+        macaddress: {{ configure_networking_mac_addresses[interface_loop] }}
       {% if interface.addresses == [] %}
-      dhcp4: true
-      dhcp6: true
-      accept-ra: true
+      dhcp4: false
+      dhcp6: false
+      accept-ra: false
       {% else %}
       dhcp4: {{ true | lower if interface.addresses | map(attribute='mode') | intersect(['ipv4_dhcp']) else false | lower }}
       dhcp6: {{ true | lower if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp','ipv6_slaac']) else false | lower }}
@@ -20,22 +18,22 @@ network:
       {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_static', 'ipv6_static']) | list | length > 0 %}
       addresses:
         {% for ip_address in interface.addresses %}
-        {% if ip_address.address != none %}
+        {% if ip_address.mode in ['ipv4_static', 'ipv6_static'] and ip_address.address != none %}
         - {{ ip_address.address }}
         {% endif %}
         {% endfor %}
-        {% if extra_ipv4[interface.network_id] is defined %}
-        {% for ipv4 in extra_ipv4[interface.network_id] %}
+        {% if extra_ipv4[interface_names[interface_loop]] is defined %}
+        {% for ipv4 in extra_ipv4[interface_names[interface_loop]] %}
         - {{ ipv4 }}
         {% endfor %}
         {% endif %}
-        {% if extra_ipv6[interface.network_id] is defined %}
-        {% for ipv6 in extra_ipv6[interface.network_id] %}
+        {% if extra_ipv6[interface_names[interface_loop]] is defined %}
+        {% for ipv6 in extra_ipv6[interface_names[interface_loop]] %}
         - {{ ipv6 }}
         {% endfor %}
         {% endif %}
       {% endif %}
-      {% if (interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes[interface.network_id] is defined) %}
+      {% if (interface.addresses | selectattr("gateway", "!=", none)) or (extra_routes[interface_names[interface_loop]] is defined) %}
       routes:
       {% endif %}
       {% for ip_address in interface.addresses %}
@@ -50,8 +48,8 @@ network:
           via: "{{ ip_address.gateway }}"
       {% endif %}
       {% endfor %}
-      {% if extra_routes[interface.network_id] is defined %}
-      {% for route in extra_routes[interface.network_id] %}
+      {% if extra_routes[interface_names[interface_loop]] is defined %}
+      {% for route in extra_routes[interface_names[interface_loop]] %}
         - to: {{ route.to }}
           via: "{{ route.via }}"
       {% endfor %}

@@ -3,6 +3,30 @@
   become: false
   delegate_to: localhost
   block:
+    # Check if root is mounted read-only
+    # This an issue specific to Kali where sometimes root is mounted read-only
+    # Done here because the check needs to happen in the very early stage of the boot
+    - name: Checking if root is mounted read-only...
+      ansible.builtin.uri:
+        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ created_vm_info.value[0].vm
+          | default(vcenter_vm_info.value[0].vm) }}/guest/processes?action=create
+        method: POST
+        headers:
+          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+        body:
+          credentials: "{{ rest_api_credentials }}"
+          spec:
+            arguments: -c 'if grep -q ID=kali /etc/os-release && mount | grep "on / " | grep ro,; then mount -o remount,rw /; fi'
+            path: /bin/bash
+        status_code: 201
+        body_format: json
+        validate_certs: "{{ validate_vmware_certs }}"
+      retries: 3
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
+
     - name: Templating nmcli configuration files...
       ansible.builtin.template:
         src: "{{ item.src }}"

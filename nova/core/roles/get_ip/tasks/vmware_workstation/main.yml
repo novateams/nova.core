@@ -20,8 +20,13 @@
     - vmip.stdout != "unknown"
     - vmip.stdout is ansible.utils.ipv4 # Waiting until IP address is a valid IPv4 address
 
+- name: Setting connection_address fact...
+  ansible.builtin.set_fact:
+    connection_address: "{{ vmip.stdout }}"
+
 - name: Printing IP for {{ inventory_hostname }}...
   ansible.builtin.debug:
     msg: |
       {{ fqdn | default('NA') }}
       IPv4 - {{ vmip.stdout }}
+      Connection - {{ connection_address }}
