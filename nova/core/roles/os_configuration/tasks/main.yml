@@ -13,15 +13,15 @@
           ansible.builtin.include_tasks: windows.yml
           when: ansible_system == "Win32NT"
 
-        - name: Including Linux configuration tasks...
-          ansible.builtin.include_tasks: linux.yml
-          when:
-            - ansible_system == "Linux"
-            - customization_method != "proxmox" # Proxmox has its own tasks
-
+        # This needs to be before the Linux tasks
+        # Because Proxmox might have specific cluster configuration tasks
         - name: Including Proxmox configuration tasks...
           ansible.builtin.include_tasks: proxmox.yml
           when: customization_method == "proxmox"
+
+        - name: Including Linux configuration tasks...
+          ansible.builtin.include_tasks: linux.yml
+          when: ansible_system == "Linux"
 
         - name: Including FreeBSD configuration tasks...
           ansible.builtin.include_tasks: freebsd.yml
