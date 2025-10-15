@@ -4,3 +4,10 @@
     name: "*"
     state: latest # Latest is used in order to perform a full upgrade
     autoremove: true
+  register: pkgng_update
+
+- name: Rebooting if required after package updates... # noqa: no-handler
+  ansible.builtin.reboot:
+  when:
+    - pkgng_update.changed
+    - updates_freebsd_reboot_after_updates | bool
