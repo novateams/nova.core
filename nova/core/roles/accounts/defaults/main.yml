@@ -52,19 +52,21 @@ windows_user_groups:
 accounts_domain_groups_members_strategy: replace
 
 unix_distro_root_group_map:
-  Debian: sudo
+  AlmaLinux: wheel
+  Alpine: root
+  Archlinux: wheel
   CentOS: wheel
+  Debian: sudo
+  FreeBSD: wheel
+  Kali: sudo
+  OpenWrt: wheel
+  Parrot: sudo
   RedHat: wheel
   Ubuntu: sudo
-  Kali: sudo
-  FreeBSD: wheel
-  OpenWrt: wheel
-  Archlinux: wheel
-  AlmaLinux: wheel
-  Parrot: sudo
   VMkernel: root
 
 unix_distro_shell_map:
+  Alpine: /bin/sh
   FreeBSD: /bin/tcsh
 
 unix_distro_skel_map:
