@@ -53,12 +53,24 @@
         - name: Reboot and availability check...
           when: domain_users_to_remove != []
           block:
-            # This is to block any logins after reboot
+            # This is required to lookup the path of the user
+            - name: Getting DistinguishedName of following accounts...
+              microsoft.ad.object_info:
+                ldap_filter: (&(objectClass=user)(sAMAccountName={{ item[:20] }})) # sAMAccountName is limited to 20 characters
+                properties:
+                  - msDS-parentdistname
+              register: users_dn
+              loop: "{{ domain_users_to_remove }}"
+
+            # Disabling instead of removing since it's a better practice to keep the account for audit purposes
             - name: Disabling following domain accounts...
               microsoft.ad.user:
                 name: "{{ item }}"
                 enabled: false
+                path: "{{ (users_dn.results | map(attribute='objects') | list | flatten)[idx]['msDS-parentdistname'] }}"
               loop: "{{ domain_users_to_remove }}"
+              loop_control:
+                index_var: idx
 
             - name: Handling reboot before removing domain accounts...
               when: accounts_reboot_before_remove | bool
@@ -69,12 +81,6 @@
                 - name: DC post-reboot availability check...
                   ansible.builtin.include_role:
                     name: nova.core.win_dc_post_reboot_check
-
-        - name: Removing following domain accounts...
-          microsoft.ad.user:
-            name: "{{ item }}"
-            state: absent
-          loop: "{{ domain_users_to_remove }}"
 
     - name: Rebooting non-primary DC to close any open sessions...
       when:

@@ -5,8 +5,13 @@ domain_user_accounts: []
 domain_groups: []
 sudo_requires_password: true # Unix & MacOS only
 use_ssh_agent_for_sudo: false
-accounts_remove_stale: true # Compares the accounts list with the users on the system created by this role and removes any that are not in the accounts list
-accounts_reboot_before_remove: true # Checks if the system can be rebooted. This should be TRUE, otherwise the role can fail if user_profiles_to_remove are still logged in
+
+# Compares the accounts list with the user profiles on the system created by this role and removes any that are not in the accounts list
+accounts_remove_stale: true
+
+# Checks if the system can be rebooted. This should be TRUE, otherwise the role can fail if user_profiles_to_remove are still logged in
+accounts_reboot_before_remove: true
+
 fresh_deploy: false # Checks if the machine has just been created, required for setting correct connection parameters for AWS machines
 accounts_pre_roles: [] # Extra roles to include as first step in this one
 accounts_post_roles: [] # Extra roles to include as last step in this one
