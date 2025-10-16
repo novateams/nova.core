@@ -39,29 +39,14 @@
       until: not win_updates.failed
       retries: 2
 
-    - name: Rebooting and re-including the task...
-      when:
-        - win_updates.reboot_required
-        - updates_include_count is not defined or updates_include_count | int < 3
-      block:
-        - name: Setting update loop count...
-          ansible.builtin.set_fact:
-            updates_include_count: "{{ updates_include_count | default(0) | int + 1 }}"
-
-        - name: Rebooting...
-          ansible.windows.win_reboot:
-
-        - name: Including Windows Update tasks...
-          ansible.builtin.include_tasks: windows.yml
-
   # In some cases Windows Update may fail to install updates, so we need to try rescue the situation
   rescue:
     - name: WINDOWS UPDATE ERROR
       ansible.builtin.fail:
-        msg: Windows Update failed to install updates. Check the errors above and {{ inventory_hostname }} host logs for more details.
-      when:
-        - updates_rescue_count is defined
-        - updates_rescue_count | int < 3
+        msg: |
+          Windows Update has failed {{ updates_rescue_count | default(0) }}
+          times to install updates. Check the errors above and {{ inventory_hostname }} host logs for more details.
+      when: updates_rescue_count | default(0) | int == 3
 
     - name: Stopping Windows Update service...
       ansible.windows.win_service:
@@ -88,7 +73,7 @@
 
     - name: Setting rescue loop count...
       ansible.builtin.set_fact:
-        updates_include_count: "{{ updates_rescue_count | default(0) | int + 1 }}"
+        updates_rescue_count: "{{ updates_rescue_count | default(0) | int + 1 }}"
 
     - name: Rebooting...
       ansible.windows.win_reboot:
