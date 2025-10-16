@@ -21,7 +21,7 @@ until systemctl is-active --quiet pve-cluster; do
     sleep 3
 done
 
-MGMT_INTERFACE_NAME={{ configure_networking_proxmox_mgmt_interface_name | default("$(ip -o link show | awk -F': ' '{print $2}' | grep -v '^lo$' | grep -v '^ens.*' | head -n 1)") }}
+MGMT_INTERFACE_NAME={{ configure_networking_proxmox_mgmt_interface_name | default("vmbr0") }}
 NODE_NAME={{ configure_networking_proxmox_node_name | default("$(hostname)") }}
 
 pvesh set /nodes/$NODE_NAME/network/$MGMT_INTERFACE_NAME --type bridge \
