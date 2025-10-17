@@ -25,6 +25,7 @@
   register: deploy_vars_vault_token
   delegate_to: localhost
   become: false
+  changed_when: false # It only does a web request to get a token so no need to mark as changed
   when:
     - vault_address != {}
     - deploy_vars_get_vault_token | bool # | bool is required to pass the variable from the command line
