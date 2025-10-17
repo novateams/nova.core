@@ -244,6 +244,26 @@
         label: "{{ item.cloud_id }}"
         index_var: idx
 
+    - name: Setting custom attributes on {{ custom_vm_name | default(vm_name) }}...
+      when: machine_operations_vsphere_custom_attributes != []
+      block:
+        - name: Removing following attributes from {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_custom_attribute_defs:
+            state: absent
+            attribute_key: "{{ item.key }}"
+          loop: "{{ existing_vm_info.instance.customvalues | dict2items }}"
+          loop_control:
+            label: "{{ item.key }}"
+          when:
+            - existing_vm_info.instance.customvalues != {}
+            - existing_vm_info.instance.customvalues | length != machine_operations_vsphere_custom_attributes | length
+
+        - name: Adding attributes to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_custom_attributes:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            state: present
+            attributes: "{{ machine_operations_vsphere_custom_attributes }}"
+
 - name: Including nova.core.powerstate role...
   ansible.builtin.include_role:
     name: nova.core.powerstate

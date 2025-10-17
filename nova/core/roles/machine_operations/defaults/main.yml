@@ -61,6 +61,10 @@ machine_operations_vsphere_video_3d_memory: 256
 vm_description: Created on {{ ansible_date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }} - {{ inventory_hostname }}
 template_description: Created on {{ ansible_date_time.iso8601 }}
 
+# Add a list of custom attributes to add to the VM
+# https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_custom_attributes_module.html
+machine_operations_vsphere_custom_attributes: []
+
 ######################
 # VMWare workstation #
 ######################
