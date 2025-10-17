@@ -1,55 +1,50 @@
 ---
-- name: Installing Packages...
-  # Proxmox is Debian but we don't want to run these tasks on Proxmox
-  # customization_method comes from Operating System group_var
-  when: customization_method != "proxmox"
-  block:
-    # These packages are also available on BSD systems
-    - name: Installing universal Unix packages...
-      ansible.builtin.package:
-        name:
-          - curl # Useful for downloading files & interacting with web services
-          - dbus # Required for DBus (for an example hostname change)
-          - file # Useful for file management & editing over SSH
-          - jq # Useful for parsing JSON
-          - nano # Useful for editing files over SSH
-          - python3 # Required for Ansible
-          - sudo # Required for Ansible
-          - tcpdump # Useful for network troubleshooting
-          - vim # Useful for editing files over SSH
-          - wget # Useful for downloading files
-        state: present
-        update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
+# These packages are also available on BSD systems
+- name: Installing universal Unix packages...
+  ansible.builtin.package:
+    name:
+      - curl # Useful for downloading files & interacting with web services
+      - dbus # Required for DBus (for an example hostname change)
+      - file # Useful for file management & editing over SSH
+      - jq # Useful for parsing JSON
+      - nano # Useful for editing files over SSH
+      - python3 # Required for Ansible
+      - sudo # Required for Ansible
+      - tcpdump # Useful for network troubleshooting
+      - vim # Useful for editing files over SSH
+      - wget # Useful for downloading files
+    state: present
+    update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
 
-    # These packages are only available on Linux systems
-    - name: Installing universal Linux packages...
-      ansible.builtin.package:
-        name:
-          - acl # Required for managing file permissions
-          - ca-certificates # Required for managing trusted certificates
-          - dnsutils # DNS query tools
-          - man # Required for reading manual pages
-          - net-tools # Useful for network troubleshooting
-          - traceroute # Useful for network troubleshooting
-        state: present
-        update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
-      when: ansible_system == "Linux"
+# These packages are only available on Linux systems
+- name: Installing universal Linux packages...
+  ansible.builtin.package:
+    name:
+      - acl # Required for managing file permissions
+      - ca-certificates # Required for managing trusted certificates
+      - dnsutils # DNS query tools
+      - man # Required for reading manual pages
+      - net-tools # Useful for network troubleshooting
+      - traceroute # Useful for network troubleshooting
+    state: present
+    update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
+  when: ansible_system == "Linux"
 
-    - name: Include Ubuntu specific configuration...
-      ansible.builtin.include_tasks: ubuntu.yml
-      when: ansible_distribution == "Ubuntu"
+- name: Include Ubuntu specific configuration...
+  ansible.builtin.include_tasks: ubuntu.yml
+  when: ansible_distribution == "Ubuntu"
 
-    - name: Include Archlinux specific configuration...
-      ansible.builtin.include_tasks: arch.yml
-      when: ansible_os_family == "Archlinux"
+- name: Include Archlinux specific configuration...
+  ansible.builtin.include_tasks: arch.yml
+  when: ansible_os_family == "Archlinux"
 
-    - name: Include Debian based OS specific configuration...
-      ansible.builtin.include_tasks: debian_family.yml
-      when: ansible_os_family == "Debian"
+- name: Include Debian based OS specific configuration...
+  ansible.builtin.include_tasks: debian_family.yml
+  when: ansible_os_family == "Debian"
 
-    - name: Include Debian based OS specific configuration...
-      ansible.builtin.include_tasks: redhat_family.yml
-      when: ansible_os_family == "RedHat"
+- name: Include RedHat based OS specific configuration...
+  ansible.builtin.include_tasks: redhat_family.yml
+  when: ansible_os_family == "RedHat"
 
 # SSHD Configuration
 # This to avoid errors when someone has more that 6 SSH keys in their agent
