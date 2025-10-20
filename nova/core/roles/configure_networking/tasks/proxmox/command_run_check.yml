@@ -9,7 +9,7 @@
     method: GET
     validate_certs: "{{ proxmox_validate_certs }}"
   register: network_config_command_status
-  retries: 3
+  retries: "{{ (configure_networking_command_wait_timeout if configure_networking_command_wait_timeout >= 3 else 3) // 3 }}"
   delay: 3
 
 - name: ERROR
