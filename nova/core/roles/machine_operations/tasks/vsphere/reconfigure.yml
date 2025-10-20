@@ -4,9 +4,8 @@
   become: false
   block:
     - name: Getting {{ custom_vm_name | default(vm_name) }} VM CPU & RAM info...
-      vmware.vmware.vm_resource_info:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vsphere_vm_info
+      vmware.vmware_rest.vcenter_vm_info:
+        vm: "{{ vcenter_vm_info.value[0].vm }}"
 
     # When Providentia is used hardware_cpu and hardware_ram are always defined
     # For local inventories, either hardware_cpu or hardware_ram needs to be defined to trigger this block.
@@ -21,7 +20,7 @@
                 count: "{{ hardware_cpu }}"
               when:
                 - hardware_cpu != none
-                - vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
+                - vcenter_vm_info.value[0].cpu_count != hardware_cpu
               retries: 2
               delay: 2
 
@@ -31,7 +30,7 @@
                 size_MiB: "{{ hardware_ram * 1024 }}"
               when:
                 - hardware_ram != none
-                - vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
+                - vcenter_vm_info.value[0].memory_size_MiB != (hardware_ram * 1024)
               retries: 2
               delay: 2
 
@@ -52,7 +51,7 @@
                     count: "{{ hardware_cpu }}"
                   when:
                     - hardware_cpu != none
-                    - vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
+                    - vcenter_vm_info.value[0].cpu_count != hardware_cpu
                   retries: 2
                   delay: 2
 
@@ -62,7 +61,7 @@
                     size_MiB: "{{ hardware_ram * 1024 }}"
                   when:
                     - hardware_ram != none
-                    - vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
+                    - vcenter_vm_info.value[0].memory_size_MiB != (hardware_ram * 1024)
                   retries: 2
                   delay: 2
 
