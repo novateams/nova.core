@@ -17,6 +17,9 @@ configure_networking_post_roles: [] # List of roles to include after finishing t
 # Can be used as as CLI var to re-run the network configuration part. Does not when sudo password is required because of vmware_tools plugin limitations
 reconfigure_network: false
 
+# Timeout in seconds to wait for network configuration commands to complete over the guest agent like VMware Tools, Qemu Guest Agent, etc.
+configure_networking_command_wait_timeout: 60
+
 mgmt_ip: {}
 
 # VMWare REST API defaults

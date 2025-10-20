@@ -13,8 +13,8 @@
     validate_certs: "{{ validate_vmware_certs }}"
   register: network_config_command_status
   until: network_config_command_status.json.exit_code is defined
-  retries: 30
-  delay: 2
+  retries: "{{ (configure_networking_command_wait_timeout if configure_networking_command_wait_timeout >= 3 else 3) // 3 }}"
+  delay: 3
 
 - name: ERROR
   ansible.builtin.fail:
