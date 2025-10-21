@@ -4,7 +4,8 @@
     msg: "{{ inventory_hostname }} Has immutable variable or group set and won't be configured"
   when:
     - immutable or ['immutable', 'custom_immutable'] | intersect(group_names) | length > 0
-    - not connection_connect | default(true) # Still allowing nova.core.connect role to be used to connect to the host
+    - single_role | default(false) not in ['nova.core.connection'] # Allowing non-invasive supporting single_roles to run even with immutable set
+    - pre_role | default(false) not in ['nova.core.get_ip'] # Allowing non-invasive supporting pre_roles to run even with immutable set
 
 - name: Including following post-deploy_vars roles...
   ansible.builtin.include_role:
