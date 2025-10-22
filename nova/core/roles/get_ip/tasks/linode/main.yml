@@ -5,6 +5,7 @@
     label: "{{ custom_vm_name | default(vm_name) }}"
   register: linode_vm
   delegate_to: localhost
+  become: false
 
 - name: Setting connection_address fact...
   ansible.builtin.set_fact:
