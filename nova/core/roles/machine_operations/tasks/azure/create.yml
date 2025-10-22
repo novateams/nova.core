@@ -51,8 +51,7 @@
 
     - name: Creating a list of interface names for {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.set_fact:
-        azure_vm_network_interface_names:
-          "{{ azure_vm_network_interface_names | default([])
+        azure_vm_network_interface_names: "{{ azure_vm_network_interface_names | default([])
           + [custom_vm_name | default(vm_name) + '_nic' + ('%02d' | format(index + 1))] }}"
       loop: "{{ interfaces }}"
       loop_control:
@@ -89,6 +88,8 @@
         state: present
         image: "{{ azure_vm_image }}"
         tags:
+          inventory_hostname: "{{ inventory_hostname }}"
+          project_fullname: "{{ project_fullname | default('undefined_project') }}"
           vm_name: "{{ custom_vm_name | default(vm_name) }}"
 
     - name: Enabling SSH on Windows via CustomScriptExtension...
