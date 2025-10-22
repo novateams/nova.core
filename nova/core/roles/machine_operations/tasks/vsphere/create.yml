@@ -269,3 +269,4 @@
     name: nova.core.powerstate
   vars:
     poweron: true
+  when: fresh_deploy or vcenter_vm_info.guests[0].hw_power_status != 'poweredOn'
