@@ -27,19 +27,24 @@
       no_log: true
       register: vcenter_session_api_key
 
-    - name: Including {{ customization_method }} network configuration tasks...
-      ansible.builtin.include_tasks: "{{ customization_method }}.yml"
+    # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
+    # to retry the network configuration up to 3 times before failing the task completely.
+    - name: Including network configuration tasks...
+      block:
+        - name: Including {{ customization_method }} network configuration tasks...
+          ansible.builtin.include_tasks: "{{ customization_method }}.yml"
 
-    - name: Terminating the REST API session...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/session
-        method: DELETE
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.vmware_api_session_id }}"
-        user: "{{ vmware_defaults.username }}"
-        password: "{{ vmware_defaults.password }}"
-        force_basic_auth: true
-        status_code: 204
-        body_format: json
-        validate_certs: "{{ vmware_defaults.validate_certs }}"
-      no_log: true
+      rescue:
+        - name: NETWORK CONFIGURATION ERROR
+          ansible.builtin.fail:
+            msg: |
+              Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+              Check the errors above and {{ inventory_hostname }} host logs for more details.
+          when: configure_networking_rescue_count | default(0) | int == 3
+
+        - name: Setting rescue loop count...
+          ansible.builtin.set_fact:
+            configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+        - name: Re-including vSphere network configuration tasks...
+          ansible.builtin.include_tasks: main.yml
