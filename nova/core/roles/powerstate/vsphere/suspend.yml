@@ -12,6 +12,6 @@
       vmware.vmware.guest_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
       register: vm_tools
-      until: vm_tools.guests[0].hw_power_status == "suspended"
+      until: vm_tools.guests[0].hw_power_status | default(false) == "suspended"
       retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
       delay: 5
