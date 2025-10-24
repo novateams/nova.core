@@ -34,21 +34,14 @@
     state: present
   when: ansible_os_family != 'RedHat'
 
+# For latest Debian versions the localectl command gives access denied so using lineinfile
 - name: Setting the default locale...
-  block:
-    - name: Setting the default locale...
-      ansible.builtin.command: localectl set-locale LANG={{ os_configuration_locale }} LANGUAGE={{ os_configuration_locale }}
-      changed_when: true
-
-  rescue:
-    # It has happened that for latest Debian versions the localectl command is broken
-    # Using lineinfile as a workaround if that happens
-    - name: Setting the default locale (rescue)...
-      ansible.builtin.lineinfile:
-        path: /etc/locale.conf
-        regexp: ^LANG=
-        line: LANG={{ os_configuration_locale }}
-        mode: "0644"
+  ansible.builtin.lineinfile:
+    path: /etc/locale.conf
+    regexp: ^LANG=
+    line: LANG={{ os_configuration_locale }}
+    mode: "0644"
+    create: true
 
 - name: Enabling SSH forwarding for sudo...
   ansible.builtin.lineinfile:
