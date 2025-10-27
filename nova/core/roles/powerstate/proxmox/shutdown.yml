@@ -4,7 +4,7 @@
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: stopped
     timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-  retries: 6
+  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
   delay: 5
   delegate_to: localhost
   become: false
