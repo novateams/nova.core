@@ -13,15 +13,26 @@
   ansible.builtin.set_fact:
     user_profiles_to_remove: "{{ home_profiles.stdout_lines | difference(local_accounts_with_password | map(attribute='username')) }}"
 
-- name: Rebooting to close any open sessions...
-  ansible.builtin.reboot:
-  when:
-    - user_profiles_to_remove != []
-    - accounts_reboot_before_remove | bool
+- name: Trying to remove stale accounts...
+  block:
+    - name: Removing following accounts...
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: absent
+        remove: true
+      loop: "{{ user_profiles_to_remove }}"
 
-- name: Removing following accounts...
-  ansible.builtin.user:
-    name: "{{ item }}"
-    state: absent
-    remove: true
-  loop: "{{ user_profiles_to_remove }}"
+  # Using rescue to close any open sessions before trying to remove accounts again
+  rescue:
+    - name: Rebooting to close any open sessions...
+      ansible.builtin.reboot:
+      when:
+        - user_profiles_to_remove != []
+        - accounts_reboot_before_remove | bool
+
+    - name: Removing following accounts...
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: absent
+        remove: true
+      loop: "{{ user_profiles_to_remove }}"
