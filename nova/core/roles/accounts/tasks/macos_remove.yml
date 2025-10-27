@@ -16,11 +16,20 @@
       | difference(local_accounts_with_password | map(attribute='username')) }}"
 
 - name: Removing stale user accounts and profiles...
-  when:
-    - user_profiles_to_remove != []
+  when: user_profiles_to_remove != []
   block:
+    - name: Removing following accounts...
+      ansible.builtin.raw: |
+        dscl . -delete /Users/{{ item }}
+        rm -rf /Users/{{ item }}
+      loop: "{{ user_profiles_to_remove }}"
+      changed_when: true
+
+  rescue:
     - name: Handling reboot before removing accounts...
       when: accounts_reboot_before_remove | bool
+      delegate_to: localhost
+      become: false
       block:
         - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
           ansible.builtin.include_role:
@@ -34,8 +43,6 @@
             port: 22
             state: stopped
             timeout: 300
-          delegate_to: localhost
-          become: false
 
         - name: Waiting until ssh is up for {{ inventory_hostname }}...
           ansible.builtin.wait_for:
@@ -43,12 +50,10 @@
             port: 22
             state: started
             timeout: 300
-          delegate_to: localhost
-          become: false
 
     - name: Removing following accounts...
       ansible.builtin.raw: |
-        dscl . -delete "/Users/{{ item }}"
+        dscl . -delete /Users/{{ item }}
         rm -rf /Users/{{ item }}
       loop: "{{ user_profiles_to_remove }}"
       changed_when: true
