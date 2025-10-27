@@ -69,6 +69,10 @@ machine_operations_vsphere_custom_attributes: []
 # VMWare workstation #
 ######################
 
+# Set to false to skip downloading VM templates from vSphere
+# The templates must be created by other means and exist locally in this case
+machine_operations_vmware_workstation_download_template_from_vsphere: true
+
 # If the local template is older than this interval it will re-downloaded during deploy
 machine_operations_vmware_workstation_template_update_interval_days: 90
 
