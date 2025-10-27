@@ -25,33 +25,22 @@
           changed_when: true
           when: vmware_workstation.local_vmx_path in running_vms.stdout_lines
 
-        - name: Stopping VMware Workstation GUI...
-          ansible.builtin.shell: |
-            if [ -z "$(ps -fC vmware --no-headers)" ]; then
-                echo "VMware not running..."
-            else
-                echo "Stopping VMware..."
-                set -o pipefail
-                kill $(ps -fC vmware --no-headers | awk '{print $2}')
-            fi
-          args:
-            executable: /bin/bash
-          changed_when: vmware_workstation_running.stdout == "Stopping VMware..."
-          register: vmware_workstation_running
+        - name: Getting all lock files in VM folder...
+          ansible.builtin.find:
+            paths: "{{ vmware_workstation.local_vmx_folder_path }}"
+            recurse: true
+            patterns: "*.lck"
+          register: lck_files
 
-        # Otherwise the file is locked and we can't remove the VM
-        - name: Please close the VMware Workstation GUI (VMs can keep running in the background)...
-          ansible.builtin.shell: |
-            if [ -z "$(ps -fC vmware --no-headers)" ]; then
-                echo "Moving on..."
-            else
-                echo "Waiting for VMware to stop..."
-            fi
-          changed_when: false
-          register: vmware_workstation_running
-          retries: 60
-          delay: 5
-          until: vmware_workstation_running.stdout == "Moving on..."
+        - name: Removing following lock files...
+          ansible.builtin.file:
+            path: "{{ lock.path }}"
+            state: absent
+          loop: "{{ lck_files.files }}"
+          loop_control:
+            loop_var: lock
+            label: "{{ lock.path | basename }}"
+          when: lck_files.files != []
 
         - name: Removing {{ inventory_hostname }}...
           ansible.builtin.command: vmrun -T ws deleteVM {{ vmware_workstation.local_vmx_path }}
