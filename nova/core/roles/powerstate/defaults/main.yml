@@ -6,22 +6,18 @@ restart: false
 shutdown: false
 suspend: false
 
-# Timeouts in seconds
-powerstate_poweron_timeout: 180
-powerstate_shutdown_timeout: 180
-powerstate_restart_timeout: 180
-
+# How long to wait for agent info during powerstate operations
 # Agent can be VMTools, Qemu-guest-agent, etc.
 powerstate_agent_info_timeout: 180
 
-# Legacy delay values
+# Legacy delay values, not to be used anymore
 shutdown_shutting_retries: 5
 shutdown_shutting_delay: 2
-shutdown_waiting_retries: "{{ powerstate_shutdown_timeout }}"
+shutdown_waiting_retries: 18
 shutdown_waiting_delay: 10
 
 powerstate_poweron_retries: 18
-powerstate_poweron_delay: "{{ powerstate_poweron_timeout }}"
+powerstate_poweron_delay: 18
 
 powerstate_vmtools_retries: 18
 powerstate_vmtools_delay: 10

@@ -1,24 +1,24 @@
 ---
-# In case the machine was suspended, we need to resume it first, since suspend does not have a valid state in proxmox_vm_info output
-- name: Resuming {{ custom_vm_name | default(vm_name) }}...
-  ansible.builtin.uri:
-    url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/status/resume"
-    headers:
-      Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
-    method: POST
-    validate_certs: "{{ proxmox_validate_certs }}"
-  retries: 6
-  delay: 5
+- name: Powering on Proxmox VM...
   delegate_to: localhost
   become: false
-  when: proxmox_vm_info.proxmox_vms[0].status == 'running'
+  block:
+    # In case the machine was suspended, it needs to be resumed first, since suspend does not have a valid state in proxmox_vm_info output
+    - name: Resuming {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/status/resume"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        validate_certs: "{{ proxmox_validate_certs }}"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
+      delay: 5
+      when: proxmox_vm_info.proxmox_vms[0].status == 'running'
 
-- name: Starting {{ custom_vm_name | default(vm_name) }} VM...
-  community.proxmox.proxmox_kvm:
-    name: "{{ custom_vm_name | default(vm_name) }}"
-    state: started
-    timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-  retries: 6
-  delay: 5
-  delegate_to: localhost
-  become: false
+    - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+      community.proxmox.proxmox_kvm:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: started
+        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
+      delay: 5

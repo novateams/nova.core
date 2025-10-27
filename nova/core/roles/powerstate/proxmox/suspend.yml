@@ -8,5 +8,5 @@
     validate_certs: "{{ proxmox_validate_certs }}"
   delegate_to: localhost
   become: false
-  retries: 6
+  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
   delay: 5

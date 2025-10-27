@@ -10,10 +10,6 @@
         state: powered-on
         force: true # Required to power on a VM that is in a suspended state
 
-    - name: Waiting for {{ custom_vm_name | default(vm_name) }} to power on...
-      vmware.vmware.guest_info:
-        guest_name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vm_tools
-      until: vm_tools.guests[0].guest_tools_status | default(false) == "guestToolsRunning"
-      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
-      delay: 5
+    - name: Waiting for VMware tools to become available...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
