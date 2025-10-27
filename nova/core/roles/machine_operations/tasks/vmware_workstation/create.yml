@@ -21,7 +21,9 @@
         recurse: true
 
     - name: Creating and configuring {{ custom_vm_name | default(vm_name) }}...
-      when: not vm_presence.stat.exists
+      when:
+        - machine_operations_vmware_workstation_download_template_from_vsphere
+        - not vm_presence.stat.exists
       block:
         - name: Checking if {{ vm_template }} template is already downloaded...
           ansible.builtin.stat:
@@ -73,6 +75,18 @@
             path: "{{ vmware_workstation.local_vm_folder }}"
             state: directory
             recurse: true
+
+        - name: Checking for existing {{ machine_operations_vmware_workstation_local_vmx_template_path }}...
+          ansible.builtin.stat:
+            path: "{{ machine_operations_vmware_workstation_local_vmx_template_path }}"
+          register: vmx_template_presence
+
+        - name: MISSING TEMPLATE FILE
+          ansible.builtin.fail:
+            msg: |
+              Template {{ vm_template }} is missing from {{ machine_operations_vmware_workstation_local_vmx_template_path }}
+              When not downloading from vSphere create the template by other means first.
+          when: not vmx_template_presence.stat.exists
 
         - name: Creating {{ custom_vm_name | default(vm_name) }} to vmxt template...
           ansible.builtin.command:
