@@ -30,13 +30,22 @@
             * {{ inventory_hostname }} machine interface has the connection flag set to true
       when: connection_network_info == []
 
-    - name: Checking that nothing is already responding on {{ connection_address }}...
-      ansible.builtin.command: ping -q -c 2 -W 2 {{ connection_address }}
-      register: res
-      failed_when: not (('0 received' in res.stdout) or ('0 packets received' in res.stdout))
-      changed_when: false
-      # The list of connection modes are the ones that are available in Providentia
-      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+    - name: Checking for IP conflict for non-automatic IP assignment...
+      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac'] # The list of connection modes are the ones that are available in Providentia
+      block:
+        - name: Checking that nothing is already responding on {{ connection_address }}... # noqa: command-instead-of-shell
+          ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'Test-IPAddress.sh') }}"
+          register: response
+          failed_when: not (response.stdout is search("received.*packet"))
+          changed_when: false
+
+        - name: ADDRESS ALREADY IN USE
+          ansible.builtin.fail:
+            msg: |
+              Looks like the address {{ connection_address }} is already in use!
+              Cannot continue deploying {{ custom_vm_name | default(vm_name) }} to avoid IP conflicts!
+              Check the VM management platform to if another device is using the same IP address.
+          when: not (response.stdout is search("100.*packet loss"))
 
     - name: Missing Operating System...
       ansible.builtin.fail:
@@ -75,7 +84,7 @@
     - name: Looking up template from exiting VMs...
       when: machine_operations_vsphere_content_library_name == {}
       block:
-        - name: Getting {{ vm_template }} info...
+        - name: Getting {{ vm_template }} CPU & RAM info...
           vmware.vmware.guest_info:
             name: "{{ vm_template if not template else base_vm_template }}"
           register: template_search_result
