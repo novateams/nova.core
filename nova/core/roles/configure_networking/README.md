@@ -58,6 +58,7 @@ When not using Providentia define the the network configuration in host/group/et
 # Any undefined value leave to null to avoid errors
 interfaces:
   - network_id: my-network-name # Some type of identifiable name. It'll be used for an example in netplan and nmcli interface name
+    nic_name: my_network_name # Name of the network interface inside the VM for Unix based OSs. Must be lowercase, numbers and underscores only
     cloud_id: my-cloud-name # This is a vSphere portgroup name
     domain: my.domain.com
     fqdn: my-host.my.domain.com # FQDN of the VM where the network will be configured
