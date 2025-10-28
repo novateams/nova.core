@@ -24,9 +24,15 @@
     - name: Configuring VMTools auto-update... # noqa: no-handler
       when: vmtools_autoupdate.changed
       block:
+        - name: Getting VMTools current state for {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.command: vmcli tools query {{ vmware_workstation.local_vmx_path }}
+          changed_when: false
+          register: vmtools_state
+
         - name: Upgrading VMTools for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.command: vmcli tools upgrade {{ vmware_workstation.local_vmx_path }}
           changed_when: true
+          when: not (vmtools_state.stdout is search("versionStatus.*supported_new")) # If a newer version is already installed we don't need to upgrade
 
         - name: Setting VMTools to upgrade on boot for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.command: vmcli configparams setentry tools.upgrade.policy upgradeAtPowerCycle {{ vmware_workstation.local_vmx_path }}
