@@ -23,15 +23,43 @@
       ansible.builtin.set_fact:
         interfaces: "{{ interfaces | rejectattr('cloud_id', 'in', ['', none]) }}"
 
+    - name: Checking if nic_name attribute is defined in any of the interfaces...
+      when: interfaces | selectattr('nic_name', 'defined') == []
+      block:
+        - name: NO nic_name FOUND
+          ansible.builtin.debug:
+            msg: |
+              No nic_name attribute found in interfaces list!
+              Do one of the following to fix this:
+                - Update Providentia to latest version
+                - Add nic_name attribute to the interfaces in your inventory when NOT using Providentia
+
+        - name: SLEEPING TO READ
+          ansible.builtin.wait_for:
+            timeout: 30
+          become: false
+          delegate_to: localhost
+
     # This is done to avoid issues with duplicate interface names in network configuration
     # Different OSs can use the same list and logic for interface naming
-    - name: Building a list of unique names from following interfaces...
+    - name: Building a list of unique names from following interfaces from network_id...
       ansible.builtin.set_fact:
-        interface_names: "{{ interface_names | default([]) + [item | regex_replace('[^A-Za-z0-9_]', '_')
+        interface_names: "{{ interface_names | default([]) + [item | regex_replace('[^A-Za-z0-9_]', '_') | lower
           if item not in interface_names | default([]) else item + idx | string] }}"
       loop: "{{ interfaces | map(attribute='network_id') }}"
       loop_control:
         index_var: idx
+      when: interfaces | selectattr('nic_name', 'defined') == []
+
+    # The regex here is temporary until users have upgraded their Providentia to the latest version where nic_name comes from API
+    # And made sure that all network abbreviations are updated
+    - name: Building a list of unique names from following interfaces from nic_name...
+      ansible.builtin.set_fact:
+        interface_names: "{{ interface_names | default([]) + [item | regex_replace('[^A-Za-z0-9_]', '_') | lower] }}"
+      loop: "{{ interfaces | map(attribute='nic_name') }}"
+      loop_control:
+        index_var: idx
+      when: interfaces | selectattr('nic_name', 'defined') != []
 
     - name: Configuring VM network in vSphere environment...
       ansible.builtin.include_tasks: vsphere/main.yml
