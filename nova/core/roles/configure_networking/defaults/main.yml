@@ -2,25 +2,64 @@
 skip_network_configuration: false # Skip network configuration tasks
 fresh_deploy: false
 interfaces: []
-dns_domain: {}
+
+#######
+# DNS #
+#######
+
+# list of DNS search domains to add to /etc/resolv.conf
 dns_search: []
+
+# list of IPv4 DNS servers to be used by the system
 dns_servers: []
+
+# list of IPv6 DNS servers to be used by the system
 dns_servers6: []
+
+# Combined list of all DNS servers that will be used in cases where supported. In other the IPv4 and IPv6 lists are used separately.
+dns_server_combined: "{{ dns_servers + dns_servers6 }}"
+
+# list of options to add to /etc/resolv.conf
 resolv_options: []
+
+#######
+# NTP #
+#######
+
 ntp_servers:
   - "0.pool.ntp.org"
   - "1.pool.ntp.org"
-dns_server_combined: "{{ dns_servers + dns_servers6 }}"
-configure_networking_pre_roles: [] # List of roles to include before starting the networking configuration tasks
-configure_networking_post_roles: [] # List of roles to include after finishing the networking configuration tasks
 
-# Can be used as as CLI var to re-run the network configuration part. Does not when sudo password is required because of vmware_tools plugin limitations
+########
+# Misc #
+########
+
+# Extra routes to add per interface when using netplan. Refer to role readme for examples
+extra_routes: []
+
+# PanOS specific defaults, since only 2 DNS or NTP servers are supported
+configure_networking_panos_enable_ipv6: true # Enable IPv6 on configured interfaces
+configure_networking_panos_primary_dns_server: "{{ dns_servers[0] }}"
+configure_networking_panos_secondary_dns_server: "{{ dns_servers6[0] | default(dns_servers[0]) }}"
+configure_networking_panos_primary_ntp_server: "{{ ntp_servers[0] }}"
+configure_networking_panos_secondary_ntp_server: "{{ ntp_servers[1] | default(ntp_servers[0]) }}"
+
+# List of roles to include before starting the networking configuration tasks
+configure_networking_pre_roles: []
+
+# List of roles to include after finishing the networking configuration tasks
+configure_networking_post_roles: []
+
+# Can be used as a CLI var to re-run the network configuration part.
+# Does not work on VMware when sudo password is required because of vmware_tools plugin limitations
 reconfigure_network: false
 
 # Timeout in seconds to wait for network configuration commands to complete over the guest agent like VMware Tools, Qemu Guest Agent, etc.
 configure_networking_command_wait_timeout: 60
 
-mgmt_ip: {}
+##########
+# VMWare #
+##########
 
 # VMWare REST API defaults
 # Using this method allows not defining password key in accounts lists
@@ -43,15 +82,3 @@ rest_api_credentials:
   type: USERNAME_PASSWORD
   user_name: "{{ template_username if fresh_deploy and not manual_fresh_deploy else admin_account }}"
   password: "{{ template_password if fresh_deploy and not manual_fresh_deploy else admin_account_password }}"
-retries_vmware_api: 60
-delay_vmware_api: 3
-
-# Routing options
-extra_routes: [] # Configure extra routes per interfaces.
-
-# PanOS
-configure_networking_panos_enable_ipv6: true # Enable IPv6 on configured interfaces
-configure_networking_panos_primary_dns_server: "{{ dns_servers[0] }}"
-configure_networking_panos_secondary_dns_server: "{{ dns_servers6[0] | default(dns_servers[0]) }}"
-configure_networking_panos_primary_ntp_server: "{{ ntp_servers[0] }}"
-configure_networking_panos_secondary_ntp_server: "{{ ntp_servers[1] | default(ntp_servers[0]) }}"
