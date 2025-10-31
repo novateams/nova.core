@@ -15,6 +15,13 @@ debian_family_unattended_upgrades_allow_reboot: false
 # Upgrade method for Debian family
 updates_debian_family_upgrade_method: dist
 
+################
+# Linux RedHat #
+################
+
+# Nr of kernel versions to keep, since by default RedHat boot partition is only 1GB
+updates_redhat_family_nr_of_kernels_to_keep: 2
+
 ###########
 # Windows #
 ###########
