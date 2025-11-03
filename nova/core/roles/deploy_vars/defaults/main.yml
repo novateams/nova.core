@@ -23,7 +23,7 @@ immutable: false # Set to true to stop running any role on the host or group
 ansible_become_password: "{{ ansible_password | default(omit) }}" # Defaulting to ansible_password when password is required for sudo
 
 # Networking
-# Networking defaults when using Providentia or interfaces list that is based on Providentia API output
+# Defaults when using Providentia or interfaces list that is based on Providentia API output
 # To make sure these values can be used as hostvar lookups they also need to be defined in projects group_vars all.yml file
 
 connection_address: "{{ interfaces | nova.core.addresses('connection_address') | first | ansible.utils.ipaddr('address') }}"
@@ -91,9 +91,9 @@ deploy_vars_get_vault_token_with_pre_role: false
 deploy_vars_vault_auth_method: ldap # Method used to authenticate to Vault. Can be ldap or token.
 deploy_vars_vault_mount_point: "{{ omit }}" # The mount point for the secrets engine in Vault will be omitted if empty
 vault_ca_cert: "{{ omit }}" # The path to the CA certificate file which is used to validate the Vault server certificate
-vault_auth_method: ldap # Currenty in this role ldap or userpass are supported
-vault_username: "{{ project_deployer_username | default(deployer_username) }}"
-vault_password: "{{ project_deployer_password | default(deployer_password) }}"
+vault_auth_method: ldap # Currently in this role ldap or userpass are supported
+vault_username: "{{ env_project_deployer_username | default(project_deployer_username) | default(deployer_username) }}"
+vault_password: "{{ env_project_deployer_password | default(project_deployer_password) | default(deployer_password) }}"
 validate_vault_certs: true
 vault_access_token: "{{ deploy_vars_vault_token.login.auth.client_token }}" # Comes from Vault token generation task in main.yml
 vault_lookup_fragment: "url={{ vault_address }} token={{ vault_access_token }} " # The space before the ending quote is required
@@ -106,27 +106,36 @@ validate_vmware_certs: true
 
 vmware_defaults:
   hostname: "{{ vcenter_hostname | default('') }}"
-  username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default('') }}"
-  password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default('') }}"
+  username: "{{ vcenter_username | default(env_project_deployer_username) | default(project_deployer_username) | default(deployer_username) | default('') }}"
+  password: "{{ vcenter_password | default(env_project_deployer_password) | default(project_deployer_password) | default(deployer_password) | default('') }}"
   validate_certs: "{{ validate_vmware_certs }}"
 
 vmware_rest_defaults:
   vcenter_hostname: "{{ vcenter_hostname | default('') }}"
-  vcenter_username: "{{ vcenter_username | default(project_deployer_username) | default(deployer_username) | default('') }}"
-  vcenter_password: "{{ vcenter_password | default(project_deployer_password) | default(deployer_password) | default('') }}"
+  vcenter_username:
+    "{{ vcenter_username | default(env_project_deployer_username) | default(project_deployer_username)
+    | default(deployer_username) | default('') }}"
+  vcenter_password:
+    "{{ vcenter_password | default(env_project_deployer_password) | default(project_deployer_password)
+    | default(deployer_password) | default('') }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username: "{{ nsx_username | default(project_deployer_username)
+nsx_deployer_username:
+  "{{ nsx_username | default(env_project_deployer_username) | default(project_deployer_username)
   | default(deployer_username | default('') + '@' + ldap_auth_domain | default('')) }}"
-nsx_deployer_password: "{{ nsx_password | default(project_deployer_username) | default(deployer_password) | default('') }}"
+nsx_deployer_password:
+  "{{ nsx_password | default(env_project_deployer_password) | default(project_deployer_password)
+  | default(deployer_password) | default('') }}"
 
 vmware_workstation:
   connection: ssh
   host: host.docker.internal
   local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}
-  local_vmx_folder_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
+  local_vmx_folder_path:
+    /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
     | default(vm_name) }}
-  local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
+  local_vmx_path:
+    /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
     | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
   python_interpreter: /usr/bin/python3
   shell_type: sh
@@ -138,8 +147,14 @@ vmware_workstation:
 
 aws_defaults:
   region: "{{ aws_region | default('eu-north-1') }}" # Default is Stockholm
-  aws_access_key: "{{ aws_access_key_id | default('') }}"
-  aws_secret_key: "{{ aws_access_key | default('') }}"
+  aws_access_key:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_aws_access_key_id']
+    | default(vars[project_fullname ~ '_aws_access_key_id'])
+    | default(aws_access_key_id) | default('') }}"
+  aws_secret_key:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_aws_access_key']
+    | default(vars[project_fullname ~ '_aws_access_key'])
+    | default(aws_access_key) | default('') }}"
 
 #########
 # Azure #
@@ -149,13 +164,27 @@ azure_resource_group: "{{ project_fullname | default('') }}"
 azure_location: westeurope
 azure_defaults:
   # Current subscription ID from https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade
-  subscription_id: "{{ azure_subscription_id | default('') }}"
+  subscription_id:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_subscription_id']
+    | default(vars[project_fullname ~ '_azure_subscription_id'])
+    | default(azure_subscription_id) | default('') }}"
+
   # The Service Principal Name's (Service Account used for deployment) ID from
   # https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  client_id: "{{ azure_client_id | default('') }}"
+  client_id:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_client_id']
+    | default(vars[project_fullname ~ '_azure_client_id'])
+    | default(azure_client_id) | default('') }}"
+
   # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  tenant: "{{ azure_tenant_id | default('') }}"
-  secret: "{{ azure_service_principal_secret | default('') }}"
+  tenant:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_tenant_id']
+    | default(vars[project_fullname ~ '_azure_tenant_id'])
+    | default(azure_tenant_id) | default('') }}"
+  secret:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_service_principal_secret']
+    | default(vars[project_fullname ~ '_azure_service_principal_secret'])
+    | default(azure_service_principal_secret) | default('') }}"
 
 ###########
 # Proxmox #
@@ -163,12 +192,47 @@ azure_defaults:
 
 proxmox_defaults:
   api_host: "{{ proxmox_api_host | default('') }}"
-  api_user: "{{ proxmox_api_user | default('') }}"
-  api_token_id: "{{ proxmox_api_token_id | default('') }}"
-  api_token_secret: "{{ proxmox_api_token_secret | default('') }}"
+  api_user:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_proxmox_api_user']
+    | default(vars[project_fullname ~ '_proxmox_api_user'])
+    | default(proxmox_api_user) | default('') }}"
+  api_token_id:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_proxmox_api_token_id']
+    | default(vars[project_fullname ~ '_proxmox_api_token_id'])
+    | default(proxmox_api_token_id) | default('') }}"
+  api_token_secret:
+    "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_proxmox_api_token_secret']
+    | default(vars[project_fullname ~ '_proxmox_api_token_secret'])
+    | default(proxmox_api_token_secret) | default('') }}"
 
 proxmox_validate_certs: true
 proxmox_api_url: https://{{ proxmox_defaults.api_host }}:8006/api2/json
 
 # How long to wait for a Proxmox operation (like clone, powerstate and snapshots) to complete
 proxmox_machine_operations_operation_timeout: 180
+
+#############
+# OpenStack #
+#############
+
+openstack_defaults:
+  auth:
+    auth_url: "{{ openstack_auth_url | default('') }}"
+    username:
+      "{{ openstack_username | default(env_project_deployer_username) | default(project_deployer_username)
+      | default(deployer_username) | default('') }}"
+    password:
+      "{{ openstack_password | default(env_project_deployer_password) | default(project_deployer_password)
+      | default(deployer_password) | default('') }}"
+    project_id:
+      "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_openstack_project_id']
+      | default(vars[project_fullname ~ '_openstack_project_id'])
+      | default(openstack_project_id) | default('') }}"
+    user_domain_name:
+      "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_openstack_user_domain_name']
+      | default(vars[project_fullname ~ '_openstack_user_domain_name'])
+      | default(openstack_user_domain_name) | default('Default') }}"
+    project_domain_name:
+      "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_openstack_project_domain_name']
+      | default(vars[project_fullname ~ '_openstack_project_domain_name'])
+      | default(openstack_project_domain_name) | default('Default') }}"
