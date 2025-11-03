@@ -8,5 +8,9 @@
     validate_certs: "{{ proxmox_validate_certs }}"
   delegate_to: localhost
   become: false
-  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
-  delay: 5
+  when: proxmox_vm_info.proxmox_vms[0].status == 'running'
+
+- name: Cannot suspend {{ custom_vm_name | default(vm_name) }} because it is not running.
+  ansible.builtin.debug:
+    msg: "{{ custom_vm_name | default(vm_name) }} is not running; skipping suspend."
+  when: proxmox_vm_info.proxmox_vms[0].status != 'running'
