@@ -28,8 +28,8 @@
     or azure_tenant_id | default(false) is ansible.builtin.falsy
 
 - name: Checking for resource group and VM existence...
-  become: false
   delegate_to: localhost
+  become: false
   block:
     - name: Checking if resource group {{ azure_resource_group }} exists in Azure...
       azure.azcollection.azure_rm_resourcegroup_info:

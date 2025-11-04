@@ -23,8 +23,8 @@
     azure_template_username: "{{ 'Administrator' if 'os_windows' in group_names else ansible_deployer_username }}"
 
 - name: Creating a resource group and a VM in Azure...
-  become: false
   delegate_to: localhost
+  become: false
   when: single_role is not defined
   block:
     - name: Creating a security group for {{ custom_vm_name | default(vm_name) }}...
@@ -34,9 +34,17 @@
         purge_rules: true
         rules: "{{ machine_operations_azure_security_group_rules }}"
 
+    - name: Creating a public IP for {{ custom_vm_name | default(vm_name) }}...
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_pip"
+        allocation_method: static
+        sku: standard
+      when: machine_operations_azure_attach_public_ip
+
     - name: Creating following network interface(s) for {{ custom_vm_name | default(vm_name) }}...
       azure.azcollection.azure_rm_networkinterface:
-        name: "{{ custom_vm_name | default(vm_name) }}_nic{{ '%02d' | format(index + 1) }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
         resource_group: "{{ azure_resource_group }}"
         virtual_network: "{{ item.cloud_id }}"
         subnet_name: "{{ item.cloud_id }}"
@@ -46,17 +54,15 @@
           if item.connection and machine_operations_azure_attach_public_ip else [] }}"
       loop: "{{ interfaces }}"
       loop_control:
-        index_var: index
-        label: "{{ item.cloud_id }}"
+        label: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
 
     - name: Creating a list of interface names for {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.set_fact:
         azure_vm_network_interface_names: "{{ azure_vm_network_interface_names | default([])
-          + [custom_vm_name | default(vm_name) + '_nic' + ('%02d' | format(index + 1))] }}"
+          + [custom_vm_name | default(vm_name) ~ '_' ~ item.nic_name] }}"
       loop: "{{ interfaces }}"
       loop_control:
-        index_var: index
-        label: "{{ item.cloud_id }}"
+        label: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
 
     - name: Setting template_password as fact...
       ansible.builtin.set_fact:

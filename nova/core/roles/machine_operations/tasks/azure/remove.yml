@@ -17,6 +17,22 @@
           - all
         state: absent
 
+    - name: Removing following {{ custom_vm_name | default(vm_name) }} network interface(s)...
+      azure.azcollection.azure_rm_networkinterface:
+        name: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
+        resource_group: "{{ azure_resource_group }}"
+        state: absent
+      loop: "{{ interfaces }}"
+      loop_control:
+        label: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
+
+    - name: Removing {{ custom_vm_name | default(vm_name) }} public IP...
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_pip"
+        state: absent
+      when: machine_operations_azure_attach_public_ip
+
     - name: Removing {{ custom_vm_name | default(vm_name) }}-nsg security group...
       azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ azure_resource_group }}"
