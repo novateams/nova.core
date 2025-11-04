@@ -84,7 +84,7 @@
                   "assign_public_ip": false,
                   "device_index": {{ loop.index0 }},
                   "delete_on_termination": true,
-                  "description": "{{ custom_vm_name | default(vm_name) }}-{{ iface.network_id }}",
+                  "description": "{{ custom_vm_name | default(vm_name) }}-{{ iface.nic_name }}",
                   "ipv6_addresses": {{ iface.addresses | selectattr('mode', 'equalto', 'ipv6_static')
                     | map(attribute='address') | ansible.utils.ipaddr('address') }},
                   "private_ip_addresses": [
