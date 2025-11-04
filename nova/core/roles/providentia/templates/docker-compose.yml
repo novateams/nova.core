@@ -28,6 +28,12 @@ services:
         gid: "1000"
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 3000 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
     environment:
       - RAILS_ENV=production
       - RAILS_MAX_THREADS={{ providentia_threads_per_process }}
