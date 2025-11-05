@@ -4,7 +4,7 @@
   become: false
   block:
     - name: Removing {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot...
-      community.vmware.vmware_guest_snapshot:
+      vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
@@ -15,9 +15,10 @@
         - snapshot_info.guest_snapshots != {}
 
     - name: Removing all existing snapshots...
-      community.vmware.vmware_guest_snapshot:
+      vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
-        state: remove_all
+        state: absent
+        remove_all: true
       when: remove_all_snapshots | bool

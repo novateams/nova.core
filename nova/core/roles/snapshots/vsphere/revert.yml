@@ -1,10 +1,10 @@
 ---
 - name: Reverting to {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot...
-  community.vmware.vmware_guest_snapshot:
+  vmware.vmware.vm_snapshot:
     datacenter: "{{ datacenter }}"
     folder: "{{ folder }}"
     name: "{{ custom_vm_name | default(vm_name) }}"
-    state: revert
+    state: present
     snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
   delegate_to: localhost
   become: false
