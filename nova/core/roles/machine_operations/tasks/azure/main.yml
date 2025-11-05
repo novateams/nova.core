@@ -30,6 +30,7 @@
 - name: Checking for resource group and VM existence...
   delegate_to: localhost
   become: false
+  when: deploy_mode not in ['undeploy']
   block:
     - name: Checking if resource group {{ azure_resource_group }} exists in Azure...
       azure.azcollection.azure_rm_resourcegroup_info:
