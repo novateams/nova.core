@@ -20,7 +20,11 @@ save_secrets_to_vault: false # Set to true to save accounts to vault, required a
 gt_username: gt # Default non-root/Administrator username for deployment
 deploy_vars_post_roles: [] # List of roles to include after credentials facts have been set
 immutable: false # Set to true to stop running any role on the host or group
-ansible_become_password: "{{ ansible_password | default(omit) }}" # Defaulting to ansible_password when password is required for sudo
+
+# Defaulting to ansible_password when password is required for sudo
+# If no ansible_password is set, defaulting to no_password_set string to avoid Missing sudo password that comes with Ansible 2.19+
+# This is required when some other sudo method instead of password is used
+ansible_become_password: "{{ ansible_password | default('no_password_set') }}"
 
 # Networking
 # Defaults when using Providentia or interfaces list that is based on Providentia API output
