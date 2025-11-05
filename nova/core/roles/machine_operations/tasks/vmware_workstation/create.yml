@@ -12,7 +12,9 @@
         msg: "{{ custom_vm_name | default(vm_name) }} doesn't exist, run deploy or redeploy first!"
       when:
         - not vm_presence.stat.exists
-        - role_only or role_only_wp
+        - role_only is ansible.builtin.truthy
+          or role_only_wp is ansible.builtin.truthy
+          or single_role is defined
 
     - name: Creating {{ machine_operations_vmware_workstation_template_export_folder }} folder...
       ansible.builtin.file:
