@@ -17,8 +17,10 @@
         msg: |
           Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
       when:
-        - fresh_deploy
-        - role_only or role_only_wp or single_role is defined
+        - fresh_deploy is ansible.builtin.truthy
+        - role_only is ansible.builtin.truthy
+          or role_only_wp is ansible.builtin.truthy
+          or single_role is defined
 
     - name: Including fresh deploy tasks...
       when: fresh_deploy
@@ -71,34 +73,7 @@
           amazon.aws.ec2_instance:
             name: "{{ custom_vm_name | default(vm_name) }}"
             key_name: "{{ custom_vm_name | default(vm_name) }}"
-            network_interfaces: >-
-              [
-                {% if interfaces == [] %}
-                {
-                  "assign_public_ip": false
-                }
-                {% endif %}
-                {% for iface in interfaces %}
-                {
-                  "subnet_id": "{{ iface.cloud_id }}",
-                  "assign_public_ip": false,
-                  "device_index": {{ loop.index0 }},
-                  "delete_on_termination": true,
-                  "description": "{{ custom_vm_name | default(vm_name) }}-{{ iface.nic_name }}",
-                  "ipv6_addresses": {{ iface.addresses | selectattr('mode', 'equalto', 'ipv6_static')
-                    | map(attribute='address') | ansible.utils.ipaddr('address') }},
-                  "private_ip_addresses": [
-                    {% for ip in iface.addresses | selectattr('mode', 'equalto', 'ipv4_static')
-                      | map(attribute='address') | ansible.utils.ipaddr('address') %}
-                      {
-                        "private_ip_address": "{{ ip }}",
-                        "primary": {{ 'true' if loop.first else 'false' }}
-                      }{% if not loop.last %},{% endif %}
-                    {% endfor %}
-                  ]
-                }{% if not loop.last %},{% endif %}
-                {% endfor %}
-              ]
+            network_interfaces: "{{ lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml }}"
             instance_type: "{{ aws_vm_size | default('t3.micro') }}"
             security_group: "{{ aws_security_group_id | default(created_security_group.group_id) }}"
             image_id: "{{ all_images[-1].image_id }}"
