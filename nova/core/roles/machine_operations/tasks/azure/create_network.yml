@@ -13,6 +13,8 @@
       loop: "{{ interfaces }}"
       loop_control:
         label: "{{ item.cloud_id }}"
+      retries: 3 # Retries a request for the case where no network exists yet and multiple machines are being created in parallel
+      delay: 20
 
     - name: Creating following subnets...
       azure.azcollection.azure_rm_subnet:
@@ -23,3 +25,5 @@
       loop: "{{ interfaces }}"
       loop_control:
         label: "{{ item.cloud_id }}"
+      retries: 3 # Retries a request for the case where no network exists yet and multiple machines are being created in parallel
+      delay: 20

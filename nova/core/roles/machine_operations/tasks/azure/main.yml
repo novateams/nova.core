@@ -30,30 +30,32 @@
 - name: Checking for resource group and VM existence...
   delegate_to: localhost
   become: false
-  when: deploy_mode not in ['undeploy']
   block:
     - name: Checking if resource group {{ azure_resource_group }} exists in Azure...
       azure.azcollection.azure_rm_resourcegroup_info:
         name: "{{ azure_resource_group }}"
       register: resource_group_info
 
-    - name: Creating {{ azure_resource_group }} resource group...
-      azure.azcollection.azure_rm_resourcegroup:
-        name: "{{ azure_resource_group }}"
-        location: "{{ azure_location }}"
-      when: resource_group_info.resourcegroups == []
+    - name: Creating Azure resource group...
+      when: deploy_mode not in ['undeploy']
+      block:
+        - name: Creating {{ azure_resource_group }} resource group...
+          azure.azcollection.azure_rm_resourcegroup:
+            name: "{{ azure_resource_group }}"
+            location: "{{ azure_location }}"
+          when: resource_group_info.resourcegroups == []
 
-    - name: Checking if {{ custom_vm_name | default(vm_name) }} VM already exists in Azure...
-      azure.azcollection.azure_rm_virtualmachine_info:
-        resource_group: "{{ azure_resource_group }}"
-        tags:
-          - vm_name:{{ custom_vm_name | default(vm_name) }}
-      register: azure_vm_info
+        - name: Checking if {{ custom_vm_name | default(vm_name) }} VM already exists in Azure...
+          azure.azcollection.azure_rm_virtualmachine_info:
+            resource_group: "{{ azure_resource_group }}"
+            tags:
+              - vm_name:{{ custom_vm_name | default(vm_name) }}
+          register: azure_vm_info
 
-    - name: Setting fresh_deploy as fact...
-      ansible.builtin.set_fact:
-        fresh_deploy: true
-      when: azure_vm_info.vms == [] or deploy_mode == "redeploy"
+        - name: Setting fresh_deploy as fact...
+          ansible.builtin.set_fact:
+            fresh_deploy: true
+          when: azure_vm_info.vms == [] or deploy_mode == "redeploy"
 
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml
