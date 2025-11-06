@@ -83,8 +83,4 @@
 
 - name: Including policies tasks for...
   ansible.builtin.include_tasks: configure_policies.yml
-  loop: "{{ vault_policies }}"
-  loop_control:
-    loop_var: vault_policy
-    label: "{{ vault_policy.policy_name }}"
   when: vault_policies != []
