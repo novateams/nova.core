@@ -15,3 +15,4 @@ keycloak_admin_user: admin
 keycloak_admin_password: {} # Define as role variable (Vault lookup for a an example)
 keycloak_postgres_db_password: {} # Define as role variable (Vault lookup for a an example)
 keycloak_proxy_headers: xforwarded # Refer to https://www.keycloak.org/server/reverseproxy based on your reverse proxy configuration
+keycloak_config_timeout_seconds: 120 # Timeout for Keycloak Config CLI to wait for Keycloak to become available
