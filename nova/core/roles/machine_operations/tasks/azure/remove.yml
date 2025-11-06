@@ -7,6 +7,7 @@
 - name: Removing VM and it's resources...
   become: false
   delegate_to: localhost
+  when: resource_group_info.resourcegroups != [] # If there is no resource group, there is nothing to remove
   block:
     - name: Removing {{ custom_vm_name | default(vm_name) }} VM from Azure...
       azure.azcollection.azure_rm_virtualmachine:
@@ -19,8 +20,8 @@
 
     - name: Removing following {{ custom_vm_name | default(vm_name) }} network interface(s)...
       azure.azcollection.azure_rm_networkinterface:
-        name: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
         resource_group: "{{ azure_resource_group }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
         state: absent
       loop: "{{ interfaces }}"
       loop_control:
