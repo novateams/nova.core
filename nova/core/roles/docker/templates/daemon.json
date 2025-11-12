@@ -10,8 +10,12 @@
     "buildkit": {{ docker_buildkit | lower }}
   },
   "ipv6": {{ docker_enable_ipv6 | lower }},
+  {% if docker_firewall_backend == "nftables" %}
+  "firewall-backend": "nftables",
+  {% else %}
   "ip6tables": {{ docker_enable_ip6tables | lower }},
   "iptables": {{ docker_enable_iptables | lower }},
+  {% endif %}
   "fixed-cidr-v6": "{{ docker_bridge_ipv6_range }}",
   "userland-proxy": {{ docker_userland_proxy | lower }},
   "registry-mirrors": [

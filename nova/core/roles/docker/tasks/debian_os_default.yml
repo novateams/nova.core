@@ -34,8 +34,8 @@
   ansible.builtin.apt:
     name:
       - containerd.io
-      - docker-ce-cli{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else '' }}
-      - docker-ce{{ '=5:' + docker_engine_version + '*' if docker_engine_version != {} else '' }}
+      - docker-ce-cli{{ '=5:' + docker_engine_version | string + '*' if docker_engine_version != {} else '' }}
+      - docker-ce{{ '=5:' + docker_engine_version | string + '*' if docker_engine_version != {} else '' }}
       - docker-compose-plugin
       - python3-docker
       - python3-jsondiff
