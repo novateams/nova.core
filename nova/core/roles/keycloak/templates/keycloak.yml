@@ -28,7 +28,7 @@ services:
       test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/8080' || exit 1"]
       interval: 10s
       timeout: 10s
-      retries: 12
+      retries: 30
     depends_on:
       - keycloak_postgres
     logging:
