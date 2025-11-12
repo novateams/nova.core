@@ -69,4 +69,5 @@
 
 - name: Stopping play...
   ansible.builtin.meta: end_host
-  when: just_create or (deploy_mode == "undeploy" and customization_context != "host")
+  when: just_create | bool
+    or (deploy_mode == "undeploy" and customization_context != "host")
