@@ -9,6 +9,7 @@ docker_buildkit: true
 docker_enable_ipv6: true
 docker_enable_ip6tables: true
 docker_enable_iptables: true
+docker_firewall_backend: iptables # Options are iptables or (still experimental) nftables
 docker_bridge_ipv6_range: fd69::/64
 docker_userland_proxy: true
 docker_log_to_journald: false
