@@ -28,7 +28,7 @@
     loop_var: vault_policy
     label: "{{ vault_policy.policy_name }}"
 
-- name: Creating following groups...
+- name: Creating following groups to policy mapping...
   ansible.builtin.uri:
     url: "{{ vault_configuration_uri }}/v1/identity/group"
     method: PUT
@@ -38,7 +38,7 @@
     body:
       name: "{{ vault_policy.vault_group_name }}"
       policies:
-        - "{{ vault_policy.vault_group_name }}"
+        - "{{ vault_policy.policy_name }}"
       type: external
     body_format: json
     status_code:
@@ -47,7 +47,7 @@
   loop: "{{ vault_policies }}"
   loop_control:
     loop_var: vault_policy
-    label: "{{ vault_policy.vault_group_name }}"
+    label: "{{ vault_policy.vault_group_name }} > {{ vault_policy.policy_name }}"
 
 - name: Listing all groups...
   ansible.builtin.uri:
