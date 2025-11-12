@@ -16,8 +16,12 @@
 
     - name: Creating a list of MAC addresses...
       ansible.builtin.set_fact:
-        # Skipping the first MAC address as it is the loopback interface.
-        configure_networking_mac_addresses: "{{ (proxmox_vm_info.proxmox_vms[0].network | map(attribute='hardware-address') | list)[1:] }}"
+        # Assigning 00:00:00:00:00:00 as a default for interfaces without a MAC address,
+        # since different OSes report network interfaces differently.
+        # These default MAC addresses are then filtered out, as they typically represent loopback or non-physical interfaces.
+        configure_networking_mac_addresses:
+          "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='hardware-address', default='00:00:00:00:00:00')
+          | reject('equalto', '00:00:00:00:00:00') | list }}"
 
     - name: Including {{ customization_method }} network configuration tasks...
       ansible.builtin.include_tasks: "{{ customization_method }}.yml"
