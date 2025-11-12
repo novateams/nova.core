@@ -1,6 +1,6 @@
 ---
 # The Keycloak version and the Keycloak Config CLI version should be compatible
-keycloak_version: 26.4.4
+keycloak_version: 26.4.5
 
 # https://github.com/adorsys/keycloak-config-cli
 # https://hub.docker.com/r/adorsys/keycloak-config-cli/tags
