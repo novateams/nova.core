@@ -70,7 +70,7 @@
                 - groupname: admins
                 - bcrypt-hash: "{{ item.password | password_hash('sha512') }}"
                 - uid: "{{ (0 if item.username == admin_account else 2000 + idx - 1) | string }}"
-                - authorizedkeys: "{{ (item.ssh_key | b64encode) if item.ssh_key is defined }}"
+                - authorizedkeys: "{{ (item.ssh_key | b64encode) if item.ssh_key is defined else '' }}"
                 - webguicss: pfSense.css
                 - keephistory:
                 - expires:
