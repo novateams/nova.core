@@ -31,8 +31,10 @@
   register: template
 
 - name: Composing Vault on {{ inventory_hostname }}...
-  ansible.builtin.command: docker compose -f {{ vault_config_folder }}/docker-compose.yml up -d
-  changed_when: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ vault_config_folder }}"
+    state: present
+    wait: true
 
 - name: Finding and restarting proxy container...
   when:
