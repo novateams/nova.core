@@ -10,6 +10,15 @@
     target: stop
   when: providentia_current_version_stat.stat.exists
 
+- name: Pulling ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}
+  community.docker.docker_image_pull:
+    name: ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}
+
+- name: Get image info
+  community.docker.docker_image_info:
+    name: ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}
+  register: providentia_image
+
 - name: Template Providentia configuration
   ansible.builtin.template:
     src: "{{ item }}"
@@ -19,24 +28,8 @@
   loop:
     - docker-compose.yml
     - Makefile
-
-- name: Pull latest containers
-  community.docker.docker_compose_v2_pull:
-    project_src: "{{ providentia_install_dir }}"
-
-- name: Get image info
-  community.docker.docker_image_info:
-    name: "ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}"
-  register: providentia_image
-
-- name: Template Providentia configuration (2nd run)
-  ansible.builtin.template:
-    src: docker-compose.yml
-    dest: "{{ providentia_install_dir }}/"
-    lstrip_blocks: true
-    mode: "0644"
   vars:
-    cmd_and_entrypoint_needed: "{{ not providentia_image.images[0].Config.Entrypoint }}"
+    cmd_and_entrypoint_needed: "{{ providentia_image.images[0].Config.Entrypoint is ansible.builtin.falsy }}"
 
 - name: Template builtin keycloak configuration
   ansible.builtin.template:
@@ -49,10 +42,8 @@
     - keycloak-config.yml
   when: providentia_builtin_keycloak
 
-- name: Start Providentia containers
+- name: Composing Providentia...
   community.docker.docker_compose_v2:
     project_src: "{{ providentia_install_dir }}"
     state: present
-    pull: always
-    remove_orphans: true
     wait: true
