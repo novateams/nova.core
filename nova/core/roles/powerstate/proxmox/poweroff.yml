@@ -10,8 +10,6 @@
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: POST
         validate_certs: "{{ proxmox_validate_certs }}"
-      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
-      delay: 5
 
     - name: Waiting until {{ custom_vm_name | default(vm_name) }} to be stopped...
       community.proxmox.proxmox_vm_info:

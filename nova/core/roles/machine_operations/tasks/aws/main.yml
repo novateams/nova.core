@@ -3,8 +3,14 @@
   ansible.builtin.fail:
     msg: |
       You are missing following secrets:
+
       {% for variable in required_variables %}
-      {% if vars[variable] is not defined or vars[variable] == none %}
+      {% if vars[variable] is defined %}
+      {% set evaluated = lookup('vars', variable) %}
+      {% if evaluated is ansible.builtin.falsy %}
+        - {{ variable }}
+      {% endif %}
+      {% else %}
         - {{ variable }}
       {% endif %}
       {% endfor %}

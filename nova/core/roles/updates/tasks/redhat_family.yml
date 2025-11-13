@@ -1,4 +1,17 @@
 ---
+- name: Gathering package facts for {{ inventory_hostname }}...
+  ansible.builtin.package_facts:
+    manager: auto
+
+# Since by default RedHat boot partition is only 1GB and kernel updates can quickly fill it up
+- name: Keeping only latest {{ updates_redhat_family_nr_of_kernels_to_keep }} kernel versions for {{ inventory_hostname }}...
+  ansible.builtin.command: dnf remove --oldinstallonly --setopt installonly_limit={{ updates_redhat_family_nr_of_kernels_to_keep }} -y kernel
+  register: dnf_remove_output
+  changed_when: dnf_remove_output.stdout is search("Remove.*Packages")
+  when:
+    - ansible_facts.packages.kernel is defined
+    - ansible_facts.packages.kernel | length > updates_redhat_family_nr_of_kernels_to_keep
+
 - name: Updating all packages...
   ansible.builtin.dnf:
     name: "*"

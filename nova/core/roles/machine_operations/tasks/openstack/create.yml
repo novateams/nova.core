@@ -1,0 +1,98 @@
+---
+- name: Setting fresh_deploy fact...
+  ansible.builtin.set_fact:
+    fresh_deploy: true
+  when: openstack_vm_exists.servers == [] or deploy_mode == "redeploy"
+
+- name: Checking for the correct deploy mode...
+  ansible.builtin.fail:
+    msg: |
+      "{{ custom_vm_name | default(vm_name) }} instance doesn't exist, use the deploy command first!"
+  when:
+    - fresh_deploy is ansible.builtin.truthy
+    - role_only is ansible.builtin.truthy
+      or role_only_wp is ansible.builtin.truthy
+      or single_role is defined
+
+- name: Cloning and configuring VM...
+  delegate_to: localhost
+  become: false
+  when:
+    - not role_only
+    - not role_only_wp
+    - single_role is not defined
+  block:
+    - name: Looking up template and cloning the VM...
+      when:
+        - fresh_deploy
+        - machine_operations_openstack_use_keypair
+        - machine_operations_openstack_key_name == {}
+      block:
+        # This is required when the deploy failed but keypair was created
+        - name: Removing any existing keypair for {{ machine_operations_openstack_temp_ssh_key_name }}...
+          openstack.cloud.keypair:
+            name: "{{ machine_operations_openstack_temp_ssh_key_name }}"
+            state: absent
+
+        - name: Generating a new keypair for {{ machine_operations_openstack_temp_ssh_key_name }}...
+          openstack.cloud.keypair:
+            name: "{{ machine_operations_openstack_temp_ssh_key_name }}"
+          register: openstack_keypair
+
+        - name: Saving {{ machine_operations_openstack_temp_ssh_key_name }} private key to a temporary file...
+          ansible.builtin.copy:
+            content: "{{ openstack_keypair.keypair.private_key }}"
+            dest: "{{ machine_operations_openstack_temp_ssh_key_path }}"
+            mode: "0600"
+
+    - name: Creating a volume for {{ custom_vm_name | default(vm_name) }}...
+      openstack.cloud.volume:
+        image: "{{ openstack_image }}"
+        name: "{{ custom_vm_name | default(vm_name) }}_volume"
+        size: "{{ hardware_primary_disk_size }}"
+        # Increasing the timeout by 60 seconds for each host in the batch
+        timeout: "{{ 900 + ansible_play_batch | length * 60 }}"
+
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
+    - name: Creating {{ custom_vm_name | default(vm_name) }} VM...
+      openstack.cloud.server:
+        auto_ip: false
+        boot_volume: "{{ custom_vm_name | default(vm_name) }}_volume"
+        delete_ips: true
+        description: "{{ vm_description if fresh_deploy else omit }}" # Only set description on first run
+        flavor: "{{ openstack_flavor }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: present
+        terminate_volume: true
+        volume_size: "{{ hardware_primary_disk_size }}"
+        key_name: "{{ machine_operations_openstack_key_name if machine_operations_openstack_key_name != {}
+          else machine_operations_openstack_temp_ssh_key_name if machine_operations_openstack_use_keypair else omit }}"
+        security_groups: "{{ openstack_security_groups | default(['default']) }}"
+        nics: "{{ openstack_nics }}"
+      register: openstack_vm
+
+    - name: Attaching a floating IP to {{ custom_vm_name | default(vm_name) }}...
+      openstack.cloud.floating_ip:
+        server: "{{ custom_vm_name | default(vm_name) }}"
+        network: "{{ machine_operations_openstack_floating_ip_pool_name }}"
+        nat_destination: "{{ omit if machine_operations_openstack_floating_ip_nat_destination is ansible.builtin.falsy
+          else machine_operations_openstack_floating_ip_nat_destination }}"
+      when: machine_operations_openstack_floating_ip_pool_name is ansible.builtin.truthy
+
+    - name: Removing existing keypair for {{ custom_vm_name | default(vm_name) }}...
+      openstack.cloud.keypair:
+        name: "{{ machine_operations_openstack_temp_ssh_key_name }}"
+        state: absent
+
+    - name: Getting {{ custom_vm_name | default(vm_name) }} info...
+      openstack.cloud.server_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: openstack_server_info
+
+- name: Setting connection_address...
+  ansible.builtin.set_fact:
+    connection_address: "{{ openstack_server_info.servers[0].access_ipv4 | default(openstack_vm_exists.servers[0].access_ipv4) }}"
+  when: openstack_server_info.servers[0].access_ipv4 | default(openstack_vm_exists.servers[0].access_ipv4) is ansible.builtin.truthy

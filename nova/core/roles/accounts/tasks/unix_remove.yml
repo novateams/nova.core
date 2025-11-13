@@ -20,11 +20,12 @@
         name: "{{ item }}"
         state: absent
         remove: true
+        force: true
       loop: "{{ user_profiles_to_remove }}"
 
   # Using rescue to close any open sessions before trying to remove accounts again
   rescue:
-    - name: Rebooting to close any open sessions...
+    - name: Rebooting again to close any other open sessions...
       ansible.builtin.reboot:
       when:
         - user_profiles_to_remove != []
@@ -35,4 +36,5 @@
         name: "{{ item }}"
         state: absent
         remove: true
+        force: true
       loop: "{{ user_profiles_to_remove }}"

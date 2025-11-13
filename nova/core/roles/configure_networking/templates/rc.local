@@ -50,18 +50,16 @@
     {% endif %}
 {% endfor %}
 
-{% if dns_server_combined != [] %}
 echo "This file is re-generated on each startup by /etc/rc.local" > /etc/resolv.conf
-{% if dns_domain != {} %}
-echo "domain {{ dns_domain }}" >> /etc/resolv.conf
-{% endif %}
-{% if dns_search %}
-echo "search {{ dns_search | join(' ') }}" >> /etc/resolv.conf
-{% endif %}
+{% if dns_server_combined != [] %}
 {% for dns_address in dns_server_combined %}
 echo "nameserver {{ dns_address }}" >> /etc/resolv.conf
 {% endfor %}
-{% if resolv_options %}
-echo "options {{ resolv_options }}" >> /etc/resolv.conf
 {% endif %}
+echo "domain {{ domain }}" >> /etc/resolv.conf
+{% if dns_search != [] %}
+echo "search {{ dns_search | join(' ') }}" >> /etc/resolv.conf
+{% endif %}
+{% if resolv_options != [] %}
+echo "options {{ resolv_options | join(' ') }}" >> /etc/resolv.conf
 {% endif %}

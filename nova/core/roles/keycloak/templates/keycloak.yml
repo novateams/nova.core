@@ -24,6 +24,11 @@ services:
     volumes:
       - "{{ keycloak_container_config_folder }}/data:/opt/jboss/keycloak/standalone/data"
       - "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-host-ca-certificates.crt"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
     depends_on:
       - keycloak_postgres
     logging:
@@ -54,7 +59,8 @@ services:
     image: adorsys/keycloak-config-cli:{{ keycloak_config_cli_version }}
     container_name: keycloak-config
     depends_on:
-      - keycloak
+      keycloak:
+        condition: service_healthy
     volumes:
       - "{{ keycloak_container_config_folder }}/config.yml:/config/config.yml"
     environment:
@@ -62,7 +68,7 @@ services:
       KEYCLOAK_USER: "{{ keycloak_admin_user }}"
       KEYCLOAK_PASSWORD: "{{ keycloak_admin_password }}"
       KEYCLOAK_AVAILABILITYCHECK_ENABLED: true
-      KEYCLOAK_AVAILABILITYCHECK_TIMEOUT: 60s
+      KEYCLOAK_AVAILABILITYCHECK_TIMEOUT: "{{ keycloak_config_timeout_seconds }}s"
       IMPORT_FILES: "/config/*"
     logging:
       driver: json-file

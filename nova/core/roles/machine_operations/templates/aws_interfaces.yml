@@ -1,0 +1,16 @@
+{% if interfaces == [] %}
+- assign_public_ip: false
+{% endif %}
+{% for iface in interfaces %}
+- subnet_id: "{{ iface.cloud_id }}"
+  assign_public_ip: false
+  device_index: {{ loop.index0 }}
+  delete_on_termination: true
+  description: "{{ custom_vm_name | default(vm_name) }}-{{ iface.nic_name }}"
+  ipv6_addresses: {{ iface.addresses | selectattr('mode', 'equalto', 'ipv6_static') | map(attribute='address') | ansible.utils.ipaddr('address') | list }}
+  private_ip_addresses:
+    {% for ip in iface.addresses | selectattr('mode', 'equalto', 'ipv4_static') | map(attribute='address') | ansible.utils.ipaddr('address') %}
+    - private_ip_address: "{{ ip }}"
+      primary: {{ true if loop.first else false }}
+    {% endfor %}
+{% endfor %}

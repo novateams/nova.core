@@ -12,7 +12,8 @@
 # Filtering out empty lines
 - name: Getting profiles not defined in accounts list...
   ansible.builtin.set_fact:
-    user_profiles_to_remove: "{{ home_profiles.stdout_lines | select('string') | select('regex', '.+')
+    user_profiles_to_remove:
+      "{{ home_profiles.stdout_lines | select('string') | select('regex', '.+')
       | difference(local_accounts_with_password | map(attribute='username')) }}"
 
 - name: Removing stale user accounts and profiles...

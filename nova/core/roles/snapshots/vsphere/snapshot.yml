@@ -4,15 +4,16 @@
   become: false
   block:
     - name: Removing all existing snapshots...
-      community.vmware.vmware_guest_snapshot:
+      vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
-        state: remove_all
+        state: absent
+        remove_all: true
       when: snapshot_mode == 'clean-snap'
 
     - name: Removing snapshot...
-      community.vmware.vmware_guest_snapshot:
+      vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
@@ -27,7 +28,7 @@
         filter: "*_time"
 
     - name: Creating a snapshot - {{ snapshot_name | default(ansible_date_time.iso8601) }}...
-      community.vmware.vmware_guest_snapshot:
+      vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"

@@ -8,3 +8,8 @@
   delay: 5
   delegate_to: localhost
   become: false
+  when: proxmox_vm_info.proxmox_vms[0].status == 'running'
+
+- name: Including poweron tasks since {{ custom_vm_name | default(vm_name) }} is not running...
+  ansible.builtin.include_tasks: poweron.yml
+  when: proxmox_vm_info.proxmox_vms[0].status != 'running'

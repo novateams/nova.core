@@ -17,6 +17,12 @@ Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/mai
 
 ## Example
 
+To add extra configuration to vars follow these steps:
+
+1. Configure the keycloak settings manually and test that they work
+2. Export the realm configuration from Keycloak admin console
+3. Based on the exported configuration, create the corresponding variables in your host/group vars to be used by this role.
+
 ```yaml
 # Example on how to install Keycloak with Providentia client and LDAPs (AD) group mapper
 dependencies:

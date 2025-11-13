@@ -9,8 +9,10 @@
     msg: |
       "{{ custom_vm_name | default(vm_name) }} Virtual Machine doesn't exist, use the deploy command first!"
   when:
-    - fresh_deploy
-    - role_only or role_only_wp or single_role is defined
+    - fresh_deploy is ansible.builtin.truthy
+    - role_only is ansible.builtin.truthy
+      or role_only_wp is ansible.builtin.truthy
+      or single_role is defined
 
 - name: Cloning and configuring VM...
   delegate_to: localhost

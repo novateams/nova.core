@@ -47,7 +47,7 @@
     name: keycloak-config
   register: keycloak_config_status
   until: keycloak_config_status.container.State.Running == false
-  retries: 30
+  retries: "{{ (keycloak_config_timeout_seconds if keycloak_config_timeout_seconds >= 2 else 2) // 2 }}"
   delay: 2
 
 - name: Keycloak configuration failed...
