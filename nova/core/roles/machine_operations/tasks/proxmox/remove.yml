@@ -4,7 +4,7 @@
     msg: "{{ inventory_hostname }} Has no_undeploy set and won't be removed"
   when: no_undeploy or ['no_undeploy', 'custom_no_undeploy'] | intersect(group_names) | length > 0
 
-- name: Removing machine and any leftover disks...
+- name: Removing machine...
   when: proxmox_vm_exists.proxmox_vms != []
   delegate_to: localhost
   become: false
@@ -34,6 +34,10 @@
         force: true
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
 
+- name: Removing any leftover disks...
+  delegate_to: localhost
+  become: false
+  block:
     - name: Getting the time...
       ansible.builtin.setup:
         filter: "*_time"
