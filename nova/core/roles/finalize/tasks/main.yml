@@ -45,8 +45,10 @@
 # Can be useful for some specific cases like disk encryption where the machine is locked after reboot
 - name: Including following post-finalize roles...
   ansible.builtin.include_role:
-    name: "{{ item }}"
+    name: "{{ finalize_post_role }}"
   loop: "{{ finalize_post_roles }}"
+  loop_control:
+    loop_var: finalize_post_role
   when: finalize_post_roles != []
 
 - name: Flushing handlers...
