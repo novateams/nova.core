@@ -32,7 +32,7 @@
               No nic_name attribute found in interfaces list!
               Do one of the following to fix this:
                 - Update Providentia to latest version
-                - When NOT using Providentia, add nic_name key to the interfaces list in your inventory
+                - When NOT using Providentia, add nic_name key to the interfaces list in your host/group vars
 
         - name: SLEEPING TO READ
           ansible.builtin.wait_for:
