@@ -7,7 +7,7 @@ $LogPath = "C:\Windows\Temp\install.log"
 $RemoteConnectivityHost = "google.com"
 $OS = Get-WmiObject -Class Win32_OperatingSystem
 $version = [version]$OS.Version
-$SSHDownloadLink = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v9.5.0.0p1-Beta/OpenSSH-Win64-v9.5.0.0.msi"
+$SSHDownloadLink = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.0.0.0p2-Preview/OpenSSH-Win64-v10.0.0.0.msi"
 
 #--------------------End of variables, Start of Script--------------------#
 
