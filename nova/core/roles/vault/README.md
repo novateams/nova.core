@@ -73,13 +73,14 @@ Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/no
       vault_userdn: OU=Users,OU=ORG,DC=example,DC=com
       vault_ldaps_certificate_source: /usr/local/share/ca-certificates/LDAPRootCA.crt # Path or URL to the LDAP server's root CA certificate
       vault_policies:
-        - policy_name: developers
-          policy_content: |-
-            path "developers/data/*" { capabilities = ["create", "read", "update", "patch", "delete", "list"] }
-            path "developers/metadata/*" { capabilities = ["create", "read", "update", "patch", "delete", "list"] }
-            path "developers/metadata" { capabilities = ["list"] }
-          vault_group_name: developers
+        - vault_group_name: developers # This is the Vault group name that will be created
           ldap_group_name: vault-developers # This is the LDAP group name that will be mapped to the Vault group for this policy
+          policies:
+            - name: developers # This is the name of the policy that will be created
+              content: |- # These are the permissions for the developers policy
+                path "developers/data/*" { capabilities = ["create", "read", "update", "patch", "delete", "list"] }
+                path "developers/metadata/*" { capabilities = ["create", "read", "update", "patch", "delete", "list"] }
+                path "developers/metadata" { capabilities = ["list"] }
 ```
 
 ```yaml

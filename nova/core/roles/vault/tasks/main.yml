@@ -63,6 +63,14 @@
   ansible.builtin.include_tasks: configure_ldap.yml
   when: vault_configure_ldap
 
-- name: Including policies tasks for...
+- name: Including policies tasks for legacy structure...
+  ansible.builtin.include_tasks: configure_policies_legacy.yml
+  when:
+    - vault_policies != []
+    - vault_policies | map(attribute='policy_name') | list is defined
+
+- name: Including policies tasks...
   ansible.builtin.include_tasks: configure_policies.yml
-  when: vault_policies != []
+  when:
+    - vault_policies != []
+    - vault_policies | map(attribute='policy_name') | list is not defined
