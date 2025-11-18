@@ -27,7 +27,7 @@
       - net-tools # Useful for network troubleshooting
       - traceroute # Useful for network troubleshooting
     state: present
-    update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
+    update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat', 'Archlinux'] else omit }}"
   when: ansible_system == "Linux"
 
 - name: Include Ubuntu specific configuration...
