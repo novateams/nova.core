@@ -1,0 +1,150 @@
+---
+- name: Configuring /etc/network/interfaces...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Waiting for OS info...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      become: false
+      delegate_to: localhost
+      register: vcenter_vm_info
+      until: vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'] is defined
+      retries: 12
+      delay: 10
+
+    - name: Setting OS as fact...
+      ansible.builtin.set_fact:
+        configure_networking_os: "{{ (vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
+
+    - name: Templating interfaces...
+      ansible.builtin.template:
+        src: interfaces.j2
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+        lstrip_blocks: true
+        mode: "0644"
+
+    - name: Templating resolv.conf...
+      ansible.builtin.template:
+        src: resolv.conf
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        lstrip_blocks: true
+        mode: "0644"
+
+    - name: Templating udev persistent net rules...
+      ansible.builtin.template:
+        src: 70-persistent-net.rules
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        mode: "0644"
+        lstrip_blocks: true
+
+# This is done since VMTools on alpine does not allow file uploads or code execution
+- name: Including Alpine specific networking tasks...
+  when: configure_networking_os is search('Alpine')
+  ansible.builtin.include_tasks: interfaces_alpine.yml
+
+- name: Configuring interfaces over VMTools...
+  become: false
+  delegate_to: localhost
+  when: not configure_networking_os is search('Alpine')
+  block:
+    ###################
+    # interfaces file #
+    ###################
+
+    - name: Getting resolv.conf file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+      register: resolv_file_size
+
+    - name: Getting file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+      register: file_size
+
+    # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
+    # to retry the network configuration up to 3 times before failing the task completely.
+    - name: Including network configuration tasks...
+      block:
+        - name: Preparing file upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ file_size.stat.size }}"
+                path: /etc/network/interfaces
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: file_upload_prep
+
+        - name: Uploading file...
+          ansible.builtin.uri:
+            url: "{{ file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+
+        ####################
+        # resolv.conf file #
+        ####################
+
+        - name: Preparing resolv.conf upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ resolv_file_size.stat.size }}"
+                path: /etc/resolv.conf
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: resolv_file_upload_prep
+
+        - name: Uploading resolv.conf...
+          ansible.builtin.uri:
+            url: "{{ resolv_file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+
+      rescue:
+        - name: NETWORK CONFIGURATION ERROR
+          ansible.builtin.fail:
+            msg: |
+              Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+              Check the errors above and {{ inventory_hostname }} host logs for more details.
+          when: configure_networking_rescue_count | default(0) | int == 3
+
+        - name: Setting rescue loop count...
+          ansible.builtin.set_fact:
+            configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+        - name: Re-including vSphere network configuration tasks...
+          ansible.builtin.include_tasks: main.yml
+
+    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
