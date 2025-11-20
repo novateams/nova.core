@@ -15,50 +15,69 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_rc.local
       register: file_size
 
-    - name: Preparing file upload...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            attributes:
-              overwrite: true
-              size: "{{ file_size.stat.size }}"
-            path: /etc/rc.local
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: file_upload_prep
+    # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
+    # to retry the network configuration up to 3 times before failing the task completely.
+    - name: Including network configuration tasks...
+      block:
+        - name: Preparing file upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ file_size.stat.size }}"
+                path: /etc/rc.local
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: file_upload_prep
 
-    - name: Uploading file...
-      ansible.builtin.uri:
-        url: "{{ file_upload_prep.json }}"
-        method: PUT
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_rc.local
-        status_code: 200
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
+        - name: Uploading file...
+          ansible.builtin.uri:
+            url: "{{ file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_rc.local
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
 
-    - name: Configuring network...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "chmod +x /etc/rc.local && /etc/rc.local"
-            path: /bin/tcsh
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
+        - name: Configuring network...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "chmod +x /etc/rc.local && /etc/rc.local"
+                path: /bin/tcsh
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
 
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+      rescue:
+        - name: NETWORK CONFIGURATION ERROR
+          ansible.builtin.fail:
+            msg: |
+              Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+              Check the errors above and {{ inventory_hostname }} host logs for more details.
+          when: configure_networking_rescue_count | default(0) | int == 3
+
+        - name: Setting rescue loop count...
+          ansible.builtin.set_fact:
+            configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+        - name: Re-including vSphere network configuration tasks...
+          ansible.builtin.include_tasks: main.yml
