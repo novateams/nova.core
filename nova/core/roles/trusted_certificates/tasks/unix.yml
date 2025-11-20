@@ -31,7 +31,7 @@
 - name: Updating CA certificates...
   ansible.builtin.command: update-ca-certificates --fresh
   changed_when: true
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family in ['Debian', 'Alpine']
 
 - name: Trusting installed certificates...
   ansible.builtin.command: trust extract-compat
