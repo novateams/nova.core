@@ -16,7 +16,7 @@
     state: present
     update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
 
-# These packages are only available on Linux systems
+# These packages are only available on non-Alpine Linux systems
 - name: Installing universal Linux packages...
   ansible.builtin.package:
     name:
@@ -28,7 +28,23 @@
       - traceroute # Useful for network troubleshooting
     state: present
     update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat', 'Archlinux'] else omit }}"
-  when: ansible_system == "Linux"
+  when:
+    - ansible_system == "Linux"
+    - ansible_distribution != "Alpine"
+
+# These packages are only available on Alpine Linux systems
+- name: Installing Alpine Linux packages...
+  ansible.builtin.package:
+    name:
+      - acl # Required for managing file permissions
+      - ca-certificates # Required for managing trusted certificates
+      - net-tools # Useful for network troubleshooting
+      - traceroute # Useful for network troubleshooting
+      - musl-locales # Required for locale support
+      - musl-locales-lang # Required for locale support
+    state: present
+    update_cache: true
+  when: ansible_distribution == "Alpine"
 
 - name: Include Ubuntu specific configuration...
   ansible.builtin.include_tasks: ubuntu.yml
