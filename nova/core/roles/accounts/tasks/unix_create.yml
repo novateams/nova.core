@@ -104,3 +104,4 @@
   when:
     - use_ssh_agent_for_sudo
     - ansible_system == 'Linux'
+    - ansible_os_family != 'Alpine'
