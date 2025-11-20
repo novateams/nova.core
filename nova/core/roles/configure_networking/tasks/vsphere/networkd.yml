@@ -1,4 +1,14 @@
 ---
+- name: Waiting for OS info...
+  community.vmware.vmware_guest_tools_wait:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+  become: false
+  delegate_to: localhost
+  register: vcenter_vm_info
+  until: vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'] is defined
+  retries: 12
+  delay: 10
+
 - name: Setting OS as fact...
   ansible.builtin.set_fact:
     configure_networking_os: "{{ (vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
@@ -7,25 +17,6 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Removing existing systemd-networkd configuration...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "rm -rf /etc/systemd/network/*"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
-
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
-
     - name: Templating interface(s) configuration...
       ansible.builtin.template:
         src: networkd.network
@@ -46,120 +37,6 @@
         index_var: interface_index
         label: "{{ interface_names[interface_index] }}"
 
-    - name: Preparing interface(s) configuration upload...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            attributes:
-              overwrite: true
-              size: "{{ item.stat.size }}"
-            path: /etc/systemd/network/10-{{ interface_names[interface_index] }}.network
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_file_upload_prep
-      loop: "{{ network_file_size.results }}"
-      loop_control:
-        index_var: interface_index
-        label: "{{ interface_names[interface_index] }}"
-
-    - name: Uploading interface(s) file(s)...
-      ansible.builtin.uri:
-        url: "{{ item.json }}"
-        method: PUT
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.network_networkd
-        status_code: 200
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      loop: "{{ network_file_upload_prep.results }}"
-      loop_control:
-        index_var: interface_index
-        label: "{{ interface_names[interface_index] }}"
-
-    - name: Templating link(s) configuration script(s)...
-      ansible.builtin.template:
-        src: networkd.link
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
-        lstrip_blocks: true
-        mode: "0644"
-      loop: "{{ interfaces }}"
-      loop_control:
-        index_var: interface_index
-        label: "{{ interface_names[interface_index] }}"
-
-    - name: Getting links(s) file info...
-      ansible.builtin.stat:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
-      register: link_file_size
-      loop: "{{ interfaces }}"
-      loop_control:
-        index_var: interface_index
-        label: "{{ interface_names[interface_index] }}"
-
-    - name: Preparing links(s) configuration upload...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            attributes:
-              overwrite: true
-              size: "{{ item.stat.size }}"
-            path: /etc/systemd/network/10-{{ interface_names[interface_index] }}.link
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: link_file_upload_prep
-      loop: "{{ link_file_size.results }}"
-      loop_control:
-        index_var: interface_index
-        label: "{{ interface_names[interface_index] }}"
-
-    - name: Uploading links(s) file(s)...
-      ansible.builtin.uri:
-        url: "{{ item.json }}"
-        method: PUT
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
-        status_code: 200
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      loop: "{{ link_file_upload_prep.results }}"
-      loop_control:
-        index_var: interface_index
-        label: "{{ interface_names[interface_index] }}"
-
-    - name: Starting networkd & udev services...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            arguments: -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
-              systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
-
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
-
     - name: Templating resolv.conf configuration script...
       ansible.builtin.template:
         src: resolv.conf
@@ -172,39 +49,11 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
       register: resolv_file_size
 
-    - name: Preparing resolv.conf upload...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            attributes:
-              overwrite: true
-              size: "{{ resolv_file_size.stat.size }}"
-            path: /etc/resolv.conf
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: resolv_file_upload_prep
-
-    - name: Uploading resolv.conf...
-      ansible.builtin.uri:
-        url: "{{ resolv_file_upload_prep.json }}"
-        method: PUT
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
-        status_code: 200
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-
-    - name: Applying network configuration on Debian...
-      when: configure_networking_os is search('Debian')
+    # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
+    # to retry the network configuration up to 3 times before failing the task completely.
+    - name: Including network configuration tasks...
       block:
-        - name: Configuring network interface(s) names on Debian...
+        - name: Removing existing systemd-networkd configuration...
           ansible.builtin.uri:
             url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
             method: POST
@@ -213,7 +62,7 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments: -c "update-initramfs -k all -u"
+                arguments: -c "rm -rf /etc/systemd/network/*"
                 path: /bin/bash
             status_code: 201
             body_format: json
@@ -223,10 +72,153 @@
         - name: Including command run check task...
           ansible.builtin.include_tasks: command_run_check.yml
 
-        - name: Getting DNS from DHCP...
-          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+        - name: Preparing interface(s) configuration upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ item.stat.size }}"
+                path: /etc/systemd/network/10-{{ interface_names[interface_index] }}.network
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_file_upload_prep
+          loop: "{{ network_file_size.results }}"
+          loop_control:
+            index_var: interface_index
+            label: "{{ interface_names[interface_index] }}"
+
+        - name: Uploading interface(s) file(s)...
+          ansible.builtin.uri:
+            url: "{{ item.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.network_networkd
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          loop: "{{ network_file_upload_prep.results }}"
+          loop_control:
+            index_var: interface_index
+            label: "{{ interface_names[interface_index] }}"
+
+        - name: Templating link(s) configuration script(s)...
+          ansible.builtin.template:
+            src: networkd.link
+            dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
+            lstrip_blocks: true
+            mode: "0644"
+          loop: "{{ interfaces }}"
+          loop_control:
+            index_var: interface_index
+            label: "{{ interface_names[interface_index] }}"
+
+        - name: Getting links(s) file info...
+          ansible.builtin.stat:
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
+          register: link_file_size
+          loop: "{{ interfaces }}"
+          loop_control:
+            index_var: interface_index
+            label: "{{ interface_names[interface_index] }}"
+
+        - name: Preparing links(s) configuration upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ item.stat.size }}"
+                path: /etc/systemd/network/10-{{ interface_names[interface_index] }}.link
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: link_file_upload_prep
+          loop: "{{ link_file_size.results }}"
+          loop_control:
+            index_var: interface_index
+            label: "{{ interface_names[interface_index] }}"
+
+        - name: Uploading links(s) file(s)...
+          ansible.builtin.uri:
+            url: "{{ item.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}-{{ interface_names[interface_index] }}.link_networkd
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          loop: "{{ link_file_upload_prep.results }}"
+          loop_control:
+            index_var: interface_index
+            label: "{{ interface_names[interface_index] }}"
+
+        - name: Starting networkd & udev services...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
+                  systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+        - name: Preparing resolv.conf upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ resolv_file_size.stat.size }}"
+                path: /etc/resolv.conf
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: resolv_file_upload_prep
+
+        - name: Uploading resolv.conf...
+          ansible.builtin.uri:
+            url: "{{ resolv_file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+
+        - name: Applying network configuration on Debian...
+          when: configure_networking_os is search('Debian')
           block:
-            - name: Getting DNS from DHCP...
+            - name: Configuring network interface(s) names on Debian...
               ansible.builtin.uri:
                 url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
                 method: POST
@@ -235,7 +227,7 @@
                 body:
                   credentials: "{{ rest_api_credentials }}"
                   spec:
-                    arguments: -c 'if [ -x "$(command -v dhclient)" ]; then dhclient; else :; fi'
+                    arguments: -c "update-initramfs -k all -u"
                     path: /bin/bash
                 status_code: 201
                 body_format: json
@@ -245,27 +237,64 @@
             - name: Including command run check task...
               ansible.builtin.include_tasks: command_run_check.yml
 
-    - name: Applying network configuration on Debian...
-      when: configure_networking_os is search('Arch')
-      block:
-        - name: Configuring network interface(s) names on Arch...
-          ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-            method: POST
-            headers:
-              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-            body:
-              credentials: "{{ rest_api_credentials }}"
-              spec:
-                arguments: -c "mkinitcpio -P"
-                path: /bin/bash
-            status_code: 201
-            body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
-          register: network_config_command
+            - name: Getting DNS from DHCP...
+              when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+              block:
+                - name: Getting DNS from DHCP...
+                  ansible.builtin.uri:
+                    url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+                    method: POST
+                    headers:
+                      vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                    body:
+                      credentials: "{{ rest_api_credentials }}"
+                      spec:
+                        arguments: -c 'if [ -x "$(command -v dhclient)" ]; then dhclient; else :; fi'
+                        path: /bin/bash
+                    status_code: 201
+                    body_format: json
+                    validate_certs: "{{ validate_vmware_certs }}"
+                  register: network_config_command
 
-        - name: Including command run check task...
-          ansible.builtin.include_tasks: command_run_check.yml
+                - name: Including command run check task...
+                  ansible.builtin.include_tasks: command_run_check.yml
+
+        - name: Applying network configuration on Debian...
+          when: configure_networking_os is search('Arch')
+          block:
+            - name: Configuring network interface(s) names on Arch...
+              ansible.builtin.uri:
+                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    arguments: -c "mkinitcpio -P"
+                    path: /bin/bash
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: network_config_command
+
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
+
+      rescue:
+        - name: NETWORK CONFIGURATION ERROR
+          ansible.builtin.fail:
+            msg: |
+              Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+              Check the errors above and {{ inventory_hostname }} host logs for more details.
+          when: configure_networking_rescue_count | default(0) | int == 3
+
+        - name: Setting rescue loop count...
+          ansible.builtin.set_fact:
+            configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+        - name: Re-including vSphere network configuration tasks...
+          ansible.builtin.include_tasks: main.yml
 
     - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
       ansible.builtin.include_role:
