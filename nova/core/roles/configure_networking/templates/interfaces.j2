@@ -1,0 +1,40 @@
+auto lo
+iface lo inet loopback
+
+{% for interface in interfaces %}
+{% set interface_loop = loop.index0 %}
+auto {{ interface_names[interface_loop] }}
+{% for ip in interface.addresses %}
+{% if ip.mode == 'ipv4_dhcp' %}
+iface {{ interface_names[interface_loop] }} inet dhcp
+    pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+{% endif %}
+{% if ip.mode == 'ipv6_dhcp' %}
+iface {{ interface_names[interface_loop] }} inet6 dhcp
+    pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+{% endif %}
+{% if ip.mode == 'ipv6_slaac' %}
+iface {{ interface_names[interface_loop] }} inet6 auto
+    pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+{% endif %}
+{% if ip.mode == 'ipv4_static' %}
+iface {{ interface_names[interface_loop] }} inet static
+    pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+    address {{ ip.address | ansible.utils.ipaddr('address') }}
+    netmask {{ ip.address | ansible.utils.ipaddr('netmask') }}
+    {% if ip.gateway is ansible.builtin.truthy %}
+    gateway {{ ip.gateway }}
+    {% endif %}
+{% endif %}
+{% if ip.mode == 'ipv6_static' %}
+iface {{ interface_names[interface_loop] }} inet6 static
+    pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+    address {{ ip.address | ansible.utils.ipaddr('address') }}
+    netmask {{ ip.address | ansible.utils.ipaddr('prefix') }}
+    {% if ip.gateway is ansible.builtin.truthy %}
+    gateway {{ ip.gateway }}
+    {% endif %}
+{% endif %}
+{% endfor %}
+
+{% endfor %}
