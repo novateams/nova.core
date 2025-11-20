@@ -1,0 +1,158 @@
+---
+- name: Configuring initial IP address...
+  become: false
+  delegate_to: localhost
+  block:
+    # When an IP address is reported by VMware Tools, it is ready to accept console input
+    # Otherwise the login prompt is not ready in vSphere VMMs console
+    - name: Waiting for {{ custom_vm_name | default(vm_name) }} to be ready for console input...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: alpine_boot_status
+      until: alpine_boot_status.instance.ipv4 is not ansible.builtin.falsy
+        or alpine_boot_status.instance.ipv6 is not ansible.builtin.falsy
+      retries: "{{ (configure_networking_alpine_boot_wait_time if configure_networking_alpine_boot_wait_time >= 5 else 5) // 5 }}"
+      delay: 5
+
+    # For locking MAC addresses to interface names
+    - name: Templating mactab...
+      ansible.builtin.template:
+        src: mactab
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+        mode: "0644"
+        lstrip_blocks: true
+
+    - name: Slurping network configuration files...
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      register: slurped_network_files
+      loop:
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+
+    # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
+    # to retry the network configuration up to 3 times before failing the task completely.
+    - name: Including network configuration tasks...
+      block:
+        - name: Typing username to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: "{{ rest_api_credentials.user_name }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+
+        - name: Typing password to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: "{{ rest_api_credentials.password }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Logging in to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            sleep_time: 5
+            keys_send:
+              - ENTER
+
+        # Interfaces
+        - name: Sending interfaces config to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: "echo {{ slurped_network_files.results[0].content }} | base64 -d > /etc/network/interfaces"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+          when: slurped_network_files.results[0].content | length <= 500
+
+        - name: Configuring long string interfaces file for {{ custom_vm_name | default(vm_name) }}...
+          when: slurped_network_files.results[0].content | length >= 500
+          block:
+            - name: Sending interfaces configs to {{ custom_vm_name | default(vm_name) }}...
+              community.vmware.vmware_guest_sendkey:
+                string_send: "echo {{ item }} >> /tmp/interfaces_base64"
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                keys_send:
+                  - ENTER
+              loop: "{{ slurped_network_files.results[0].content | regex_findall('.{1,1000}') }}"
+              loop_control:
+                index_var: interface_loop
+                label: "{{ interface_loop + 1 }}/{{ slurped_network_files.results[0].content | regex_findall('.{1,1000}') | length }}"
+
+            - name: Sending base64 decode command to {{ custom_vm_name | default(vm_name) }}...
+              community.vmware.vmware_guest_sendkey:
+                string_send: "cat /tmp/interfaces_base64 | base64 -d > /etc/network/interfaces"
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                keys_send:
+                  - ENTER
+
+        - name: Committing interfaces update for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        # DNS
+        - name: Sending DNS config to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: "echo {{ slurped_network_files.results[1].content }} | base64 -d > /etc/resolv.conf"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+
+        - name: Committing DNS update for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        # Network interface persistence
+        - name: Sending network interface persistence config to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: "echo {{ slurped_network_files.results[2].content }} | base64 -d > /etc/mactab"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+
+        - name: Committing network interface persistence update for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        # Restarting networking
+        - name: Sending networking restart command to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            string_send: mkinitfs && reboot
+            name: "{{ custom_vm_name | default(vm_name) }}"
+
+        - name: Restarting networking for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+        - name: Waiting for the network to be configured...
+          ansible.builtin.wait_for:
+            host: "{{ connection_address }}"
+            port: 22
+            timeout: 60
+
+      rescue:
+        - name: NETWORK CONFIGURATION ERROR
+          ansible.builtin.fail:
+            msg: |
+              Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+              Check the errors above and {{ inventory_hostname }} host logs for more details.
+          when: configure_networking_rescue_count | default(0) | int == 3
+
+        - name: Setting rescue loop count...
+          ansible.builtin.set_fact:
+            configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            shutdown: true
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
+
+        - name: Re-including vSphere network configuration tasks...
+          ansible.builtin.include_tasks: main.yml
