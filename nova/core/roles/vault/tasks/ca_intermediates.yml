@@ -73,6 +73,7 @@
         body:
           csr: "{{ intermediate_csr.json.data.csr }}"
           common_name: "{{ vault_intermediate_ca.vault_intermediate_ca_name }}"
+          not_before_duration: 0s # Effective immediately, this is to avoid an issue where Root and Intermediate were created in quick succession
           use_csr_values: true
         body_format: json
         validate_certs: "{{ vault_validate_cert }}"
