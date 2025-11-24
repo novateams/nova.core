@@ -35,7 +35,7 @@
 
 - name: Including accounts save secrets tasks...
   ansible.builtin.include_tasks: save_account_password.yml
-  loop: "{{ accounts }}"
+  loop: "{{ accounts if secrets == [] else [] }}" # This is to avoid evaluating Vault lookups when not saving account passwords to Vault
   loop_control:
     loop_var: sct
     label: "{{ sct.username }}"
