@@ -41,7 +41,8 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments: -c 'if grep -q ID=kali /etc/os-release && mount | grep "on / " | grep ro,; then mount -o remount,rw /; fi'
+                arguments: |
+                  -c 'if grep -q ID=kali /etc/os-release; then while mount | grep "on / " | grep -q ro,; do mount -o remount,rw / || true; sleep 1; done; fi'
                 path: /bin/bash
             status_code: 201
             body_format: json
