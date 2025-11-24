@@ -1,5 +1,5 @@
 ---
-- name: Reverting to {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot...
+- name: Reverting to {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) | default('') }} snapshot...
   community.vmware.vmware_guest_snapshot:
     datacenter: "{{ datacenter }}"
     folder: "{{ folder }}"
