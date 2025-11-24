@@ -3,7 +3,7 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Removing {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }} snapshot...
+    - name: Removing {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) | default('') }} snapshot...
       vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
