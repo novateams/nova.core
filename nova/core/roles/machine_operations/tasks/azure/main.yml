@@ -22,10 +22,10 @@
       - azure_service_principal_secret
       - azure_subscription_id
       - azure_tenant_id
-  when: azure_client_id | default(false) is ansible.builtin.falsy
-    or azure_service_principal_secret | default(false) is ansible.builtin.falsy
-    or azure_subscription_id | default(false) is ansible.builtin.falsy
-    or azure_tenant_id | default(false) is ansible.builtin.falsy
+  when: azure_defaults.subscription_id | default(false) is ansible.builtin.falsy
+    or azure_defaults.client_id | default(false) is ansible.builtin.falsy
+    or azure_defaults.tenant | default(false) is ansible.builtin.falsy
+    or azure_defaults.secret | default(false) is ansible.builtin.falsy
 
 - name: Checking for resource group and VM existence...
   delegate_to: localhost
