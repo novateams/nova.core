@@ -144,11 +144,11 @@ vmware_workstation:
 
 aws_defaults:
   region: "{{ aws_region | default('eu-north-1') }}" # Default is Stockholm
-  aws_access_key: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_aws_access_key_id']
-    | default(vars[project_fullname ~ '_aws_access_key_id'])
+  aws_access_key: "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key_id']
+    | default(vars[project_fullname | default('') ~ '_aws_access_key_id'])
     | default(aws_access_key_id) | default('') }}"
-  aws_secret_key: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_aws_access_key']
-    | default(vars[project_fullname ~ '_aws_access_key'])
+  aws_secret_key: "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key']
+    | default(vars[project_fullname | default('') ~ '_aws_access_key'])
     | default(aws_access_key) | default('') }}"
 
 #########
@@ -159,22 +159,24 @@ azure_resource_group: "{{ project_fullname | default('') }}"
 azure_location: westeurope
 azure_defaults:
   # Current subscription ID from https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade
-  subscription_id: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_subscription_id']
-    | default(vars[project_fullname ~ '_azure_subscription_id'])
+  subscription_id:
+    "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_azure_subscription_id']
+    | default(vars[project_fullname | default('') ~ '_azure_subscription_id'])
     | default(azure_subscription_id) | default('') }}"
 
   # The Service Principal Name's (Service Account used for deployment) ID from
   # https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  client_id: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_client_id']
-    | default(vars[project_fullname ~ '_azure_client_id'])
+  client_id: "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_azure_client_id']
+    | default(vars[project_fullname | default('') ~ '_azure_client_id'])
     | default(azure_client_id) | default('') }}"
 
   # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  tenant: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_tenant_id']
-    | default(vars[project_fullname ~ '_azure_tenant_id'])
+  tenant: "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_azure_tenant_id']
+    | default(vars[project_fullname | default('') ~ '_azure_tenant_id'])
     | default(azure_tenant_id) | default('') }}"
-  secret: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_azure_service_principal_secret']
-    | default(vars[project_fullname ~ '_azure_service_principal_secret'])
+  secret:
+    "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_azure_service_principal_secret']
+    | default(vars[project_fullname | default('') ~ '_azure_service_principal_secret'])
     | default(azure_service_principal_secret) | default('') }}"
 
 ###########
@@ -183,14 +185,16 @@ azure_defaults:
 
 proxmox_defaults:
   api_host: "{{ proxmox_api_host | default('') }}"
-  api_user: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_proxmox_api_user']
-    | default(vars[project_fullname ~ '_proxmox_api_user'])
+  api_user: "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_proxmox_api_user']
+    | default(vars[project_fullname | default('') ~ '_proxmox_api_user'])
     | default(proxmox_api_user) | default('') }}"
-  api_token_id: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_proxmox_api_token_id']
-    | default(vars[project_fullname ~ '_proxmox_api_token_id'])
+  api_token_id:
+    "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_proxmox_api_token_id']
+    | default(vars[project_fullname | default('') ~ '_proxmox_api_token_id'])
     | default(proxmox_api_token_id) | default('') }}"
-  api_token_secret: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_proxmox_api_token_secret']
-    | default(vars[project_fullname ~ '_proxmox_api_token_secret'])
+  api_token_secret:
+    "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_proxmox_api_token_secret']
+    | default(vars[project_fullname | default('') ~ '_proxmox_api_token_secret'])
     | default(proxmox_api_token_secret) | default('') }}"
 
 proxmox_validate_certs: true
@@ -210,12 +214,15 @@ openstack_defaults:
       | default(deployer_username) | default('') }}"
     password: "{{ openstack_password | default(env_project_deployer_password) | default(project_deployer_password)
       | default(deployer_password) | default('') }}"
-    project_id: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_openstack_project_id']
-      | default(vars[project_fullname ~ '_openstack_project_id'])
+    project_id:
+      "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_openstack_project_id']
+      | default(vars[project_fullname | default('') ~ '_openstack_project_id'])
       | default(openstack_project_id) | default('') }}"
-    user_domain_name: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_openstack_user_domain_name']
-      | default(vars[project_fullname ~ '_openstack_user_domain_name'])
+    user_domain_name:
+      "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_openstack_user_domain_name']
+      | default(vars[project_fullname | default('') ~ '_openstack_user_domain_name'])
       | default(openstack_user_domain_name) | default('Default') }}"
-    project_domain_name: "{{ vars[environment_name ~ '_' ~ project_fullname ~ '_openstack_project_domain_name']
-      | default(vars[project_fullname ~ '_openstack_project_domain_name'])
+    project_domain_name:
+      "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_openstack_project_domain_name']
+      | default(vars[project_fullname | default('') ~ '_openstack_project_domain_name'])
       | default(openstack_project_domain_name) | default('Default') }}"
