@@ -20,8 +20,8 @@
     required_variables:
       - aws_access_key
       - aws_access_key_id
-  when: aws_access_key_id | default(false) is ansible.builtin.falsy
-    or aws_access_key | default(false) is ansible.builtin.falsy
+  when: aws_defaults.aws_access_key | default(false) is ansible.builtin.falsy
+    or aws_defaults.aws_secret_key | default(false) is ansible.builtin.falsy
 
 - name: MISSING DEPLOYER SSH KEY
   ansible.builtin.fail:
