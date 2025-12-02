@@ -49,10 +49,10 @@
     rm -rf /home/*/.cache/*
     rm -rf /home/gt/.bash_history
     rm -rf /var/log/installer/*
-    service apache2 restart || true
-    {{ 'if [ -d "/run/log/journal" ]; then find /run/log/journal -name "*.journal" | xargs rm -f; fi' if ansible_system != 'FreeBSD' }}
+    {{ 'service apache2 restart || true' if ansible_distribution | default('') != 'Alpine' else '' }}
+    {{ 'if [ -d "/run/log/journal" ]; then find /run/log/journal -name "*.journal" | xargs rm -f; fi' if ansible_system | default('') != 'FreeBSD' }}
   args:
-    executable: "/bin/{{  'tcsh' if ansible_system == 'FreeBSD' else 'bash' }}"
+    executable: "/bin/{{  'tcsh' if ansible_system | default('') == 'FreeBSD' else 'sh' if ansible_distribution | default('') == 'Alpine' else 'bash' }}"
   changed_when: true
 
 # tcsh automatically writes current history in HISTFILE
@@ -63,13 +63,14 @@
     rm -f /root/.bash_history
     history -c && {{ 'history -w && ' if ansible_system != 'FreeBSD' }}cat /dev/null > /root/.bash_history
   args:
-    executable: "/bin/{{  'tcsh' if ansible_system == 'FreeBSD' else 'bash' }}"
+    executable: "/bin/{{  'tcsh' if ansible_system | default('') == 'FreeBSD' else 'sh' if ansible_distribution | default('') == 'Alpine' else 'bash' }}"
   changed_when: true
   when: cleanup_remove_bash_history
 
 - name: Clearing journalctl...
   ansible.builtin.command: journalctl --rotate --vacuum-time=1s
   changed_when: true
+  when: ansible_distribution | default('') != 'Alpine'
 
 - name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
   ansible.builtin.set_fact:

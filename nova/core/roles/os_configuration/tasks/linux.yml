@@ -32,7 +32,9 @@
   community.general.locale_gen:
     name: "{{ os_configuration_locale }}"
     state: present
-  when: ansible_os_family != 'RedHat'
+  when:
+    - ansible_os_family != 'RedHat'
+    - ansible_os_family != 'Alpine'
 
 # For latest Debian versions the localectl command gives access denied so using lineinfile
 - name: Setting the default locale...
@@ -42,6 +44,15 @@
     line: LANG={{ os_configuration_locale }}
     mode: "0644"
     create: true
+  when: ansible_os_family != 'Alpine'
+
+- name: Setting the default locale for Alpine...
+  ansible.builtin.copy:
+    content: |
+      export LANG={{ os_configuration_locale }}
+    dest: /etc/profile.d/locale.sh
+    mode: "0755"
+  when: ansible_os_family == 'Alpine'
 
 - name: Enabling SSH forwarding for sudo...
   ansible.builtin.lineinfile:
@@ -127,6 +138,19 @@
           loop: "{{ ntp_servers }}"
           notify: restart_chronyd
 
+- name: Set NTP server for Alpine...
+  when:
+    - ntp_servers != []
+    - ansible_os_family in ["Alpine"]
+  block:
+    - name: Configuring NTP in /etc/conf.d/ntpd...
+      ansible.builtin.copy:
+        content: |
+          NTPD_OPTS="-s {{ ntp_servers | join(' -s ') }}"
+        dest: /etc/conf.d/ntpd
+        mode: "0644"
+      when: ansible_os_family == 'Alpine'
+
 - name: Waiting until {{ wait_for_address }} is reachable...
   ansible.builtin.wait_for:
     host: "{{ wait_for_address }}"
@@ -144,24 +168,22 @@
   delay: 10
   when: os_configuration_wait_for_site
 
-- name: Regenerating Snakeoil certificates...
+- name: Regenerating Snakeoil certificates... # noqa: command-instead-of-shell
   ansible.builtin.shell: "{{ lookup('template', 'regenerate-snakeoil-certificates.sh') }}"
-  args:
-    executable: /bin/bash
   register: regenerate_snakeoil_certs
   changed_when: regenerate_snakeoil_certs.stdout == "done"
 
-- name: Regenerating machine-id & host ssh keys...
+- name: Regenerating machine-id & host ssh keys... # noqa: command-instead-of-shell
   ansible.builtin.shell: "{{ lookup('template', 'regenerate-machine-id.sh') }}"
-  args:
-    executable: /bin/bash
   register: regenerate_machine_id
   changed_when: regenerate_machine_id.stdout != "done"
   retries: 5
   delay: 3
 
 - name: Restarting required services... # noqa: no-handler
-  when: regenerate_machine_id.changed
+  when:
+    - regenerate_machine_id.changed
+    - ansible_os_family != 'Alpine'
   block:
     - name: Checking if systemd-journald service exists...
       ansible.builtin.systemd:

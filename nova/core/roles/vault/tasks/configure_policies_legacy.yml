@@ -1,4 +1,18 @@
 ---
+- name: USING LEGACY DATA STRUCTURE FOR vault_policies
+  ansible.builtin.debug:
+    msg: |
+      The vault_policies variable is using a legacy data structure.
+      Please update your configuration to use the new data structure.
+      Support for legacy structure will be removed 01.06.2026!
+      Refer to the {{ role_path }}/README.md for data structure examples.
+
+- name: SLEEPING TO READ
+  ansible.builtin.wait_for:
+    timeout: 30
+  become: false
+  delegate_to: localhost
+
 - name: Listing all auth methods...
   ansible.builtin.uri:
     url: "{{ vault_configuration_uri }}/v1/sys/auth"
@@ -9,34 +23,36 @@
     body_format: json
   register: all_auth_methods
 
+# Configuring policies
 - name: Creating following policies
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/policy/{{ vault_policy.name }}"
+    url: "{{ vault_configuration_uri }}/v1/sys/policy/{{ vault_policy.policy_name }}"
     method: PUT
     headers:
       X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body:
-      policy: "{{ vault_policy.content }}"
+      policy: "{{ vault_policy.policy_content }}"
     body_format: json
     status_code:
       - 200
       - 204
-  loop: "{{ vault_policies | map(attribute='policies') | flatten | unique }}"
+  loop: "{{ vault_policies }}"
   loop_control:
     loop_var: vault_policy
-    label: "{{ vault_policy.name }}"
+    label: "{{ vault_policy.policy_name }}"
 
 - name: Creating following groups to policy mapping...
   ansible.builtin.uri:
     url: "{{ vault_configuration_uri }}/v1/identity/group"
-    method: POST
+    method: PUT
     headers:
       X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body:
       name: "{{ vault_policy.vault_group_name }}"
-      policies: "{{ vault_policy.policies | map(attribute='name') | flatten }}"
+      policies:
+        - "{{ vault_policy.policy_name }}"
       type: external
     body_format: json
     status_code:
@@ -45,7 +61,7 @@
   loop: "{{ vault_policies }}"
   loop_control:
     loop_var: vault_policy
-    label: "{{ vault_policy.policies | map(attribute='name') | flatten }} > {{ vault_policy.vault_group_name }}"
+    label: "{{ vault_policy.vault_group_name }} > {{ vault_policy.policy_name }}"
 
 - name: Listing all groups...
   ansible.builtin.uri:

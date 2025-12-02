@@ -1,4 +1,4 @@
-# Gitlab
+# gitlab
 
 This role installs and configures Gitlab with Docker Compose. https://docs.gitlab.com/
 Optionally it can also configure:

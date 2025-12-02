@@ -15,74 +15,93 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
       register: file_size
 
-    - name: Preparing file upload...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            attributes:
-              overwrite: true
-              size: "{{ file_size.stat.size }}"
-            path: /etc/netplan/01-netcfg.yaml
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: file_upload_prep
+    # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
+    # to retry the network configuration up to 3 times before failing the task completely.
+    - name: Including network configuration tasks...
+      block:
+        - name: Preparing file upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ file_size.stat.size }}"
+                path: /etc/netplan/01-netcfg.yaml
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: file_upload_prep
 
-    - name: Removing existing netplan configuration file(s)...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            # netplan apply here is needed to avoid systemd-networkd-wait-online.service timing out
-            arguments: -c "rm -rf /etc/netplan/* && netplan apply"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
+        - name: Removing existing netplan configuration file(s)...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                # netplan apply here is needed to avoid systemd-networkd-wait-online.service timing out
+                arguments: -c "rm -rf /etc/netplan/* && netplan apply"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
 
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
 
-    - name: Uploading file...
-      ansible.builtin.uri:
-        url: "{{ file_upload_prep.json }}"
-        method: PUT
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
-        status_code: 200
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
+        - name: Uploading file...
+          ansible.builtin.uri:
+            url: "{{ file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
 
-    - name: Configuring network...
-      ansible.builtin.uri:
-        url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-        method: POST
-        headers:
-          vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-        body:
-          credentials: "{{ rest_api_credentials }}"
-          spec:
-            # 2x netplan is required for Ubuntu 20.04 for some reason
-            arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply"
-            path: /bin/bash
-        status_code: 201
-        body_format: json
-        validate_certs: "{{ validate_vmware_certs }}"
-      register: network_config_command
+        - name: Configuring network...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                # 2x netplan is required for Ubuntu 20.04 for some reason
+                arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
 
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+      rescue:
+        - name: NETWORK CONFIGURATION ERROR
+          ansible.builtin.fail:
+            msg: |
+              Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+              Check the errors above and {{ inventory_hostname }} host logs for more details.
+          when: configure_networking_rescue_count | default(0) | int == 3
+
+        - name: Setting rescue loop count...
+          ansible.builtin.set_fact:
+            configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+        - name: Re-including vSphere network configuration tasks...
+          ansible.builtin.include_tasks: main.yml
 
     # When using many IPs on a single interface, netplan will start having DNS resolution issues
     # For those use cases we will use resolv.conf to configure DNS
@@ -90,44 +109,6 @@
       when: extra_ipv4 is defined
         or extra_ipv6 is defined
       block:
-        - name: Disabling systemd-resolved service...
-          ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-            method: POST
-            headers:
-              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-            body:
-              credentials: "{{ rest_api_credentials }}"
-              spec:
-                arguments: -c "systemctl disable --now systemd-resolved"
-                path: /bin/bash
-            status_code: 201
-            body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
-          register: network_config_command
-
-        - name: Including command run check task...
-          ansible.builtin.include_tasks: command_run_check.yml
-
-        - name: Removing existing resolv.conf file...
-          ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-            method: POST
-            headers:
-              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-            body:
-              credentials: "{{ rest_api_credentials }}"
-              spec:
-                arguments: -c "rm -f /etc/resolv.conf"
-                path: /bin/bash
-            status_code: 201
-            body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
-          register: network_config_command
-
-        - name: Including command run check task...
-          ansible.builtin.include_tasks: command_run_check.yml
-
         - name: Templating resolv.conf configuration script...
           ansible.builtin.template:
             src: resolv.conf
@@ -140,31 +121,88 @@
             path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
           register: resolv_file_size
 
-        - name: Preparing resolv.conf upload...
-          ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
-            method: POST
-            headers:
-              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-            body:
-              credentials: "{{ rest_api_credentials }}"
-              spec:
-                attributes:
-                  overwrite: true
-                  size: "{{ resolv_file_size.stat.size }}"
-                path: /etc/resolv.conf
-            status_code: 201
-            body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
-          register: resolv_file_upload_prep
+        # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
+        # to retry the network configuration up to 3 times before failing the task completely.
+        - name: Including network configuration tasks...
+          block:
+            - name: Disabling systemd-resolved service...
+              ansible.builtin.uri:
+                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    arguments: -c "systemctl disable --now systemd-resolved"
+                    path: /bin/bash
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: network_config_command
 
-        - name: Uploading resolv.conf...
-          ansible.builtin.uri:
-            url: "{{ resolv_file_upload_prep.json }}"
-            method: PUT
-            headers:
-              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
-            status_code: 200
-            body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
+
+            - name: Removing existing resolv.conf file...
+              ansible.builtin.uri:
+                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    arguments: -c "rm -f /etc/resolv.conf"
+                    path: /bin/bash
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: network_config_command
+
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
+
+            - name: Preparing resolv.conf upload...
+              ansible.builtin.uri:
+                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    attributes:
+                      overwrite: true
+                      size: "{{ resolv_file_size.stat.size }}"
+                    path: /etc/resolv.conf
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: resolv_file_upload_prep
+
+            - name: Uploading resolv.conf...
+              ansible.builtin.uri:
+                url: "{{ resolv_file_upload_prep.json }}"
+                method: PUT
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+                status_code: 200
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+
+          rescue:
+            - name: NETWORK CONFIGURATION ERROR
+              ansible.builtin.fail:
+                msg: |
+                  Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+                  Check the errors above and {{ inventory_hostname }} host logs for more details.
+              when: configure_networking_rescue_count | default(0) | int == 3
+
+            - name: Setting rescue loop count...
+              ansible.builtin.set_fact:
+                configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+            - name: Re-including vSphere network configuration tasks...
+              ansible.builtin.include_tasks: main.yml

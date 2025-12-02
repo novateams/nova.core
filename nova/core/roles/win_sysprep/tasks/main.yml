@@ -1,4 +1,9 @@
 ---
+- name: Disabling Bitlocker...
+  ansible.windows.win_shell: "{{ lookup('template', 'Disable-Bitlocker.ps1') }}"
+  register: disable_bitlocker_result
+  changed_when: ("BitLocker not enabled" not in disable_bitlocker_result.stdout)
+
 - name: Including sysprep fix tasks...
   when: ansible_distribution | regex_search('Microsoft Windows 1(0|1).*') != none # Windows 10 and 11
   block:

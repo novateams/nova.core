@@ -1,6 +1,4 @@
-# Mapping of network interfaces to ethX based on MAC address
-# This is required for the network interfaces to be persistent across reboots
-# The maximum interfaces name length is 15 characters
+# Mapping correct MAC addresses to interface names
 {% for interface in interfaces %}
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ configure_networking_mac_addresses[loop.index - 1] }}", NAME="{{ interface_names[loop.index0] }}"
+SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="{{ configure_networking_mac_addresses[loop.index0] }}", NAME="{{ interface_names[loop.index0] }}"
 {% endfor %}

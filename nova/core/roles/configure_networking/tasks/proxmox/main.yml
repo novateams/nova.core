@@ -22,6 +22,8 @@
         configure_networking_mac_addresses:
           "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='hardware-address', default='00:00:00:00:00:00')
           | reject('equalto', '00:00:00:00:00:00') | list }}"
+        configure_networking_hw_interfaces: "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='name')
+          | reject('equalto', 'lo') | list }}"
 
     - name: Including {{ customization_method }} network configuration tasks...
       ansible.builtin.include_tasks: "{{ customization_method }}.yml"

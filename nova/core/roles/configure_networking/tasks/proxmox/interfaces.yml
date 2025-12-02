@@ -1,0 +1,92 @@
+---
+- name: Configuring interfaces on Proxmox VM...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Templating following network configuration files...
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        lstrip_blocks: true
+        mode: "0644"
+      loop_control:
+        label: "{{ item.dest }}"
+      loop:
+        - src: interfaces.j2
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+
+        - src: resolv.conf
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+
+        # For locking MAC addresses to interface names
+        - src: mactab
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+
+    - name: Getting network configuration file contents...
+      ansible.builtin.slurp:
+        path: "{{ item }}"
+      register: network_files
+      loop:
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+
+    # Since the Proxmox API can be quite unstable especially under load, we implement a rescue loop here
+    # to retry the network configuration up to 3 times before failing the task completely.
+    - name: Including network configuration tasks...
+      block:
+        - name: Writing following configuration to {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+              }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body:
+              content: "{{ item.content }}"
+              file: "{{ item.file }}"
+            body_format: json
+            validate_certs: "{{ proxmox_validate_certs }}"
+          loop_control:
+            label: "{{ item.file }}"
+          loop:
+            - content: "{{ network_files.results[0].content | b64decode }}"
+              file: /etc/network/interfaces
+
+            - content: "{{ network_files.results[1].content | b64decode }}"
+              file: /etc/resolv.conf
+
+            - content: "{{ network_files.results[2].content | b64decode }}"
+              file: /etc/mactab
+
+            - content: mkinitfs && reboot
+              file: /tmp/rebuild_initramfs.sh
+
+        - name: Rebuilding initramfs on {{ custom_vm_name | default(vm_name) }}...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+              }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body:
+              command:
+                - sh
+                - /tmp/rebuild_initramfs.sh # Execute the script to rebuild initramfs and reboot
+            body_format: json
+            validate_certs: "{{ proxmox_validate_certs }}"
+
+      rescue:
+        - name: NETWORK CONFIGURATION ERROR
+          ansible.builtin.fail:
+            msg: |
+              Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+              Check the errors above and {{ inventory_hostname }} host logs for more details.
+          when: configure_networking_rescue_count | default(0) | int == 3
+
+        - name: Setting rescue loop count...
+          ansible.builtin.set_fact:
+            configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+        - name: Re-including network configuration tasks...
+          ansible.builtin.include_tasks: main.yml

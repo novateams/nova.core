@@ -1,0 +1,3 @@
+{% for interface in interfaces %}
+{{ interface_names[loop.index0] }} {{ configure_networking_mac_addresses[loop.index0] }}
+{% endfor %}

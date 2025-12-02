@@ -1,0 +1,3 @@
+---
+# How many seconds to wait for the DC to come back online after a reboot
+win_dc_post_reboot_check_timeout: 120

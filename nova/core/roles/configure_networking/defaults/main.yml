@@ -80,5 +80,16 @@ admin_account_password: >-
 rest_api_credentials:
   interactive_session: false
   type: USERNAME_PASSWORD
-  user_name: "{{ template_username if fresh_deploy and not manual_fresh_deploy else admin_account }}"
-  password: "{{ template_password if fresh_deploy and not manual_fresh_deploy else admin_account_password }}"
+  user_name: "{{ template_username if fresh_deploy or configure_networking_use_template_credentials | bool else admin_account }}"
+  password: "{{ template_password if fresh_deploy or configure_networking_use_template_credentials | bool else admin_account_password }}"
+
+# Useful for debugging or for building networking support for new OSes
+# By default uses the logic defined above to determine whether to use template credentials or not
+# This variable is specific to hypervisors that use guest credentials for network configuration like VMWare
+configure_networking_use_template_credentials: false
+
+# Time in seconds to wait for the Alpine VM to boot before sending networking configuration commands
+configure_networking_alpine_boot_wait_time: 60
+
+# Time in seconds to wait for the PanOS VM to boot before sending networking configuration commands
+configure_networking_panos_boot_wait_time: 60

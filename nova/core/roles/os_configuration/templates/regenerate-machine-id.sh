@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
 # Generating new SSH host keys and machine-id if current SSH keys do not contain machine's hostname
-if [[ -z $(grep -r {{ hostname }} /etc/ssh/) ]]; then
+if [ -z "$(grep -r {{ hostname }} /etc/ssh/)" ]; then
 
     echo "Regenerating SSH host keys and machine-id"
 
@@ -12,11 +12,14 @@ if [[ -z $(grep -r {{ hostname }} /etc/ssh/) ]]; then
 
     # Regenerate SSH host keys and machine-id
     ssh-keygen -A
-    rm /etc/machine-id
+    rm -f /etc/machine-id
+
+    {% if ansible_os_family | default(true) not in ["Alpine"] %}
     systemd-machine-id-setup
 
     # Restarting SSH service
     systemctl restart ssh* # * Is to match sshd and ssh
+    {% endif %}
 
 else
 

@@ -17,9 +17,7 @@
 - name: Running VM creation tasks...
   delegate_to: localhost
   become: false
-  when:
-    - fresh_deploy
-    - not manual_fresh_deploy # Since this block can only be ran once during clone
+  when: fresh_deploy
   block:
     - name: Checking for Network...
       ansible.builtin.fail:
@@ -94,7 +92,7 @@
             msg: Cannot find template - {{ vm_template if not template else base_vm_template }}
           when: template_search_result.guests == []
 
-        - name: Getting VM template disk info...
+        - name: Getting {{ vm_template | default(false) }} disk info...
           community.vmware.vmware_guest_disk_info:
             datacenter: "{{ datacenter }}"
             moid: "{{ template_search_result.guests[0].moid }}"

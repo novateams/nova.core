@@ -2,10 +2,12 @@
 # Getting the the ADWS is up event after the last clean reboot
 - name: Waiting until Active Directory Web Services is running...
   ansible.windows.win_shell: "{{ lookup('file', 'PostReboot-Check.ps1') }}"
+  changed_when: false
 
-- name: Getting domain info... # Extra check to make sure DC is up
+# Extra check to make sure DC is up
+- name: Getting domain info...
   ansible.windows.win_shell: Get-ADDomain
   register: domain_check
-  retries: 10
-  delay: 5
   until: domain_check.rc == 0
+  retries: "{{ (win_dc_post_reboot_check_timeout if win_dc_post_reboot_check_timeout >= 5 else 5) // 5 }}"
+  delay: 5

@@ -136,4 +136,4 @@
             - current_os_disk_size | int < os_disk_size | int
             - vm_disk_info.instance.config.hardware.device | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk')
               | map(attribute='backing.deltaDiskFormat') | first != none
-              or snapshot_info.guest_snapshots
+              or snapshot_info.guest_snapshots != {}
