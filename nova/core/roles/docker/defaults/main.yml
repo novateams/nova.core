@@ -25,6 +25,8 @@ docker_network:
   ipv4_subnet: 172.18.0.0/16
   ipv6_subnet: fd42::/64
 
+# Default is latest version available in the Docker APT repository but can be locked to a specific major version
+docker_engine_version: {}
 # Docker APT proxy
 docker_apt_proxy: https://download.docker.com/linux/{{ ansible_distribution | lower }}
 
