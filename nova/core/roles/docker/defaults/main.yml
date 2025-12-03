@@ -1,5 +1,6 @@
 ---
-docker_engine_version: 28
+# Default docker daemon.json template to be used
+# Update the path if you have a custom template
 docker_daemon_template: daemon.json
 
 # Docker daemon.json defaults
@@ -9,15 +10,16 @@ docker_buildkit: true
 docker_enable_ipv6: true
 docker_enable_ip6tables: true
 docker_enable_iptables: true
-docker_firewall_backend: iptables # Options are iptables or (still experimental) nftables
+docker_firewall_backend: iptables # Options are iptables or still experimental nftables
 docker_bridge_ipv6_range: fd69::/64
 docker_userland_proxy: true
 docker_log_to_journald: false
 
-# List of mirrors to be added to the Docker daemon config. The mirror must be a complete URL including a protocol (http:// or https://)
+# List of mirrors to be added to the Docker daemon config.
+# The mirror must be a complete URL including a protocol eg https://
 docker_registry_mirrors: []
 
-# List of Docker networks to be create
+# Docker networks to be create
 docker_create_network: true
 docker_network:
   name: local-network
@@ -25,8 +27,13 @@ docker_network:
   ipv4_subnet: 172.18.0.0/16
   ipv6_subnet: fd42::/64
 
+#############
+# Debian OS #
+#############
+
 # Default is latest version available in the Docker APT repository but can be locked to a specific major version
 docker_engine_version: {}
+
 # Docker APT proxy
 docker_apt_proxy: https://download.docker.com/linux/{{ ansible_distribution | lower }}
 
