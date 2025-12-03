@@ -12,8 +12,6 @@ admin_accounts: []
 user_accounts: []
 # List of domain user accounts to save to Vault usually defined in host var for the domain controller
 domain_user_accounts: []
-# Combine all account types to one list
-accounts: "{{ user_accounts + admin_accounts + domain_user_accounts }}"
 
 ###########
 # Secrets #
