@@ -5,7 +5,7 @@
     start_mode: auto
     state: started
 
-- name: Instaling Hyper-V & Containers with sub features and management tools...
+- name: Installing Hyper-V & Containers with sub features and management tools...
   ansible.windows.win_feature:
     name:
       - Containers
