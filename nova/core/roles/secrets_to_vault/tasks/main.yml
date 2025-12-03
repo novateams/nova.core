@@ -1,5 +1,5 @@
 ---
-- name: Getting Authentication token for {{ secrets_vault_address }}...
+- name: Getting Authentication token for {{ secrets_vault_address | default('') }}...
   ansible.builtin.uri:
     url: "{{ secrets_vault_address }}/v1/auth/ldap/login/{{ vault_username }}"
     method: POST
@@ -32,6 +32,13 @@
     loop_var: sct
     label: "{{ sct.key }}"
   when: secrets != []
+
+# Combine all account types to one list
+# Since this can use Vault lookups, we want to avoid evaluating it unless needed
+# For that reason, this variable is set by set_fact instead of defaults/main.yml
+- name: Setting accounts variable
+  ansible.builtin.set_fact:
+    accounts: "{{ user_accounts + admin_accounts + domain_user_accounts }}"
 
 - name: Including accounts save secrets tasks...
   ansible.builtin.include_tasks: save_account_password.yml
