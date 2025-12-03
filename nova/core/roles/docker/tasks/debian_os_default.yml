@@ -52,7 +52,8 @@
   retries: 6
   delay: 5
 
-- name: "{{ 'Locking' if docker_engine_version != {} else 'Unlocking' }} Docker engine version..." # This is to avoid updating Docker with apt upgrade
+# This is to avoid updating Docker with apt upgrade if a specific version is set
+- name: "{{ 'Locking' if docker_engine_version != {} else 'Unlocking' }} Docker engine version..."
   ansible.builtin.dpkg_selections:
     name: "{{ docker_package }}"
     selection: "{{ 'hold' if docker_engine_version != {} else 'install' }}"
@@ -61,6 +62,18 @@
   loop:
     - docker-ce-cli
     - docker-ce
+  register: docker_dpkg_lock
+
+- name: Updating Docker packages after unlock... # noqa: package-latest
+  ansible.builtin.apt:
+    name:
+      - docker-ce-cli
+      - docker-ce
+    state: latest
+    update_cache: true
+  when:
+    - docker_engine_version == {}
+    - docker_dpkg_lock.changed
 
 - name: Adding Docker daemon config...
   ansible.builtin.template:
@@ -81,10 +94,10 @@
 - name: Including default network creation tasks...
   when: docker_create_network | bool
   block:
-    - name: Checking if {{ docker_network.name }} exists...
-      community.docker.docker_network_info:
-        name: "{{ docker_network.name }}"
-      register: docker_network_check
+    # - name: Checking if {{ docker_network.name }} exists...
+    #   community.docker.docker_network_info:
+    #     name: "{{ docker_network.name }}"
+    #   register: docker_network_check
 
     - name: Creating {{ docker_network.name }}...
       community.docker.docker_network:
@@ -93,4 +106,4 @@
         ipam_config:
           - subnet: "{{ docker_network.ipv4_subnet }}"
           - subnet: "{{ docker_network.ipv6_subnet }}"
-      when: not docker_network_check.exists
+      # when: not docker_network_check.exists
