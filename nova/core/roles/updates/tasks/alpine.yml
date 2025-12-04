@@ -1,0 +1,6 @@
+---
+- name: Updating packages...
+  community.general.apk:
+    update_cache: true
+    upgrade: true
+    state: present
