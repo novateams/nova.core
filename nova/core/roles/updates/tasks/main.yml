@@ -1,34 +1,32 @@
 ---
-- name: Including non-network OS update tasks...
-  when: ansible_network_os is not defined
-  block:
-    - name: Including Windows update tasks...
-      ansible.builtin.include_tasks: windows.yml
-      when: ansible_os_family == "Windows"
+- name: Including Windows update tasks...
+  ansible.builtin.include_tasks: windows.yml
+  when: ansible_os_family | default('') == "Windows"
 
-    - name: Including Debian family update tasks...
-      ansible.builtin.include_tasks: debian_family.yml
-      when: ansible_os_family == 'Debian'
+- name: Including Debian family update tasks...
+  ansible.builtin.include_tasks: debian_family.yml
+  when: ansible_os_family | default('') == 'Debian'
 
-    - name: Including Archlinux update tasks...
-      ansible.builtin.include_tasks: archlinux_family.yml
-      when: ansible_os_family == 'Archlinux'
+- name: Including Archlinux update tasks...
+  ansible.builtin.include_tasks: archlinux_family.yml
+  when: ansible_os_family | default('') == 'Archlinux'
 
-    - name: Including RedHat family update tasks...
-      ansible.builtin.include_tasks: redhat_family.yml
-      when: ansible_os_family == 'RedHat'
+- name: Including RedHat family update tasks...
+  ansible.builtin.include_tasks: redhat_family.yml
+  when: ansible_os_family | default('') == 'RedHat'
 
-    - name: Including FreeBSD update tasks...
-      ansible.builtin.include_tasks: freebsd.yml
-      when: ansible_system == "FreeBSD"
+- name: Including Alpine update tasks...
+  ansible.builtin.include_tasks: alpine.yml
+  when: ansible_os_family | default('') == 'Alpine'
 
-    - name: Including MacOS update tasks...
-      ansible.builtin.include_tasks: macos.yml
-      when: ansible_system == "Darwin"
+- name: Including FreeBSD update tasks...
+  ansible.builtin.include_tasks: freebsd.yml
+  when: ansible_system | default('') == "FreeBSD"
 
-- name: Including network OS update tasks...
-  when: ansible_network_os is defined
-  block:
-    - name: Including RouterOS update tasks...
-      ansible.builtin.include_tasks: routeros.yml
-      when: ansible_network_os == 'community.routeros.routeros'
+- name: Including MacOS update tasks...
+  ansible.builtin.include_tasks: macos.yml
+  when: ansible_system | default('') == "Darwin"
+
+- name: Including RouterOS update tasks...
+  ansible.builtin.include_tasks: routeros.yml
+  when: ansible_network_os | default('') == 'community.routeros.routeros'
