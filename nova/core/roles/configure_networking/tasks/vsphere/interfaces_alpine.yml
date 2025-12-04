@@ -55,14 +55,17 @@
               - ENTER
 
         # Interfaces
+        # Not using | character since it gets interpreted incorrectly by the sendkey module from some keyboard layouts
         - name: Sending interfaces config to {{ custom_vm_name | default(vm_name) }}...
           community.vmware.vmware_guest_sendkey:
-            string_send: "echo {{ slurped_network_files.results[0].content }} | base64 -d > /etc/network/interfaces"
+            string_send:
+              "echo {{ slurped_network_files.results[0].content }} > /tmp/interfaces_base64 && base64
+              -d /tmp/interfaces_base64 > /etc/network/interfaces"
             name: "{{ custom_vm_name | default(vm_name) }}"
-          when: slurped_network_files.results[0].content | length <= 500
+          when: slurped_network_files.results[0].content | length <= 1000
 
         - name: Configuring long string interfaces file for {{ custom_vm_name | default(vm_name) }}...
-          when: slurped_network_files.results[0].content | length >= 500
+          when: slurped_network_files.results[0].content | length >= 1000
           block:
             - name: Sending interfaces configs to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -77,7 +80,7 @@
 
             - name: Sending base64 decode command to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
-                string_send: "cat /tmp/interfaces_base64 | base64 -d > /etc/network/interfaces"
+                string_send: "base64 -d /tmp/interfaces_base64 > /etc/network/interfaces"
                 name: "{{ custom_vm_name | default(vm_name) }}"
                 keys_send:
                   - ENTER
@@ -91,7 +94,7 @@
         # DNS
         - name: Sending DNS config to {{ custom_vm_name | default(vm_name) }}...
           community.vmware.vmware_guest_sendkey:
-            string_send: "echo {{ slurped_network_files.results[1].content }} | base64 -d > /etc/resolv.conf"
+            string_send: "echo {{ slurped_network_files.results[1].content }} > /tmp/resolv_conf_base64 && base64 -d /tmp/resolv_conf_base64 > /etc/resolv.conf"
             name: "{{ custom_vm_name | default(vm_name) }}"
 
         - name: Committing DNS update for {{ custom_vm_name | default(vm_name) }}...
@@ -103,7 +106,7 @@
         # Network interface persistence
         - name: Sending network interface persistence config to {{ custom_vm_name | default(vm_name) }}...
           community.vmware.vmware_guest_sendkey:
-            string_send: "echo {{ slurped_network_files.results[2].content }} | base64 -d > /etc/mactab"
+            string_send: "echo {{ slurped_network_files.results[2].content }} > /tmp/mactab_base64 && base64 -d /tmp/mactab_base64 > /etc/mactab"
             name: "{{ custom_vm_name | default(vm_name) }}"
 
         - name: Committing network interface persistence update for {{ custom_vm_name | default(vm_name) }}...
