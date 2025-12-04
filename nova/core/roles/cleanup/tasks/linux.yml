@@ -55,13 +55,10 @@
     executable: "/bin/{{  'tcsh' if ansible_system | default('') == 'FreeBSD' else 'sh' if ansible_distribution | default('') == 'Alpine' else 'bash' }}"
   changed_when: true
 
-# tcsh automatically writes current history in HISTFILE
-- name: Removing Linux bash history...
+- name: Removing Linux shell history...
   ansible.builtin.shell: |
-    {{ 'setenv HISTFILE "/dev/null"' if ansible_system == 'FreeBSD' else 'export HISTFILE=/dev/null' }}
-    rm -f /home/*/.bash_history
-    rm -f /root/.bash_history
-    history -c && {{ 'history -w && ' if ansible_system != 'FreeBSD' }}cat /dev/null > /root/.bash_history
+    rm -f /home/*/.*_history
+    rm -f /root/.*_history
   args:
     executable: "/bin/{{  'tcsh' if ansible_system | default('') == 'FreeBSD' else 'sh' if ansible_distribution | default('') == 'Alpine' else 'bash' }}"
   changed_when: true
