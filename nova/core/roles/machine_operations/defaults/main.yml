@@ -185,6 +185,10 @@ machine_operations_proxmox_vmid: "{{ custom_vm_name | default(vm_name) | hash('s
 # Start VM on boot
 machine_operations_proxmox_vm_start_on_boot: true
 
+# Enable Firewall for all VM network interfaces
+# True or false for all interfaces. Use a custom role/task to enable/disable per interface if needed
+machine_operations_proxmox_enable_firewall: true
+
 #############
 # OpenStack #
 #############
