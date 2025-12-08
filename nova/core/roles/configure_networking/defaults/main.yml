@@ -93,3 +93,16 @@ configure_networking_alpine_boot_wait_time: 60
 
 # Time in seconds to wait for the PanOS VM to boot before sending networking configuration commands
 configure_networking_panos_boot_wait_time: 60
+
+###########
+# Proxmox #
+###########
+
+# This is a list of interfaces to exclude when configuring networking on Proxmox VMs
+# These are typically non-physical interfaces like loopback
+configure_networking_proxmox_interfaces_to_exclude:
+  - lo
+  - lo0 # OPNsense loopback
+  - enc0 # OPNsense encryption
+  - pfsync0 # OPNsense pfsync
+  - pflog0 # OPNsense pflog

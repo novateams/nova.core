@@ -23,7 +23,18 @@
           "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='hardware-address', default='00:00:00:00:00:00')
           | reject('equalto', '00:00:00:00:00:00') | list }}"
         configure_networking_hw_interfaces: "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='name')
-          | reject('equalto', 'lo') | list }}"
+          | reject('in', configure_networking_proxmox_interfaces_to_exclude) | list }}"
+
+    - name: Checking if network customization method exists...
+      ansible.builtin.stat:
+        path: "{{ role_path }}/tasks/proxmox/{{ customization_method }}.yml"
+      register: customization_method_file
+
+    - name: NETWORK CUSTOMIZATION NOT IMPLEMENTED
+      ansible.builtin.fail:
+        msg: |
+          Network customization method {{ customization_method | upper }} is not implemented on Proxmox.
+      when: not customization_method_file.stat.exists
 
     - name: Including {{ customization_method }} network configuration tasks...
       ansible.builtin.include_tasks: "{{ customization_method }}.yml"
