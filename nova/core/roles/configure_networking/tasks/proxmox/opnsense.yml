@@ -1,0 +1,162 @@
+---
+- name: Configuring netplan on Proxmox VM...
+  become: false
+  delegate_to: localhost
+  block:
+    - name: Downloading /conf/config.xml {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-read?file=/conf/config.xml"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: config_download
+
+    - name: Saving /conf/config.xml to a temporary file...
+      ansible.builtin.copy:
+        content: "{{ config_download.json.data.content }}"
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        mode: "0600"
+
+    - name: Deleting existing interfaces...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/interfaces/*
+        state: absent
+
+    - name: Deleting existing gateways...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/OPNsense/Gateways/*
+        state: absent
+
+    - name: Deleting existing DNS servers...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system/dnsserver
+        state: absent
+
+    - name: Templating interfaces config...
+      ansible.builtin.template:
+        src: opnsense.yml
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_interfaces.yml
+        lstrip_blocks: true
+        mode: "0600"
+
+    - name: Including interfaces config...
+      ansible.builtin.include_vars:
+        file: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_interfaces.yml
+
+    - name: Configuring following opnsense interfaces for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/interfaces
+        pretty_print: true
+        add_children: "{{ opnsense_interfaces }}"
+
+    - name: Configuring egress interface gateways for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/OPNsense/Gateways
+        pretty_print: true
+        add_children: "{{ opnsense_gateways }}"
+
+    - name: Configuring following DNS server for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system
+        pretty_print: true
+        add_children:
+          - dnsserver: "{{ item }}"
+      loop: "{{ dns_server_combined }}"
+
+    - name: Enabling {{ inventory_hostname }} configured DNS servers...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/system
+        pretty_print: true
+        value: remote
+
+    - name: Adding a wan management rule for {{ inventory_hostname }}...
+      community.general.xml:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        xpath: /opnsense/filter
+        pretty_print: true
+        add_children:
+          - rule:
+              uuid: "{{ lookup('password', '/dev/null length=32') | ansible.builtin.to_uuid }}"
+              _:
+                - type: pass
+                - ipprotocol: inet46
+                - statetype: keep state
+                - direction: in
+                - floating: "yes"
+                - quick: "1"
+                - source:
+                    _:
+                      - any: "1"
+                - destination:
+                    _:
+                      - any: "1"
+                - descr: MGMT
+      when: interfaces | selectattr('egress', 'equalto', true) | first == interfaces | selectattr('connection', 'equalto', true) | first
+
+    - name: Getting network configuration file contents...
+      ansible.builtin.slurp:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+      register: file_contents
+
+    - name: Getting the nr of config.xml chunks...
+      ansible.builtin.set_fact:
+        config_file_chunks: "{{ (file_contents.content | length + 1699) // 1700 }}"
+
+    # Writing in 1700 char chunks because otherwise the Qemu Guest Agent service fails
+    - name: Writing /conf/config.xml to {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          content: "{{ item | b64decode }}"
+          file: /tmp/config_{{ '%03d' | format(file_loop) }}.xml
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      loop: "{{ file_contents.content | regex_findall('.{1,1700}') }}"
+      loop_control:
+        index_var: file_loop
+        label: "{{ file_loop + 1 }}/{{ config_file_chunks }}"
+
+    - name: Removing local config.xml file...
+      ansible.builtin.file:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
+        state: absent
+
+    - name: Writing final /conf/config.xml to {{ custom_vm_name | default(vm_name) }}...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
+          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: POST
+        body:
+          command:
+            - sh
+            - -c
+            - "cat /tmp/config_*.xml > /conf/config.xml && rm -f /tmp/config_*.xml"
+            - reboot
+        body_format: json
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_command
+
+    - name: Including command run check task...
+      ansible.builtin.include_tasks: command_run_check.yml
+
+# This is required for network config to take effect
+- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    restart: true
