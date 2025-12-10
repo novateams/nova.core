@@ -19,7 +19,7 @@
       - libpam-ssh-agent-auth # Required when using ssh-agent for sudo
     state: present
     update-cache: true
-  when: ansible_distribution != 'Kali'
+  when: ansible_facts.distribution != 'Kali'
 
 - name: Running apt cleanup...
   ansible.builtin.apt:

@@ -5,9 +5,9 @@
   changed_when: ("BitLocker not enabled" not in disable_bitlocker_result.stdout)
 
 - name: Including sysprep fix tasks...
-  when: ansible_distribution | regex_search('Microsoft Windows 1(0|1).*') != none # Windows 10 and 11
+  when: ansible_facts.distribution | regex_search('Microsoft Windows 1(0|1).*') != none # Windows 10 and 11
   block:
-    - name: Removing sysprep-blocking packages from {{ ansible_distribution }}...
+    - name: Removing sysprep-blocking packages from {{ ansible_facts.distribution }}...
       ansible.windows.win_shell: |
         Get-AppxPackage Microsoft.BingSearch* | Remove-AppPackage
         Get-AppxPackage Microsoft.Copilot* | Remove-AppPackage

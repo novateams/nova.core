@@ -6,7 +6,6 @@
   changed_when: true
   become: true
 
-# This step is not actually very useful for debugging
 - name: Templating interface(s) configuration(s)...
   ansible.builtin.template:
     src: networkd.network
@@ -75,7 +74,7 @@
 
 - name: Applying network configuration on Debian...
   become: true
-  when: ansible_distribution | default(false) == "Debian"
+  when: ansible_facts.distribution | default('') == "Debian"
   block:
     - name: Configuring network interface(s) names on Debian...
       ansible.builtin.command: update-initramfs -k all -u
@@ -96,7 +95,7 @@
   ansible.builtin.command: mkinitcpio -P
   changed_when: true
   become: true
-  when: ansible_distribution | default(false) == "Archlinux"
+  when: ansible_facts.distribution | default('') == "Archlinux"
 
 - name: Rebooting...
   ansible.builtin.reboot:

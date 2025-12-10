@@ -1,18 +1,14 @@
 ---
-- name: Inlcuding non-network OS cleanup tasks...
-  when: ansible_network_os is not defined
-  block:
-    - name: Including Windows cleanup tasks...
-      ansible.builtin.include_tasks: windows.yml
-      when: ansible_system == "Win32NT"
+- name: Including Windows cleanup tasks...
+  ansible.builtin.include_tasks: windows.yml
+  when: ansible_facts.system | default('') == "Win32NT"
 
-    - name: Including Linux cleanup tasks...
-      ansible.builtin.include_tasks: linux.yml
-      when: ansible_system == "Linux"
+- name: Including Linux cleanup tasks...
+  ansible.builtin.include_tasks: linux.yml
+  when:
+    - ansible_facts.system | default('') == "Linux"
+    - ansible_network_os | default('') != 'vyos.vyos.vyos'
 
-- name: Including network OS cleanup tasks...
-  when: ansible_network_os is defined
-  block:
-    - name: Including Vyos cleanup tasks...
-      ansible.builtin.include_tasks: vyos.yml
-      when: ansible_network_os == 'vyos.vyos.vyos'
+- name: Including VyOS cleanup tasks...
+  ansible.builtin.include_tasks: vyos.yml
+  when: ansible_network_os | default('') == 'vyos.vyos.vyos'

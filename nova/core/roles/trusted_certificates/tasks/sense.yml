@@ -1,30 +1,30 @@
 ---
-- name: Creating folder - {{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}...
+- name: Creating folder - {{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}...
   ansible.builtin.file:
-    path: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}"
+    path: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}"
     state: directory
     mode: "0755"
 
 - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.copy:
     src: "{{ item.src }}"
-    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
     mode: "0644"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
-    label: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
   when: not item.src.startswith('http')
 
 - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.get_url:
     url: "{{ item.src }}"
-    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
     mode: "0644"
     timeout: 60
     validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
-    label: "{{ unix_os_family_trusted_certificates_paths[ansible_os_family] }}/{{ item.name }}.crt"
+    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
   when: item.src.startswith('http')
 
 - name: Updating CA certificates...

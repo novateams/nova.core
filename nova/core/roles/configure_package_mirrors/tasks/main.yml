@@ -4,32 +4,32 @@
   block:
     - name: Including Windows Chocolatey mirror tasks...
       ansible.builtin.include_tasks: choco.yml
-      when: ansible_os_family == "Windows"
+      when: ansible_facts.os_family | default('') == "Windows"
 
     - name: Configuring Debian family sources.list
-      when: ansible_os_family == "Debian"
+      when: ansible_facts.os_family | default('') == "Debian"
       block:
         - name: Including Kali mirror tasks...
           ansible.builtin.include_tasks: kali.yml
           when:
-            - ansible_distribution == "Kali"
+            - ansible_facts.distribution | default('') == "Kali"
             - package_mirror_kali_uri != {}
 
         - name: Including Ubuntu mirror tasks...
           ansible.builtin.include_tasks: ubuntu.yml
           when:
-            - ansible_distribution == "Ubuntu"
+            - ansible_facts.distribution | default('') == "Ubuntu"
             - package_mirror_ubuntu_uri != {}
 
         - name: Including Debian mirror tasks...
           ansible.builtin.include_tasks: debian.yml
           when:
-            - ansible_distribution == "Debian"
+            - ansible_facts.distribution | default('') == "Debian"
             - customization_method != "proxmox"
             - package_mirror_debian_uri != {}
 
         - name: Including Parrot mirror tasks...
           ansible.builtin.include_tasks: parrot.yml
           when:
-            - ansible_distribution == "Parrot"
+            - ansible_facts.distribution | default('') == "Parrot"
             - package_mirror_parrot_uri != {}

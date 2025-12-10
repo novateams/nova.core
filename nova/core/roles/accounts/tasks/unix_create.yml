@@ -1,7 +1,7 @@
 ---
-- name: Setting the correct sudo group for {{ ansible_distribution }}...
+- name: Setting the correct sudo group for {{ ansible_facts.distribution }}...
   ansible.builtin.set_fact:
-    root_group: "{{ unix_distro_root_group_map[ansible_distribution] }}"
+    root_group: "{{ unix_distro_root_group_map[ansible_facts.distribution] }}"
 
 - name: Making sure the sudo group exists...
   ansible.builtin.group:
@@ -10,20 +10,20 @@
 
 # This required so this role can clean up the default cloud users if they are not in the local_accounts_with_password list
 - name: Adding source creation flag for default cloud account...
-  when: vars[infra_env ~ '_template_username'] | default('') not in [admin_account, '']
+  when: lookup('vars', infra_env ~ '_template_username') | default('') not in [admin_account, '']
   block:
-    - name: Checking if {{ vars[infra_env ~ '_template_username'] | default('') }} user exists...
+    - name: Checking if {{ lookup('vars', infra_env ~ '_template_username') | default('') }} user exists...
       ansible.builtin.stat:
-        path: /home/{{ vars[infra_env ~ '_template_username'] | default('') }}
+        path: /home/{{ lookup('vars', infra_env ~ '_template_username') | default('') }}
       register: template_user
 
-    - name: Adding account creation source flag for {{ vars[infra_env ~ '_template_username'] | default('') }}...
+    - name: Adding account creation source flag for {{ lookup('vars', infra_env ~ '_template_username') | default('') }}...
       ansible.builtin.lineinfile:
-        dest: /home/{{ vars[infra_env ~ '_template_username'] | default('') }}/.created
+        dest: /home/{{ lookup('vars', infra_env ~ '_template_username') | default('') }}/.created
         line: This account was created with {{ ansible_role_name }} role
         state: present
         create: true
-        owner: "{{ vars[infra_env ~ '_template_username'] | default('') }}"
+        owner: "{{ lookup('vars', infra_env ~ '_template_username') | default('') }}"
         mode: "0600"
       when: template_user.stat.exists
 
@@ -34,8 +34,8 @@
     groups: "{{ item.groups | default(root_group if item.username in admin_accounts | map(attribute='username') else 'users') }}"
     name: "{{ item.username }}"
     password: "{{ item.password | password_hash('sha512') }}"
-    shell: "{{ item.shell | default(unix_distro_shell_map[ansible_distribution] | default('/bin/bash')) }}"
-    skeleton: "{{ unix_distro_skel_map[ansible_distribution] | default('/etc/skel') }}"
+    shell: "{{ item.shell | default(unix_distro_shell_map[ansible_facts.distribution] | default('/bin/bash')) }}"
+    skeleton: "{{ unix_distro_skel_map[ansible_facts.distribution] | default('/etc/skel') }}"
     uid: "{{ item.uid | default(omit) }}"
     update_password: "{{ item.update_password | default('always') }}" # always or on_create
   register: created_account
@@ -47,8 +47,7 @@
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ local_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-  when:
-    created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+  when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
     | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Adding account creation source flag...
@@ -78,7 +77,7 @@
 
 - name: Enabling password requirement for sudo...
   ansible.builtin.lineinfile:
-    dest: "{{ unix_distro_sudoers_map[ansible_distribution] | default('/etc/sudoers') }}"
+    dest: "{{ unix_distro_sudoers_map[ansible_facts.distribution] | default('/etc/sudoers') }}"
     state: present
     regexp: ^%{{ root_group }}
     line: "%{{ root_group }} ALL=(ALL:ALL) ALL"
@@ -87,7 +86,7 @@
 
 - name: Disabling password requirement for sudo...
   ansible.builtin.lineinfile:
-    dest: "{{ unix_distro_sudoers_map[ansible_distribution] | default('/etc/sudoers') }}"
+    dest: "{{ unix_distro_sudoers_map[ansible_facts.distribution] | default('/etc/sudoers') }}"
     state: present
     regexp: ^%{{ root_group }}
     line: "%{{ root_group }} ALL=(ALL) NOPASSWD: ALL"
@@ -103,5 +102,5 @@
     state: present
   when:
     - use_ssh_agent_for_sudo
-    - ansible_system == 'Linux'
-    - ansible_os_family != 'Alpine'
+    - ansible_facts.system == 'Linux'
+    - ansible_facts.os_family != 'Alpine'

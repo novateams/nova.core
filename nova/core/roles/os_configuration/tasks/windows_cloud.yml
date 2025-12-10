@@ -5,7 +5,7 @@
     name: Shell
     data: PowerShell.exe -NoExit
     type: string
-  when: ansible_os_installation_type == 'Server Core'
+  when: ansible_facts.os_installation_type == 'Server Core'
 
 # SSHD Configuration
 # This to avoid errors when someone has more that 6 SSH keys in their agent

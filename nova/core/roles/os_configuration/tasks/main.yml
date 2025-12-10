@@ -5,13 +5,11 @@
     - infra_env != "my_host" # my_host is computer where you run the play from
   block:
     - name: Configuring non-Network OS ...
-      when:
-        - ansible_network_os is not defined
-        - "'os_macos' not in group_names"
+      when: ansible_network_os is not defined
       block:
         - name: Including Windows configuration tasks...
           ansible.builtin.include_tasks: windows.yml
-          when: ansible_system == "Win32NT"
+          when: ansible_facts.system | default('') == "Win32NT"
 
         # This needs to be before the Linux tasks
         # Because Proxmox might have specific cluster configuration tasks
@@ -21,11 +19,18 @@
 
         - name: Including Linux configuration tasks...
           ansible.builtin.include_tasks: linux.yml
-          when: ansible_system == "Linux"
+          when: ansible_facts.system | default('') == "Linux"
 
         - name: Including FreeBSD configuration tasks...
           ansible.builtin.include_tasks: freebsd.yml
-          when: ansible_system == "FreeBSD"
+          when: ansible_facts.system | default('') == "FreeBSD"
+
+        # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
+        # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
+        - name: Including MacOS configuration tasks...
+          ansible.builtin.include_tasks: macos.yml
+          when: ansible_facts.system | default('') == "Darwin"
+            or not macos_has_python | default(true)
 
     - name: Configuring Network OS...
       when: ansible_network_os is defined
@@ -57,10 +62,6 @@
         - name: Including PanOS configuration tasks...
           ansible.builtin.include_tasks: panos.yml
           when: ansible_network_os == 'panos'
-
-    - name: Including MacOS configuration tasks...
-      ansible.builtin.include_tasks: macos.yml
-      when: "'os_macos' in group_names"
 
     # Since there can be so many different partitioning methods and file systems we'll leave to the user to create a role that matches their templates
     # When `os_configuration_expand_os_disk_role_name` variable is defined then the role will be included here

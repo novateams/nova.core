@@ -14,8 +14,8 @@
         path: "{{ post_scripts_folder_on_target }}"
         state: directory
       when:
-        - ansible_system is defined
-        - ansible_system == "Win32NT"
+        - ansible_facts.system is defined
+        - ansible_facts.system == "Win32NT"
 
     - name: Including {{ customization_role_path }}/{{ role }} role...
       ansible.builtin.include_role:

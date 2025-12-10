@@ -33,8 +33,8 @@
     name: "{{ os_configuration_locale }}"
     state: present
   when:
-    - ansible_os_family != 'RedHat'
-    - ansible_os_family != 'Alpine'
+    - ansible_facts.os_family != 'RedHat'
+    - ansible_facts.os_family != 'Alpine'
 
 # For latest Debian versions the localectl command gives access denied so using lineinfile
 - name: Setting the default locale...
@@ -44,7 +44,7 @@
     line: LANG={{ os_configuration_locale }}
     mode: "0644"
     create: true
-  when: ansible_os_family != 'Alpine'
+  when: ansible_facts.os_family != 'Alpine'
 
 - name: Setting the default locale for Alpine...
   ansible.builtin.copy:
@@ -52,7 +52,7 @@
       export LANG={{ os_configuration_locale }}
     dest: /etc/profile.d/locale.sh
     mode: "0755"
-  when: ansible_os_family == 'Alpine'
+  when: ansible_facts.os_family == 'Alpine'
 
 - name: Enabling SSH forwarding for sudo...
   ansible.builtin.lineinfile:
@@ -86,7 +86,7 @@
 - name: Set NTP server for Debian and Archlinux like OS...
   when:
     - ntp_servers != []
-    - ansible_os_family in [ "Debian", "Archlinux" ]
+    - ansible_facts.os_family in [ "Debian", "Archlinux" ]
   block:
     - name: Check if timesyncd.conf file exists...
       ansible.builtin.stat:
@@ -110,7 +110,7 @@
 - name: Set NTP server for ReadHat like OS...
   when:
     - ntp_servers != []
-    - ansible_os_family in [ "RedHat" ]
+    - ansible_facts.os_family in [ "RedHat" ]
   block:
     - name: Check if chrony.conf file exists...
       ansible.builtin.stat:
@@ -141,7 +141,7 @@
 - name: Set NTP server for Alpine...
   when:
     - ntp_servers != []
-    - ansible_os_family in ["Alpine"]
+    - ansible_facts.os_family in ["Alpine"]
   block:
     - name: Configuring NTP in /etc/conf.d/ntpd...
       ansible.builtin.copy:
@@ -149,7 +149,7 @@
           NTPD_OPTS="-s {{ ntp_servers | join(' -s ') }}"
         dest: /etc/conf.d/ntpd
         mode: "0644"
-      when: ansible_os_family == 'Alpine'
+      when: ansible_facts.os_family == 'Alpine'
 
 - name: Waiting until {{ wait_for_address }} is reachable...
   ansible.builtin.wait_for:
@@ -183,7 +183,7 @@
 - name: Restarting required services... # noqa: no-handler
   when:
     - regenerate_machine_id.changed
-    - ansible_os_family != 'Alpine'
+    - ansible_facts.os_family != 'Alpine'
   block:
     - name: Checking if systemd-journald service exists...
       ansible.builtin.systemd:

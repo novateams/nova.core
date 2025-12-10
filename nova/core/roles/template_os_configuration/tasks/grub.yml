@@ -17,14 +17,14 @@
     - name: Applying GRUB configuration...
       ansible.builtin.command: update-grub
       changed_when: true
-      when: ansible_os_family == "Debian"
+      when: ansible_facts.os_family == "Debian"
 
     - name: Applying GRUB configuration...
       ansible.builtin.command: grub2-mkconfig -o /boot/grub2/grub.cfg
       changed_when: true
-      when: ansible_os_family == "RedHat"
+      when: ansible_facts.os_family == "RedHat"
 
     - name: Applying GRUB configuration...
       ansible.builtin.command: grub-mkconfig -o /boot/grub/grub.cfg
       changed_when: true
-      when: ansible_os_family == 'Archlinux'
+      when: ansible_facts.os_family == 'Archlinux'

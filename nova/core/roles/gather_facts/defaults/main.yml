@@ -1,3 +1,0 @@
----
-# By default MacOS does not have Python installed so it cannot use ansible.builtin.setup
-macos_has_python: false

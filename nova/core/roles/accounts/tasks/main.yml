@@ -31,42 +31,45 @@
       block:
         - name: Including Windows accounts creation tasks...
           ansible.builtin.include_tasks: windows_create.yml
-          when: ansible_system == 'Win32NT'
+          when: ansible_facts.system | default('') == 'Win32NT'
 
         - name: Including Unix accounts creation tasks...
           ansible.builtin.include_tasks: unix_create.yml
-          when: ansible_system in ["FreeBSD", "Linux"]
+          when: ansible_facts.system | default('') in ["FreeBSD", "Linux"]
 
+        # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
+        # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
         - name: Including MacOS accounts creation tasks...
           ansible.builtin.include_tasks: macos_create.yml
-          when: ansible_system == "Darwin"
+          when: ansible_facts.system | default('') == "Darwin"
+            or not macos_has_python | default(true)
 
     - name: Configuring Network OS accounts...
       when: ansible_network_os is defined
       block:
         - name: Configure RouterOS accounts...
           ansible.builtin.include_tasks: routeros.yml
-          when: ansible_network_os == 'community.routeros.routeros'
+          when: ansible_network_os | default('') == 'community.routeros.routeros'
 
         - name: Configure VyOS accounts...
           ansible.builtin.include_tasks: vyos.yml
-          when: ansible_network_os == 'vyos.vyos.vyos'
+          when: ansible_network_os | default('') == 'vyos.vyos.vyos'
 
         - name: Configure Cisco-IOS accounts...
           ansible.builtin.include_tasks: ios.yml
-          when: ansible_network_os == 'cisco.ios.ios'
+          when: ansible_network_os | default('') == 'cisco.ios.ios'
 
         - name: Configure pfSense accounts...
           ansible.builtin.include_tasks: pfsense.yml
-          when: ansible_network_os == 'pfsense'
+          when: ansible_network_os | default('') == 'pfsense'
 
         - name: Configure OPNsense accounts...
           ansible.builtin.include_tasks: opnsense.yml
-          when: ansible_network_os == 'opnsense'
+          when: ansible_network_os | default('') == 'opnsense'
 
         - name: Configure PanOS accounts...
           ansible.builtin.include_tasks: panos.yml
-          when: ansible_network_os == 'panos'
+          when: ansible_network_os | default('') == 'panos'
 
     - name: Setting {{ ansible_deployer_username }} as connection user...
       ansible.builtin.set_fact:
@@ -91,24 +94,27 @@
       block:
         - name: Including Unix accounts removal tasks...
           ansible.builtin.include_tasks: unix_remove.yml
-          when: ansible_system in ["FreeBSD", "Linux"]
+          when: ansible_facts.system | default('') in ["FreeBSD", "Linux"]
 
         - name: Including Windows accounts removal tasks...
           ansible.builtin.include_tasks: windows_remove.yml
-          when: ansible_system == 'Win32NT'
+          when: ansible_facts.system | default('') == 'Win32NT'
 
+        # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
+        # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
         - name: Including MacOS accounts removal tasks...
           ansible.builtin.include_tasks: macos_remove.yml
-          when: ansible_system == "Darwin"
+          when: ansible_facts.system | default('') == "Darwin"
+            or not macos_has_python | default(true)
 
     # Cloud temp keys removal
     - name: Removing {{ infra_env }} temp ssh key for {{ inventory_hostname }}...
       ansible.builtin.file:
-        path: "{{ vars['machine_operations_' ~ infra_env ~ '_temp_ssh_key_path'] }}"
+        path: "{{ lookup('vars', 'machine_operations_' ~ infra_env ~ '_temp_ssh_key_path') | default('') }}"
         state: absent
       delegate_to: localhost
       become: false
-      when: vars['machine_operations_' ~ infra_env ~ '_temp_ssh_key_path'] is defined
+      when: lookup('vars', 'machine_operations_' ~ infra_env ~ '_temp_ssh_key_path') is defined
 
 - name: Including following accounts post-roles...
   ansible.builtin.include_role:

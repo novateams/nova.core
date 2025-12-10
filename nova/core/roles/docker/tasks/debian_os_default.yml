@@ -11,9 +11,9 @@
   delay: 6
 
 - name: Including Docker for default Debian based OS...
-  when: ansible_distribution not in docker_non_default_debian_os_list
+  when: ansible_facts.distribution not in docker_non_default_debian_os_list
   block:
-    - name: Adding Docker repo key for {{ ansible_distribution }}...
+    - name: Adding Docker repo key for {{ ansible_facts.distribution }}...
       ansible.builtin.get_url:
         url: "{{ docker_apt_proxy }}/gpg"
         dest: /etc/apt/trusted.gpg.d/docker.asc
@@ -26,7 +26,7 @@
     # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
     - name: Adding Docker repository...
       ansible.builtin.copy:
-        content: deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_distribution_release }} stable
+        content: deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_facts.distribution_release }} stable
         dest: /etc/apt/sources.list.d/docker.list
         mode: "0644"
 

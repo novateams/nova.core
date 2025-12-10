@@ -3,7 +3,7 @@ nexus_docker_network: local-network # The network where the container will be at
 nexus_proxy_container_name: {} # Name of the proxy container to restart after composing Nexus.
 
 nexus_container_config_folder: /srv/nexus # Path where Nexus application data is stored
-nexus_fqdn: "{{ fqdn | default(ansible_fqdn) }}" # FQDN of the Nexus server, usually comes from Providentia or all.yml
+nexus_fqdn: "{{ fqdn | default(ansible_facts.fqdn) }}" # FQDN of the Nexus server, usually comes from Providentia or all.yml
 nexus_configure: false # Set to true to also configure Nexus after installation
 nexus_configure_ldap: false # Set to true to also configure LDAP after installation
 nexus_create_repos: false # Set to true to also create default repositories after installation

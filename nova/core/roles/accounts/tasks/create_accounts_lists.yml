@@ -47,7 +47,7 @@
   loop: "{{ domain_user_accounts }}"
   loop_control:
     label: "{{ item.username }}"
-  when: ansible_windows_domain_role == "Primary domain controller"
+  when: ansible_facts.windows_domain_role == "Primary domain controller"
 
 - name: Creating combined users lists...
   ansible.builtin.set_fact:
