@@ -27,15 +27,15 @@
       ansible.builtin.setup:
         filter: "*_time"
 
-    - name: Creating a snapshot - {{ snapshot_name | default(ansible_date_time.iso8601) }}...
+    - name: Creating a snapshot - {{ snapshot_name | default(ansible_facts.date_time.iso8601) }}...
       vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: present
         memory_dump: "{{ true if live_snap else false }}"
-        snapshot_name: "{{ snapshot_name | default(ansible_date_time.iso8601) }}"
-        description: Created at {{ ansible_date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }}
+        snapshot_name: "{{ snapshot_name | default(ansible_facts.date_time.iso8601) }}"
+        description: Created at {{ ansible_facts.date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }}
 
 - name: Including powerstate role...
   ansible.builtin.include_role:

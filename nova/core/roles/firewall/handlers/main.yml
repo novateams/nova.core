@@ -17,4 +17,4 @@
 - name: Rebooting Unix...
   ansible.builtin.reboot:
   listen: reboot_unix
-  when: ansible_os_family == "Archlinux" # For some reason nftables does not work without a reboot on Archlinux
+  when: ansible_facts.os_family == "Archlinux" # For some reason nftables does not work without a reboot on Archlinux

@@ -2,21 +2,21 @@
 - name: Gathering RouterOS facts...
   community.routeros.facts:
   retries: 3
-  when: ansible_network_os | default(false) == 'community.routeros.routeros'
+  when: ansible_network_os | default('') == 'community.routeros.routeros'
 
 - name: Gathering VyOS facts...
   vyos.vyos.vyos_facts:
-  when: ansible_network_os | default(false) == 'vyos.vyos.vyos'
+  when: ansible_network_os | default('') == 'vyos.vyos.vyos'
 
 - name: Gathering Cisco IOS facts...
   cisco.ios.ios_facts:
-  when: ansible_network_os | default(false) == 'cisco.ios.ios'
+  when: ansible_network_os | default('') == 'cisco.ios.ios'
 
 - name: Gathering facts for FortiOS...
   fortinet.fortios.fortios_configuration_fact:
     access_token: "{{ fortios_access_token }}"
     selector: system_global
-  when: ansible_network_os | default(false) == 'fortinet.fortios.fortios'
+  when: ansible_network_os | default('') == 'fortinet.fortios.fortios'
 
 - name: Gathering facts for pfSense/OPNsense...
   ansible.builtin.setup:
@@ -33,26 +33,21 @@
   delay: 3
   delegate_to: localhost
   become: false
-  when: ansible_network_os | default(false) == 'panos'
+  when: ansible_network_os | default('') == 'panos'
 
-- name: Gathering facts for {{ inventory_hostname }}...
-  ansible.builtin.setup:
-    gather_timeout: 60
-  when:
-    - ansible_system | default(false) == "Darwin"
-    - macos_has_python
-
+# macos_has_python is a MacOS specific OS group var to indicate if Python is installed
+# false by default for MacOS but defaulting to true here to avoid errors on non-MacOS systems
 - name: Gathering facts for {{ inventory_hostname }}...
   ansible.builtin.setup:
     gather_timeout: 60
   when:
     - ansible_network_os is not defined
-    - ansible_system is not defined or ansible_system != "Darwin"
-# # Useful when debugging facts gathered from different operating systems
+    - macos_has_python | default(true)
+# Useful when debugging facts gathered from different operating systems
 # - name: Saving ansible_facts to file...
 #   ansible.builtin.copy:
 #     content: "{{ ansible_facts | to_nice_yaml }}"
-#     dest: "{{ inventory_hostname }}.yaml"
+#     dest: "{{ inventory_hostname }}.yml"
 #     mode: "0644"
 #   delegate_to: localhost
 #   become: false

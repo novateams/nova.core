@@ -23,18 +23,18 @@
           block:
             - name: Including Windows finalization tasks...
               ansible.builtin.include_tasks: windows.yml
-              when: ansible_system == 'Win32NT'
+              when: ansible_facts.system | default('') == 'Win32NT'
 
             - name: Including Unix finalization tasks...
               ansible.builtin.include_tasks: unix.yml
-              when: ansible_system in ["FreeBSD", "Linux"]
+              when: ansible_facts.system | default('') in ["FreeBSD", "Linux"]
 
         - name: Configuring Network OS accounts...
           when: ansible_network_os is defined
           block:
             - name: Including VyOS finalization tasks...
               ansible.builtin.include_tasks: vyos.yml
-              when: ansible_network_os == 'vyos.vyos.vyos'
+              when: ansible_network_os | default('') == 'vyos.vyos.vyos'
 
 - name: Including metadata posting role...
   ansible.builtin.include_role:

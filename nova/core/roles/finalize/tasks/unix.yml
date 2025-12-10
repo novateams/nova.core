@@ -23,8 +23,8 @@
       line: APT::Periodic::Update-Package-Lists "0";
   when:
     - disable_auto_updates
-    - ansible_os_family is defined
-    - ansible_os_family == 'Debian'
+    - ansible_facts.os_family is defined
+    - ansible_facts.os_family == 'Debian'
 
 - name: Rebooting...
   ansible.builtin.reboot:

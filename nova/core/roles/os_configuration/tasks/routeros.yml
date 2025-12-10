@@ -10,7 +10,7 @@
     commands:
       - /system ntp client set enabled=yes server-dns-names={{ ntp_servers[0] }} primary-ntp=0.0.0.0 secondary-ntp=0.0.0.0
   when:
-    - ansible_net_version.startswith('6')
+    - ansible_facts.net_version.startswith('6')
     - not ntp_servers[0] | ansible.utils.ipaddr
 
 # Setting NTP servers for RouterOS when NTP server is an IP address
@@ -20,14 +20,14 @@
       - /system ntp client set enabled=yes server-dns-names="" primary-ntp={{
         ntp_servers[0] }} secondary-ntp={{ ntp_servers[1] | default(ntp_servers[0]) }}
   when:
-    - ansible_net_version.startswith('6')
+    - ansible_facts.net_version.startswith('6')
     - ntp_servers[0] | ansible.utils.ipaddr != false
 
 - name: Setting NTP servers for RouterOS 7...
   community.routeros.command:
     commands:
       - /system ntp client set enabled=yes servers={{ ntp_servers | join(",") }}
-  when: ansible_net_version.startswith('7')
+  when: ansible_facts.net_version.startswith('7')
 
 - name: Generating new system ID for license...
   community.routeros.command:

@@ -21,7 +21,7 @@
     mode: "0755"
 
 - name: Installing and configuring iptables for Debian based OS...
-  when: ansible_os_family == "Debian"
+  when: ansible_facts.os_family == "Debian"
   block:
     - name: Installing iptables-persistent...
       ansible.builtin.package:

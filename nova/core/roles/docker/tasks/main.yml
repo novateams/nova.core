@@ -2,17 +2,17 @@
 - name: Installing Docker on Windows machine...
   ansible.builtin.include_tasks: windows.yml
   when:
-    - ansible_os_family | default('') == "Windows"
-    - ansible_os_installation_type | default('') == "Server"
+    - ansible_facts.os_family | default('') == "Windows"
+    - ansible_facts.installation_type | default('') == "Server"
 
 - name: Including non-default Debian based OS repo tasks...
   ansible.builtin.include_tasks: debian_os_non_default.yml
-  when: ansible_distribution | default('') in docker_non_default_debian_os_list
+  when: ansible_facts.distribution | default('') in docker_non_default_debian_os_list
 
 - name: Installing Docker on Debian based Linux machine...
   ansible.builtin.include_tasks: debian_os_default.yml
-  when: ansible_os_family | default('') == "Debian"
+  when: ansible_facts.os_family | default('') == "Debian"
 
 - name: Installing Docker on Archlinux based machine...
   ansible.builtin.include_tasks: archlinux.yml
-  when: ansible_os_family | default('') == "Archlinux"
+  when: ansible_facts.os_family | default('') == "Archlinux"

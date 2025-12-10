@@ -168,4 +168,4 @@ vault_ldap_configuration:
 # On 2038-01-19 UNIX epoch will not fit into 32-bit signed integer. This may
 # cause issues on some software. Taking into account timezones, 2038-01-17
 # is the last Y2038 safe day.
-vault_y2038_hours_left: "{{ (2147292000 - (ansible_date_time.epoch | int)) / 3600 | round | int }}"
+vault_y2038_hours_left: "{{ (2147292000 - (ansible_facts.date_time.epoch | int)) / 3600 | round | int }}"

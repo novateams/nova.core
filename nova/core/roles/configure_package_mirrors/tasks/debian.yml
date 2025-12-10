@@ -12,9 +12,9 @@
     mode: "0644"
   when: not apt_backup_file.stat.exists
 
-- name: Templating custom debian-{{ ansible_distribution_release }}.list to {{ inventory_hostname }}...
+- name: Templating custom debian-{{ ansible_facts.distribution_release }}.list to {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: debian-{{ ansible_distribution_release }}.list
+    src: debian-{{ ansible_facts.distribution_release }}.list
     dest: /etc/apt/sources.list
     mode: "0644"
   register: apt_sources

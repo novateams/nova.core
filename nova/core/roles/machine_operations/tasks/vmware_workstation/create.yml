@@ -38,7 +38,7 @@
 
         - name: Downloading or updating VM template...
           when:
-            - not vm_template_presence.stat.exists or ((ansible_date_time.epoch | int) - (vm_template_presence.stat.ctime | round)
+            - not vm_template_presence.stat.exists or ((ansible_facts.date_time.epoch | int) - (vm_template_presence.stat.ctime | round)
               >= machine_operations_vmware_workstation_template_update_interval_days * 86400)
             - not role_only
             - not role_only_wp
@@ -132,6 +132,8 @@
             - regex: vhv.enable.*
               line: vhv.enable = "TRUE"
 
+        # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
+        # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
         - name: Setting compatible Darwin OS type...
           ansible.builtin.lineinfile:
             path: "{{ vmware_workstation.local_vmx_path }}"
@@ -143,9 +145,8 @@
           loop:
             - regex: guestos.*
               line: guestos = "darwin20-64"
-          when:
-            - ansible_system is defined
-            - ansible_system == "Darwin"
+          when: ansible_facts.system | default('') == "Darwin"
+            or not macos_has_python | default(true)
 
         - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
           ansible.builtin.lineinfile:

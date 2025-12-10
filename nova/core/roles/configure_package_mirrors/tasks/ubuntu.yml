@@ -1,13 +1,13 @@
 ---
 - name: Configuring Ubuntu < 24.04 sources.list
-  when: ansible_distribution_release != "noble"
+  when: ansible_facts.distribution_release != "noble"
   block:
     - name: Checking if sources.list backup exists...
       ansible.builtin.stat:
         path: /etc/apt/sources.list_backup
       register: non_noble_apt_backup_file
 
-    - name: Backing up existing {{ ansible_distribution_release }} sources.list...
+    - name: Backing up existing {{ ansible_facts.distribution_release }} sources.list...
       ansible.builtin.copy:
         src: /etc/apt/sources.list
         dest: /etc/apt/sources.list_backup
@@ -23,7 +23,7 @@
       register: non_noble_apt_sources
 
 - name: Configuring Ubuntu 24.04 sources.list
-  when: ansible_distribution_release == "noble"
+  when: ansible_facts.distribution_release == "noble"
   block:
     - name: Checking if ubuntu.sources backup exists...
       ansible.builtin.stat:
@@ -38,7 +38,7 @@
             path: /etc/apt/sources.list.d/ubuntu.sources
           register: ubuntu_sources_state
 
-        - name: Backing up existing {{ ansible_distribution_release }} ubuntu.sources...
+        - name: Backing up existing {{ ansible_facts.distribution_release }} ubuntu.sources...
           ansible.builtin.copy:
             src: /etc/apt/sources.list.d/ubuntu.sources
             dest: /etc/apt/ubuntu.sources_backup

@@ -14,7 +14,7 @@
       - vim # Useful for editing files over SSH
       - wget # Useful for downloading files
     state: present
-    update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat'] else omit }}"
+    update_cache: "{{ true if ansible_facts.os_family in ['Debian', 'RedHat'] else omit }}"
 
 # These packages are only available on non-Alpine Linux systems
 - name: Installing universal Linux packages...
@@ -27,10 +27,10 @@
       - net-tools # Useful for network troubleshooting
       - traceroute # Useful for network troubleshooting
     state: present
-    update_cache: "{{ true if ansible_os_family in ['Debian', 'RedHat', 'Archlinux'] else omit }}"
+    update_cache: "{{ true if ansible_facts.os_family in ['Debian', 'RedHat', 'Archlinux'] else omit }}"
   when:
-    - ansible_system == "Linux"
-    - ansible_distribution != "Alpine"
+    - ansible_facts.system == "Linux"
+    - ansible_facts.distribution != "Alpine"
 
 # These packages are only available on Alpine Linux systems
 - name: Installing Alpine Linux packages...
@@ -44,23 +44,23 @@
       - musl-locales-lang # Required for locale support
     state: present
     update_cache: true
-  when: ansible_distribution == "Alpine"
+  when: ansible_facts.distribution == "Alpine"
 
 - name: Include Ubuntu specific configuration...
   ansible.builtin.include_tasks: ubuntu.yml
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_facts.distribution == "Ubuntu"
 
 - name: Include Archlinux specific configuration...
   ansible.builtin.include_tasks: arch.yml
-  when: ansible_os_family == "Archlinux"
+  when: ansible_facts.os_family == "Archlinux"
 
 - name: Include Debian based OS specific configuration...
   ansible.builtin.include_tasks: debian_family.yml
-  when: ansible_os_family == "Debian"
+  when: ansible_facts.os_family == "Debian"
 
 - name: Include RedHat based OS specific configuration...
   ansible.builtin.include_tasks: redhat_family.yml
-  when: ansible_os_family == "RedHat"
+  when: ansible_facts.os_family == "RedHat"
 
 # SSHD Configuration
 # This to avoid errors when someone has more that 6 SSH keys in their agent
@@ -80,7 +80,7 @@
     dest: /etc/network/interfaces
     line: iface ens192 inet6 dhcp
   when:
-    - ansible_distribution | intersect(["Debian", "Kali"]) | length > 0
+    - ansible_facts.distribution | intersect(["Debian", "Kali"]) | length > 0
     - customization_method != "proxmox" # Because Proxmox will not boot after this change
 
 # Cleaning up current machine ID

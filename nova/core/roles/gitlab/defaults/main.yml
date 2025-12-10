@@ -4,7 +4,7 @@ gitlab_version: 18.6.2-ee.0
 gitlab_ssh_port: 10022
 # Increase gitlab ssh MaxAuthTries to avoid connection issues for users with more than 6 keys in their SSH agent set to {} to disable
 gitlab_ssh_max_auth_tries: 20
-gitlab_fqdn: "{{ fqdn | default(ansible_fqdn) }}"
+gitlab_fqdn: "{{ fqdn | default(ansible_facts.fqdn) }}"
 gitlab_url: https://{{ gitlab_fqdn }}
 gitlab_url_api: https://{{ gitlab_fqdn }}/api/v4
 

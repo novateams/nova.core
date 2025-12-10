@@ -12,5 +12,5 @@
     - snapshot_mode == 'clean-snap'
 
 - name: Creating a snapshot...
-  ansible.builtin.command: vmcli snapshot take {{ snapshot_name | default(ansible_date_time.iso8601) }} {{ vmware_workstation.local_vmx_path }}
+  ansible.builtin.command: vmcli snapshot take {{ snapshot_name | default(ansible_facts.date_time.iso8601) }} {{ vmware_workstation.local_vmx_path }}
   changed_when: true

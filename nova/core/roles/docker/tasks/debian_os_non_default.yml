@@ -1,5 +1,5 @@
 ---
-- name: Adding Docker repo key for {{ ansible_distribution_release }}...
+- name: Adding Docker repo key for {{ ansible_facts.distribution_release }}...
   ansible.builtin.get_url:
     url: "{{ docker_apt_proxy }}/gpg"
     dest: /etc/apt/trusted.gpg.d/docker.asc
@@ -9,17 +9,19 @@
   retries: 10
   delay: 6
   vars:
-    # Overriding ansible_distribution and ansible_distribution_release to match Debian
-    ansible_distribution_release: bookworm
-    ansible_distribution: Debian
+    # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
+    ansible_facts:
+      distribution_release: bookworm
+      distribution: Debian
 
 # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
 - name: Adding Docker repository...
   ansible.builtin.copy:
-    content: deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_distribution_release }} stable
+    content: deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_facts.distribution_release }} stable
     dest: /etc/apt/sources.list.d/docker.list
     mode: "0644"
   vars:
-    # Overriding ansible_distribution and ansible_distribution_release to match Debian
-    ansible_distribution_release: bookworm
-    ansible_distribution: Debian
+    # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
+    ansible_facts:
+      distribution_release: bookworm
+      distribution: Debian

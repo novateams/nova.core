@@ -14,7 +14,7 @@ if [ -z "$(grep -r {{ hostname }} /etc/ssh/)" ]; then
     ssh-keygen -A
     rm -f /etc/machine-id
 
-    {% if ansible_os_family | default(true) not in ["Alpine"] %}
+    {% if ansible_facts.os_family | default(true) not in ["Alpine"] %}
     systemd-machine-id-setup
 
     # Restarting SSH service

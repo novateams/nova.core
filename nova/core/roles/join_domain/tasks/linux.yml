@@ -56,18 +56,18 @@
 - name: Creating user home folder automatically...
   ansible.builtin.command: pam-auth-update --enable mkhomedir
   changed_when: true
-  when: ansible_os_family == "Debian"
+  when: ansible_facts.os_family == "Debian"
 
 - name: Creating user home folder automatically for RedHat...
-  when: ansible_os_family == "RedHat"
+  when: ansible_facts.os_family == "RedHat"
   block:
-    - name: Installing required packages for {{ ansible_os_family }}...
+    - name: Installing required packages for {{ ansible_facts.os_family }}...
       ansible.builtin.package:
         name: authconfig
         state: present
         update_cache: true
 
-    - name: Creating user home folder automatically for {{ ansible_os_family }}...
+    - name: Creating user home folder automatically for {{ ansible_facts.os_family }}...
       ansible.builtin.command: authconfig --enablemkhomedir --update
       changed_when: true
 

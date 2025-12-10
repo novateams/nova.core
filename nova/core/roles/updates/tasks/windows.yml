@@ -18,7 +18,7 @@
   until: not usosvc_service.failed
   retries: 10
   delay: 30
-  when: ansible_distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
+  when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
 
 # Using this block and rescue approach in order to avoid this issue:
 # https://github.com/ansible-collections/ansible.windows/issues/762
@@ -89,7 +89,7 @@
       ansible.windows.win_service:
         name: UsoSvc
         state: stopped
-      when: ansible_distribution_version is version('6.3.9600.0', '>')
+      when: ansible_facts.distribution_version is version('6.3.9600.0', '>')
 
     # Removing Windows Update cache using rd because Powershell (win_file module) can't do it in some cases although it's possible manually
     # The issue is most likely related to long paths
@@ -116,4 +116,4 @@
 - name: Running interactive scan... # Runs a scan for updates to clean up the GUI
   ansible.windows.win_command: UsoClient.exe StartInteractiveScan
   changed_when: false
-  when: ansible_distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
+  when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
