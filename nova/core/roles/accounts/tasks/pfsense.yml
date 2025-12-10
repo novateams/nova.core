@@ -92,13 +92,6 @@
         index_var: idx
         label: "{{ item.username }}"
 
-# This is required because sometimes the new configuration will apply on upload and Ansible will try to connect to the host again with invalid credentials
-- name: Restarting {{ inventory_hostname }} to apply configuration in 10 seconds...
-  ansible.builtin.shell: sleep 10 && reboot
-  changed_when: true
-  async: 10
-  poll: 0
-
 - name: Uploading config.xml to {{ inventory_hostname }}...
   ansible.builtin.copy:
     src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
@@ -107,17 +100,24 @@
     owner: root
     group: wheel
 
-- name: Setting correct password for {{ ansible_deployer_username }}...
-  ansible.builtin.set_fact:
-    ansible_deployer_password: "{{ admin_accounts_with_password
-      | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-
 - name: Removing local config.xml file...
   ansible.builtin.file:
     path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
     state: absent
   delegate_to: localhost
   become: false
+
+# This is required because sometimes the new configuration will apply on upload and Ansible will try to connect to the host again with invalid credentials
+- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    restart: true
+
+- name: Setting correct password for {{ ansible_deployer_username }}...
+  ansible.builtin.set_fact:
+    ansible_deployer_password: "{{ admin_accounts_with_password
+      | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
 
 - name: Waiting until ssh is down for {{ inventory_hostname }}...
   ansible.builtin.wait_for:
@@ -142,6 +142,4 @@
     name: "{{ custom_vm_name | default(vm_name) }}"
   delegate_to: localhost
   become: false
-  when:
-    - infra_env is defined
-    - infra_env == "vsphere" | default('undefined')
+  when: infra_env | default('') == "vsphere"
