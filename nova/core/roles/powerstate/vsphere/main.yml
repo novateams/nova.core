@@ -17,14 +17,14 @@
       vmware.vmware.guest_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
       register: vm_tools
-      until: vm_tools.guests[0].guest_tools_status | default(false) == "guestToolsRunning"
+      until: vm_tools.guests[0].guest_tools_status | default('') == "guestToolsRunning"
       retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
       delay: 5
       when:
         - powerstate_vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
         - powerstate_vcenter_vm_info.guests[0].hw_power_status != "suspended"
-        - not reset and not poweroff
-        - shutdown and powerstate_vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
+        - not reset
+        - not poweroff
 
     - name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
       ansible.builtin.include_tasks: poweroff.yml
