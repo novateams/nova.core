@@ -50,8 +50,8 @@
     {% endif %}
 {% endfor %}
 
-echo "This file is re-generated on each startup by /etc/rc.local" > /etc/resolv.conf
 {% if dns_server_combined != [] %}
+echo "This file is re-generated on each startup by /etc/rc.local" > /etc/resolv.conf
 {% for dns_address in dns_server_combined %}
 echo "nameserver {{ dns_address }}" >> /etc/resolv.conf
 {% endfor %}

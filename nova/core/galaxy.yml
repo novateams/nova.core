@@ -4,8 +4,7 @@ version: 6.9.11
 readme: README.md
 authors:
   - https://github.com/novateams
-description:
-  This is a collection of public roles and plugins that are developed by the Nova team.
+description: This is a collection of public roles and plugins that are developed by the Nova team.
   These roles go very well with Catapult https://github.com/ClarifiedSecurity/catapult but can be used separately.
 license:
   - AGPL-3.0-or-later
