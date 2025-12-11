@@ -1,6 +1,6 @@
 ---
 ### gitlab general
-gitlab_version: 18.6.1-ee.0
+gitlab_version: 18.6.2-ee.0
 gitlab_ssh_port: 10022
 # Increase gitlab ssh MaxAuthTries to avoid connection issues for users with more than 6 keys in their SSH agent set to {} to disable
 gitlab_ssh_max_auth_tries: 20
