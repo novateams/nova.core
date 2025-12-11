@@ -116,6 +116,11 @@ machine_operations_create_aws_security_group: true
 # Mutually exclusive with machine_operations_create_aws_security_group set to true
 machine_operations_aws_security_group_names: []
 
+# By default the subnet ID comes from the interfaces list
+# It can be overridden it here to use the same subnet for all interfaces
+# or custom mapping can be created in host_vars/group_vars to map to specific subnet ID to specific host or group
+machine_operations_aws_subnet_id: {}
+
 # AWS security group rules, default is allow all
 # Use the following link to create custom rules:
 # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_security_group_module.html

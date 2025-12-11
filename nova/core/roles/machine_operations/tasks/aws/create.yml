@@ -55,9 +55,9 @@
               architecture: x86_64
           register: found_amis
 
-        - name: Sorting images by creation_date...
+        - name: Setting latest found image as instance image...
           ansible.builtin.set_fact:
-            all_images: "{{ found_amis.images | sort(attribute='creation_date') }}"
+            ec2_instance_image: "{{ (found_amis.images | sort(attribute='creation_date'))[-1] }}"
 
         - name: Configuring AWS security group for {{ custom_vm_name | default(vm_name) }}...
           amazon.aws.ec2_security_group:
@@ -67,22 +67,33 @@
             state: present
             vpc_id: "{{ aws_vpc_id | default(omit) }}"
           register: created_security_group
-          when: machine_operations_create_aws_security_group
+          when:
+            - machine_operations_create_aws_security_group
+            - machine_operations_aws_security_group_names == []
 
-        - name: Launching {{ hostname }} EC2 instance...
+        - name: Getting required values from templated aws_interfaces.yml...
+          ansible.builtin.set_fact:
+            aws_interfaces: "{{ (lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml)
+              | map('dict2items') | map('rejectattr', 'key', 'equalto', 'connection_interface') | map('items2dict') | list }}"
+            aws_connection_interface_subnet: "{{ (lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml)
+              | map(attribute='subnet_id') | list | default([]) | first | default('') }}"
+
+        - name: Launching {{ custom_vm_name | default(vm_name) }} EC2 instance...
           amazon.aws.ec2_instance:
             name: "{{ custom_vm_name | default(vm_name) }}"
             key_name: "{{ custom_vm_name | default(vm_name) }}"
-            network_interfaces: "{{ lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml }}"
+            network_interfaces: "{{ aws_interfaces }}"
+            vpc_subnet_id: "{{ omit if aws_connection_interface_subnet == [] else aws_connection_interface_subnet }}"
             instance_type: "{{ aws_vm_size | default('t3.micro') }}"
-            security_group: "{{  omit if machine_operations_aws_security_group_names != []
+            security_group: "{{ omit if machine_operations_aws_security_group_names != []
               else machine_operations_aws_security_group_name | default(created_security_group.group_name) }}"
             security_groups: "{{ omit if machine_operations_aws_security_group_names == [] else machine_operations_aws_security_group_names }}"
+            image_id: "{{ machine_operations_aws_ec2_image_id | default(ec2_instance_image.image_id) }}"
             user_data: "{{ lookup('ansible.builtin.template', 'Configure-CloudWindows.ps1') if 'os_windows' in group_names and fresh_deploy else omit }}"
             tags:
               inventory_hostname: "{{ inventory_hostname }}"
               project_fullname: "{{ project_fullname | default('undefined_project') }}"
-              image_name: "{{ all_images[-1].name }}"
+              image_name: "{{ ec2_instance_image.name }}"
           register: created_ec2_instance
           when: fresh_deploy
 
@@ -111,7 +122,7 @@
 
 - name: Setting connection address to {{ eip_info.public_ip
     | default(created_ec2_instance.instances[0].public_ip_address)
-    | default(existing_instances[-1].public_ip_address) }}
+    | default(existing_instances[-1].public_ip_address) | default('N/A') }}...
   ansible.builtin.set_fact:
     connection_address: "{{ eip_info.public_ip
       | default(created_ec2_instance.instances[0].public_ip_address)

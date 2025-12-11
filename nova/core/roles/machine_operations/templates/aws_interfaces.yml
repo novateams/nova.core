@@ -2,9 +2,10 @@
 
 {% if interfaces == [] %}
 - assign_public_ip: false
+  connection_interface: true
 {% endif %}
 {% for iface in interfaces %}
-- subnet_id: "{{ iface.cloud_id }}"
+- subnet_id: "{{ iface.cloud_id if machine_operations_aws_subnet_id == {} else machine_operations_aws_subnet_id }}"
   assign_public_ip: false
   device_index: {{ loop.index0 }}
   delete_on_termination: true
@@ -15,4 +16,4 @@
     - private_ip_address: "{{ ip }}"
       primary: {{ true if loop.first else false }}
     {% endfor %}
-{% endfor %}
+  {% endfor %}
