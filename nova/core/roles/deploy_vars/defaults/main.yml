@@ -144,12 +144,18 @@ vmware_workstation:
 
 aws_defaults:
   region: "{{ aws_region | default('eu-north-1') }}" # Default is Stockholm
-  aws_access_key: "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key_id']
-    | default(vars[project_fullname | default('') ~ '_aws_access_key_id'])
+  access_key:
+    "{{ lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key_id')
+    | default(lookup('vars', project_fullname | default('') ~ '_aws_access_key_id'))
     | default(aws_access_key_id) | default('') }}"
-  aws_secret_key: "{{ vars[environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key']
-    | default(vars[project_fullname | default('') ~ '_aws_access_key'])
+  secret_key:
+    "{{ lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key')
+    | default(lookup('vars', project_fullname | default('') ~ '_aws_access_key'))
     | default(aws_access_key) | default('') }}"
+  session_token:
+    "{{ lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_session_token')
+    | default(lookup('vars', project_fullname | default('') ~ '_aws_session_token'))
+    | default(aws_session_token) | default(omit) }}"
 
 #########
 # Azure #
