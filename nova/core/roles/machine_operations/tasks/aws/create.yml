@@ -75,8 +75,9 @@
             key_name: "{{ custom_vm_name | default(vm_name) }}"
             network_interfaces: "{{ lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml }}"
             instance_type: "{{ aws_vm_size | default('t3.micro') }}"
-            security_group: "{{ aws_security_group_id | default(created_security_group.group_id) }}"
-            image_id: "{{ all_images[-1].image_id }}"
+            security_group: "{{  omit if machine_operations_aws_security_group_names != []
+              else machine_operations_aws_security_group_name | default(created_security_group.group_name) }}"
+            security_groups: "{{ omit if machine_operations_aws_security_group_names == [] else machine_operations_aws_security_group_names }}"
             user_data: "{{ lookup('ansible.builtin.template', 'Configure-CloudWindows.ps1') if 'os_windows' in group_names and fresh_deploy else omit }}"
             tags:
               inventory_hostname: "{{ inventory_hostname }}"

@@ -112,6 +112,10 @@ machine_operations_aws_assign_public_ip: true
 # Set to false when pre-created custom security group is used
 machine_operations_create_aws_security_group: true
 
+# List of existing security group names to use for the instance
+# Mutually exclusive with machine_operations_create_aws_security_group set to true
+machine_operations_aws_security_group_names: []
+
 # AWS security group rules, default is allow all
 # Use the following link to create custom rules:
 # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_security_group_module.html
