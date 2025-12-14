@@ -1,4 +1,9 @@
 ---
+- name: NO SNAPSHOTS FOUND
+  when: (all_snapshots.stdout | from_yaml).snapshots == []
+  ansible.builtin.debug:
+    msg: No snapshots found for {{ inventory_hostname }}, skipping revert.
+
 - name: Reverting to snapshot...
   when: (all_snapshots.stdout | from_yaml).snapshots != []
   block:
@@ -28,13 +33,11 @@
       changed_when: true
       when: snapshot_name is not defined
 
-    - name: Reverting to {{ snapshot_name }} snapshot...
+    - name: Reverting to {{ snapshot_name | default('') }} snapshot...
+      ansible.builtin.command: vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots
+        | selectattr('displayName', 'equalto', snapshot_name) | map(attribute='uid') | first }} {{ vmware_workstation.local_vmx_path }}
+      changed_when: true
       when: snapshot_name is defined
-      block:
-        - name: Reverting to {{ snapshot_name }} snapshot...
-          ansible.builtin.command: vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots
-            | selectattr('displayName', 'equalto', snapshot_name) | map(attribute='uid') | first }} {{ vmware_workstation.local_vmx_path }}
-          changed_when: true
 
     - name: Starting {{ inventory_hostname }}...
       ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
