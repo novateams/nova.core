@@ -25,12 +25,10 @@
   ansible.builtin.include_tasks: freebsd.yml
   when: ansible_facts.system | default('') == "FreeBSD"
 
-# macos_has_python is a MacOS specific OS group var to indicate if Python is installed
-# In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
 - name: Including MacOS update tasks...
   ansible.builtin.include_tasks: macos.yml
   when: ansible_facts.system | default('') == "Darwin"
-    or not macos_has_python | default(true)
+    or ansible_custom_facts.system | default('') == "Darwin"
 
 - name: Including RouterOS update tasks...
   ansible.builtin.include_tasks: routeros.yml

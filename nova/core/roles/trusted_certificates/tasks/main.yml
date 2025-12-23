@@ -12,12 +12,10 @@
         - ansible_facts.system | default('') in ['Linux', 'FreeBSD']
         - ansible_network_os | default('') not in ['opnsense', 'pfsense', 'vyos.vyos.vyos'] # These are based on Unix but have their own tasks
 
-    # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
-    # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
     - name: Including certificates tasks for MacOS systems...
       ansible.builtin.include_tasks: macos.yml
       when: ansible_facts.system | default('') == "Darwin"
-        or not macos_has_python | default(true)
+        or ansible_custom_facts.system | default('') == "Darwin"
 
     - name: Including trusted certificates tasks for VyOS systems...
       ansible.builtin.include_tasks: vyos.yml

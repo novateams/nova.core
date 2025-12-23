@@ -37,12 +37,10 @@
           ansible.builtin.include_tasks: unix_create.yml
           when: ansible_facts.system | default('') in ["FreeBSD", "Linux"]
 
-        # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
-        # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
         - name: Including MacOS accounts creation tasks...
           ansible.builtin.include_tasks: macos_create.yml
           when: ansible_facts.system | default('') == "Darwin"
-            or not macos_has_python | default(true)
+            or ansible_custom_facts.system | default('') == "Darwin"
 
     - name: Configuring Network OS accounts...
       when: ansible_network_os is defined
@@ -101,12 +99,10 @@
           ansible.builtin.include_tasks: windows_remove.yml
           when: ansible_facts.system | default('') == 'Win32NT'
 
-        # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
-        # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
         - name: Including MacOS accounts removal tasks...
           ansible.builtin.include_tasks: macos_remove.yml
           when: ansible_facts.system | default('') == "Darwin"
-            or not macos_has_python | default(true)
+            or ansible_custom_facts.system | default('') == "Darwin"
 
     # Cloud temp keys removal
     - name: Removing {{ infra_env }} temp ssh key for {{ inventory_hostname }}...

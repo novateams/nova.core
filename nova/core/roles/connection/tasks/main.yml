@@ -44,17 +44,33 @@
       password: "{{ template_password if fresh_deploy else ansible_deployer_password }}"
   when: ansible_network_os | default('') == "panos"
 
+- name: Checking for MacOS Python...
+  when: ("os_macos" in group_names)
+  block:
+    - name: Checking if Xcode exists on MacOS...
+      ansible.builtin.raw: |
+        if [ -d /Applications/Xcode.app ]; then
+          echo "Xcode installed"
+        else
+          echo "Xcode NOT installed"
+        fi
+      register: xcode_check
+      changed_when: false
+
+    - name: Setting MacOS Xcode check fact...
+      ansible.builtin.set_fact:
+        darwin_with_python: "{{ true if 'Xcode installed' in xcode_check.stdout else false }}"
+
 - name: Running different wait_for_connection methods based on OS...
   when:
     - not role_only
     - not role_only_wp
   block:
-    # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
     # false by default for MacOS but defaulting to true here to avoid errors on non-MacOS systems
     - name: Waiting for connection to {{ inventory_hostname }}...
       ansible.builtin.wait_for_connection:
         timeout: 300
-      when: macos_has_python | default(true)
+      when: darwin_with_python | default(true)
 
     - name: Waiting Pythonless MacOS connection to {{ inventory_hostname }}...
       ansible.builtin.raw: echo " "
@@ -62,7 +78,7 @@
       retries: 30
       delay: 5
       until: true
-      when: not macos_has_python | default(true)
+      when: not darwin_with_python | default(true)
 
 - name: Including connect role...
   ansible.builtin.include_role:
