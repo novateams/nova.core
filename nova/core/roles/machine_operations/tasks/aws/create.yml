@@ -37,6 +37,11 @@
             key_type: rsa
             file_name: "{{ machine_operations_aws_temp_ssh_key_path }}"
 
+        - name: Slurping {{ machine_operations_aws_temp_ssh_key_path }} file...
+          ansible.builtin.slurp:
+            src: "{{ machine_operations_aws_temp_ssh_key_path }}"
+          register: slurped_aws_temp_ssh_key
+
         - name: Generating {{ aws_template_username | default(template_username) }} user account password...
           ansible.builtin.set_fact:
             template_password: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"

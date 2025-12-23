@@ -17,7 +17,5 @@
       {%- endif -%}
     # Initial connection will be done with temporary SSH key
     ansible_private_key_file: "{{ machine_operations_aws_temp_ssh_key_path if fresh_deploy else omit }}"
-    # To avoid SSH MaxAuthTries limit
-    ansible_ssh_extra_args: "{{ connection_custom_ansible_ssh_extra_args
-      | default('-o PreferredAuthentications=password' if fresh_deploy and 'os_windows' in group_names else
-      '-o IdentitiesOnly=yes' if fresh_deploy and 'os_windows' not in group_names else omit) }}"
+    # To avoid SSH MaxAuthTries limit if a user has more then 6 keys added to their ssh agent
+    ansible_ssh_extra_args: "{{ connection_custom_ansible_ssh_extra_args | default('-o IdentitiesOnly=yes' if fresh_deploy else omit) }}"
