@@ -1,30 +1,9 @@
 ---
-# Universal
-- name: Updating SSHD MaxAuthTries for Cloud {{ inventory_hostname }}...
-  when: os_configuration_configure_ssh_maxauthtries
-  block:
-    - name: Setting SSHD MaxAuthTries to {{ os_configuration_ssh_maxauthtries }}...
-      ansible.builtin.replace:
-        dest: /etc/ssh/sshd_config
-        regexp: .*MaxAuthTries.*
-        replace: MaxAuthTries {{ os_configuration_ssh_maxauthtries }}
-      register: maxauthtries
-
-    - name: Restarting SSHD... # noqa: no-handler
-      ansible.builtin.systemd:
-        name: "{{ os_configuration_os_family_service_name[ansible_facts.os_family] | default('sshd') }}"
-        state: restarted
-      when: maxauthtries.changed
-
-# AWS
-- name: Cleaning up {{ infra_env }} configurations for {{ inventory_hostname }}...
-  when: infra_env in os_configuration_cloud_envs
-  block:
-    - name: Removing cloud managed hostname...
-      ansible.builtin.replace:
-        dest: /etc/cloud/cloud.cfg
-        regexp: ^ - update_etc_hosts
-        replace: "# - update_etc_hosts"
+- name: Removing cloud managed hostname...
+  ansible.builtin.replace:
+    dest: /etc/cloud/cloud.cfg
+    regexp: ^ - update_etc_hosts
+    replace: "# - update_etc_hosts"
 
 - name: Installing Gnome for Ubuntu Desktop...
   ansible.builtin.apt:

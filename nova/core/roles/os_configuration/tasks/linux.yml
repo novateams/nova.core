@@ -1,8 +1,4 @@
 ---
-- name: Including Linux in Cloud configuration tasks...
-  ansible.builtin.include_tasks: linux_cloud.yml
-  when: infra_env in os_configuration_cloud_envs
-
 - name: Adding temp hostname... # This is so that sudo will not hang due to unknown hostname
   ansible.builtin.lineinfile:
     dest: /etc/hosts
@@ -206,3 +202,7 @@
         name: NetworkManager.service
         state: restarted
       when: networkmanager_service_exists.status.LoadState in ["enabled", "loaded"]
+
+- name: Including Linux in Cloud configuration tasks...
+  ansible.builtin.include_tasks: linux_cloud.yml
+  when: infra_env in os_configuration_cloud_envs
