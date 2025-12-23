@@ -1,4 +1,13 @@
 ---
+- name: Saving default connection parameters...
+  ansible.builtin.set_fact:
+    default_ansible_private_key_file: "{{ ansible_private_key_file | default('') }}"
+    default_ansible_ssh_extra_args: "{{ ansible_ssh_extra_args | default('') }}"
+  when:
+    - fresh_deploy
+    - default_ansible_private_key_file is not defined
+    - default_ansible_ssh_extra_args is not defined
+
 - name:
     Connecting as {{ aws_template_username | default(template_username) if fresh_deploy else ansible_deployer_username
     }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper

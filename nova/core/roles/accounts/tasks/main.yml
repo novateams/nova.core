@@ -76,9 +76,10 @@
         ansible_user: "{{ ansible_deployer_username }}"
         ansible_password: "{{ ansible_deployer_password | default(omit) }}" # Updated ansible_deployer_password
 
-        # To avoid SSH MaxAuthTries limit in cloud environments with cloud templates
-        ansible_ssh_extra_args: "{{ accounts_custom_ansible_ssh_extra_args
-          | default('-o IdentitiesOnly=no' if fresh_deploy else omit) }}"
+        # Setting custom or restoring default SSH key and connection parameters
+        # This is mostly because initial connection parameters for cloud templates need to be customized to match specific VM template defaults
+        ansible_ssh_private_key_file: "{{ accounts_custom_ansible_ssh_private_key_file | default(default_ansible_private_key_file) | default('') }}"
+        ansible_ssh_extra_args: "{{ accounts_custom_ansible_ssh_extra_args | default(default_ansible_ssh_extra_args) | default('') }}"
 
     - name: Including gather_facts role... # Since the connection account changed and we need to gather facts with the new account
       ansible.builtin.include_role:
