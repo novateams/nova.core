@@ -35,14 +35,22 @@
   become: false
   when: ansible_network_os | default('') == 'panos'
 
-# macos_has_python is a MacOS specific OS group var to indicate if Python is installed
+# macos_has_python is a MacOS specific var set in nova.core.connection role to indicate if Python is installed
 # false by default for MacOS but defaulting to true here to avoid errors on non-MacOS systems
 - name: Gathering facts for {{ inventory_hostname }}...
   ansible.builtin.setup:
     gather_timeout: 60
   when:
     - ansible_network_os is not defined
-    - macos_has_python | default(true)
+    - darwin_with_python | default(true)
+
+- name: Setting minimal facts for Pythonless MacOS {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_custom_facts:
+      system: Darwin
+  when:
+    - darwin_with_python is defined
+    - not darwin_with_python
 # Useful when debugging facts gathered from different operating systems
 # - name: Saving ansible_facts to file...
 #   ansible.builtin.copy:

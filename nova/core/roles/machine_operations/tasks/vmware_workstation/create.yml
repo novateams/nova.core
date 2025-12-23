@@ -145,8 +145,7 @@
           loop:
             - regex: guestos.*
               line: guestos = "darwin20-64"
-          when: ansible_facts.system | default('') == "Darwin"
-            or not macos_has_python | default(true)
+          when: ("os_macos" in group_names)
 
         - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
           ansible.builtin.lineinfile:
