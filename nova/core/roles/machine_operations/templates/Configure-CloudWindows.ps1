@@ -18,6 +18,10 @@ Write-Host "Setting Administrator password"
 $Password = "{{ template_password }}"
 $SecurePassword = ConvertTo-SecureString $Password -AsPlainText -Force
 Set-LocalUser -Name "Administrator" -Password $SecurePassword
+
+Write-Host "Setting temporary SSH key for Administrator user"
+$TempSSHKey = "{{ slurped_aws_temp_ssh_key.content | b64decode }}"
+Set-Content -Path "C:\ProgramData\ssh\administrators_authorized_keys" -Value $TempSSHKey -Force
 {% endif %}
 
 {% if infra_env == "azure" %}
