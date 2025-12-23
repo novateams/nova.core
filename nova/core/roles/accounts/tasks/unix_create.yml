@@ -104,3 +104,21 @@
     - use_ssh_agent_for_sudo
     - ansible_facts.system == 'Linux'
     - ansible_facts.os_family != 'Alpine'
+
+- name: Configuring SSHD in cloud environments...
+  when: accounts_configure_ssh_maxauthtries
+  block:
+    # This to avoid errors when someone has more that 6 SSH keys in their agent
+    - name: Setting SSHD MaxAuthTries to {{ accounts_ssh_maxauthtries }}...
+      ansible.builtin.replace:
+        dest: /etc/ssh/sshd_config
+        regexp: .*MaxAuthTries.*
+        replace: MaxAuthTries {{ accounts_ssh_maxauthtries }}
+      register: maxauthtries
+      become: true
+
+    - name: Restarting SSHD... # noqa: no-handler
+      ansible.builtin.systemd:
+        name: "{{ accounts_os_family_service_name[ansible_facts.os_family] | default('sshd') }}"
+        state: restarted
+      when: maxauthtries.changed

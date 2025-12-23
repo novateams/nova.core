@@ -77,3 +77,15 @@ unix_distro_sudoers_map:
   Parrot: /etc/sudoers.d/10-installer
 
 accounts_panos_temp_username: temp # The username to use for the temporary account to change the admin_accounts password(s) in PanOS
+
+# For training, lab and exercise environments in can be very common to have more than (the default accepted by sshd) 6 keys in an ssh agent.
+# If that's the case the SSH authentication will fail, so by default setting the MaxAuthTries sshd value to 20.
+# Currently this variable is applicable to Unix and Windows hosts
+accounts_configure_ssh_maxauthtries: true
+accounts_ssh_maxauthtries: 20
+
+# Since different OS families have different service names the sshd service name is set here
+accounts_os_family_service_name:
+  Debian: ssh
+  RedHat: sshd
+  Archlinux: sshd
