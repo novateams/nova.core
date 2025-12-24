@@ -151,10 +151,8 @@
           when: dotnet_install.reboot_required
 
     - name: Installing Chocolatey...
-      ansible.windows.win_shell:
-        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol =
-        [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex
-        ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+      chocolatey.chocolatey.win_chocolatey:
+        name: chocolatey
 
     - name: Configuring Chocolatey features...
       chocolatey.chocolatey.win_chocolatey_feature:
