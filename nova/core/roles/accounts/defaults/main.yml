@@ -27,7 +27,8 @@ pregenerated_password: >-
     + '/data/' + item.secrets_vault_secrets_path | default(secrets_vault_secrets_path)
     | default(project_fullname) + ':' + inventory_hostname + '_' + item.username) }}
   {%- else -%}
-  {{ lookup('password', '/dev/null length=17 chars=ascii_lowercase,ascii_uppercase,hexdigits,digits') }}
+  {{ lookup('community.general.random_string', min_lower=1, min_upper=1, min_numeric=1, length=17, special=false, ignore_similar_chars=true,
+    similar_chars=(item.username | lower + item.username | upper)) }}
   {%- endif -%}
 
 # Windows defaults
