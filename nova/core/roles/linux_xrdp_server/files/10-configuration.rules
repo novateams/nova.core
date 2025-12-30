@@ -1,16 +1,23 @@
 polkit.addRule(function(action, subject) {
- if ((action.id == "org.freedesktop.color-manager.create-device" ||
- action.id == "org.freedesktop.color-manager.create-profile" ||
- action.id == "org.freedesktop.color-manager.delete-device" ||
- action.id == "org.freedesktop.color-manager.delete-profile" ||
- action.id == "org.freedesktop.color-manager.modify-device" ||
- action.id == "org.freedesktop.color-manager.modify-profile" ||
- action.id == "org.freedesktop.login1.reboot" ||
- action.id == "org.freedesktop.login1.power-off" ||
- action.id == "org.freedesktop.login1.suspend" ||
- action.id == "org.freedesktop.login1.hibernate" ||
- action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
- action.id == "org.freedesktop.login1.power-off-multiple-sessions")) {
- return polkit.Result.YES;
- }
- });
+    if ((
+
+        action.id == "org.freedesktop.color-manager.create-device" ||
+        action.id == "org.freedesktop.color-manager.create-profile" ||
+        action.id == "org.freedesktop.color-manager.delete-device" ||
+        action.id == "org.freedesktop.color-manager.delete-profile" ||
+        action.id == "org.freedesktop.color-manager.modify-device" ||
+        action.id == "org.freedesktop.color-manager.modify-profile" ||
+        action.id == "org.freedesktop.login1.reboot" ||
+        action.id == "org.freedesktop.login1.power-off" ||
+        action.id == "org.freedesktop.login1.suspend" ||
+        action.id == "org.freedesktop.login1.hibernate" ||
+        action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
+        action.id == "org.freedesktop.login1.power-off-multiple-sessions" ||
+        action.id == "org.freedesktop.NetworkManager.network-control" ||
+        action.id == "org.freedesktop.NetworkManager.settings.modify.system"
+
+    ))
+
+    {return polkit.Result.YES;}
+
+});

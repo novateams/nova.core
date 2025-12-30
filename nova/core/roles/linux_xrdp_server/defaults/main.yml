@@ -1,3 +1,8 @@
 ---
-# Locking since the latest version is currently broken
+# Can be used to lock to a specific version when the latest is not desired or is temporarily broken
 linux_xrdp_server_xorgxrdp_version: {}
+
+# Kali & Ubuntu 24 and later
+
+# To modify polkit permissions pass a custom file using this variable
+linux_xrdp_server_kali_polkit_file: 10-configuration.rules
