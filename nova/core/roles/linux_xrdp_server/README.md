@@ -1,6 +1,6 @@
 # linux_xrdp_server
 
-This roles installs and configures xrdp on a Linux machine.
+This roles installs and configures XRDP on a Debian based Linux machine.
 
 ## Requirements
 
@@ -8,7 +8,7 @@ none
 
 ## Role Variables
 
-All required role variables are coming from gather_facts.
+Refer to [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/linux_xrdp_server/defaults/main.yml) for the full list of variables, their default values and descriptions.
 
 ## Dependencies
 
