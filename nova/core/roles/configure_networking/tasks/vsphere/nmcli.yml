@@ -162,6 +162,12 @@
           ansible.builtin.set_fact:
             configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
 
+        - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            restart: true
+
         - name: Re-including vSphere network configuration tasks...
           ansible.builtin.include_tasks: main.yml
 
