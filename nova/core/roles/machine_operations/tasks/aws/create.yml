@@ -70,7 +70,7 @@
             description: Security group for {{ custom_vm_name | default(vm_name) }}
             rules: "{{ machine_operations_aws_security_group_rules }}"
             state: present
-            vpc_id: "{{ aws_vpc_id | default(omit) }}"
+            vpc_id: "{{ omit if aws_vpc_id == {} else aws_vpc_id }}"
           register: created_security_group
           when:
             - machine_operations_create_aws_security_group

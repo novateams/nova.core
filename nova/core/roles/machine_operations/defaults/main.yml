@@ -100,7 +100,11 @@ machine_operations_vmware_workstation_custom_params: []
 # AWS defaults #
 ################
 
-aws_access_key: {} # Can be defined in your Ansible Vault
+# The ID of the VPC where the instance will be created
+# If left empty the default VPC for the region will be used
+# If a VPC ID is defined then the the subnet ID must also be defined
+# For that either use machine_operations_aws_subnet_id in code or define it in the "ID in cloud" field in Providentia
+aws_vpc_id: {}
 
 # Temporary ssh key path on your container
 machine_operations_aws_temp_ssh_key_path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_aws_key

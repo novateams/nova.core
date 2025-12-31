@@ -18,7 +18,7 @@
     - name: Deleting AWS security group for {{ custom_vm_name | default(vm_name) }}..."
       amazon.aws.ec2_security_group:
         name: "{{ custom_vm_name | default(vm_name) }}"
-        vpc_id: "{{ aws_vpc_id | default(omit) }}"
+        vpc_id: "{{ omit if aws_vpc_id == {} else aws_vpc_id }}"
         state: absent
 
     - name: Removing ssh key for {{ custom_vm_name | default(vm_name) }}...
