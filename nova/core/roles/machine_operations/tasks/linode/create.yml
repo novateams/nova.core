@@ -9,20 +9,29 @@
       or role_only_wp is ansible.builtin.truthy
       or single_role is defined
 
-- name: Configuring {{ custom_vm_name | default(vm_name) }} in Linode...
-  linode.cloud.instance:
-    api_token: "{{ linode_api_token }}"
-    label: "{{ custom_vm_name | default(vm_name) }}"
-    type: "{{ linode_vm_type | default('g6-dedicated-2') }}"
-    region: "{{ linode_vm_region | default('eu-central') }}"
-    image: "{{ linode_image }}"
-    root_pass: "{{ template_password if fresh_deploy else omit }}"
-    tags:
-      - "{{ project_fullname | default('untagged') }}"
-    state: present
-  register: linode_vm
+- name: Creating Linode instance...
   delegate_to: localhost
   become: false
+  block:
+    - name: Getting {{ linode_vpc_label }} VPC info from Linode...
+      linode.cloud.vpc_info:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ linode_vpc_label }}"
+      register: vpc_info
+      when: linode_vpc_label != {}
+
+    - name: Configuring {{ custom_vm_name | default(vm_name) }} in Linode...
+      linode.cloud.instance:
+        api_token: "{{ linode_api_token }}"
+        label: "{{ custom_vm_name | default(vm_name) }}"
+        type: "{{ linode_vm_type | default('g6-dedicated-2') }}"
+        region: "{{ linode_vm_region | default('eu-central') }}"
+        image: "{{ linode_image }}"
+        root_pass: "{{ template_password if fresh_deploy else omit }}"
+        tags:
+          - "{{ project_fullname | default('untagged') }}"
+        state: present
+      register: linode_vm
 
 - name: Setting IP address facts for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
