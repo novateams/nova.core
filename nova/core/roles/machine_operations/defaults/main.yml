@@ -142,8 +142,12 @@ machine_operations_aws_security_group_rules:
 # Linode defaults #
 ###################
 
-linode_api_token: {} # Can be defined in your Ansible Vault
-rebuild: false # Use ctp host rebuild-linode-vm <inventory_hostname> command to rebuild the VM with different size but keeping the data
+# Set to true to rebuild the VM with different size but keeping the data
+rebuild: false
+
+# Set to VPC label to attach the VM to a VPC and its subnet
+# If left empty the VM will be created without VPC
+linode_vpc_label: {}
 
 ##################
 # Azure defaults #
