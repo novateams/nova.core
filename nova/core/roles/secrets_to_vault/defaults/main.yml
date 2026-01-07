@@ -3,6 +3,10 @@
 # Accounts #
 ############
 
+# Set to false to skip saving accounts list passwords to Vault
+# This can be useful when saving pre_deploy_secrets only
+secrets_to_vault_account_passwords: true
+
 # Vault key name when saving account passwords to Vault to make sure it's unique across the inventory.
 account_key_name: "{{ inventory_hostname }}_{{ sct.username }}"
 
