@@ -21,7 +21,7 @@
       - 201 # Created
     validate_certs: false # Because Tuoni uses self-signed certificate with an empty Subject Name
     body: "{{ item }}"
-  loop: "{{ tuoni_users }}"
+  loop: "{{ tuoni_users | map('combine', {'update_password': omit}) | list }}"
   loop_control:
     label: "{{ item.username }}"
   when: item.username not in tuoni_existing_users.json | map(attribute='username')
@@ -63,4 +63,6 @@
   loop: "{{ tuoni_users }}"
   loop_control:
     label: "{{ item.username }}"
-  when: item.username in tuoni_existing_users.json | map(attribute='username')
+  when:
+    - item.username in tuoni_existing_users.json | map(attribute='username')
+    - item.update_password | default(true)
