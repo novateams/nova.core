@@ -1,5 +1,5 @@
 ---
-# Configuring pfSense accounts in lochost to avoid installing required Python modules on the remote host
+# Configuring pfSense accounts on localhost to avoid installing required Python modules on the remote host
 - name: Downloading config.xml from {{ inventory_hostname }}...
   ansible.builtin.fetch:
     dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
