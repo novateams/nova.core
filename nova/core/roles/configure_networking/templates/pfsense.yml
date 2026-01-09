@@ -2,6 +2,7 @@
 {# https://forum.netgate.com/topic/85739/change-order-of-interfaces-on-vm/13 #}
 {# https://forum.netgate.com/topic/159909/adding-an-interface-to-a-pfsense-esx-vm-causes-them-to-be-re-ordered-on-reboot #}
 
+{% if infra_env == "vsphere" %}
 {% if interfaces | length == 1 %}
   {% set nic_map = ["vmx0"] %}
 {% elif interfaces | length == 2 %}
@@ -22,6 +23,9 @@
   {% set nic_map = ["vmx2","vmx5","vmx7","vmx0","vmx3","vmx6","vmx8","vmx1","vmx4"] %}
 {% elif interfaces | length == 10 %}
   {% set nic_map = ["vmx2","vmx5","vmx8","vmx0","vmx3","vmx6","vmx9","vmx1","vmx4","vmx7"] %}
+{% endif %}
+{% else %}
+  {% set nic_map = configure_networking_hw_interfaces %}
 {% endif %}
 
 pfsense_interfaces:
