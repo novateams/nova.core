@@ -50,10 +50,8 @@
         config: current
         network: true
       register: proxmox_agent_status
-      until:
-        - proxmox_agent_status.msg is defined
-        - proxmox_agent_status.msg is search('.*agent is not running.*')
-      failed_when: proxmox_agent_status.failed and proxmox_agent_status.msg is not search('.*agent is not running.*')
+      until: proxmox_agent_status.msg | default('') is search('.*agent is not running.*')
+      failed_when: proxmox_agent_status.failed and proxmox_agent_status.msg | default('') is not search('.*agent is not running.*')
       retries: 60
       delay: 5
       when:
