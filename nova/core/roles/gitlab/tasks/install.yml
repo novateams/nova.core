@@ -1,16 +1,19 @@
 ---
 - name: Creating Gitlab folders..
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     state: directory
-    mode: "0755"
+    mode: "{{ item.mode | default('0755') }}"
+  loop_control:
+    label: "{{ item.path }}"
   loop:
-    - "{{ gitlab_config_folder }}"
-    - "{{ gitlab_config_folder }}/etc"
-    - "{{ gitlab_config_folder }}/data"
-    - "{{ gitlab_config_folder }}/logs"
-    - "{{ gitlab_config_folder }}/registry"
-    - "{{ gitlab_config_folder }}/temp_configuration"
+    - path: "{{ gitlab_config_folder }}"
+    - path: "{{ gitlab_config_folder }}/etc"
+      mode: u=rwX,g=rwX,o=rX
+    - path: "{{ gitlab_config_folder }}/data"
+    - path: "{{ gitlab_config_folder }}/logs"
+    - path: "{{ gitlab_config_folder }}/registry"
+    - path: "{{ gitlab_config_folder }}/temp_configuration"
 
 - name: Templating Gitlab configuration files for {{ inventory_hostname }}..
   ansible.builtin.template:
