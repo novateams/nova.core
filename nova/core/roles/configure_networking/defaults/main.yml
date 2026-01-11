@@ -101,7 +101,7 @@ configure_networking_panos_boot_wait_time: 60
 # This is a list of interfaces to exclude when configuring networking on Proxmox VMs
 # These are typically non-physical interfaces like loopback
 configure_networking_proxmox_interfaces_to_exclude:
-  - lo
+  - lo # Linux loopback
   - lo0 # OPNsense loopback
   - enc0 # OPNsense encryption
   - pfsync0 # OPNsense pfsync

@@ -34,10 +34,6 @@
         force: true
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
 
-- name: Removing any leftover disks...
-  delegate_to: localhost
-  become: false
-  block:
     - name: Getting the time...
       ansible.builtin.setup:
         filter: "*_time"
