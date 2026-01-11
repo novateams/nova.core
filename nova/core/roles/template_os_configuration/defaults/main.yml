@@ -7,3 +7,7 @@ template_os_configuration_update_system: true # Update OS during this role
 # Increasing MaxAuthTries in sshd_config to avoid issues where user has more then 6 keys in their SSH agent
 template_os_configuration_increase_maxauthtries: true
 template_os_configuration_increase_maxauthtries_value: 20
+
+# Will remove existing and creating a fresh snapshot after all configuration is done on the template VM
+# Set to false to skip snapshot creation
+template_os_configuration_create_snapshot: true

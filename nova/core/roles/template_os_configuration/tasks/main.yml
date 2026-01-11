@@ -65,6 +65,15 @@
     snapshot_mode: clean-snap
     snapshot_name: LinkedCloneSource
     start_vm_after_snapshot: false
+  when: template_os_configuration_create_snapshot
+
+# Shutting down the VM only if snapshotting is disabled since the snapshot role will shut down the VM itself
+- name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    shutdown: true
+  when: not template_os_configuration_create_snapshot
 
 - name: Ending play for templates...
   ansible.builtin.meta: end_host
