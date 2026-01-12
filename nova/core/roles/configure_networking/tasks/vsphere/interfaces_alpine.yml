@@ -3,14 +3,12 @@
   become: false
   delegate_to: localhost
   block:
-    # When an IP address is reported by VMware Tools, it is ready to accept console input
-    # Otherwise the login prompt is not ready in vSphere VMMs console
+    # Extra check to ensure that the VM is ready for console input, since sometimes the boot can take longer on low-end systems
     - name: Waiting for {{ custom_vm_name | default(vm_name) }} to be ready for console input...
       community.vmware.vmware_guest_tools_wait:
         name: "{{ custom_vm_name | default(vm_name) }}"
       register: alpine_boot_status
-      until: alpine_boot_status.instance.ipv4 is not ansible.builtin.falsy
-        or alpine_boot_status.instance.ipv6 is not ansible.builtin.falsy
+      until: alpine_boot_status.instance.advanced_settings['guestInfo.detailed.data'] is defined
       retries: "{{ (configure_networking_alpine_boot_wait_time if configure_networking_alpine_boot_wait_time >= 5 else 5) // 5 }}"
       delay: 5
 
