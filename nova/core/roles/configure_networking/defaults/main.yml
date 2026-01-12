@@ -98,6 +98,11 @@ configure_networking_panos_boot_wait_time: 60
 # Proxmox #
 ###########
 
+# How many seconds to wait for different networking configuration commands to complete over the Qemu Guest Agent
+# Increasing this may help on slower systems or when Windows is running sysprep on first boot
+# There's a separate timeout command for waiting that the command sent over the guest agent has completed called - configure_networking_command_wait_timeout
+configure_networking_proxmox_timeout: 300
+
 # This is a list of interfaces to exclude when configuring networking on Proxmox VMs
 # These are typically non-physical interfaces like loopback
 configure_networking_proxmox_interfaces_to_exclude:
