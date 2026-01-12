@@ -3,6 +3,39 @@
   become: false
   delegate_to: localhost
   block:
+    - name: Getting OS...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-read?file=/etc/os-release"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_validate_certs }}"
+      register: network_config_os
+
+    # Check if root is mounted read-only and remount as read-write
+    # This an issue specific to Kali where sometimes root is mounted read-only
+    # Done here because the check needs to happen in the very early stage of the boot
+    - name: Remounting Kali root filesystem as read-write if needed...
+      when: network_config_os.json.data.content is search('ID=kali')
+      block:
+        - name: Checking that root is remounted read-write...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body:
+              command:
+                - sh
+                - -c
+                - "if grep -q ID=kali /etc/os-release; then while mount | grep 'on / ' | grep -q ro,; do mount -o remount,rw / || true; sleep 1; done; fi"
+            body_format: json
+            validate_certs: "{{ proxmox_validate_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
     - name: Templating nmcli configuration files...
       ansible.builtin.template:
         src: "{{ item.src }}"

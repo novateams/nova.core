@@ -29,7 +29,7 @@
     # to retry the network configuration up to 3 times before failing the task completely.
     - name: Including network configuration tasks...
       block:
-        # Check if root is mounted read-only
+        # Check if root is mounted read-only and remount as read-write
         # This an issue specific to Kali where sometimes root is mounted read-only
         # Done here because the check needs to happen in the very early stage of the boot
         - name: Checking if root is mounted read-only...
