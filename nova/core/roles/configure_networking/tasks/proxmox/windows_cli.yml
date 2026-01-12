@@ -11,8 +11,8 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
-      retries: 30
-      delay: 10
+      retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
+      delay: 5
 
     - name: Templating network configuration script...
       ansible.builtin.template:
@@ -57,7 +57,7 @@
         body_format: json
         validate_certs: "{{ proxmox_validate_certs }}"
       register: network_config_command
-      retries: 24
+      retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
 
     - name: Including command run check task...
@@ -67,6 +67,7 @@
       ansible.builtin.wait_for:
         host: "{{ connection_address }}"
         port: 22
+        timeout: "{{ configure_networking_proxmox_timeout }}"
 
   rescue:
     - name: WINDOWS NETWORK ERROR
@@ -90,8 +91,8 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
-      retries: 30
-      delay: 10
+      retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
+      delay: 5
 
     - name: Re-including Windows CLI tasks...
       ansible.builtin.include_tasks: windows_cli.yml

@@ -23,8 +23,8 @@
         body_format: json
         validate_certs: "{{ proxmox_validate_certs }}"
       register: network_config_command
-      retries: 60
-      delay: 2
+      retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
+      delay: 5
 
     - name: Getting Sysprep status...
       ansible.builtin.uri:
@@ -34,8 +34,8 @@
         method: GET
         validate_certs: "{{ proxmox_validate_certs }}"
       register: sysprep_status
-      retries: 60
-      delay: 2
+      retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
+      delay: 5
 
     - name: Setting Sysprep loop count to {{ sysprep_loop_count | default(0) | int + 1 }}...
       ansible.builtin.set_fact:
@@ -49,7 +49,7 @@
       register: proxmox_agent_status
       until: proxmox_agent_status.msg | default('') is search('.*agent is not running.*')
       failed_when: proxmox_agent_status.failed and proxmox_agent_status.msg | default('') is not search('.*agent is not running.*')
-      retries: 60
+      retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
       when:
         - sysprep_status.json.data['content'] | trim != "7"
