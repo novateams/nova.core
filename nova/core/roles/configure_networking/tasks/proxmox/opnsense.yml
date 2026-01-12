@@ -5,8 +5,7 @@
   block:
     - name: Downloading /conf/config.xml {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-read?file=/conf/config.xml"
+        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-read?file=/conf/config.xml"
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: GET
@@ -114,8 +113,8 @@
     # Writing in 1700 char chunks because otherwise the Qemu Guest Agent service fails
     - name: Writing /conf/config.xml to {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/file-write"
+        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node
+          }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-write"
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: POST
@@ -136,8 +135,7 @@
 
     - name: Writing final /conf/config.xml to {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: POST

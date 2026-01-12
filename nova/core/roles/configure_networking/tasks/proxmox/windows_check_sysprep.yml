@@ -5,8 +5,7 @@
   block:
     - name: Saving Sysprep status...
       ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid }}/agent/exec"
+        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: POST
@@ -29,9 +28,7 @@
 
     - name: Getting Sysprep status...
       ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_info.proxmox_vms[0].node
-          }}/qemu/{{ proxmox_vm_info.proxmox_vms[0].vmid
-          }}/agent/file-read?file=C:\\Windows\\Temp\\SysprepStatus"
+        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-read?file=C:\\Windows\\Temp\\SysprepStatus"
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: GET
