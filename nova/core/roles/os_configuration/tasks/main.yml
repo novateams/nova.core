@@ -84,7 +84,7 @@
 
     # This needs to be last because the play stops after that
     - name: Creating snapshot, getting IP and stopping play...
-      when: just_clone | bool
+      when: just_clone | bool or deploy_with_mid_snapshot | bool
       block:
         - name: Including snapshots role...
           ansible.builtin.include_role:
@@ -95,9 +95,12 @@
             snapshot_name: Pre-customization
           when: os_configuration_create_snapshot_with_just_clone | bool
 
-        - name: Including get_ip role...
-          ansible.builtin.include_role:
-            name: nova.core.get_ip
+        - name: Stopping play if just_clone...
+          when: just_clone | bool
+          block:
+            - name: Including get_ip role...
+              ansible.builtin.include_role:
+                name: nova.core.get_ip
 
-        - name: Stopping play...
-          ansible.builtin.meta: end_host
+            - name: Stopping play...
+              ansible.builtin.meta: end_host
