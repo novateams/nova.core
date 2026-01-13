@@ -1,0 +1,97 @@
+---
+services:
+  "{{ db_container_name }}":
+    container_name: "{{ db_container_name }}"
+    hostname: "{{ db_container_name }}"
+    image: "{{ db_container_image }}"
+    restart: unless-stopped
+    volumes:
+      - "{{ db_container_folder }}/database-data:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+      - POSTGRES_DB={{ postgres_db }}
+    command: >
+      postgres
+      -c max_connections=100
+      -c shared_buffers=2GB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=256MB
+      -c work_mem=8MB
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+  "{{ redis_container_name }}":
+    container_name: "{{ redis_container_name }}"
+    hostname: "{{ redis_container_name }}"
+    image: "{{ redis_container_image }}"
+    restart: unless-stopped
+    volumes:
+      - "{{ redis_container_folder }}/redis.conf:/redis.conf"
+    command:
+      - "redis-server"
+      - "/redis.conf"
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+  "{{ app_container_name }}":
+    container_name: "{{ app_container_name }}"
+    hostname: "{{ app_container_name }}"
+    image: "{{ app_container_image }}"
+    restart: unless-stopped
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+      - "{{ outline_local_file_storage_folder }}:/var/lib/outline/data"
+    environment:
+      - DATABASE_CONNECTION_POOL_MAX=25
+      - DATABASE_CONNECTION_POOL_MIN=5
+      - DATABASE_URL={{ database_url }}
+      - DEBUG=http
+      - DEFAULT_LANGUAGE=en_US
+      - ENABLE_UPDATES=false
+      - FILE_STORAGE_IMPORT_MAX_SIZE={{ outline_maximum_import_size }}
+      - FILE_STORAGE_UPLOAD_MAX_SIZE={{ outline_file_storage_upload_max_size }}
+      - FILE_STORAGE=local
+      - FORCE_HTTPS={{ outline_force_https | default("true") }}
+      - NODE_ENV={{ node_env }}
+      - NODE_EXTRA_CA_CERTS={{ node_extra_ca_certs }}
+      - NODE_TLS_REJECT_UNAUTHORIZED={{ node_tls_reject_unauthorized }}
+      - OIDC_AUTH_URI={{ outline_oidc_auth_uri }}
+      - OIDC_CLIENT_ID={{ outline_oidc_client_id }}
+      - OIDC_CLIENT_SECRET={{ outline_oidc_client_secret }}
+      - OIDC_DISPLAY_NAME={{ outline_oidc_display_name }}
+      - OIDC_LOGOUT_URI={{ outline_oidc_logout_uri | default("") }}
+      - OIDC_SCOPES={{ outline_oidc_scopes | join(' ') }}
+      - OIDC_TOKEN_URI={{ outline_oidc_token_uri }}
+      - OIDC_USERINFO_URI={{ outline_oidc_userinfo_uri }}
+      - OIDC_USERNAME_CLAIM={{ outline_oidc_username_claim }}
+      - PGSSLMODE=disable
+      - RATE_LIMITER_DURATION_WINDOW={{ outline_rate_limiter_duration_window }}
+      - RATE_LIMITER_ENABLED={{ outline_rate_limiter_enabled }}
+      - RATE_LIMITER_REQUESTS={{ outline_rate_limiter_requests }}
+      - REDIS_URL={{ redis_url }}
+      - SECRET_KEY={{ outline_secret_key }}
+      - URL={{ outline_url }}
+      - UTILS_SECRET={{ outline_utils_secret_key }}
+      - WEB_CONCURRENCY=1
+    depends_on:
+      - "{{ redis_container_name }}"
+      - "{{ db_container_name }}"
+    healthcheck:
+      retries: 3 # Default healthcheck from Dockerfile does not have retries and may report unhealthy during high load or low-end systems
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+networks:
+  default:
+    name: "{{ outline_docker_network }}"
+    external: true

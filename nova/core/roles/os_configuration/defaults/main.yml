@@ -19,6 +19,10 @@ wait_for_timeout: 300 # How many seconds to wait for wait_for_host
 # Creates a snapshot when just_clone is true, set do false to skip snapshot creation
 os_configuration_create_snapshot_with_just_clone: true
 
+# Set to true to keep the play running after creating snapshot
+# This can be useful when during development to have a snapshot created but still continue with the play
+deploy_with_mid_snapshot: false
+
 # Set true to wait for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
 os_configuration_wait_for_site: false
 os_configuration_wait_for_site_url: https://google.com # URL to wait for

@@ -1,75 +1,62 @@
 ---
+- name: DEPRECATED STORAGE MODE
+  ansible.builtin.fail:
+    msg: |
+      The "s3" file storage mode is deprecated and cannot be no longer used with this role.
+      Migrate your data from s3 to local storage and remove the outline_file_storage_mode variable from your code
+  when:
+    - outline_file_storage_mode is defined
+    - outline_file_storage_mode == "s3"
+
+- name: MISSING REQUIRED VARIABLES
+  ansible.builtin.fail:
+    msg: |
+      You are missing following variables:
+
+      {% for variable in required_variables %}
+      {% if vars[variable] is defined %}
+      {% set evaluated = lookup('vars', variable) %}
+      {% if evaluated is ansible.builtin.falsy %}
+        - {{ variable }}
+      {% endif %}
+      {% else %}
+        - {{ variable }}
+      {% endif %}
+      {% endfor %}
+
+      Make sure they are added to your project and passed to the role correctly.
+  vars:
+    required_variables:
+      - outline_secret_key
+      - outline_utils_secret_key
+      - postgres_password
+  when: outline_secret_key | default(false) is ansible.builtin.falsy
+    or outline_utils_secret_key | default(false) is ansible.builtin.falsy
+    or postgres_password | default(false) is ansible.builtin.falsy
+
 - name: Create directories
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     recurse: true
     state: directory
+    owner: "{{ item.owner | default(omit) }}"
   with_items:
-    - "{{ app_container_folder }}"
-    - "{{ redis_container_folder }}"
-    - "{{ db_container_folder }}"
-    - "{{ db_container_folder }}/database-data"
+    - path: "{{ app_container_folder }}"
+    - path: "{{ redis_container_folder }}"
+    - path: "{{ db_container_folder }}"
+    - path: "{{ db_container_folder }}/database-data"
+    - path: "{{ outline_local_file_storage_folder }}"
+      owner: 1001 # nodejs user inside the container
 
-- name: Create directories for s3 mode
-  ansible.builtin.file:
-    path: "{{ item }}"
-    recurse: true
-    state: directory
-  with_items:
-    - "{{ minio_client_container_folder }}"
-    - "{{ storage_container_folder }}"
-    - "{{ storage_container_folder }}/storage-data"
-  when:
-    - outline_file_storage_mode == "s3"
-
-- name: Create directories for local filestorage mode
-  ansible.builtin.file:
-    path: "{{ item }}"
-    recurse: true
-    state: directory
-    owner: "{{ outline_container_uid }}"
-  with_items:
-    - "{{ outline_local_file_storage_folder }}"
-  when:
-    - outline_file_storage_mode == "local"
-
-## MINIO CLIENT for automating the minio configuration
-- name: Templating minio bucket policy from template for S3...
-  ansible.builtin.template:
-    src: bucket-policy.j2
-    dest: "{{ minio_client_container_folder }}/bucket-policy.json"
-    mode: "0600"
-  when:
-    - minio_client_configuration | bool
-    - outline_file_storage_mode == "s3"
-
-- name: Templating compose file for minio client for S3...
-  ansible.builtin.template:
-    src: docker-compose-mc.yml.j2
-    dest: "{{ minio_client_container_folder }}/docker-compose.yml"
-    mode: "0600"
-  when:
-    - minio_client_configuration | bool
-    - outline_file_storage_mode == "s3"
-
-- name: Composing {{ inventory_hostname }} minio client for S3...
-  community.docker.docker_compose_v2:
-    project_src: "{{ minio_client_container_folder }}"
-    state: present
-    wait: true
-  when:
-    - minio_client_configuration | bool
-    - outline_file_storage_mode == "s3"
-
-## Outline main compose
 - name: Templating Docker Compose file for Outline...
   ansible.builtin.template:
-    src: docker-compose.yml.j2
-    dest: "{{ compose_config_folder }}/docker-compose.yml"
+    src: docker-compose.j2
+    dest: "{{ app_container_folder }}/docker-compose.yml"
     mode: "0600"
 
 - name: Composing Outline on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
-    project_src: "{{ compose_config_folder }}"
+    project_src: "{{ app_container_folder }}"
     state: present
+    build: never
     wait: true
