@@ -191,6 +191,7 @@ clients:
     protocol: openid-connect
     standardFlowEnabled: {{ client.standard_flow_enabled | default(true) }}
     implicitFlowEnabled: {{ client.implicit_flow_enabled | default(false) }}
+    serviceAccountsEnabled: {{ client.service_accounts_enabled | default(false) }}
     publicClient: {{ client.public_client | default(true) }}
     secret: {{ client.client_secret | default('') }}
     directAccessGrantsEnabled: {{ client.direct_access_grants_enabled | default(true) }}
