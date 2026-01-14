@@ -33,13 +33,15 @@
   loop:
     - src: keycloak.yml
       dest: docker-compose.yml
-    - src: config.j2
+    - src: "{{ keycloak_config_template }}"
       dest: config.yml
 
 - name: Composing Keycloak on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ keycloak_container_config_folder }}"
     state: present
+    recreate: "{{ 'always' if template.changed else 'auto' }}"
+    build: never
     wait: true
 
 - name: Waiting until keycloak-config container exits...
