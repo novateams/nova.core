@@ -1,6 +1,6 @@
 # keycloak
 
-This is a role for installing and configuring Keycloak Docker based on a target machine.
+This is a role for installing and configuring Keycloak Docker based on a target machine. It has a limit set of features that can be configured via Ansible variables but more can be added as needed.
 
 ## Requirements
 
@@ -11,17 +11,19 @@ This is a role for installing and configuring Keycloak Docker based on a target 
 
 Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/main/nova/core/roles/keycloak/defaults/main.yml) file for a list and description of the variables used in this role.
 
+Refer to the to the [templated config file](https://github.com/novateams/nova.core/blob/main/nova/core/roles/keycloak/templates/config.j2) for more details on what variables can be used.
+
+To create your own custom configuration template:
+
+1. Use the one provided in the role as a starting point
+2. Export the running Keycloak realm configuration from the admin console
+3. Modify the template to include the desired configuration based on the exported configuration
+
 ## Dependencies
 
-- `nova.core.docker`
+- `nova.core` Ansible collection
 
 ## Example
-
-To add extra configuration to vars follow these steps:
-
-1. Configure the keycloak settings manually and test that they work
-2. Export the realm configuration from Keycloak admin console
-3. Based on the exported configuration, create the corresponding variables in your host/group vars to be used by this role.
 
 ```yaml
 # Example on how to install Keycloak with Providentia client and LDAPs (AD) group mapper
@@ -47,6 +49,7 @@ dependencies:
 
           clients:
             - client_name: Providentia
+              protocol: openid-connect # Optional, defaults to openid-connect but can also be saml
               admin_uri: https://providentia.example.com
               base_uri: https://providentia.example.com
               redirect_uris:
