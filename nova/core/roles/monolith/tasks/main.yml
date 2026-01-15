@@ -1,51 +1,55 @@
 ---
-- name: Including prerequisites tasks...
-  ansible.builtin.include_tasks:
-    file: prerequisites.yml
-
-- name: Including Caddy role...
-  ansible.builtin.include_role:
-    name: nova.core.caddy
-  vars:
-    # Will be used only if no pre-existing certificate is found
-    caddy_self_signed_certificate_subject_alt_name: "{{ monolith_caddy_self_signed_certificate_subject_alt_name }}"
-    caddy_servers: "{{ monolith_default_caddy_servers + monolith_extra_caddy_servers }}"
-
-- name: Downloading and trusting self-signed certificate...
-  when: caddy_generate_self_signed_certificate is defined
+# Skipping deps and proxy config when only reconfiguring single service
+- name: Configuring prerequisites and proxy
+  when: monolith_single_service is not defined
   block:
-    - name: Getting self-signed certificate contents...
-      ansible.builtin.slurp:
-        src: /srv/certs/{{ fqdn }}_fullchain.crt
-      register: monolith_self_signed_certificate
+    - name: Including prerequisites tasks...
+      ansible.builtin.include_tasks:
+        file: prerequisites.yml
 
-    - name: Copying self-signed certificate to /usr/local/share/ca-certificates/{{ fqdn }}.crt...
-      ansible.builtin.copy:
-        content: "{{ monolith_self_signed_certificate.content | b64decode }}"
-        dest: /usr/local/share/ca-certificates/{{ fqdn }}.crt
-        mode: "0644"
+    - name: Including Caddy role...
+      ansible.builtin.include_role:
+        name: nova.core.caddy
+      vars:
+        # Will be used only if no pre-existing certificate is found
+        caddy_self_signed_certificate_subject_alt_name: "{{ monolith_caddy_self_signed_certificate_subject_alt_name }}"
+        caddy_servers: "{{ monolith_default_caddy_servers + monolith_extra_caddy_servers }}"
 
-    - name: Copying self-signed certificate to /usr/local/share/ca-certificates/{{ fqdn }}.crt...
-      ansible.builtin.copy:
-        content: "{{ monolith_self_signed_certificate.content | b64decode }}"
-        dest: /usr/local/share/ca-certificates/{{ fqdn }}.crt
-        mode: "0644"
-      delegate_to: localhost
-      become: true
+    - name: Downloading and trusting self-signed certificate...
+      when: caddy_generate_self_signed_certificate is defined
+      block:
+        - name: Getting self-signed certificate contents...
+          ansible.builtin.slurp:
+            src: /srv/certs/{{ fqdn }}_fullchain.crt
+          register: monolith_self_signed_certificate
 
-    - name: Updating remote CA certificates...
-      ansible.builtin.command: update-ca-certificates --fresh
-      changed_when: true
-      retries: 5
-      delay: 2
+        - name: Copying self-signed certificate to /usr/local/share/ca-certificates/{{ fqdn }}.crt...
+          ansible.builtin.copy:
+            content: "{{ monolith_self_signed_certificate.content | b64decode }}"
+            dest: /usr/local/share/ca-certificates/{{ fqdn }}.crt
+            mode: "0644"
 
-    - name: Updating local CA certificates...
-      ansible.builtin.command: update-ca-certificates --fresh
-      changed_when: true
-      delegate_to: localhost
-      become: true
-      retries: 5
-      delay: 2
+        - name: Copying self-signed certificate to /usr/local/share/ca-certificates/{{ fqdn }}.crt...
+          ansible.builtin.copy:
+            content: "{{ monolith_self_signed_certificate.content | b64decode }}"
+            dest: /usr/local/share/ca-certificates/{{ fqdn }}.crt
+            mode: "0644"
+          delegate_to: localhost
+          become: true
+
+        - name: Updating remote CA certificates...
+          ansible.builtin.command: update-ca-certificates --fresh
+          changed_when: true
+          retries: 5
+          delay: 2
+
+        - name: Updating local CA certificates...
+          ansible.builtin.command: update-ca-certificates --fresh
+          changed_when: true
+          delegate_to: localhost
+          become: true
+          retries: 5
+          delay: 2
 
 # This is so we don't need to include vault.yml if using monolith_single_service for only configuring single service
 - name: Checking if Vault credentials already exist...
