@@ -9,6 +9,7 @@
   block:
     - name: Removing sysprep-blocking packages from {{ ansible_facts.distribution }}...
       ansible.windows.win_shell: |
+        Get-AppxPackage Microsoft.549981C3F5F10* | Remove-AppPackage
         Get-AppxPackage Microsoft.BingSearch* | Remove-AppPackage
         Get-AppxPackage Microsoft.Copilot* | Remove-AppPackage
         Get-AppxPackage Microsoft.Edge.GameAssist* | Remove-AppPackage
