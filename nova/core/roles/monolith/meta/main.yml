@@ -1,3 +1,4 @@
 ---
 dependencies:
   - role: nova.core.docker
+    when: monolith_single_service is not defined
