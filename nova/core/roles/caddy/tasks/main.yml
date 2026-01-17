@@ -18,6 +18,7 @@
   community.docker.docker_compose_v2:
     project_src: "{{ caddy_config_folder }}"
     state: present
+    build: never
     wait: true
 
 - name: Formatting Caddyfile...
@@ -31,6 +32,7 @@
   community.docker.docker_compose_v2:
     project_src: "{{ caddy_config_folder }}"
     state: restarted
+    build: never
     wait: true
 
 - name: Including Caddyfile API configuration tasks...
