@@ -27,6 +27,7 @@
     - not vault_seal_status.json.sealed
   retries: 60
   delay: 5
+  when: vault_configure
 
 - name: Including creation tasks for following Root CAs...
   ansible.builtin.include_tasks: ca_roots.yml
