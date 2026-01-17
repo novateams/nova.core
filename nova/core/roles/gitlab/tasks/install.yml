@@ -36,6 +36,7 @@
     project_src: "{{ gitlab_config_folder }}"
     recreate: "{{ 'always' if gitlab_config_files.changed else 'auto' }}"
     state: present
+    build: never
     wait: true
     wait_timeout: 900
 
