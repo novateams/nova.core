@@ -9,7 +9,7 @@ nexus_configure_ldap: false # Set to true to also configure LDAP after installat
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
 nexus_active_encryption_key_id: Primary Encryption Key # Name of the active encryption key that comes with this role
-nexus_version: 3.86.2 # Nexus version to install
+nexus_version: 3.87.2 # Nexus version to install
 
 # Default is the built-in Nexus admin user. If set to a different value than admin, the role will create the user.
 nexus_admin_username: admin
@@ -26,38 +26,40 @@ nexus_realms_to_activate: # List of authentication realms to activate
 
 nexus_ldap_administrators_group: # sAMAccountName of the pre-created group in LDAP that will be used to grant admin access to Nexus
 nexus_ldap_configuration:
-  name: "{{ nexus_ldap_name }}" # Name of the LDAP configuration
-  # This is here to make sure that the configuration is not created twice
-  id: "{{ omit if existing_ldap_servers.json == [] else existing_ldap_servers.json[0].id }}"
-  protocol: "{{ nexus_ldap_protocol | default('ldaps') }}" # ldap or LDAPs
-  useTrustStore: true
-  host: "{{ nexus_ldap_host }}" # FQDN of the LDAP server
-  port: "{{ nexus_ldap_port | default(636) }}" # Usually 389 for LDAP and 636 for LDAPs
-  searchBase: "{{ nexus_ldap_search_base }}" # Base DistinguishedName (DN) where to look for users and groups
-  authScheme: SIMPLE
+  authPassword: "{{ nexus_bind_dn_password }}" # Password of the service account to connect to LDAP
   authRealm: ""
+  authScheme: simple
   authUsername: "{{ nexus_bind_user_dn }}" # DistinguishedName (DN) of the service account to connect to LDAP
-  connectionTimeoutSeconds: 30
   connectionRetryDelaySeconds: 300
-  maxIncidentsCount: 3
-  userSubtree: true
-  userObjectClass: user
-  userLdapFilter: "{{ nexus_ldap_user_filter | default('') }}"
-  userIdAttribute: sAMAccountName
-  userRealNameAttribute: cn
-  userEmailAddressAttribute: mail
-  userPasswordAttribute: ""
-  ldapGroupsAsRoles: true
-  groupType: STATIC
+  connectionTimeoutSeconds: 30
   # The relative DN where group objects are found (e.g. ou=Group). This value will have the Search base DN value appended to form the full Group search base DN
   groupBaseDn: "{{ nexus_groups_dn_under_searchbase }}"
-  groupSubtree: true
-  groupObjectClass: group
   groupIdAttribute: sAMAccountName
   groupMemberAttribute: "member:1.2.840.113556.1.4.1941:" # This is a magic variable that looks for nested group memberships
   groupMemberFormat: ${dn}
+  groupObjectClass: group
+  groupSubtree: true
+  groupType: static
+  host: "{{ nexus_ldap_host }}" # FQDN of the LDAP server
+  # This is here to make sure that the configuration is not created twice
+  id: "{{ omit if existing_ldap_servers.json == []
+    else existing_ldap_servers.json | selectattr('name', 'equalto', nexus_ldap_name) | map(attribute='id') | first }}"
+  ldapGroupsAsRoles: true
+  maxIncidentsCount: 3
+  name: "{{ nexus_ldap_name }}" # Name of the LDAP configuration
+  port: "{{ nexus_ldap_port | default(636) }}" # Usually 389 for LDAP and 636 for LDAPs
+  protocol: "{{ nexus_ldap_protocol | default('ldaps') }}" # ldap or LDAPs
+  searchBase: "{{ nexus_ldap_search_base }}" # Base DistinguishedName (DN) where to look for users and groups
+  userBaseDn: "{{ nexus_users_dn_under_searchbase | default('') }}"
+  userEmailAddressAttribute: mail
+  userIdAttribute: sAMAccountName
+  userLdapFilter: "{{ nexus_ldap_user_filter | default('') }}"
   userMemberOfAttribute: ""
-  authPassword: "{{ nexus_bind_dn_password }}" # Password of the service account to connect to LDAP
+  userObjectClass: user
+  userPasswordAttribute: ""
+  userRealNameAttribute: cn
+  userSubtree: true
+  useTrustStore: true
 
 nexus_remove_unmanaged_repos: true # By default remove repositories that are not in the nexus_repositories list during deploy
 nexus_repositories: "{{ nexus_default_repositories + nexus_extra_repositories }}" # List of repositories to create when nexus_create_repos is set to true
