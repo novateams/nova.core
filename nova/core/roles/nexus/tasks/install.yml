@@ -34,6 +34,7 @@
   community.docker.docker_compose_v2:
     project_src: "{{ nexus_container_config_folder }}"
     state: present
+    build: never
     wait: true
   register: nexus_compose
 

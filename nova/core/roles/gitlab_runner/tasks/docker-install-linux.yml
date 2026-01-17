@@ -23,6 +23,7 @@
     project_src: "{{ gitlab_runner_docker_config_folder }}"
     recreate: "{{ 'always' if gitlab_runner_config.changed else 'auto' }}"
     state: present
+    build: never
     wait: true
 
 - name: Cleanup config.toml..

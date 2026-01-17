@@ -46,4 +46,5 @@
   community.docker.docker_compose_v2:
     project_src: "{{ providentia_install_dir }}"
     state: present
+    build: never
     wait: true
