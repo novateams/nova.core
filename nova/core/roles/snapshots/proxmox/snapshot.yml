@@ -35,3 +35,12 @@
         retention: "{{ 1 if snapshot_mode == 'clean-snap' else omit }}"
         vmstate: "{{ true if live_snap else false }}" # Memory dump
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+
+- name: Including powerstate role...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true
+  when:
+    - start_vm_after_snapshot | bool # To be able to pass this as a cli extra var -e start_vm_after_snapshot=true/false
+    - not live_snap | bool # To be able to pass this as a cli extra var -e live_snap=true/false
