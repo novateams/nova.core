@@ -13,7 +13,7 @@
     ansible_deployer_password: "{{ admin_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
 
-- name: Adding RSA ssh key for following users...
+- name: Adding ssh key for following users...
   community.routeros.command:
     commands:
       - /file print file=ssh_user_key_{{ item.username }}.txt
@@ -23,9 +23,7 @@
   loop: "{{ admin_accounts_with_password }}"
   loop_control:
     label: "{{ item.username }}"
-  when:
-    - item.ssh_key is defined
-    - item.ssh_key is search("ssh-rsa") # Because EC is not supported
+  when: item.ssh_key is defined
 
 # Required because of RouterOS SSH MaxAuthTries default is too small
 - name: Allowing password login...
