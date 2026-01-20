@@ -182,28 +182,45 @@ class InventoryModule(BaseInventoryPlugin):
         url = f"{self.providentia_host}/api/v3/{self.project}/{endpoint}"
 
         headers = {
-            'Authorization': f"{self._access_token['token_type']} {self._access_token['access_token']}",
-            'Accept-Encoding': 'br, gzip, deflate'
+            "Authorization": f"{self._access_token['token_type']} {self._access_token['access_token']}",
+            "Accept": "application/json",
         }
 
+        # Inventory-only cache
+        if endpoint == "inventory":
+            etag_file = f"/tmp/providentia_{self.project}_inventory.etag"
+            cache_file = f"/tmp/providentia_{self.project}_inventory.json"
+
+            if os.path.exists(etag_file):
+                with open(etag_file) as f:
+                    headers["If-None-Match"] = f.read().strip()
+
         async with self._session.get(url, headers=headers) as response:
+            if endpoint == "inventory" and response.status == 304:
+                with open(cache_file) as f:
+                    return json.load(f)
+
             if response.status == 200:
-                api_endpoint_response = await response.json()
-                return api_endpoint_response
+                data = await response.json()
+                if endpoint == "inventory":
+                    etag = response.headers.get("ETag")
+                    if etag:
+                        with open(etag_file, "w") as f:
+                            f.write(etag)
+                        with open(cache_file, "w") as f:
+                            json.dump(data, f)
+                return data
 
-            elif response.status == 401:
+            if response.status == 401:
                 raise AnsibleParserError("Providentia responded with 401: Unauthenticated")
-
-            elif response.status == 403:
-                raise AnsibleParserError("Requested token is not authorized to perform this action")
-
-            elif response.status == 404:
+            if response.status == 403:
+                raise AnsibleParserError("Providentia responded with 403: Forbidden")
+            if response.status == 404:
                 raise AnsibleParserError("Providentia responded with 404: Not found")
+            if response.status >= 500:
+                raise AnsibleParserError("Providentia server error")
 
-            elif response.status == 500:
-                raise AnsibleParserError("Providentia responded with 500: Server error")
-            else:
-                raise AnsibleParserError(f"Fetching Providentia responded with {response.status}")
+            raise AnsibleParserError(f"Providentia responded with {response.status}")
 
     ###################################
     # Credentials and token functions #
