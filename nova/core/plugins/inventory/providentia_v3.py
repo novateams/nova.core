@@ -147,31 +147,32 @@ class InventoryModule(BaseInventoryPlugin):
             if priority:
                 self.inventory.set_variable(group, 'ansible_group_priority', int(priority))
 
-        # List of Providentia keys that should be excluded from being added as variables
-        excluded_keys = {"instances", "tags"}
+        flat_inventory = []
+        for spec in hosts['result'] or []:
+            base = {k: v for k, v in spec.items() if k != "instances"}
+            base_tags = spec.get("tags", [])
+            main_id = spec.get("id")
 
-        for host in hosts['result']:
-            host_tags = host.get('tags', [])
-            instances = host.get('instances', [])
+            for inst in spec.get("instances", []):
+                item = {}
+                item.update(base)
+                item.update(inst)
+                item["providentia_tags"] = base_tags + inst.get("tags", [])
+                item["main_id"] = main_id
+                item.pop("tags", None)
+                flat_inventory.append(item)
 
-            for host_instance in instances:
-                host_instance_id = host_instance['id']
-                self.inventory.add_host(host_instance_id)
+        for host in flat_inventory:
+            host_id = host.get('id')
+            host_tags = host.get('providentia_tags')
+            self.inventory.add_host(host_id)
+            host_obj = self.inventory.get_host(host_id)
+            if host_obj:
+                host_obj.vars.update(host)
 
-                # Set main_id
-                self.inventory.set_variable(host_instance_id, "main_id", host['id'])
-
-                # Combine variables from host and host_instance
-                host_vars = {k: v for k, v in host.items() if k not in excluded_keys}
-                instance_vars = {k: v for k, v in host_instance.items() if k not in excluded_keys}
-
-                combined_vars = {**host_vars, **instance_vars}
-                for k, v in combined_vars.items():
-                    self.inventory.set_variable(host_instance_id, k, v)
-
-                # Add tags to groups
-                for group in host_tags + host_instance.get('tags', []):
-                    self.inventory.add_child(group, host_instance_id)
+            # Add tags to groups
+            for group in host_tags + host.get('providentia_tags', []):
+                self.inventory.add_child(group, host_id)
 
     #############################################
     # Providentia API endpoint request function #
