@@ -35,9 +35,7 @@
   loop_control:
     loop_var: vault_root_ca
     label: "{{ vault_root_ca.vault_root_ca_pki_engine_name }}"
-  when:
-    - vault_create_root_ca
-    - vault_root_ca_pki_engine_name is not defined
+  when: vault_create_root_ca
 
 - name: Including creation tasks for following Intermediate CAs...
   ansible.builtin.include_tasks: ca_intermediates.yml
@@ -46,9 +44,7 @@
     loop_var: vault_intermediate_ca
     label: "{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name }}"
     index_var: loop_index
-  when:
-    - vault_create_intermediate_ca
-    - vault_intermediate_ca_pki_engine_name is not defined
+  when: vault_create_intermediate_ca
 
 - name: Including creation tasks for following MiTM CAs...
   ansible.builtin.include_tasks: ca_mitms.yml
@@ -56,9 +52,7 @@
   loop_control:
     loop_var: vault_mitm_ca
     label: "{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}"
-  when:
-    - vault_create_mitm_ca
-    - vault_mitm_ca_pki_engine_name is not defined
+  when: vault_create_mitm_ca
 
 - name: Including ldap configuration task...
   ansible.builtin.include_tasks: configure_ldap.yml
