@@ -33,7 +33,7 @@ DOCUMENTATION = """
             type: string
             default: Providentia
 """
-import os, aiohttp, asyncio, time, json, functools
+import os, aiohttp, asyncio, time, json, functools, hashlib
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session
 from ansible.plugins.inventory import BaseInventoryPlugin
@@ -181,29 +181,46 @@ class InventoryModule(BaseInventoryPlugin):
     async def fetch_from_providentia(self, endpoint=""):
         url = f"{self.providentia_host}/api/v3/{self.project}/{endpoint}"
 
+        # Hashing URL with md5 to create unique cache file names
+        hashed_url = hashlib.md5(url.encode()).hexdigest()
+
         headers = {
-            'Authorization': f"{self._access_token['token_type']} {self._access_token['access_token']}",
-            'Accept-Encoding': 'br, gzip, deflate'
+            "Authorization": f"{self._access_token['token_type']} {self._access_token['access_token']}",
+            "Accept": "application/json",
         }
 
+        etag_file = f"/tmp/providentia_{self.project}_{endpoint}_cache_{hashed_url}.etag"
+        cache_file = f"/tmp/providentia_{self.project}_{endpoint}_cache_{hashed_url}.json"
+
+        if os.path.exists(etag_file) and os.path.exists(cache_file):
+            with open(etag_file) as f:
+                headers["If-None-Match"] = f.read().strip()
+
         async with self._session.get(url, headers=headers) as response:
+            if response.status == 304:
+                with open(cache_file) as f:
+                    return json.load(f)
+
             if response.status == 200:
-                api_endpoint_response = await response.json()
-                return api_endpoint_response
+                data = await response.json()
+                etag = response.headers.get("ETag")
+                if etag:
+                    with open(etag_file, "w") as f:
+                        f.write(etag)
+                    with open(cache_file, "w") as f:
+                        json.dump(data, f)
+                return data
 
-            elif response.status == 401:
+            if response.status == 401:
                 raise AnsibleParserError("Providentia responded with 401: Unauthenticated")
-
-            elif response.status == 403:
-                raise AnsibleParserError("Requested token is not authorized to perform this action")
-
-            elif response.status == 404:
+            if response.status == 403:
+                raise AnsibleParserError("Providentia responded with 403: Forbidden")
+            if response.status == 404:
                 raise AnsibleParserError("Providentia responded with 404: Not found")
+            if response.status >= 500:
+                raise AnsibleParserError("Providentia server error")
 
-            elif response.status == 500:
-                raise AnsibleParserError("Providentia responded with 500: Server error")
-            else:
-                raise AnsibleParserError(f"Fetching Providentia responded with {response.status}")
+            raise AnsibleParserError(f"Providentia responded with {response.status}")
 
     ###################################
     # Credentials and token functions #
