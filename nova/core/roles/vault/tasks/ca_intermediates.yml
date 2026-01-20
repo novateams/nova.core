@@ -37,8 +37,10 @@
     body_format: json
     validate_certs: "{{ vault_validate_cert }}"
 
-- name: Including Intermediate CA configuration block...
-  when: intermediate_ca_pki_engine_status.status != 200
+- name: Including Intermediate CA generation block...
+  when:
+    - intermediate_ca_pki_engine_status.status != 200
+    - vault_intermediate_ca.vault_intermediate_ca_create_mode | default("generate") == "generate"
   block:
     - name: Generating Intermediate CSR...
       ansible.builtin.uri:
@@ -94,6 +96,23 @@
           - 200
           - 204
 
+- name: Including Intermediate CA import block...
+  when:
+    - intermediate_ca_pki_engine_status.status != 200
+    - vault_intermediate_ca.vault_intermediate_ca_create_mode | default("generate") == "import"
+  block:
+    - name: Generating Intermediate CSR...
+      ansible.builtin.uri:
+        url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name }}/issuers/import/bundle"
+        method: POST
+        headers:
+          X-Vault-Request: true
+          X-Vault-Token: "{{ vault_root_token }}"
+        body:
+          pem_bundle: "{{ vault_intermediate_ca.vault_intermediate_ca_import_pem_bundle }}"
+        body_format: json
+        validate_certs: "{{ vault_validate_cert }}"
+
 - name: Creating following certificate roles...
   ansible.builtin.uri:
     url:
@@ -107,26 +126,29 @@
       allow_any_name: true
       allow_bare_domains: true
       allow_glob_domains: true
-      allow_wildcard_certificates: true
-      allow_ip_sans: true
+      allow_ip_sans: "{{ certificate_role.vault_cert_ip_sans | default(true) }}"
       allow_localhost: true
       allow_subdomains: true
-      cn_validations: disabled
+      allow_wildcard_certificates: true
+      basic_constraints_valid_for_non_ca: "{{ certificate_role.vault_cert_basic_constraints_valid_for_non_ca | default(false) }}"
       client_flag: true
+      cn_validations: disabled
       code_signing_flag: "{{ certificate_role.vault_cert_code_signing | default(false) }}"
+      country: "{{ certificate_role.vault_cert_country | default('') }}"
       enforce_hostnames: true
       key_bits: "{{ certificate_role.vault_cert_key_bits }}"
       key_type: "{{ certificate_role.vault_cert_key_type }}"
-      key_usage: DigitalSignature, KeyAgreement, KeyEncipherment
-      max_ttl: 43800h
+      key_usage: "{{ certificate_role.vault_cert_key_usage | join(', ') | default('DigitalSignature, KeyAgreement, KeyEncipherment') }}"
+      max_ttl: "{{ certificate_role.vault_cert_max_ttl | default('1825d') }}"
+      organization: "{{ certificate_role.vault_cert_organization | default('') }}"
+      ou: "{{ certificate_role.vault_cert_ou | default('') }}"
+      policy_identifiers: "{{ certificate_role.vault_cert_policy_identifiers | default([]) }}"
       require_cn: true
       server_flag: true
-      ttl: 9528h # 397 days
+      ttl: "{{ certificate_role.vault_cert_ttl | default('397d') }}"
       use_csr_common_name: true
       use_csr_sans: true
-      ou: "{{ certificate_role.vault_cert_ou | default('') }}"
-      organization: "{{ certificate_role.vault_cert_organization | default('') }}"
-      country: "{{ certificate_role.vault_cert_country | default('') }}"
+      signature_bits: "{{ certificate_role.vault_cert_signature_bits | default(0) }}"
     status_code:
       - 200
       - 204

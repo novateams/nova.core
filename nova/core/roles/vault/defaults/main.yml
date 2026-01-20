@@ -76,6 +76,7 @@ vault_root_cas:
 vault_create_intermediate_ca: false # Create an intermediate CA(s) (signed by the root CA(s))
 vault_intermediate_cas:
   - vault_intermediate_ca_pki_engine_name: IntermediateCA
+    vault_intermediate_ca_create_mode: generate # Options are "generate" or "import"
     vault_intermediate_ca_root_to_sign_with_name: RootCA # This is the name of the root CA to sign the intermediate CA with
     vault_intermediate_ca_name: "{{ environment_name }} {{ project_fullname }} IntermediateCA"
     vault_intermediate_ca_ou: "{{ project_fullname }}"
