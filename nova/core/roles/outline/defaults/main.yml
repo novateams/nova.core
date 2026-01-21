@@ -18,14 +18,14 @@ redis_container_image: redis:latest
 
 # Container names
 app_container_name: outline
-redis_container_name: outline_redis
 db_container_name: outline_postgres
+redis_container_name: outline_redis
 
 # Folder paths
-app_container_folder: /srv/{{ app_container_name }}
-db_container_folder: "{{ app_container_folder }}/{{ db_container_name }}"
+app_container_folder: /srv/outline
+db_container_folder: "{{ app_container_folder }}/outline_postgres"
 outline_local_file_storage_folder: "{{ app_container_folder }}/local_file_storage"
-redis_container_folder: "{{ app_container_folder }}/{{ redis_container_name }}"
+redis_container_folder: "{{ app_container_folder }}/outline_redis"
 
 # Usually comes from nova.core.docker role
 outline_docker_network: local-network
