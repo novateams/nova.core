@@ -1,4 +1,10 @@
 ---
+# Systems needs to be up to date before installing Docker
+# Otherwise, Docker installation may fail due to outdated dependencies
+- name: Including nova.core.updates role...
+  ansible.builtin.include_role:
+    name: nova.core.updates
+
 - name: Installing Docker and requirements...
   ansible.builtin.package:
     name:
@@ -7,11 +13,7 @@
       - docker-compose
       - python-requests
     state: present
-    update_cache: true
   register: docker_install
-  until: not docker_install.failed # Because sometimes the primary DNS is not up yet
-  retries: 6
-  delay: 5
 
 # Reboot is required immediately after Docker installation
 - name: Rebooting... # noqa: no-handler
