@@ -3,3 +3,16 @@
   community.general.pacman:
     update_cache: true
     upgrade: true
+  register: pacman_update
+
+# This is needed since Python can be upgraded during the package upgrade
+# and Ansible may fail later due to version mismatch
+- name: Clearing facts and gathering facts... # noqa: no-handler
+  when: pacman_update.changed
+  block:
+    - name: Clearing gathered facts...
+      ansible.builtin.meta: clear_facts
+
+    - name: Including nova.core.gather_facts role...
+      ansible.builtin.include_role:
+        name: nova.core.gather_facts
