@@ -12,3 +12,7 @@
 - name: Including VyOS cleanup tasks...
   ansible.builtin.include_tasks: vyos.yml
   when: ansible_network_os | default('') == 'vyos.vyos.vyos'
+
+- name: Including RouterOS cleanup tasks...
+  ansible.builtin.include_tasks: routeros.yml
+  when: ansible_network_os | default('') == 'community.routeros.routeros'

@@ -1,0 +1,7 @@
+---
+- name: Cleaning up RouterOS...
+  community.routeros.command:
+    commands:
+      - /system note set show-at-login=no
+      - /file remove [find]
+      - /console clear-history
