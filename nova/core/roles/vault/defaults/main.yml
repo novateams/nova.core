@@ -158,7 +158,7 @@ vault_ldap_configuration:
   url: "{{ vault_ldaps_url }}" # Can use multiple URLs separated by comma
   use_pre111_group_cn_behavior: false
   use_token_groups: true
-  userattr: samaccountname
+  userattr: "{{ vault_user_attribute | default('samaccountname') }}"
   userdn: "{{ vault_userdn }}"
   # Default use filter is ({{.UserAttr}}={{.Username}})
   # Example to only allow specific group members to log in:
