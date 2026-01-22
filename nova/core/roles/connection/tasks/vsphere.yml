@@ -22,10 +22,24 @@
       delay: 5
 
 - name:
-    Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
-    | upper }} over {{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}... # noqa: name[template]
+    Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }}
+    to {{ inventory_hostname }}
+    using {{ default_connection_plugin | upper }}
+    over {{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}... # noqa: name[template]
   ansible.builtin.set_fact:
     ansible_host: "{{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}"
     ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
     ansible_password: "{{ omit if connection_no_password else template_password if fresh_deploy else ansible_deployer_password }}"
+  when: ansible_network_os | default('') != "fortinet.fortios.fortios"
+
+- name: Connecting to {{ inventory_hostname }}
+    using {{ default_connection_plugin | upper }}
+    over {{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}... # noqa: name[template] jinja[invalid]
+  ansible.builtin.set_fact:
+    ansible_host:
+      "{{ '[' ~ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) ~ ']'
+      if (connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address)) | ansible.utils.ipv6
+      else connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}"
+    ansible_connection: "{{ default_connection_plugin }}"
+  when: ansible_network_os | default('') == "fortinet.fortios.fortios"

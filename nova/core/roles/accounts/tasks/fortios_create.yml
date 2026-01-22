@@ -1,0 +1,4 @@
+---
+- name: NOT YET IMPLEMENTED
+  ansible.builtin.debug:
+    msg: CONFIGURING FORTIOS ACCOUNTS IS NOT YET IMPLEMENTED

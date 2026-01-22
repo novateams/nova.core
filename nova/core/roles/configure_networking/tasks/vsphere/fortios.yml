@@ -1,0 +1,382 @@
+---
+- name: Setting connection facts...
+  ansible.builtin.set_fact:
+    ansible_connection: "{{ default_connection_plugin }}"
+
+- name: Setting static IP connection facts... # noqa: jinja[invalid]
+  ansible.builtin.set_fact:
+    ansible_host:
+      "{{ '[' ~ connection_address_info.address | ansible.utils.ipaddr('address') ~ ']'
+      if connection_address_info.address | ansible.utils.ipaddr('address') is ansible.utils.ipv6
+      else connection_address_info.address | ansible.utils.ipaddr('address') }}"
+  when: connection_mode in ['ipv4_static', 'ipv6_static']
+
+- name: Configuring FortiOS connection interface...
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Typing username to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_sendkey:
+        string_send: "{{ rest_api_credentials.user_name }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+
+    - name: Typing password to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_sendkey:
+        keys_send:
+          - ENTER
+        string_send: "{{ rest_api_credentials.password }}"
+        name: "{{ custom_vm_name | default(vm_name) }}"
+
+    - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_sendkey:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        sleep_time: 10
+        keys_send:
+          - ENTER
+
+    - name: Sending connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_sendkey:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        string_send: config system interface
+
+    - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_sendkey:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        keys_send:
+          - ENTER
+        string_send: edit port{{ (interfaces | map(attribute='connection') | list).index(true) + 1 }}
+
+    - name: Configuring IPv4 connection address from DHCP...
+      when: connection_mode == 'ipv4_dhcp'
+      block:
+        - name: Sending IPv4 DHCP connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set mode dhcp
+
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set allowaccess ping https ssh
+
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: end
+
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+    - name: Configuring IPv4 connection address...
+      when:
+        - connection_mode == 'ipv4_static'
+        - connection_address_info.address | ansible.utils.ipaddr('address') is ansible.utils.ipv4
+      block:
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set mode static
+
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send:
+              set ip {{ connection_address_info.address | ansible.utils.ipaddr('address') }} {{
+              connection_address_info.address | ansible.utils.ipaddr('netmask') }}
+
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set allowaccess ping https ssh
+
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: end
+
+        - name: Sending IPv4 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+    - name: Configuring IPv6 connection address...
+      when:
+        - connection_mode == 'ipv6_static'
+        - connection_address_info.address | ansible.utils.ipaddr('address') is ansible.utils.ipv6
+      block:
+        - name: Sending IPv6 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: config ipv6
+
+        - name: Sending IPv6 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set ip6-mode static
+
+        - name: Sending IPv6 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set ip6-address {{ connection_address_info.address }}
+
+        - name: Sending IPv6 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set ip6-allowaccess ping https ssh
+
+        - name: Sending IPv6 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: end
+
+        - name: Sending IPv6 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: end
+
+        - name: Sending IPv6 connection interface commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+    - name: Configuring IPv4 connection interface gateway...
+      when: connection_address_info.gateway is ansible.utils.ipv4
+      block:
+        - name: Sending IPv4 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: config router static
+
+        - name: Sending IPv4 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: edit 1
+
+        - name: Sending IPv4 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set gateway {{ connection_address_info.gateway }}
+
+        - name: Sending IPv4 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set device port{{ (interfaces | map(attribute='connection') | list).index(true) + 1 }}
+
+        - name: Sending IPv4 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: end
+
+        - name: Sending IPv4 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+    - name: Configuring IPv6 connection interface gateway...
+      when: connection_address_info.gateway is ansible.utils.ipv6
+      block:
+        - name: Sending IPv6 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            string_send: config router static6
+
+        - name: Sending IPv6 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: edit 1
+
+        - name: Sending IPv6 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set gateway {{ connection_address_info.gateway }}
+
+        - name: Sending IPv6 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: set device port{{ (interfaces | map(attribute='connection') | list).index(true) + 1 }}
+
+        - name: Sending IPv6 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+            string_send: end
+
+        - name: Sending IPv6 connection interface gateway commands to {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_sendkey:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            keys_send:
+              - ENTER
+
+    - name: Sending exit commands to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_sendkey:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        string_send: exit
+
+    - name: Sending exit commands to {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_sendkey:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        keys_send:
+          - ENTER
+
+    - name: Getting connection address from DHCP...
+      when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+      delegate_to: localhost
+      become: false
+      block:
+        - name: Detecting DHCP address for {{ hostname }}...
+          community.vmware.vmware_guest_info:
+            datacenter: "{{ datacenter }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            folder: "{{ folder }}"
+            properties:
+              - guest.ipAddress
+            schema: vsphere
+          register: detect_dhcp
+          until:
+            - detect_dhcp.instance.guest.ipAddress != none
+            - detect_dhcp.instance.guest.ipAddress != "0.0.0.0"
+            - not (detect_dhcp.instance.guest.ipAddress | regex_search('169.254.*')) # Protection against APIPA address
+            - not (detect_dhcp.instance.guest.ipAddress | ansible.utils.ipv6) # Protection against IPv6 link-local address
+          retries: 60
+          delay: 5
+
+        - name: Setting DHCP connection facts... # noqa: jinja[invalid]
+          ansible.builtin.set_fact:
+            ansible_host: "{{ '[' ~ detect_dhcp.instance.guest.ipAddress ~ ']'
+              if detect_dhcp.instance.guest.ipAddress is ansible.utils.ipv6
+              else detect_dhcp.instance.guest.ipAddress }}"
+
+    - name: Waiting for the network to be configured...
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        timeout: 30
+
+  rescue:
+    - name: NETWORK CONFIGURATION ERROR
+      ansible.builtin.fail:
+        msg: |
+          Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+          Check the errors above and {{ inventory_hostname }} host logs for more details.
+      when: configure_networking_rescue_count | default(0) | int == 3
+
+    - name: Setting rescue loop count...
+      ansible.builtin.set_fact:
+        configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        restart: true
+
+    - name: Re-including vSphere network configuration tasks...
+      ansible.builtin.include_tasks: main.yml
+
+- name: Setting following IPv4 FortiOS addresses...
+  fortinet.fortios.fortios_system_interface:
+    state: present
+    system_interface:
+      name: port{{ item.interface_index + 1 }}
+      mode: static
+      ip: "{{ item.address | ansible.utils.ipaddr('address') }} {{ item.address | ansible.utils.ipaddr('netmask') }}"
+      allowaccess: "{{ ['https', 'ping', 'ssh'] if item.connection else [] }}"
+  loop: "{{ interfaces | nova.core.addresses('flattened_addresses') }}"
+  when: item.mode == 'ipv4_static'
+  loop_control:
+    index_var: loop_index
+    label: "{{ item.address }} to {{ item.nic_name }}"
+
+- name: Setting IPv4 default router...
+  fortinet.fortios.fortios_router_static:
+    state: present
+    router_static:
+      device: port{{ item.interface_index + 1 }}
+      dst: 0.0.0.0/0
+      gateway: "{{ item.gateway }}"
+      seq_num: 1
+  loop: "{{ interfaces | nova.core.addresses('flattened_addresses') }}"
+  when:
+    - item.mode == 'ipv4_static'
+    - item.gateway is ansible.utils.ipv4
+  loop_control:
+    index_var: loop_index
+    label: "{{ item.gateway }} to {{ item.nic_name }}"
+
+- name: Setting following IPv6 FortiOS addresses...
+  fortinet.fortios.fortios_system_interface:
+    state: present
+    system_interface:
+      name: port{{ item.interface_index + 1 }}
+      ipv6:
+        ip6_mode: static
+        ip6_address: "{{ item.address | ansible.utils.ipaddr('address') }}/{{ item.address | ansible.utils.ipaddr('prefix') }}"
+        ip6_allowaccess: "{{ ['https', 'ping', 'ssh'] if item.connection else [] }}"
+  loop: "{{ interfaces | nova.core.addresses('flattened_addresses') }}"
+  when: item.mode == 'ipv6_static'
+  loop_control:
+    index_var: loop_index
+    label: "{{ item.address }} to {{ item.nic_name }}"
+
+- name: Setting IPv6 default router...
+  fortinet.fortios.fortios_router_static6:
+    state: present
+    router_static6:
+      device: port{{ item.interface_index + 1 }}
+      dst: "::/0"
+      gateway: "{{ item.gateway }}"
+      seq_num: 1
+  loop: "{{ interfaces | nova.core.addresses('flattened_addresses') }}"
+  when:
+    - item.mode == 'ipv6_static'
+    - item.gateway is ansible.utils.ipv6
+  loop_control:
+    index_var: loop_index
+    label: "{{ item.gateway }} to {{ item.nic_name }}"
