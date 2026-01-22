@@ -258,6 +258,7 @@
                       - guest.ipAddress
                     schema: vsphere
                   delegate_to: localhost
+                  become: false
                   register: detect_dhcp
                   until:
                     - detect_dhcp.instance.guest.ipAddress != none
