@@ -1,24 +1,12 @@
 ---
-- name: Checking for FortiOS access token...
-  ansible.builtin.fail:
-    msg: FortiOS fortios_access_token variable is empty
-  when: fortios_access_token == {}
-
-- name: Configure system hostname...
+- name: Configuring {{ inventory_hostname }} hostname...
   fortinet.fortios.fortios_system_global:
-    access_token: "{{ fortios_access_token }}"
-    vdom: "{{ fortios_vdom }}"
     system_global:
       hostname: "{{ hostname }}"
 
-- name: Configure system NTP information...
+- name: Configure NTP servers on {{ inventory_hostname }}...
   fortinet.fortios.fortios_system_ntp:
-    access_token: "{{ fortios_access_token }}"
-    vdom: "{{ fortios_vdom }}"
     system_ntp:
-      ntpsync: enable
-      authentication: disable
       ntpserver:
-        - authentication: disable
-          id: 1
+        - id: 1
           server: "{{ ntp_servers[0] }}"

@@ -65,6 +65,7 @@
   when:
     - not role_only
     - not role_only_wp
+    - ansible_network_os | default('') != "fortinet.fortios.fortios"
   block:
     # false by default for MacOS but defaulting to true here to avoid errors on non-MacOS systems
     - name: Waiting for connection to {{ inventory_hostname }}...

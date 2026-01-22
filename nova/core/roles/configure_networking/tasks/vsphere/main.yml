@@ -11,8 +11,9 @@
     - name: Setting VM ID fact and creating a list of MAC addresses...
       ansible.builtin.set_fact:
         configure_networking_vsphere_vm_id: "{{ vcenter_vm_info.instance.moid }}"
-        configure_networking_mac_addresses: "{{ vcenter_vm_info.instance | dict2items
-          | selectattr('key', 'match', '^hw_eth[0-9]+$') | map(attribute='value.macaddress') | list }}"
+        configure_networking_mac_addresses:
+          "{{ vcenter_vm_info.instance | dict2items | selectattr('key', 'match', '^hw_eth[0-9]+$')
+          | map(attribute='value.macaddress') | list }}"
         configure_networking_hw_interfaces: "{{ vcenter_vm_info.instance.hw_interfaces }}"
 
     - name: Getting REST API token...

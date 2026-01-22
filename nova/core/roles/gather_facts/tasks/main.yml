@@ -14,7 +14,6 @@
 
 - name: Gathering facts for FortiOS...
   fortinet.fortios.fortios_configuration_fact:
-    access_token: "{{ fortios_access_token }}"
     selector: system_global
   when: ansible_network_os | default('') == 'fortinet.fortios.fortios'
 

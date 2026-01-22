@@ -74,12 +74,6 @@ os_configuration_linux_reboot_after_hostname_change: false
 cisco_ios_ntp_config:
   servers: "{{ ntp_servers | json_query('[*].{server: @}') }}"
 
-###########
-# FortiOS #
-###########
-
-fortios_access_token: {} # Required token to configure FortiOS
-
 ############
 # RouterOS #
 ############
