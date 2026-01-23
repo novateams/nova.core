@@ -12,6 +12,11 @@ DOCUMENTATION="""
                 - Gets the address used for connection to the host.
             required: true
             type: str
+        connection_address_info:
+            description:
+                - Gets all the attributes of the address used for connection to the host.
+            required: true
+            type: str
         connection_mode:
             description:
                 - Gets the method used for setting or getting connection IP address.
@@ -35,6 +40,11 @@ DOCUMENTATION="""
         connection_nic_ipv6_gw:
             description:
                 - Gets all connection NIC IPv6 gateways. (There's usually only one)
+            required: true
+            type: str
+        flattened_addresses:
+            description:
+                - Gets all interfaces flattened into a single list of addresses.
             required: true
             type: str
         egress_nic_ipv4:
@@ -112,6 +122,7 @@ class FilterModule(object):
     def addresses(self, interfaces, parameter):
         filter_functions = {
             'connection_address': self.get_connection_address(interfaces),
+            'connection_address_info': self.get_connection_address_info(interfaces),
             'connection_mode': self.get_connection_mode(interfaces),
 
             'connection_nic_ipv4': self.get_addresses_by_mode(interfaces, 'connection', 'ipv4_static'),
@@ -119,6 +130,8 @@ class FilterModule(object):
 
             'connection_nic_ipv6': self.get_addresses_by_mode(interfaces, 'connection', 'ipv6_static'),
             'connection_nic_ipv6_gw': self.get_gateways_by_mode(interfaces, 'connection', 'ipv6_static'),
+
+            'flattened_addresses': self.flatten_addresses(interfaces),
 
             'egress_nic_ipv4': self.get_addresses_by_mode(interfaces, 'egress', 'ipv4_static'),
             'egress_nic_ipv4_gw': self.get_gateways_by_mode(interfaces, 'egress', 'ipv4_static'),
@@ -186,8 +199,27 @@ class FilterModule(object):
                     addresses.append(address_val if address_val else 'null')
         return addresses
 
+    def get_connection_address_info(self, interfaces):
+        address_info = []
+        for interface in interfaces:
+            for address in interface.get('addresses', []):
+                if address.get('connection'):
+                    address_info = address
+        return address_info
+
     def validate_address(self, address, mode):
         return address.get('mode') == mode and address.get('address') and address.get('pool_id').startswith('default-')
 
     def validate_mgmt_address(self, address, mode):
         return address.get('mode') == mode and address.get('address') and address.get('pool_id').startswith('mgmt-')
+
+    def flatten_addresses(self, interfaces):
+        flattened = []
+        for iface in interfaces:
+            interface_loop_index = interfaces.index(iface)
+            base = {k: v for k, v in iface.items() if k != "addresses"}
+            for addr in iface.get("addresses", []):
+                merged = {**base, **addr}
+                merged['interface_index'] = interface_loop_index
+                flattened.append(merged)
+        return flattened
