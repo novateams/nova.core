@@ -96,11 +96,11 @@
           community.vmware.vmware_guest_disk_info:
             datacenter: "{{ datacenter }}"
             moid: "{{ template_search_result.guests[0].moid }}"
-          register: template_disk_info
+          register: vm_disk_info
 
         - name: Getting template OS disk size...
           ansible.builtin.set_fact:
-            template_disk_size: "{{ (template_disk_info.guest_disk_info | dict2items | first).value.capacity_in_kb // 1024 | int }}"
+            template_disk_size: "{{ (vm_disk_info.guest_disk_info | dict2items | first).value.capacity_in_kb // 1024 | int }}"
 
     # This task can be removed when local inventories are moved to Providentia
     - name: Setting OS disk size...
