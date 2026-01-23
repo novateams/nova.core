@@ -11,7 +11,8 @@
     # When Providentia is used hardware_cpu and hardware_ram are always defined
     # For local inventories, either hardware_cpu or hardware_ram needs to be defined to trigger this block.
     - name: Reconfiguring CPU and RAM values...
-      when: hardware_cpu != none and vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
+      when:
+        hardware_cpu != none and vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
         or hardware_ram != none and vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
       block:
         - name: Trying to configure {{ custom_vm_name | default(vm_name) }} CPU & RAM values when it's powered on...
@@ -86,7 +87,7 @@
             schema: vsphere
             properties:
               - config.hardware.device
-          register: vm_disk_info
+          register: linked_clone_info
           retries: 6
           delay: 5
 
@@ -97,43 +98,45 @@
             folder: "{{ folder }}"
           register: snapshot_info
 
-        - name: Setting OS disk size...
+        - name: Checking if disk is expandable...
           ansible.builtin.set_fact:
-            os_disk_size: "{{ os_disk_size_gb * 1024 }}"
+            machine_operations_disk_expandable: true
           when:
-            - os_disk_size_gb is defined
-            - hardware_primary_disk_size is not defined
-
-        - name: Setting OS disk size...
-          ansible.builtin.set_fact:
-            os_disk_size: "{{ hardware_primary_disk_size * 1024 }}"
-          when: hardware_primary_disk_size is defined
-
-        - name: Setting current disk size as fact...
-          ansible.builtin.set_fact:
-            current_os_disk_size: "{{ (vm_disk_info.instance.config.hardware.device
-              | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk') | map(attribute='capacityInKB') | first / 1024) | int }}"
-
-        - name: Setting {{ custom_vm_name | default(vm_name) }} disk size to {{
-            (os_disk_size if os_disk_size is defined else 1 | int / 1024) | int }}GB...
-          community.vmware.vmware_guest:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
-            cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
-            disk: "{{ machine_operations_vsphere_disk_config }}"
-          when:
-            - vm_disk_info.instance.config.hardware.device | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk')
+            - linked_clone_info.instance.config.hardware.device | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk')
               | map(attribute='backing.deltaDiskFormat') | first == none # This means that the machine is not a Linked Clone
-            - current_os_disk_size | int < os_disk_size | int
-            - snapshot_info.guest_snapshots == {}
+            - snapshot_info.guest_snapshots == {} # No snapshots present, otherwise disk expansion is not possible
 
         - name: Skipping disk size expansion for {{ custom_vm_name | default(vm_name) }}...
           ansible.builtin.debug:
             msg: |
               SKIPPING DISK SIZE EXPANSION FOR {{ custom_vm_name | default(vm_name) }} BECAUSE
               IT HAS SNAPSHOTS OR IS A LINKED CLONE!
-          when:
-            - current_os_disk_size | int < os_disk_size | int
-            - vm_disk_info.instance.config.hardware.device | selectattr('_vimtype', 'eq', 'vim.vm.device.VirtualDisk')
-              | map(attribute='backing.deltaDiskFormat') | first != none
-              or snapshot_info.guest_snapshots != {}
+          when: not machine_operations_disk_expandable | default(false)
+
+        - name: Expanding OS disk...
+          when: machine_operations_disk_expandable | default(false)
+          block:
+            - name: Getting {{ custom_vm_name | default(vm_name) }} VM disk info...
+              community.vmware.vmware_guest_disk_info:
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                folder: "{{ folder }}"
+                datacenter: "{{ datacenter }}"
+              register: vm_disk_info
+
+            - name: Setting OS disk size...
+              ansible.builtin.set_fact:
+                os_disk_size: "{{ (hardware_primary_disk_size | default(os_disk_size_gb)) * 1024 }}"
+
+            - name: Setting current disk size as fact...
+              ansible.builtin.set_fact:
+                current_os_disk_size: "{{ (vm_disk_info.guest_disk_info | dict2items | first).value.capacity_in_kb / 1024 | int }}"
+
+            - name:
+                Setting {{ custom_vm_name | default(vm_name) }} disk size to {{
+                (os_disk_size if os_disk_size is defined else 1 | int / 1024) | int }}GB...
+              community.vmware.vmware_guest:
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
+                cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
+                disk: "{{ machine_operations_vsphere_disk_config }}"
+              when: current_os_disk_size | int < os_disk_size | int
