@@ -29,10 +29,11 @@ ansible_become_password: "{{ ansible_password | default('no_password_set') }}"
 # Defaults when using Providentia or interfaces list that is based on Providentia API output
 # To make sure these values can be used as hostvar lookups they also need to be defined in projects group_vars all.yml file
 
+connection_address_info: "{{ interfaces | nova.core.addresses('connection_address_info') }}"
 connection_address: "{{ interfaces | nova.core.addresses('connection_address') | first | ansible.utils.ipaddr('address') }}"
 connection_mode: "{{ interfaces | nova.core.addresses('connection_mode') | first }}"
-egress_network_info: "{{ interfaces | selectattr('egress', 'equalto', true) | first | default([]) }}"
 connection_network_info: "{{ interfaces | selectattr('connection', 'equalto', true) | first | default([]) }}"
+egress_network_info: "{{ interfaces | selectattr('egress', 'equalto', true) | first | default([]) }}"
 
 # IPv4
 connection_nic_ipv4: "{{ interfaces | nova.core.addresses('connection_nic_ipv4') | first | ansible.utils.ipaddr('address') }}"
@@ -115,24 +116,30 @@ vmware_defaults:
 
 vmware_rest_defaults:
   vcenter_hostname: "{{ vcenter_hostname | default('') }}"
-  vcenter_username: "{{ vcenter_username | default(env_project_deployer_username) | default(project_deployer_username)
+  vcenter_username:
+    "{{ vcenter_username | default(env_project_deployer_username) | default(project_deployer_username)
     | default(deployer_username) | default('') }}"
-  vcenter_password: "{{ vcenter_password | default(env_project_deployer_password) | default(project_deployer_password)
+  vcenter_password:
+    "{{ vcenter_password | default(env_project_deployer_password) | default(project_deployer_password)
     | default(deployer_password) | default('') }}"
   vcenter_validate_certs: "{{ validate_vmware_certs }}"
 
-nsx_deployer_username: "{{ nsx_username | default(env_project_deployer_username) | default(project_deployer_username)
+nsx_deployer_username:
+  "{{ nsx_username | default(env_project_deployer_username) | default(project_deployer_username)
   | default(deployer_username | default('') + '@' + ldap_auth_domain | default('')) }}"
-nsx_deployer_password: "{{ nsx_password | default(env_project_deployer_password) | default(project_deployer_password)
+nsx_deployer_password:
+  "{{ nsx_password | default(env_project_deployer_password) | default(project_deployer_password)
   | default(deployer_password) | default('') }}"
 
 vmware_workstation:
   connection: ssh
   host: host.docker.internal
   local_vm_folder: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}
-  local_vmx_folder_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
+  local_vmx_folder_path:
+    /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
     | default(vm_name) }}
-  local_vmx_path: /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
+  local_vmx_path:
+    /home/{{ lookup('env', 'USER') }}/vmware/{{ project_fullname | default('') }}/{{ custom_vm_name
     | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmx
   python_interpreter: /usr/bin/python3
   shell_type: sh
@@ -178,7 +185,8 @@ azure_defaults:
     | default(azure_client_id) | default('') }}"
 
   # The current Tenant's ID from https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
-  tenant: "{{ lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_azure_tenant_id')
+  tenant:
+    "{{ lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_azure_tenant_id')
     | default(lookup('vars', project_fullname | default('') ~ '_azure_tenant_id'))
     | default(azure_tenant_id) | default('') }}"
   secret:
@@ -218,9 +226,11 @@ proxmox_machine_operations_operation_timeout: 180
 openstack_defaults:
   auth:
     auth_url: "{{ openstack_auth_url | default('') }}"
-    username: "{{ openstack_username | default(env_project_deployer_username) | default(project_deployer_username)
+    username:
+      "{{ openstack_username | default(env_project_deployer_username) | default(project_deployer_username)
       | default(deployer_username) | default('') }}"
-    password: "{{ openstack_password | default(env_project_deployer_password) | default(project_deployer_password)
+    password:
+      "{{ openstack_password | default(env_project_deployer_password) | default(project_deployer_password)
       | default(deployer_password) | default('') }}"
     project_id:
       "{{ lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_openstack_project_id')
@@ -234,3 +244,10 @@ openstack_defaults:
       "{{ lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_openstack_project_domain_name')
       | default(lookup('vars', project_fullname | default('') ~ '_openstack_project_domain_name'))
       | default(openstack_project_domain_name) | default('Default') }}"
+
+###########
+# FortiOS #
+###########
+
+# This can be used to define default for all FortiOS modules
+fortios_defaults: {}
