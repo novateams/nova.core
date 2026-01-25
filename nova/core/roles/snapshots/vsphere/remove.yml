@@ -2,17 +2,16 @@
 - name: Deleting snapshots...
   delegate_to: localhost
   become: false
+  when: vcenter_vm_info.guests[0].snapshots != []
   block:
-    - name: Removing {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) | default('') }} snapshot...
+    - name: Removing {{ snapshot_name | default(vcenter_vm_info.guests[0].current_snapshot.name) | default('') }} snapshot...
       vmware.vmware.vm_snapshot:
         datacenter: "{{ datacenter }}"
         folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
-        snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
-      when:
-        - not remove_all_snapshots | bool
-        - snapshot_info.guest_snapshots != {}
+        snapshot_name: "{{ snapshot_name | default(vcenter_vm_info.guests[0].current_snapshot.name) }}"
+      when: not remove_all_snapshots | bool
 
     - name: Removing all existing snapshots...
       vmware.vmware.vm_snapshot:

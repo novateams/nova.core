@@ -1,19 +1,19 @@
 ---
-- name: Reverting to {{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) | default('') }} snapshot...
+- name: Reverting to {{ snapshot_name | default(vcenter_vm_info.guests[0].current_snapshot.name) | default('') }} snapshot...
   community.vmware.vmware_guest_snapshot:
     datacenter: "{{ datacenter }}"
     folder: "{{ folder }}"
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: revert
-    snapshot_name: "{{ snapshot_name | default(snapshot_info.guest_snapshots.current_snapshot.name) }}"
+    snapshot_name: "{{ snapshot_name | default(vcenter_vm_info.guests[0].current_snapshot.name) }}"
   delegate_to: localhost
   become: false
-  when: snapshot_info.guest_snapshots != {}
+  when: vcenter_vm_info.guests[0].snapshots != []
 
 - name: ERROR
   ansible.builtin.fail:
     msg: "{{ custom_vm_name | default(vm_name) }} doesn't have any snapshots!"
-  when: snapshot_info.guest_snapshots == {}
+  when: vcenter_vm_info.guests[0].snapshots == []
 
 - name: Including powerstate role...
   ansible.builtin.include_role:
