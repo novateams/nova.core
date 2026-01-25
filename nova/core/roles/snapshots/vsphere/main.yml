@@ -24,13 +24,6 @@
         - vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
         - snapshot_mode != 'revert'
 
-    - name: Getting info about {{ custom_vm_name | default(vm_name) }} snapshots...
-      community.vmware.vmware_guest_snapshot_info:
-        datacenter: "{{ datacenter }}"
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        folder: "{{ folder }}"
-      register: snapshot_info
-
 - name: Including powerstate role...
   ansible.builtin.include_role:
     name: nova.core.powerstate
