@@ -16,10 +16,16 @@ vm_name: "{{ inventory_hostname }}" # Defaults to inventory_hostname if nothing 
 ####################
 
 # Hardware
-hardware_cpu: # Nr of CPUs to add to machine if left empty it will use the same as the template
-hardware_ram: # Nr of GB of RAM to add to machine if left empty it will use the same as the template
+
+# By default disabling CPU and RAM hot add/remove features to improve performance
+machine_operations_vsphere_memory_hot_add: false # Disable hot add for memory
+machine_operations_vsphere_cpu_hot_add: false # Disable hot add for CPU
+machine_operations_vsphere_cpu_hot_remove: false # Disable hot remove for CPU
 machine_operations_vsphere_memory_reservation_lock: false
 machine_operations_vsphere_memory_reservation_gb: {} # Set to a number to reserve that much memory in GB on the host
+
+hardware_cpu: # Nr of CPUs to add to machine if left empty it will use the same as the template
+hardware_ram: # Nr of GB of RAM to add to machine if left empty it will use the same as the template
 vmware_nic_type: vmxnet3
 machine_operations_vgpu: # https://docs.ansible.com/ansible/latest/collections/community/vmware/vmware_guest_vgpu_module.html
 machine_operations_vsphere_cdrom_config:
