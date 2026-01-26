@@ -151,8 +151,11 @@
           num_cpus: "{{ omit if not hardware_cpu else hardware_cpu }}"
           num_cpu_cores_per_socket: "{{ omit if not hardware_cpu else hardware_cpu }}"
           memory_mb: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
-          memory_reservation_lock: false
-          mem_reservation: 0
+          memory_reservation_lock: "{{ machine_operations_vsphere_memory_reservation_lock }}"
+          mem_reservation:
+            "{{ 0 if machine_operations_vsphere_memory_reservation_gb == {}
+            else omit if machine_operations_vsphere_memory_reservation_lock
+            else machine_operations_vsphere_memory_reservation_gb * 1024 }}"
         cdrom: "{{ machine_operations_vsphere_cdrom_config }}"
         disk: "{{ omit if os_disk_size is not defined else machine_operations_vsphere_disk_config }}"
         advanced_settings:
