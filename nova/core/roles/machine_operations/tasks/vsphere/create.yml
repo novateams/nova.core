@@ -148,6 +148,9 @@
         datastore: "{{ datastore }}"
         resource_pool: "{{ resource_pool | default(omit) }}"
         hardware:
+          hotremove_cpu: "{{ machine_operations_vsphere_cpu_hot_remove }}"
+          hotadd_cpu: "{{ machine_operations_vsphere_cpu_hot_add }}"
+          hotadd_memory: "{{ machine_operations_vsphere_memory_hot_add }}"
           num_cpus: "{{ omit if not hardware_cpu else hardware_cpu }}"
           num_cpu_cores_per_socket: "{{ omit if not hardware_cpu else hardware_cpu }}"
           memory_mb: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
