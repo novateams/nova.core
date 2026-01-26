@@ -3,33 +3,22 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Getting {{ custom_vm_name | default(vm_name) }} VM CPU & RAM info...
-      vmware.vmware.vm_resource_info:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vsphere_vm_info
-
-    # When Providentia is used hardware_cpu and hardware_ram are always defined
-    # For local inventories, either hardware_cpu or hardware_ram needs to be defined to trigger this block.
     - name: Reconfiguring CPU and RAM values...
-      when:
-        hardware_cpu != none and vsphere_vm_info.vms[0].cpu.processor_count != hardware_cpu
-        or hardware_ram != none and vsphere_vm_info.vms[0].memory.size_mb != (hardware_ram * 1024)
       block:
         - name: Trying to configure {{ custom_vm_name | default(vm_name) }} CPU & RAM values when it's powered on...
           block:
-            - name: Setting {{ custom_vm_name | default(vm_name) }} CPU count to {{ hardware_cpu }} and RAM to {{ hardware_ram }}...
+            - name: Reconfiguring {{ custom_vm_name | default(vm_name) }} hardware resources...
               community.vmware.vmware_guest:
-                datacenter: "{{ datacenter }}"
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                folder: "{{ folder }}"
-                esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
-                cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
-                datastore: "{{ datastore }}"
-                resource_pool: "{{ resource_pool | default(omit) }}"
                 hardware:
                   num_cpus: "{{ omit if not hardware_cpu else hardware_cpu }}"
                   num_cpu_cores_per_socket: "{{ omit if not hardware_cpu else hardware_cpu }}"
                   memory_mb: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
+                  memory_reservation_lock: "{{ machine_operations_vsphere_memory_reservation_lock }}"
+                  mem_reservation:
+                    "{{ 0 if machine_operations_vsphere_memory_reservation_gb == {}
+                    else omit if machine_operations_vsphere_memory_reservation_lock
+                    else machine_operations_vsphere_memory_reservation_gb * 1024 }}"
 
           # There are too many edge cases when the CPU and RAM values reconfiguration might fail
           # Most of them will work when the VM is powered off
@@ -42,19 +31,18 @@
 
             - name: Trying to configure {{ custom_vm_name | default(vm_name) }} CPU & RAM values when it's powered off...
               block:
-                - name: Setting {{ custom_vm_name | default(vm_name) }} CPU count to {{ hardware_cpu }} and RAM to {{ hardware_ram }}...
+                - name: Reconfiguring {{ custom_vm_name | default(vm_name) }} hardware resources...
                   community.vmware.vmware_guest:
-                    datacenter: "{{ datacenter }}"
                     name: "{{ custom_vm_name | default(vm_name) }}"
-                    folder: "{{ folder }}"
-                    esxi_hostname: "{{ omit if not machine_operations_esxi_hostname else machine_operations_esxi_hostname }}"
-                    cluster: "{{ omit if machine_operations_esxi_hostname else cluster }}"
-                    datastore: "{{ datastore }}"
-                    resource_pool: "{{ resource_pool | default(omit) }}"
                     hardware:
                       num_cpus: "{{ omit if not hardware_cpu else hardware_cpu }}"
                       num_cpu_cores_per_socket: "{{ omit if not hardware_cpu else hardware_cpu }}"
                       memory_mb: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
+                      memory_reservation_lock: "{{ machine_operations_vsphere_memory_reservation_lock }}"
+                      mem_reservation:
+                        "{{ 0 if machine_operations_vsphere_memory_reservation_gb == {}
+                        else omit if machine_operations_vsphere_memory_reservation_lock
+                        else machine_operations_vsphere_memory_reservation_gb * 1024 }}"
 
                 - name: Including nova.core.powerstate role...
                   ansible.builtin.include_role:
