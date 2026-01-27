@@ -39,14 +39,23 @@
         # Since Proxmox doesn't support locking or queuing operations, creating a limiter file
         # to make sure only one host in the batch is cloning at a time
         # After cloning is done the hosts will go back to the default parallelism
-        - name: Waiting until the previous VM is the batch cloned...
-          when: available_play_hosts.index(inventory_hostname) != 0
-          ansible.builtin.wait_for:
-            path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{
-              available_play_hosts[available_play_hosts.index(inventory_hostname) - 1] }}.done
-            # Timeout is based on the number of hosts in the batch
-            # Increasing the timeout by the operation timeout for each host in the batch
-            timeout: "{{ proxmox_machine_operations_operation_timeout * available_play_hosts.index(inventory_hostname) }}"
+        - name: Waiting for previous host in the batch to finish cloning...
+          block:
+            - name: Waiting until the previous VM is the batch cloned...
+              when: available_play_hosts.index(inventory_hostname) != 0
+              ansible.builtin.wait_for:
+                path:
+                  /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{
+                  available_play_hosts[available_play_hosts.index(inventory_hostname) - 1] }}.done
+                # Timeout is based on the number of hosts in the batch
+                # Increasing the timeout by the operation timeout for each host in the batch
+                timeout: "{{ proxmox_machine_operations_operation_timeout * available_play_hosts.index(inventory_hostname) }}"
+          rescue:
+            - name: TIMEOUT WAITING FOR PREVIOUS HOST TO FINISH CLONING
+              ansible.builtin.debug:
+                msg: |
+                  Timeout waiting for previous host in the batch to finish cloning.
+                  Moving on to avoid holding up the entire batch.
 
         # Cloning needs to happen on the same node where the template is located
         # After that the target node is used to move the VM to the correct node
