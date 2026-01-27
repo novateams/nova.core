@@ -78,9 +78,11 @@
 
         - name: Getting required values from templated aws_interfaces.yml...
           ansible.builtin.set_fact:
-            aws_interfaces: "{{ (lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml)
+            aws_interfaces:
+              "{{ (lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml)
               | map('dict2items') | map('rejectattr', 'key', 'equalto', 'connection_interface') | map('items2dict') | list }}"
-            aws_connection_interface_subnet: "{{ (lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml)
+            aws_connection_interface_subnet:
+              "{{ (lookup('ansible.builtin.template', 'aws_interfaces.yml') | from_yaml)
               | map(attribute='subnet_id') | list | default([]) | first | default('') }}"
 
         - name: Launching {{ custom_vm_name | default(vm_name) }} EC2 instance...
@@ -90,11 +92,17 @@
             network_interfaces: "{{ aws_interfaces }}"
             vpc_subnet_id: "{{ omit if aws_connection_interface_subnet == [] else aws_connection_interface_subnet }}"
             instance_type: "{{ aws_vm_size | default('t3.micro') }}"
-            security_group: "{{ omit if machine_operations_aws_security_group_names != []
+            security_group:
+              "{{ omit if machine_operations_aws_security_group_names != []
               else machine_operations_aws_security_group_name | default(created_security_group.group_name) }}"
             security_groups: "{{ omit if machine_operations_aws_security_group_names == [] else machine_operations_aws_security_group_names }}"
             image_id: "{{ machine_operations_aws_ec2_image_id | default(ec2_instance_image.image_id) }}"
             user_data: "{{ lookup('ansible.builtin.template', 'Configure-CloudWindows.ps1') if 'os_windows' in group_names and fresh_deploy else omit }}"
+            volumes:
+              - device_name: "{{ ec2_instance_image.root_device_name }}"
+                ebs:
+                  volume_size: "{{ os_disk_size | default(hardware_primary_disk_size) | default(omit) }}"
+                  delete_on_termination: true
             tags:
               inventory_hostname: "{{ inventory_hostname }}"
               project_fullname: "{{ project_fullname | default('undefined_project') }}"
@@ -111,7 +119,8 @@
     # Interfaces are sorted by device_index since they are not guaranteed to be in the same order as provided when creating the instance
     - name: Configuring public IP for {{ custom_vm_name | default(vm_name) }}...
       amazon.aws.ec2_eip:
-        device_id: "{{ ((created_ec2_instance.instances[0] | default(existing_instances[-1])).network_interfaces
+        device_id:
+          "{{ ((created_ec2_instance.instances[0] | default(existing_instances[-1])).network_interfaces
           | sort(attribute='attachment.device_index'))[(interfaces | map(attribute='connection')
           | list).index(True) if interfaces != [] else 0].network_interface_id }}"
         in_vpc: true
