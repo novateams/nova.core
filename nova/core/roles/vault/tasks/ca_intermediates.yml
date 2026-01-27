@@ -101,7 +101,7 @@
     - intermediate_ca_pki_engine_status.status != 200
     - vault_intermediate_ca.vault_intermediate_ca_create_mode | default("generate") == "import"
   block:
-    - name: Importing Intermediate CA certificate bundle...
+    - name: Generating Intermediate CSR...
       ansible.builtin.uri:
         url: "{{ vault_configuration_uri }}/v1/{{ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name }}/issuers/import/bundle"
         method: POST

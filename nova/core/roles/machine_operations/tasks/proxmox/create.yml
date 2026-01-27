@@ -1,9 +1,4 @@
 ---
-- name: Setting fresh_deploy fact...
-  ansible.builtin.set_fact:
-    fresh_deploy: true
-  when: proxmox_vm_exists.proxmox_vms == [] or deploy_mode == "redeploy"
-
 - name: Checking for the correct deploy mode...
   ansible.builtin.fail:
     msg: |
@@ -17,10 +12,6 @@
 - name: Cloning and configuring VM...
   delegate_to: localhost
   become: false
-  when:
-    - not role_only
-    - not role_only_wp
-    - single_role is not defined
   block:
     - name: Looking up template and cloning the VM...
       when: fresh_deploy
@@ -50,8 +41,6 @@
         # After cloning is done the hosts will go back to the default parallelism
         - name: Waiting until the previous VM is the batch cloned...
           when: available_play_hosts.index(inventory_hostname) != 0
-          delegate_to: localhost
-          become: false
           ansible.builtin.wait_for:
             path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{
               available_play_hosts[available_play_hosts.index(inventory_hostname) - 1] }}.done
