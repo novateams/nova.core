@@ -16,8 +16,8 @@
                   memory_mb: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
                   memory_reservation_lock: "{{ machine_operations_vsphere_memory_reservation_lock }}"
                   mem_reservation:
-                    "{{ 0 if machine_operations_vsphere_memory_reservation_gb == {}
-                    else omit if machine_operations_vsphere_memory_reservation_lock
+                    "{{ omit if machine_operations_vsphere_memory_reservation_gb == {}
+                    or machine_operations_vsphere_memory_reservation_lock
                     else machine_operations_vsphere_memory_reservation_gb * 1024 }}"
 
           # There are too many edge cases when the CPU and RAM values reconfiguration might fail
@@ -40,8 +40,8 @@
                       memory_mb: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
                       memory_reservation_lock: "{{ machine_operations_vsphere_memory_reservation_lock }}"
                       mem_reservation:
-                        "{{ 0 if machine_operations_vsphere_memory_reservation_gb == {}
-                        else omit if machine_operations_vsphere_memory_reservation_lock
+                        "{{ omit if machine_operations_vsphere_memory_reservation_gb == {}
+                        or machine_operations_vsphere_memory_reservation_lock
                         else machine_operations_vsphere_memory_reservation_gb * 1024 }}"
 
                 - name: Including nova.core.powerstate role...
