@@ -1,19 +1,4 @@
 ---
-- name: Setting fresh_deploy fact...
-  ansible.builtin.set_fact:
-    fresh_deploy: true
-  when: vcenter_vm_info.guests == [] or deploy_mode == "redeploy"
-
-- name: Checking for the correct deploy mode...
-  ansible.builtin.fail:
-    msg: |
-      Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
-  when:
-    - fresh_deploy is ansible.builtin.truthy
-    - role_only is ansible.builtin.truthy
-      or role_only_wp is ansible.builtin.truthy
-      or single_role is defined
-
 - name: Running VM creation tasks...
   delegate_to: localhost
   become: false

@@ -21,9 +21,18 @@
   retries: 5
   delay: 3
 
+- name: Setting fresh_deploy fact...
+  ansible.builtin.set_fact:
+    fresh_deploy: true
+  when: proxmox_vm_exists.proxmox_vms == [] or deploy_mode == "redeploy"
+
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml
   when: deploy_mode in ['undeploy', 'redeploy']
 
 - name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
   ansible.builtin.include_tasks: create.yml
+  when:
+    - not role_only
+    - not role_only_wp
+    - single_role is not defined
