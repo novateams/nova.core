@@ -4,7 +4,7 @@ keycloak_version: 26.5.2
 
 # https://github.com/adorsys/keycloak-config-cli
 # https://hub.docker.com/r/adorsys/keycloak-config-cli/tags
-keycloak_config_cli_version: 6.4.0-26
+keycloak_config_cli_version: 6.4.1-26
 
 keycloak_postgres_version: 15.15 # POSTGRES_VERSION_TAG
 keycloak_container_config_folder: /srv/keycloak
