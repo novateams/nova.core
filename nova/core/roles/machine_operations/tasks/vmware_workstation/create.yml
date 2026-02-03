@@ -132,6 +132,10 @@
             - regex: vhv.enable.*
               line: vhv.enable = "TRUE"
 
+            # Enabling VMTools time synchronization with host
+            - regex: tools.syncTime.*
+              line: tools.syncTime = "TRUE"
+
         # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
         # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
         - name: Setting compatible Darwin OS type...
