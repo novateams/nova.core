@@ -53,16 +53,10 @@ windows_user_groups:
 accounts_domain_groups_members_strategy: replace
 
 unix_distro_root_group_map:
-  AlmaLinux: wheel
   Alpine: root
-  Archlinux: wheel
-  CentOS: wheel
   Debian: sudo
-  FreeBSD: wheel
   Kali: sudo
-  OpenWrt: wheel
   Parrot: sudo
-  RedHat: wheel
   Ubuntu: sudo
   VMkernel: root
 
@@ -88,5 +82,3 @@ accounts_ssh_maxauthtries: 20
 # Since different OS families have different service names the sshd service name is set here
 accounts_os_family_service_name:
   Debian: ssh
-  RedHat: sshd
-  Archlinux: sshd
