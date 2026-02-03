@@ -4,6 +4,7 @@
   ansible.builtin.command: dnf remove --oldinstallonly --setopt installonly_limit={{ updates_redhat_family_nr_of_kernels_to_keep }} -y kernel
   register: dnf_remove_output
   changed_when: dnf_remove_output.stdout is search("Remove.*Packages")
+  when: ansible_facts.distribution != "Fedora"
 
 - name: Updating all packages...
   ansible.builtin.dnf:

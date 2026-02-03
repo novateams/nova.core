@@ -1,7 +1,7 @@
 ---
 - name: Setting the correct sudo group for {{ ansible_facts.distribution }}...
   ansible.builtin.set_fact:
-    root_group: "{{ unix_distro_root_group_map[ansible_facts.distribution] }}"
+    root_group: "{{ unix_distro_root_group_map[ansible_facts.distribution] | default('wheel') }}"
 
 - name: Making sure the sudo group exists...
   ansible.builtin.group:
@@ -47,7 +47,8 @@
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ local_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-  when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+  when:
+    created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
     | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Adding account creation source flag...
