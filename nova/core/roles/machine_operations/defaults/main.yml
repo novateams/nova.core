@@ -15,14 +15,6 @@ vm_name: "{{ inventory_hostname }}" # Defaults to inventory_hostname if nothing 
 # vSphere defaults #
 ####################
 
-# Networking
-extra_interfaces: false
-
-default_interface:
-  - name: "{{ interfaces[0].cloud_id }}"
-    device_type: "{{ vmware_nic_type }}"
-extra_network_interfaces: []
-
 # Hardware
 hardware_cpu: # Nr of CPUs to add to machine if left empty it will use the same as the template
 hardware_ram: # Nr of GB of RAM to add to machine if left empty it will use the same as the template
