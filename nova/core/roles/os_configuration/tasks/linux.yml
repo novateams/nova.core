@@ -1,10 +1,4 @@
 ---
-- name: Adding temp hostname... # This is so that sudo will not hang due to unknown hostname
-  ansible.builtin.lineinfile:
-    dest: /etc/hosts
-    regexp: ^127.0.1.2
-    line: 127.0.1.2       {{ fqdn }} {{ hostname }}
-
 - name: Setting hostname...
   ansible.builtin.hostname:
     name: "{{ hostname }}"
@@ -55,12 +49,6 @@
     dest: /etc/sudoers
     insertafter: ^#?\s*Defaults\s+env_keep\b
     line: Defaults    env_keep += "SSH_AUTH_SOCK"
-
-- name: Removing temp hostname...
-  ansible.builtin.lineinfile:
-    dest: /etc/hosts
-    regexp: ^127.0.1.2
-    state: absent
 
 - name: Adding custom values to hosts file...
   ansible.builtin.lineinfile:
