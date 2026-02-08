@@ -1,0 +1,7 @@
+---
+- name: Restarting samba service...
+  ansible.builtin.systemd:
+    name: samba
+    state: restarted
+  listen: samba_service_restart
+  when: samba_domain_provisioned.stat.exists

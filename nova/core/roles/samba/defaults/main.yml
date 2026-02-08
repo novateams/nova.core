@@ -1,0 +1,39 @@
+---
+##########
+# Domain #
+##########
+
+# Type of Domain Controller role to configure
+# Options:
+# pdc - Primary Domain Controller the first DC in a new domain
+# dc - Backup Domain Controller, secondary (or any next after) DC joining an existing domain)
+samba_dc_role: {}
+
+samba_domain_name: "{{ ad_domain_name | default(domain) }}"
+samba_domain_netbios: "{{ domain_netbios | default(ad_domain_name.split('.')[0] | upper) }}"
+samba_domain_admin_username: "{{ domain_admin_username | default('Administrator') }}"
+samba_domain_admin_password: "{{ domain_admin_password | default({}) }}"
+
+#########
+# LDAPs #
+#########
+
+# Enable or disable LDAPs connections for Samba
+# Requires certificate to be pre-installed on the system
+samba_ldaps_enable: true
+
+# Path to Root CA file for LDAPs connections
+# Can be left empty if it's already in OS trust store
+samba_ldaps_ca_file:
+
+# Path to LDAPs certificate private key file
+samba_ldaps_key_file: /srv/certs/{{ fqdn }}_key.crt
+
+# Path to LDAPs certificate public key file
+samba_ldaps_cert_file: /srv/certs/{{ fqdn }}_fullchain.crt
+
+#######
+# DNS #
+#######
+
+samba_dns_forwarders: "{{ (dns_forwarders | default(['1.1.1.1', '8.8.8.8'])) + (dns_forwarders6 | default(['2606:4700:4700::1111', '2001:4860:4860::8888'])) }}"
