@@ -1,0 +1,27 @@
+---
+- name: Checking if Samba domain is already provisioned...
+  when: samba_first_run | default(false)
+  block:
+    - name: Checking if {{ ad_domain_name }} domain already exists...
+      ansible.builtin.shell: host -t SRV _ldap._tcp.{{ ad_domain_name }} 2>/dev/null || true
+      changed_when: false
+      register: domain_dns_record
+
+    - name: THE DOMAIN ALREADY EXISTS
+      ansible.builtin.fail:
+        msg: |
+          The domain {{ samba_domain_name }} already exists.
+          Please choose another domain name or remove all the existing domain controllers.
+      when: domain_dns_record.stdout is search("has SRV record")
+
+- name: Creating {{ samba_domain_name }} domain...
+  ansible.builtin.command: >
+    samba-tool domain provision
+    --server-role=dc
+    --use-rfc2307
+    --dns-backend=SAMBA_INTERNAL
+    --realm={{ samba_domain_name }}
+    --domain={{ samba_domain_netbios }}
+    --adminpass={{ samba_domain_admin_password }}
+  changed_when: true
+  when: samba_first_run | default(false)

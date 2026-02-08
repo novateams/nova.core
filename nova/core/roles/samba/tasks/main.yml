@@ -1,0 +1,170 @@
+---
+- name: Checking for LDAPs certificate...
+  when: samba_ldaps_enable
+  block:
+    - name: Checking for certificate files...
+      ansible.builtin.stat:
+        path: "{{ samba_ldaps_cert_file }}"
+      register: cert_file
+
+    - name: MISSING LDAPS CERTIFICATE
+      ansible.builtin.fail:
+        msg: |
+          LDAPs is enabled but the certificate file {{ samba_ldaps_cert_file }} is not present.
+          Refer to the role defaults for more information about LDAPs configuration.
+      when: not cert_file.stat.exists
+
+- name: INVALID DOMAIN CONTROLLER ROLE
+  ansible.builtin.fail:
+    msg: |
+      Invalid domain controller role.
+      Please set 'samba_dc_role' variable to either 'pdc' or 'dc'.
+      Refer to the role defaults for more information about domain controller roles.
+  when: samba_dc_role | lower not in ['pdc', 'dc']
+
+- name: MISSING DOMAIN ADMIN PASSWORD
+  ansible.builtin.fail:
+    msg: |
+      The domain admin password is not set.
+      Please set 'samba_domain_admin_password' variable to define the password.
+  when: samba_domain_admin_password == {}
+
+- name: Install Samba prerequisite packages...
+  ansible.builtin.package:
+    name:
+      - acl
+      - attr
+      - dnsutils
+      - krb5-config
+      - krb5-user
+      - libnss-winbind
+      - libpam-winbind
+      - python3-ldap
+      - python3-setproctitle
+      - samba
+      - samba-ad-dc
+      - winbind
+    state: present
+    update_cache: true
+
+- name: Checking if Samba domain is already provisioned...
+  ansible.builtin.stat:
+    path: /var/lib/samba/private/sam.ldb
+  register: samba_domain_provisioned
+
+- name: Setting Samba first run fact...
+  ansible.builtin.set_fact:
+    samba_first_run: true
+  when: not samba_domain_provisioned.stat.exists
+
+- name: Checking that the domain does not already exist in DNS...
+  when:
+    - samba_dc_role | lower == "pdc"
+    - samba_first_run | default(false)
+  block:
+    - name: Checking that the domain does not already exist in DNS...
+      ansible.builtin.command: dig {{ samba_domain_name }} +short
+      changed_when: false
+      register: domain_dns_record
+
+    - name: DOMAIN ALREADY EXISTS
+      ansible.builtin.fail:
+        msg: |
+          The domain {{ samba_domain_name }} already exists in DNS (returned {{ domain_dns_record.stdout }}).
+          Cannot proceed with new domain provisioning.
+      when: domain_dns_record.stdout_lines != []
+
+- name: Removing existing smb.conf if domain is not yet provisioned...
+  when: samba_first_run | default(false)
+  block:
+    - name: Checking if smb.conf backup already exists...
+      ansible.builtin.stat:
+        path: /etc/samba/smb.conf.orig
+      register: smb_conf_backup_exists
+
+    - name: Backing up existing smb.conf...
+      ansible.builtin.copy:
+        src: /etc/samba/smb.conf
+        dest: /etc/samba/smb.conf.orig
+        mode: "0644"
+        remote_src: true
+      when: not smb_conf_backup_exists.stat.exists
+
+    - name: Removing existing smb.conf...
+      ansible.builtin.file:
+        path: /etc/samba/smb.conf
+        state: absent
+
+- name: Adding custom resolv.conf...
+  ansible.builtin.template:
+    src: resolv.conf
+    dest: /etc/resolv.conf
+    mode: "0644"
+
+- name: Checking if systemd-resolved service exists...
+  ansible.builtin.systemd:
+    name: systemd-resolved
+  register: systemd_resolved_service_exists
+
+- name: Stopping & disabling systemd-resolved service...
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+  when: systemd_resolved_service_exists.status.LoadState in ["enabled", "loaded"]
+
+- name: Including Primary Domain Controller tasks
+  ansible.builtin.include_tasks: pdc.yml
+  when: samba_dc_role | lower == "pdc"
+
+- name: Including Backup Domain Controller tasks
+  ansible.builtin.include_tasks: dc.yml
+  when: samba_dc_role | lower == "dc"
+
+- name: Adding DNS forwarders...
+  ansible.builtin.lineinfile:
+    path: /etc/samba/smb.conf
+    insertafter: '\[global\]'
+    line: "        dns forwarder = {{ samba_dns_forwarders | join(' ') }}"
+    regexp: .*dns forwarder =.*
+  notify: samba_service_restart
+  when: samba_dns_forwarders != []
+
+- name: Configuring LDAPs...
+  when: samba_ldaps_enable
+  block:
+    # Samba service needs to be started once before enabling LDAPs, otherwise the service won't start later
+    - name: Starting and enabling Samba services...
+      ansible.builtin.systemd:
+        name: samba
+        state: started
+
+    - name: Enabling LDAPs...
+      ansible.builtin.lineinfile:
+        path: /etc/samba/smb.conf
+        insertafter: '\[global\]'
+        line: "{{ item.line }}"
+        regexp: "{{ item.regexp }}"
+      loop_control:
+        label: "{{ item.line | trim }}"
+      loop:
+        - line: "        tls cafile = {{ samba_ldaps_ca_file }}"
+          regexp: .*tls cafile =.*
+        - line: "        tls keyfile = {{ samba_ldaps_key_file }}"
+          regexp: .*tls keyfile =.*
+        - line: "        tls certfile = {{ samba_ldaps_cert_file }}"
+          regexp: .*tls certfile =.*
+        - line: "        tls enabled = yes"
+          regexp: .*tls enabled =.*
+      notify: samba_service_restart
+
+# Rebooting only on initial domain controller provisioning
+- name: Rebooting...
+  ansible.builtin.reboot:
+  when: samba_first_run | default(false)
+
+- name: Waiting for LDAP port to be available...
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 389
+    timeout: 60

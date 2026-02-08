@@ -1,0 +1,7 @@
+---
+- name: Promoting {{ inventory_hostname }} to domain controller...
+  ansible.builtin.command:
+    samba-tool domain join {{ samba_domain_name }} DC --username={{
+    samba_domain_name }}\\{{ samba_domain_admin_username }} --password={{ samba_domain_admin_password }}
+  changed_when: true
+  when: samba_first_run | default(false)
