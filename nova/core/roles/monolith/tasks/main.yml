@@ -38,13 +38,13 @@
           become: true
 
         - name: Updating remote CA certificates...
-          ansible.builtin.command: update-ca-certificates --fresh
+          ansible.builtin.command: update-ca-certificates
           changed_when: true
           retries: 5
           delay: 2
 
         - name: Updating local CA certificates...
-          ansible.builtin.command: update-ca-certificates --fresh
+          ansible.builtin.command: update-ca-certificates
           changed_when: true
           delegate_to: localhost
           become: true

@@ -29,7 +29,7 @@
   when: item.src.startswith('http')
 
 - name: Updating CA certificates...
-  ansible.builtin.command: update-ca-certificates --fresh
+  ansible.builtin.command: update-ca-certificates
   changed_when: true
   when: ansible_facts.os_family in ['Debian', 'Alpine']
 
