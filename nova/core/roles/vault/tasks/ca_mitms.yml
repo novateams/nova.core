@@ -18,7 +18,8 @@
 
 - name: Enabling MITM CA PKI engine...
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}{{
+    url:
+      "{{ vault_configuration_uri }}/v1/sys/mounts/{{ vault_mitm_ca.vault_mitm_ca_pki_engine_name }}{{
       '/tune' if mitm_ca_pki_engine_status.status == 200 else '' }}"
     method: POST
     headers:
@@ -136,10 +137,12 @@
       X-Vault-Request: true
       X-Vault-Token: "{{ vault_root_token }}"
     body:
-      crl_distribution_points: "{{ vault_mitm_ca.vault_mitm_ca_crl_distribution_points
-        | default('http://' + vault_crl_fqdn + '/v1/' + vault_mitm_ca.vault_mitm_ca_pki_engine_name + '/crl/pem') }}"
-      issuing_certificates: "{{ vault_mitm_ca.vault_mitm_ca_issuing_certificates |
-        default('http://' + vault_aia_fqdn + '/v1/' + vault_mitm_ca.vault_mitm_ca_pki_engine_name + '/ca/pem') }}"
+      crl_distribution_points:
+        "{{ vault_mitm_ca.vault_mitm_ca_crl_distribution_points
+        | default('http://' ~ vault_crl_fqdn ~ '/v1/' ~ vault_mitm_ca.vault_mitm_ca_pki_engine_name ~ '/crl/pem') }}"
+      issuing_certificates:
+        "{{ vault_mitm_ca.vault_mitm_ca_issuing_certificates |
+        default('http://' ~ vault_aia_fqdn ~ '/v1/' ~ vault_mitm_ca.vault_mitm_ca_pki_engine_name ~ '/ca/pem') }}"
     body_format: json
     validate_certs: "{{ vault_validate_cert }}"
     status_code:

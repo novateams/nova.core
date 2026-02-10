@@ -190,10 +190,10 @@
     body:
       crl_distribution_points:
         "{{ vault_intermediate_ca.vault_intermediate_ca_crl_distribution_points |
-        default('http://' + vault_crl_fqdn + '/v1/' + vault_intermediate_ca.vault_intermediate_ca_pki_engine_name + '/crl/pem') }}"
+        default('http://' ~ vault_crl_fqdn ~ '/v1/' ~ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name ~ '/crl/pem') }}"
       issuing_certificates:
         "{{ vault_intermediate_ca.vault_intermediate_ca_issuing_certificates |
-        default('http://' + vault_aia_fqdn + '/v1/' + vault_intermediate_ca.vault_intermediate_ca_pki_engine_name + '/ca/pem') }}"
+        default('http://' ~ vault_aia_fqdn ~ '/v1/' ~ vault_intermediate_ca.vault_intermediate_ca_pki_engine_name ~ '/ca/pem') }}"
     body_format: json
     validate_certs: "{{ vault_validate_cert }}"
     status_code:
