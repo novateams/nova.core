@@ -51,18 +51,28 @@
   loop_control:
     label: "{{ item.username }}"
 
-- name: Adding a password key for following domain accounts...
-  ansible.builtin.set_fact:
-    domain_users_with_password: "{{ domain_users_with_password + [item_with_password] }}"
-  vars:
-    item_with_password: >-
-      {%- if item.password is not defined or item.password | regex_search('.*__omit_place_holder__.*') -%}
-      {{ item | combine({'password': pregenerated_password}) }}{%- else -%}
-      {{ item }}{%- endif -%}
-  loop: "{{ domain_user_accounts }}"
-  loop_control:
-    label: "{{ item.username }}"
-  when: ansible_facts.windows_domain_role == "Primary domain controller"
+- name: Generating domain users and OUs lists...
+  when:
+    ansible_facts.windows_domain_role | default('') == "Primary domain controller"
+    or samba_primary_domain_controller | default(false)
+  block:
+    - name: Adding a password key for following domain accounts...
+      ansible.builtin.set_fact:
+        domain_users_with_password: "{{ domain_users_with_password + [item_with_password] }}"
+      vars:
+        item_with_password: >-
+          {%- if item.password is not defined or item.password | regex_search('.*__omit_place_holder__.*') -%}
+          {{ item | combine({'password': pregenerated_password}) }}{%- else -%}
+          {{ item }}{%- endif -%}
+      loop: "{{ domain_user_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+    # This is done so the OU list to be created is based on length
+    # It's required so parent OUs are created before child OUs
+    - name: Building a list of OUs to be created...
+      ansible.builtin.set_fact:
+        accounts_ou_list: "{{ (lookup('ansible.builtin.template', 'generate_ou_list.yml') | from_yaml) | unique | sort(attribute='length') }}"
 
 - name: Creating combined users lists...
   ansible.builtin.set_fact:
