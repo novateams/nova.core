@@ -16,8 +16,9 @@
         create: true
       when: template_user.stat.exists
 
-- name: Configuring Domain Organizational Units...
-  ansible.builtin.include_tasks: create_domain_ous.yml
+# There's a microsoft.ad.ou but this method is many times faster for large number of OUs
+- name: Creating OUs for {{ ad_domain_name }}...
+  ansible.windows.win_shell: "{{ lookup('ansible.builtin.template', 'Create-OUs.ps1') }}"
   when: ansible_facts.windows_domain_role == "Primary domain controller"
 
 - name: Configuring Domain groups...
@@ -47,7 +48,8 @@
       ansible.builtin.set_fact:
         ansible_deployer_password: "{{ admin_accounts_with_password
           | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-      when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+      when:
+        created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
         | list | intersect([ansible_deployer_username]) | length > 0
 
 - name: Checking and creating domain accounts...
@@ -83,7 +85,8 @@
       ansible.builtin.set_fact:
         ansible_deployer_password: "{{ admin_accounts_with_password
           | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-      when: win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+      when:
+        win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
         | list | intersect([ansible_deployer_username]) | length > 0
 
 # To make sure that we are setting the password for the correct account on non-primary domain controller

@@ -1,0 +1,26 @@
+#jinja2: lstrip_blocks: True, trim_blocks: True
+
+{% set ou_list = (domain_groups + domain_user_accounts) | selectattr('ou', 'defined') | map(attribute='ou') | list | unique %}
+
+{% if ou_list != [] %}
+  {% set full_ou_list = [] %}
+  {% for dn in ou_list %}
+    {% set parts = dn.split(',') %}
+    {% for i in range(parts | length) %}
+      {% if parts[i].startswith('OU=') %}
+        {% set path = parts[i:] | join(',') %}
+        {% if path not in full_ou_list %}
+          {% set _ = full_ou_list.append(path) %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% for ou in full_ou_list %}
+- path: "{{ ou }}"
+  length: "{{ ou | length | int }}"
+  {% endfor %}
+
+{% else %}
+[]
+{% endif %}

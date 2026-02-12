@@ -52,6 +52,13 @@ windows_user_groups:
 # 'add' will add the members specified in the domain_groups list to the existing members
 accounts_domain_groups_members_strategy: replace
 
+# Whether to protect the created OUs on Windows Active Directory from accidental deletion
+accounts_protect_ou_from_accidental_deletion: false
+
+#################
+# Unix defaults #
+#################
+
 unix_distro_root_group_map:
   Alpine: root
   Debian: sudo
