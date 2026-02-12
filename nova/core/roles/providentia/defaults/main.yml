@@ -18,7 +18,7 @@ providentia_builtin_database: true # Should postgres instance be deployed with P
 providentia_builtin_reverse_proxy: true # Should a reverse proxy be deployed with Providentia
 
 # dependencies config
-providentia_builtin_keycloak_fqdn: "keycloak.{{ providentia_app_fqdn }}" # The FQDN for builtin keycloak instance
+providentia_builtin_keycloak_fqdn: keycloak.{{ providentia_app_fqdn }} # The FQDN for builtin keycloak instance
 providentia_builtin_keycloak_admin_password: secret # builtin keycloak admin user password
 providentia_builtin_database_db_password: secret # builtin keycloak db credentials (defined in providentia repo)
 providentia_builtin_reverse_proxy_tls_mode: selfsigned # one of `selfsigned` or `pregenerated`
