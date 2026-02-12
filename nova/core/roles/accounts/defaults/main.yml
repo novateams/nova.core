@@ -82,3 +82,13 @@ accounts_ssh_maxauthtries: 20
 # Since different OS families have different service names the sshd service name is set here
 accounts_os_family_service_name:
   Debian: ssh
+
+############
+# Samba AD #
+############
+
+# Mapping of group scope values since they are different between Windows and Samba
+accounts_samba_group_scope_map:
+  global: Global
+  domainlocal: Domain
+  universal: Universal

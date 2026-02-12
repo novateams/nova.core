@@ -1,0 +1,40 @@
+---
+- name: Creating objects in Samba AD...
+  ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'creating_samba_ad_objects.sh') }}"
+  register: ou_creation
+  changed_when: true
+  args:
+    executable: /bin/bash
+
+- name: Getting distinguished names for domain users...
+  ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'get_samba_user_dn.sh') }}"
+  changed_when: false
+  register: users_dns
+  args:
+    executable: /bin/bash
+
+# Since this command usually runs on the Samba DC itself,
+# then the samba_domain_admin_username or domain_admin_username should be defined in it's group or host vars
+- name: Getting Samba {{ samba_domain_admin_username | default(domain_admin_username) }} user distinguished name...
+  ansible.builtin.shell: |
+    set -o pipefail
+    samba-tool user show "{{ samba_domain_admin_username | default(domain_admin_username) }}" | grep dn: | awk '{print $2}'
+  register: samba_admin_dn
+  changed_when: false
+  args:
+    executable: /bin/bash
+
+- name: Configuring attributes for following users...
+  community.general.ldap_attrs:
+    server_uri: ldaps://{{ fqdn }}
+    bind_dn: "{{ samba_admin_dn.stdout }}"
+    bind_pw: "{{ domain_admin_password }}"
+    dn: "{{ users_dns.stdout_lines[loop_index] }}"
+    attributes:
+      mail: "{{ item.email | default(omit) }}"
+      description: "{{ item.description | default(omit) }}"
+    state: exact
+  loop: "{{ domain_user_accounts }}"
+  loop_control:
+    label: "{{ item.username }}"
+    index_var: loop_index

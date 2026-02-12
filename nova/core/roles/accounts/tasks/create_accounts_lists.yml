@@ -6,6 +6,21 @@
 # - Accounts with random generated passwords that are saved and looked up from HashiCorp Vault
 # - Accounts with random generated passwords when passwordless sudo or similar is used (Unix only)
 
+# Checking if the host is a Samba Domain controller...
+- name: Checking if samba-ad-dc service exists...
+  when: ansible_facts.system | default('') in ["FreeBSD", "Linux"]
+  block:
+    - name: Checking if samba-ad-dc service exists...
+      ansible.builtin.stat:
+        path: /usr/lib/systemd/system/samba-ad-dc.service
+      changed_when: false
+      register: samba_ad_dc_service_exists
+
+    - name: Setting samba_primary_domain_controller fact...
+      ansible.builtin.set_fact:
+        samba_primary_domain_controller: true
+      when: samba_ad_dc_service_exists.stat.exists
+
 - name: Initialize account lists to empty arrays
   ansible.builtin.set_fact:
     user_accounts_with_password: []

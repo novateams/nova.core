@@ -27,6 +27,10 @@
         mode: "0600"
       when: template_user.stat.exists
 
+- name: Including Samba AD objects creation/update tasks...
+  ansible.builtin.include_tasks: unix_create_samba.yml
+  when: samba_primary_domain_controller | default(false)
+
 - name: Creating accounts for...
   ansible.builtin.user:
     append: true
