@@ -5,6 +5,7 @@ fqdn: {} # FQDN of the server vault.example.org
 docker_network: local-network # The network where the container will be attached to. Comes from nova.core.docker role.
 vault_proxy_container_name: {} # Name of the proxy container to restart after composing Vault.
 
+vault_install: true # Whether to install Vault or not. Sometimes only (re)configuration is needed.
 vault_configure: false # Run the initial default configuration for Vault
 vault_configure_ldap: false # Configuring LDAP authentication for Vault
 vault_configuration_uri: "https://{{ fqdn }}" # Defined separately for when configuring multiple Vaults
