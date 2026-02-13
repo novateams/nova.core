@@ -20,3 +20,7 @@ join_domain_reboot_linux_immediately: false
 
 primary_domain_controller: "{{ dns_servers[0] }}"
 state: domain # Can be domain or workgroup for Windows
+
+# If set to true will try and login to the primary domain controller and clean any existing computer account before joining the domain if the trust is broken
+# Set to false when non-Windows based domain controllers are used
+join_domain_clean_broken_trust_account: true
