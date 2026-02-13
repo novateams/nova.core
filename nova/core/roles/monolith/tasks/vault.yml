@@ -12,8 +12,9 @@
     name: nova.core.vault
   vars:
     vault_configure: true
-    vault_configure_ldap: true
-    vault_configuration_uri: "https://{{ monolith_vault_fqdn }}"
+    # Configuring LDAP only if Samba4 is not being installed, otherwise it will be configured in dc.yml after generating the required secrets
+    vault_configure_ldap: "{{ not monolith_install_samba }}"
+    vault_configuration_uri: https://{{ monolith_vault_fqdn }}
     secrets_vault_engine_path: monolith
     secrets_vault_secrets_path: vault
 
@@ -43,9 +44,29 @@
         mode: "0644"
       delegate_to: localhost
       become: true
+      notify: monolith_restart_samba
+
+    # This is a Catapult specific location for trusted certificates
+    - name: Checking if /srv/personal/certificates exists...
+      ansible.builtin.stat:
+        path: /srv/personal/certificates
+      register: personal_certificates_exists
+      delegate_to: localhost
+      become: true
+
+    - name: Copying {{ vault_root_cas[0].vault_root_ca_name | default('RootCA')
+        }} certificate to /srv/personal/certificates/{{ vault_root_cas[0].vault_root_ca_name
+        | default('RootCA') }}.crt...
+      ansible.builtin.copy:
+        content: "{{ monolith_vault_root_ca.content | b64decode }}"
+        dest: /srv/personal/certificates/{{ project_fullname }} Monolith Root CA.crt
+        mode: "0644"
+      delegate_to: localhost
+      become: true
+      when: personal_certificates_exists.stat.exists
 
     - name: Updating local CA certificates...
-      ansible.builtin.command: update-ca-certificates --fresh
+      ansible.builtin.command: update-ca-certificates
       changed_when: true
       delegate_to: localhost
       become: true

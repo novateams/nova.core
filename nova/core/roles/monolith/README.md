@@ -4,12 +4,15 @@ This is a role for combining multiple roles into a single role for installing an
 This role combines the following roles:
 
 - `nova.core.caddy`
-- `nova.core.vault`
 - `nova.core.keycloak`
-- `nova.core.providentia`
 - `nova.core.nexus`
+- `nova.core.providentia`
+- `nova.core.samba` (Optional)
+- `nova.core.vault`
 
 It's meant for easy deployment of all required services for running a Cyber Exercise. The role generates and writes it's application default credentials into Vault. The login token for the Vault can be found at `/srv/vault/creds/root_token`.
+
+It's meant as a kickstart role for quickly setting up all required services on a single host. Those who wish to have more control over the individual services should install and configure them separately using their respective roles.
 
 ## Requirements
 

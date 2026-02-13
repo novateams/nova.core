@@ -1,0 +1,8 @@
+---
+# This is needed for Samba to trust new Root CA
+- name: Restarting samba-ad-dc service...
+  ansible.builtin.service:
+    name: samba-ad-dc.service
+    state: restarted
+  listen: monolith_restart_samba
+  when: monolith_install_samba

@@ -1,0 +1,17 @@
+---
+- name: Checking if /srv/vault/creds/root_token exists...
+  ansible.builtin.stat:
+    path: /srv/vault/creds/root_token
+  register: vault_creds_state
+
+- name: Getting Vault token...
+  when: vault_creds_state.stat.exists
+  block:
+    - name: Getting Vault root token...
+      ansible.builtin.command: cat /srv/vault/creds/root_token
+      changed_when: false
+      register: vault_creds
+
+    - name: Setting vault_access_token fact...
+      ansible.builtin.set_fact:
+        vault_access_token: "{{ vault_creds.stdout }}"

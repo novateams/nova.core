@@ -52,6 +52,14 @@
         state: touch
         mode: "0644"
 
+- name: Adding Vault hosts file entry for {{ fqdn }}...
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: .*{{ monolith_vault_fqdn }}$
+    line: "{{ connection_address }} {{ monolith_vault_fqdn }}"
+    state: present
+    mode: "0644"
+
 - name: Adding following hosts file entries for {{ fqdn }}...
   ansible.builtin.lineinfile:
     path: /etc/hosts
@@ -71,3 +79,4 @@
       line: "{{ connection_address }} {{ monolith_providentia_fqdn }}"
     - regexp: .*{{ monolith_nexus_fqdn }}$
       line: "{{ connection_address }} {{ monolith_nexus_fqdn }}"
+  when: not monolith_install_samba # Samba will have DNS running

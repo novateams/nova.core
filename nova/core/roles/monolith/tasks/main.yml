@@ -86,6 +86,7 @@
     loop_var: service
   loop:
     - vault
+    - dc
     - keycloak
     - providentia
     - nexus
@@ -137,9 +138,8 @@
             method: POST
             headers:
               X-Vault-Request: true
-              X-Vault-Token: "{{ root_token }}"
+              X-Vault-Token: "{{ vault_access_token }}"
             body:
-              name: "{{ fqdn }}"
               common_name: "{{ fqdn }}"
               alt_names: "{{ monolith_providentia_fqdn }},{{ monolith_nexus_fqdn }},{{ monolith_keycloak_fqdn }},{{ monolith_vault_fqdn }}"
             body_format: json
@@ -148,8 +148,8 @@
 
         - name: Saving certificates to target...
           ansible.builtin.copy:
-            content: "{{ cert_file.content }}"
-            dest: "{{ cert_file.dest }}"
+            content: "{{ cert_file_var.content }}"
+            dest: "{{ cert_file_var.dest }}"
             mode: "0600"
           loop:
             - content: "{{ cert_req.json.data.certificate }}"
@@ -159,8 +159,8 @@
             - content: "{{ cert_req.json.data.private_key }}"
               dest: /srv/certs/{{ fqdn }}_key.crt
           loop_control:
-            loop_var: cert_file
-            label: "{{ cert_file.dest }}"
+            loop_var: cert_file_var
+            label: "{{ cert_file_var.dest }}"
 
         - name: Creating a certificate & issuing CA combination file...
           ansible.builtin.shell: |

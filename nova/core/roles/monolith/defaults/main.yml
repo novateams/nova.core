@@ -27,6 +27,8 @@ monolith_providentia_fqdn: providentia.{{ domain }}
 monolith_nexus_fqdn: nexus.{{ domain }}
 monolith_keycloak_fqdn: keycloak.{{ domain }}
 monolith_vault_fqdn: vault.{{ domain }}
+
+# Deprecated, since Docker now supports paths in the mirror config
 monolith_docker_proxy_fqdn: docker-proxy.{{ domain }}
 
 # Alt (SAN) names for self-signed certificate if it's used
@@ -81,3 +83,10 @@ monolith_default_caddy_servers:
 # Custom Caddy servers to be added to the default ones
 # For an example some extra Docker proxy servers can be added here
 monolith_extra_caddy_servers: []
+
+##########
+# Samba4 #
+##########
+
+# Install and configure Samba4 domain controller on Monolith
+monolith_install_samba: false
