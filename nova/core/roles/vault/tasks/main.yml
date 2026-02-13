@@ -10,6 +10,7 @@
 
 - name: Installing Vault...
   ansible.builtin.include_tasks: install.yml
+  when: vault_install
 
 - name: Configuring Vault...
   ansible.builtin.include_tasks: configure.yml
