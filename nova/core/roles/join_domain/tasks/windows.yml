@@ -6,7 +6,9 @@
 
 - name: Including Windows tasks to fix broken trust...
   delegate_to: "{{ primary_domain_controller }}"
-  when: secure_channel.stdout_lines[0] == "False" # This means that the domain trust is broken
+  when:
+    - secure_channel.stdout_lines[0] == "False" # This means that the domain trust is broken
+    - join_domain_clean_broken_trust_account
   block:
     - name: Setting required facts for delegation...
       ansible.builtin.set_fact:
