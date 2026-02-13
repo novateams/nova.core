@@ -1,0 +1,90 @@
+---
+- name: Installing Samba4 domain controller...
+  when: monolith_install_samba
+  block:
+    - name: Generating & saving secrets to vault...
+      ansible.builtin.include_role:
+        name: nova.core.secrets_to_vault
+      vars:
+        secrets_vault_address: https://{{ monolith_vault_fqdn }}
+        secrets_vault_engine_path: monolith
+        secrets_vault_secrets_path: ad
+        secrets:
+          - key: "{{ inventory_hostname }}_svc_vault"
+            value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+          - key: "{{ inventory_hostname }}_svc_keycloak"
+            value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+          - key: "{{ inventory_hostname }}_svc_nexus"
+            value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+          - key: "{{ inventory_hostname }}_svc_gitlab"
+            value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+          - key: "{{ inventory_hostname }}_svc_outline"
+            value: "{{ lookup('password', '/dev/null length=32 chars=hexdigits') }}"
+
+    - name: Including Samba4 domain controller role...
+      ansible.builtin.include_role:
+        name: nova.core.samba
+      vars:
+        samba_dc_role: pdc
+
+    # This is needed in case the dc.yml gets included since the dc.yml will do a reboot as the last step
+    - name: Waiting until {{ monolith_vault_fqdn }} is unsealed...
+      ansible.builtin.uri:
+        url: https://{{ monolith_vault_fqdn }}/v1/sys/seal-status
+        method: GET
+        status_code: 200
+        validate_certs: true
+      register: vault_seal_status
+      until:
+        - vault_seal_status.json.sealed is defined
+        - not vault_seal_status.json.sealed
+      retries: 12
+      delay: 5
+
+    # Including to create domain accounts since Monolith is now a Domain Controller
+    - name: Including nova.core.accounts role...
+      ansible.builtin.include_role:
+        name: nova.core.accounts
+      when: samba_first_run | default(false)
+
+    - name: Creating DNS records in Samba AD...
+      ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'create_samba_dns_records.sh') }}"
+      register: dns_record_creation
+      changed_when: dns_record_creation.stdout is search("Adding DNS records -")
+      args:
+        executable: /bin/bash
+
+    # This is needed in case the dc.yml gets included since the dc.yml will do a reboot as the last step
+    - name: Waiting until {{ monolith_vault_fqdn }} is unsealed...
+      ansible.builtin.uri:
+        url: https://{{ monolith_vault_fqdn }}/v1/sys/seal-status
+        method: GET
+        status_code: 200
+        validate_certs: true
+      register: vault_seal_status
+      until:
+        - vault_seal_status.json.sealed is defined
+        - not vault_seal_status.json.sealed
+      retries: 12
+      delay: 5
+
+    # Configuring Vault LDAP here since we now have vault_lookup_fragment set
+    - name: Including Vault role for configuring LDAP...
+      ansible.builtin.include_role:
+        name: nova.core.vault
+      vars:
+        vault_install: false
+        vault_configure: false
+        vault_create_intermediate_ca: false
+        vault_create_mitm_ca: false
+        vault_create_root_ca: false
+        vault_configure_ldap: true
+        vault_configuration_uri: https://{{ monolith_vault_fqdn }}
+        secrets_vault_engine_path: monolith
+        secrets_vault_secrets_path: vault
+
+    - name: Removing Vault hosts file entry...
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: .*{{ monolith_vault_fqdn }}$
+        state: absent
