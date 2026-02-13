@@ -64,7 +64,7 @@
 
 - name: Creating {{ vault_ldap_admin_group_name }} policy...
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/policy/{{ vault_ldap_admin_group_name }}"
+    url: "{{ vault_configuration_uri }}/v1/sys/policy/{{ vault_ldap_admin_group_name | lower }}"
     method: PUT
     headers:
       X-Vault-Request: true
