@@ -11,7 +11,7 @@
 
 - name: Creating following policies
   ansible.builtin.uri:
-    url: "{{ vault_configuration_uri }}/v1/sys/policy/{{ vault_policy.name }}"
+    url: "{{ vault_configuration_uri }}/v1/sys/policy/{{ vault_policy.name | lower }}"
     method: PUT
     headers:
       X-Vault-Request: true
@@ -36,7 +36,7 @@
       X-Vault-Token: "{{ vault_root_token }}"
     body:
       name: "{{ vault_policy.vault_group_name }}"
-      policies: "{{ vault_policy.policies | map(attribute='name') | flatten }}"
+      policies: "{{ vault_policy.policies | map(attribute='name') | flatten | lower }}"
       type: external
     body_format: json
     status_code:
