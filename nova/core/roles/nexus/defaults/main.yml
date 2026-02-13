@@ -9,7 +9,7 @@ nexus_configure_ldap: false # Set to true to also configure LDAP after installat
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
 nexus_active_encryption_key_id: Primary Encryption Key # Name of the active encryption key that comes with this role
-nexus_version: 3.87.2 # Nexus version to install
+nexus_version: 3.89.1 # Nexus version to install
 
 # Default is the built-in Nexus admin user. If set to a different value than admin, the role will create the user.
 nexus_admin_username: admin
@@ -72,6 +72,30 @@ nexus_cleanup_policies: []
 
 # It can be manually created and will then be automatically used by the repositories
 nexus_default_repositories:
+  # Pypi proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/pypi/proxy
+    repo_body:
+      name: pypi-proxy
+      online: true
+      replication:
+        preemptivePullEnabled: false
+      storage:
+        blobStoreName: default
+        dataStoreName: nexus
+        strictContentTypeValidation: true
+      proxy:
+        contentMaxAge: -1
+        metadataMaxAge: 15
+        remoteUrl: https://pypi.org
+      negativeCache:
+        enabled: true
+        timeToLive: 15
+      httpClient:
+        blocked: false
+        autoBlock: true
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
   # Chocolatey proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/nuget/proxy
     repo_body:
