@@ -25,8 +25,15 @@
     label: "{{ item.username }}"
   when: item.ssh_key is defined
 
-# Required because of RouterOS SSH MaxAuthTries default is too small
-- name: Allowing password login...
+# Needed since of RouterOS SSH MaxAuthTries default is too small and login will fail if there are multiple ssh keys in the ssh agent
+- name: Allowing password login for RouterOS 6...
   community.routeros.command:
     commands:
       - /ip ssh set always-allow-password-login=yes
+  when: ansible_facts.net_version.startswith('6')
+
+- name: Allowing password login for RouterOS 7...
+  community.routeros.command:
+    commands:
+      - /ip ssh set password-authentication=yes
+  when: ansible_facts.net_version.startswith('7')
