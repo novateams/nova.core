@@ -1,5 +1,5 @@
 ---
-outline_version: 1.4.0
+outline_version: 1.5.0
 outline_postgres_version: 17 # POSTGRES_VERSION_TAG
 
 # Pre-generated secret key for Outline
