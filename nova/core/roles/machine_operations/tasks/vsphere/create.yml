@@ -207,6 +207,7 @@
     - name: Getting {{ custom_vm_name | default(vm_name) }} interfaces...
       community.vmware.vmware_guest_info:
         datacenter: "{{ datacenter }}"
+        folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
       register: existing_vm_info
 
@@ -218,6 +219,7 @@
     - name: Removing existing network interfaces from {{ custom_vm_name | default(vm_name) }}...
       community.vmware.vmware_guest_network:
         datacenter: "{{ datacenter }}"
+        folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
         mac_address: "{{ item.value.macaddress }}"
@@ -231,6 +233,7 @@
     - name: Attaching following network interfaces to {{ custom_vm_name | default(vm_name) }}...
       community.vmware.vmware_guest_network:
         datacenter: "{{ datacenter }}"
+        folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: present
         force: true
@@ -245,6 +248,8 @@
     - name: Adding attributes to {{ custom_vm_name | default(vm_name) }}...
       community.vmware.vmware_guest_custom_attributes:
         name: "{{ custom_vm_name | default(vm_name) }}"
+        datacenter: "{{ datacenter }}"
+        folder: "{{ folder }}"
         state: present
         attributes: "{{ machine_operations_vsphere_custom_attributes }}"
       when: machine_operations_vsphere_custom_attributes != []
