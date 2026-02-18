@@ -8,27 +8,43 @@
   delegate_to: localhost
   become: false
   block:
-    - name: Keeping only one cdrom for {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        cdroms:
-          - device_node: IDE(0:0)
+    - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
+      vmware.vmware.guest_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+      delegate_to: localhost
+      become: false
 
-  rescue:
-    - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
-      ansible.builtin.include_role:
-        name: nova.core.powerstate
-      vars:
-        shutdown: true
+    - name: Listing all {{ custom_vm_name | default(vm_name) }} cdroms...
+      vmware.vmware_rest.vcenter_vm_hardware_cdrom_info:
+        vm: "{{ vcenter_vm_info.guests[0].moid }}"
+      register: existing_cdroms
+      until: not existing_cdroms.failed
+      retries: 5
+      delay: 2
 
-    - name: Keeping only one cdrom for {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        cdroms:
-          - device_node: IDE(0:0)
+    - name: Removing extra cdroms if they exist...
+      when: existing_cdroms.value | length > 1
+      block:
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            shutdown: true
 
-    - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
-      ansible.builtin.include_role:
-        name: nova.core.powerstate
-      vars:
-        poweron: true
+        - name: Removing following cdroms...
+          vmware.vmware_rest.vcenter_vm_hardware_cdrom:
+            vm: "{{ vcenter_vm_info.guests[0].moid }}"
+            cdrom: "{{ item.cdrom }}"
+            state: absent
+          loop: "{{ existing_cdroms.value[1:] }}"
+          register: removed_cdroms
+          until: not removed_cdroms.failed
+          retries: 5
+          delay: 2
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
