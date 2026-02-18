@@ -19,7 +19,7 @@ do
         echo "DNS record for $fqdn already exists."
     else
         echo "Creating DNS record for $fqdn..."
-        if [ "$CONNECTION_IPV4_FAMILY" == "true" ]; then
+        if [ "$CONNECTION_IPV4_FAMILY" == "True" ]; then
             RECORD_TYPE="A"
         else
             RECORD_TYPE="AAAA"

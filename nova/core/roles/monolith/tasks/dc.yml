@@ -39,7 +39,7 @@
         - vault_seal_status.json.sealed is defined
         - not vault_seal_status.json.sealed
       retries: 12
-      delay: 5
+      delay: 10
 
     # Including to create domain accounts since Monolith is now a Domain Controller
     - name: Including nova.core.accounts role...
