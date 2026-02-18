@@ -35,7 +35,7 @@ vault_root_cas:
     vault_root_ca_name: "{{ environment_name }} {{ project_fullname }} RootCA"
     vault_root_ca_ou: "{{ project_fullname }}"
     vault_root_ca_org: "{{ environment_name }}"
-    vault_root_ca_country: US
+    vault_root_ca_country: "{{ vault_ca_country | default('US') }}"
     vault_root_ca_key_type: ECC # https://docs.ansible.com/ansible/latest/collections/community/crypto/openssl_privatekey_pipe_module.html#parameter-type
     vault_root_ca_key_curve: secp384r1 # https://docs.ansible.com/ansible/latest/collections/community/crypto/openssl_privatekey_module.html#parameter-curve
     vault_root_ca_key_bits: 384
@@ -82,7 +82,7 @@ vault_intermediate_cas:
     vault_intermediate_ca_name: "{{ environment_name }} {{ project_fullname }} IntermediateCA"
     vault_intermediate_ca_ou: "{{ project_fullname }}"
     vault_intermediate_ca_org: "{{ environment_name }}"
-    vault_intermediate_ca_country: US
+    vault_intermediate_ca_country: "{{ vault_ca_country | default('US') }}"
     vault_intermediate_ca_key_type: ec
     vault_intermediate_ca_key_bits: 384
     vault_intermediate_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/IntermediateCA/crl/pem
@@ -99,7 +99,7 @@ vault_intermediate_ca_roles_defaults:
     vault_cert_key_type: rsa
     vault_cert_ou: "{{ project_fullname }}"
     vault_cert_organization: "{{ environment_name }}"
-    vault_cert_country: US
+    vault_cert_country: "{{ vault_ca_country | default('US') }}"
     vault_cert_code_signing: false
 
   # EC Client/Server certificate
@@ -108,7 +108,7 @@ vault_intermediate_ca_roles_defaults:
     vault_cert_key_type: ec
     vault_cert_ou: "{{ project_fullname }}"
     vault_cert_organization: "{{ environment_name }}"
-    vault_cert_country: US
+    vault_cert_country: "{{ vault_ca_country | default('US') }}"
     vault_cert_code_signing: false
 
   - vault_cert_path: code_signing
@@ -116,7 +116,7 @@ vault_intermediate_ca_roles_defaults:
     vault_cert_key_type: ec
     vault_cert_ou: "{{ project_fullname }}"
     vault_cert_organization: "{{ environment_name }}"
-    vault_cert_country: US
+    vault_cert_country: "{{ vault_ca_country | default('US') }}"
     vault_cert_code_signing: true
 
 vault_create_mitm_ca: false # Create a Man-in-the-Middle (TLS termination) CA(s)
@@ -126,7 +126,7 @@ vault_mitm_cas:
     vault_mitm_ca_name: "{{ environment_name }} {{ project_fullname }} MiTMCA"
     vault_mitm_ca_ou: "{{ project_fullname }}"
     vault_mitm_ca_org: "{{ environment_name }}"
-    vault_mitm_ca_country: US
+    vault_mitm_ca_country: "{{ vault_ca_country | default('US') }}"
     vault_mitm_ca_key_type: ec
     vault_mitm_ca_key_bits: 384
     vault_mitm_ca_crl_distribution_points: http://{{ vault_crl_fqdn }}/v1/MiTMCA/crl/pem
