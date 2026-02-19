@@ -32,13 +32,21 @@ jobs:
           PR_VERSION=$(curl -s $PR_VERSION_URL | grep "version:" | cut -d " " -f 2)
 
           CURRENT_VERSION_URL="https://raw.githubusercontent.com/${{ github.event.pull_request.base.repo.full_name }}/\
-          ${{ github.event.pull_request.base.ref }}/version.yml"
+          ${{ github.event.pull_request.base.ref }}/nova/core/galaxy.yml"
           CURRENT_VERSION=$(curl -s $CURRENT_VERSION_URL | grep "version:" | cut -d " " -f 2)
 
           # Error if PR_VERSION is not found
           if [ -z "$PR_VERSION" ]; then
             echo -n -e "${C_RED}"
             echo -e "Pull request version not found in $PR_VERSION_URL"
+            echo -n -e "${C_RST}"
+            exit 1
+          fi
+
+          # Error if CURRENT_VERSION is not found
+          if [ -z "$CURRENT_VERSION" ]; then
+            echo -n -e "${C_RED}"
+            echo -e "Current version not found in $CURRENT_VERSION_URL"
             echo -n -e "${C_RST}"
             exit 1
           fi
