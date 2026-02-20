@@ -1,7 +1,8 @@
 ---
 - name: Gathering RouterOS facts...
   community.routeros.facts:
-  retries: 3
+  vars:
+    ansible_command_timeout: 60
   when: ansible_network_os | default('') == 'community.routeros.routeros'
 
 - name: Gathering VyOS facts...
