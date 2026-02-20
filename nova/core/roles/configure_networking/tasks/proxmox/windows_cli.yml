@@ -64,11 +64,13 @@
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
 
+    # Currently waiting only for static IP configurations, since don't have a universal method for detecting dynamic IP address
     - name: Waiting for the network to be configured...
       ansible.builtin.wait_for:
         host: "{{ connection_address }}"
         port: 22
         timeout: "{{ configure_networking_proxmox_timeout }}"
+      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
 
   rescue:
     - name: WINDOWS NETWORK ERROR
