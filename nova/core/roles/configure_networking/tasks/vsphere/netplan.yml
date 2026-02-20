@@ -46,8 +46,7 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                # netplan apply here is needed to avoid systemd-networkd-wait-online.service timing out
-                arguments: -c "rm -rf /etc/netplan/* && netplan apply"
+                arguments: -c "rm -rf /etc/netplan/*"
                 path: /bin/bash
             status_code: 201
             body_format: json
