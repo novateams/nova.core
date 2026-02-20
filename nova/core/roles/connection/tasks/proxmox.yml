@@ -23,6 +23,7 @@
             name: "{{ custom_vm_name | default(vm_name) }}"
             config: current
             network: true
+            validate_certs: "{{ proxmox_validate_certs }}"
           delegate_to: localhost
           become: false
           register: proxmox_vm_info
@@ -59,6 +60,7 @@
             name: "{{ custom_vm_name | default(vm_name) }}"
             config: current
             network: true
+            validate_certs: "{{ proxmox_validate_certs }}"
           delegate_to: localhost
           become: false
           register: proxmox_vm_info

@@ -9,6 +9,7 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
+        validate_certs: "{{ proxmox_validate_certs }}"
       register: proxmox_vm_info
       until: not proxmox_vm_info.failed
       retries: 60

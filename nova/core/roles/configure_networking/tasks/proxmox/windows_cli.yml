@@ -11,6 +11,7 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
+        validate_certs: "{{ proxmox_validate_certs }}"
       retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
 
@@ -91,6 +92,7 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
+        validate_certs: "{{ proxmox_validate_certs }}"
       retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
 

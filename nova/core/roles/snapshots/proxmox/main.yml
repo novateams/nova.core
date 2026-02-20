@@ -6,6 +6,7 @@
     - name: Getting {{ custom_vm_name | default(vm_name) }} info...
       community.proxmox.proxmox_vm_info:
         name: "{{ custom_vm_name | default(vm_name) }}"
+        validate_certs: "{{ proxmox_validate_certs }}"
       register: proxmox_vm_info
 
     - name: ERROR
