@@ -4,6 +4,7 @@
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: restarted
     timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+    validate_certs: "{{ proxmox_validate_certs }}"
   retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
   delay: 5
   delegate_to: localhost

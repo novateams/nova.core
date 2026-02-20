@@ -33,6 +33,7 @@
         state: absent
         force: true
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+        validate_certs: "{{ proxmox_validate_certs }}"
 
     - name: Getting the time...
       ansible.builtin.setup:

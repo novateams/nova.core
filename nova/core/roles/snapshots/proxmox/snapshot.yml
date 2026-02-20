@@ -17,6 +17,7 @@
         hostname: "{{ custom_vm_name | default(vm_name) }}"
         snapname: "{{ (snapshot_info.json.data | map(attribute='name'))[0] }}"
         state: absent
+        validate_certs: "{{ proxmox_validate_certs }}"
       when:
         - snapshot_mode == 're-snap'
         - (snapshot_info.json.data | map(attribute='name'))[0] != 'current'
@@ -35,6 +36,7 @@
         retention: "{{ 1 if snapshot_mode == 'clean-snap' else omit }}"
         vmstate: "{{ true if live_snap else false }}" # Memory dump
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+        validate_certs: "{{ proxmox_validate_certs }}"
 
 - name: Including powerstate role...
   ansible.builtin.include_role:

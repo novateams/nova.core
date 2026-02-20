@@ -4,6 +4,7 @@
     hostname: "{{ custom_vm_name | default(vm_name) }}"
     state: rollback
     snapname: "{{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }}"
+    validate_certs: "{{ proxmox_validate_certs }}"
   delegate_to: localhost
   become: false
   when: (snapshot_info.json.data | map(attribute='name'))[0] != 'current'
