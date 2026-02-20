@@ -109,38 +109,19 @@
   become: false
 
 # This is required because sometimes the new configuration will apply on upload and Ansible will try to connect to the host again with invalid credentials
-- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+- name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
   ansible.builtin.include_role:
     name: nova.core.powerstate
   vars:
-    restart: true
+    shutdown: true
 
 - name: Setting correct password for {{ ansible_deployer_username }}...
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ admin_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
 
-- name: Waiting until ssh is down for {{ inventory_hostname }}...
-  ansible.builtin.wait_for:
-    host: "{{ ansible_host }}"
-    port: 22
-    state: stopped
-    timeout: 300
-  delegate_to: localhost
-  become: false
-
-- name: Waiting until ssh is up for {{ inventory_hostname }}...
-  ansible.builtin.wait_for:
-    host: "{{ ansible_host }}"
-    port: 22
-    state: started
-    timeout: 300
-  delegate_to: localhost
-  become: false
-
-- name: Waiting for VMware tools to become available...
-  community.vmware.vmware_guest_tools_wait:
-    name: "{{ custom_vm_name | default(vm_name) }}"
-  delegate_to: localhost
-  become: false
-  when: infra_env | default('') == "vsphere"
+- name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true

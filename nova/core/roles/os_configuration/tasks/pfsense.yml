@@ -54,34 +54,11 @@
     mode: "0644"
     owner: root
     group: wheel
+  notify: pf_sense_reboot
 
 - name: Removing local config.xml file...
   ansible.builtin.file:
     path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
     state: absent
-  delegate_to: localhost
-  become: false
-
-- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
-  ansible.builtin.include_role:
-    name: nova.core.powerstate
-  vars:
-    restart: true
-
-- name: Waiting until ssh is down for {{ inventory_hostname }}...
-  ansible.builtin.wait_for:
-    host: "{{ ansible_host }}"
-    port: 22
-    state: stopped
-    timeout: 300
-  delegate_to: localhost
-  become: false
-
-- name: Waiting until ssh is up for {{ inventory_hostname }}...
-  ansible.builtin.wait_for:
-    host: "{{ ansible_host }}"
-    port: 22
-    state: started
-    timeout: 300
   delegate_to: localhost
   become: false

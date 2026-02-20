@@ -159,8 +159,15 @@
       ansible.builtin.include_tasks: command_run_check.yml
 
 # This is required for network config to take effect
-- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+# Using shutdown and poweron since poweron will wait for guest tools to be running
+- name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
   ansible.builtin.include_role:
     name: nova.core.powerstate
   vars:
-    restart: true
+    shutdown: true
+
+- name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true
