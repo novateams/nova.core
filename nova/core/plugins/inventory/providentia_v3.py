@@ -230,30 +230,38 @@ class InventoryModule(BaseInventoryPlugin):
     def fetch_creds(self):
         """
         Retrieve deployer credentials from Ansible Vault in the following order of precedence:
-        1. Environment and project specific deployer credentials eg. dev_projectA_deployer_username
+        1. Environment specific deployer credentials eg. dev_deployer_username
         2. Project specific deployer credentials eg. projectA_deployer_username
-        3. Default deployer credentials eg. deployer_username
+        3. Environment and project specific deployer credentials eg. dev_projectA_deployer_username
+        4. Default deployer credentials eg. deployer_username
         """
         if self.environment is not None:
             env_project_deployer_username = self._options.get(f"{self.environment}_{self.project}_deployer_username")
             env_project_deployer_password = self._options.get(f"{self.environment}_{self.project}_deployer_password")
+
+            env_deployer_password = self._options.get(f"{self.environment}_deployer_password")
+            env_deployer_username = self._options.get(f"{self.environment}_deployer_username")
+
         else:
             env_project_deployer_username = None
             env_project_deployer_password = None
+
+            env_deployer_password = None
+            env_deployer_username = None
 
         # Feature to allow project specific deployer credentials from Ansible vault
         project_deployer_username = self._options.get(f"{self.project}_deployer_username")
         project_deployer_password = self._options.get(f"{self.project}_deployer_password")
 
-        if env_project_deployer_username is not None and env_project_deployer_password is not None:
+        if env_deployer_username is not None and env_deployer_password is not None:
 
-            # Adding env and project specific deployer credentials as variables
-            self.inventory.set_variable("all", "project_deployer_username", env_project_deployer_username)
-            self.inventory.set_variable("all", "project_deployer_password", env_project_deployer_password)
+            # Adding env specific deployer credentials as variables
+            self.inventory.set_variable("all", "env_deployer_username", env_deployer_username)
+            self.inventory.set_variable("all", "env_deployer_password", env_deployer_password)
 
             return {
-                'username': env_project_deployer_username,
-                'password': env_project_deployer_password
+                'username': env_deployer_username,
+                'password': env_deployer_password
             }
 
         elif project_deployer_username is not None and project_deployer_password is not None:
@@ -265,6 +273,17 @@ class InventoryModule(BaseInventoryPlugin):
             return {
                 'username': project_deployer_username,
                 'password': project_deployer_password
+            }
+
+        elif env_project_deployer_username is not None and env_project_deployer_password is not None:
+
+            # Adding env and project specific deployer credentials as variables
+            self.inventory.set_variable("all", "project_deployer_username", env_project_deployer_username)
+            self.inventory.set_variable("all", "project_deployer_password", env_project_deployer_password)
+
+            return {
+                'username': env_project_deployer_username,
+                'password': env_project_deployer_password
             }
 
         else:
