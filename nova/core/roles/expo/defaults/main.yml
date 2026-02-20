@@ -40,6 +40,7 @@ expo_keycloak_client_scope: resources
 expo_keycloak_resource_prefix: Re_EXPO_
 expo_keycloak_role_prefix: Ro_EXPO_
 expo_keycloak_client_id: expo
+expo_keycloak_client_api_id: expo-api
 expo_keycloak_local_admin_username: admin
 expo_keycloak_local_admin_password: admin-pass
 expo_keycloak_log_level: INFO
@@ -91,6 +92,14 @@ expo_kafka_password: ""
 expo_kafka_ksql_enabled: false
 expo_kafka_ksql_username: ksql
 expo_kafka_ksql_password: ""
+
+### TRINO ###
+expo_trino_enabled: false
+expo_trino_url: ""
+expo_trino_catalog: rw
+expo_trino_schema: public
+expo_trino_username: trino
+expo_trino_password: ""
 
 ### SENTRY ###
 expo_sentry_frontend_enabled: false
