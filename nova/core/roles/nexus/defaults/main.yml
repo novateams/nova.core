@@ -72,6 +72,23 @@ nexus_cleanup_policies: []
 
 # It can be manually created and will then be automatically used by the repositories
 nexus_default_repositories:
+  # Installers hosted
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/raw/hosted
+    repo_body:
+      name: installers
+      online: true
+      storage:
+        blobStoreName: default
+        dataStoreName: nexus
+        strictContentTypeValidation: false
+        writePolicy: ALLOW
+      component:
+        proprietaryComponents: false
+      raw:
+        contentDisposition: ATTACHMENT
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
   # Pypi proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/pypi/proxy
     repo_body:
