@@ -43,8 +43,8 @@ providentia_sentry_dsn: # Sentry exception tracking endpoint
 providentia_sentry_env: production # Sentry production value
 
 # app config
-# The secret key base for the Rails app. Will be auto-generated if left blank
-providentia_secret_key_base: "{{ lookup('password', '/dev/null length=96 chars=hexdigits') }}"
+# The secret key base for the Rails app. Will be auto-generated based on the database URL if not set, to ensure it is consistent across deployments
+providentia_secret_key_base: "{{ lookup('password', '/dev/null length=96 chars=hexdigits seed=' ~ providentia_db_url) }}"
 providentia_enabled_features: []
 
 # app config (SSO)
