@@ -1,14 +1,14 @@
 ---
 - name: Encoding Administrator's password...
-  ansible.windows.win_shell: "{{ lookup('template', 'Encode-UnattendPassword.ps1') }}"
+  ansible.windows.win_shell: "{{ lookup('ansible.builtin.template', 'Encode-UnattendPassword.ps1') }}"
   register: win_shell
 
-- name: Templating Unattend.xml to machine...
+- name: Templating C:/Windows/System32/Sysprep/Unattend.xml...
   ansible.windows.win_template:
     src: Unattend.xml
     dest: C:/Windows/System32/Sysprep/Unattend.xml
 
-- name: Running sysprep...
-  ansible.windows.win_shell: "{{ lookup('template', 'Windows-Sysprep.ps1') }}"
+- name: Running Sysprep...
+  ansible.windows.win_shell: "{{ lookup('ansible.builtin.template', 'Windows-Sysprep.ps1') }}"
   async: 60
   poll: 0
