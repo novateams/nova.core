@@ -46,24 +46,6 @@
         validate_certs: "{{ proxmox_validate_certs }}"
       register: network_config_command
 
-    - name: Fixing permissions on netplan configuration file...
-      ansible.builtin.uri:
-        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
-        headers:
-          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
-        method: POST
-        body:
-          command:
-            - chmod
-            - 600
-            - /etc/netplan/01-netcfg.yaml
-        body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
-      register: network_config_command
-
-    - name: Including command run check task...
-      ansible.builtin.include_tasks: command_run_check.yml
-
     - name: Applying netplan...
       ansible.builtin.uri:
         url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
@@ -72,8 +54,11 @@
         method: POST
         body:
           command:
-            - netplan
-            - apply
+            - sh
+            - -c
+            # 3x netplan apply is required for Ubuntu Desktop versions otherwise the network configuration doesn't get applied correctly for some reason
+            # Doing that is still cheaper than a single reboot
+            - "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply && netplan apply"
         body_format: json
         validate_certs: "{{ proxmox_validate_certs }}"
       register: network_config_command
