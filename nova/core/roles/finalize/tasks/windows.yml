@@ -1,9 +1,14 @@
 ---
-# Sometimes unattend.xml is not removed automatically
-- name: Removing Unattend.xml...
+- name: Removing following sysprep files...
   ansible.windows.win_file:
-    path: C:/Windows/System32/Sysprep/unattend.xml
+    path: "{{ sysprep_file }}"
     state: absent
+  loop:
+    - C:/Windows/Panther/unattend-original.xml
+    - C:/Windows/Panther/unattend.xml
+    - C:/Windows/System32/Sysprep/unattend.xml # Created by nova.core.win_sysprep role
+  loop_control:
+    loop_var: sysprep_file
 
 - name: Removing {{ post_scripts_folder_on_target }}...
   ansible.windows.win_file:
