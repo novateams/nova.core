@@ -8,6 +8,13 @@ template_os_configuration_update_system: true # Update OS during this role
 template_os_configuration_increase_maxauthtries: true
 template_os_configuration_increase_maxauthtries_value: 20
 
-# Will remove existing and creating a fresh snapshot after all configuration is done on the template VM
+# Will create a fresh snapshot after all configuration is done on the template VM
 # Set to false to skip snapshot creation
 template_os_configuration_create_snapshot: true
+
+# By default will remove all previous snapshots and create a new one
+# Set value to "snap" to avoid removing previous snapshots
+template_os_configuration_create_snapshot_mode: clean-snap
+
+# Name of the snapshot to create after configuration is done. Only used if template_os_configuration_create_snapshot is true
+template_os_configuration_create_snapshot_name: LinkedCloneSource
