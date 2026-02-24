@@ -11,6 +11,7 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
+        validate_certs: "{{ proxmox_validate_certs }}"
       retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
 
@@ -63,11 +64,13 @@
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
 
+    # Currently waiting only for static IP configurations, since don't have a universal method for detecting dynamic IP address
     - name: Waiting for the network to be configured...
       ansible.builtin.wait_for:
         host: "{{ connection_address }}"
         port: 22
         timeout: "{{ configure_networking_proxmox_timeout }}"
+      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
 
   rescue:
     - name: WINDOWS NETWORK ERROR
@@ -91,6 +94,7 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
+        validate_certs: "{{ proxmox_validate_certs }}"
       retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
 

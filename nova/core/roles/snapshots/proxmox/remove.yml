@@ -9,6 +9,7 @@
         hostname: "{{ custom_vm_name | default(vm_name) }}"
         snapname: "{{ snapshot_name | default((snapshot_info.json.data | map(attribute='name'))[0]) }}"
         state: absent
+        validate_certs: "{{ proxmox_validate_certs }}"
       when:
         - not remove_all_snapshots | bool
         - (snapshot_info.json.data | map(attribute='name'))[0] != 'current'
@@ -18,6 +19,7 @@
         hostname: "{{ custom_vm_name | default(vm_name) }}"
         snapname: "{{ snapshot_name }}"
         state: absent
+        validate_certs: "{{ proxmox_validate_certs }}"
       loop_control:
         loop_var: snapshot_name
       loop: "{{ (snapshot_info.json.data | map(attribute='name'))[:-1] }}"
