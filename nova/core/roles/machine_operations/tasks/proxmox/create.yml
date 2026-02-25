@@ -82,8 +82,6 @@
                 validate_certs: "{{ proxmox_validate_certs }}"
 
             - name: Creating /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done file...
-              delegate_to: localhost
-              become: false
               ansible.builtin.file:
                 path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
                 state: touch
@@ -94,8 +92,6 @@
             # When cloning fails first making sure the limiter file is created
             # so the next host in the batch can proceed with cloning
             - name: Creating /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done file...
-              delegate_to: localhost
-              become: false
               ansible.builtin.file:
                 path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
                 state: touch
@@ -119,8 +115,6 @@
               ansible.builtin.include_tasks: disk_cleanup.yml
 
             - name: Removing {{ custom_vm_name | default(vm_name) }} VM cloning limiter file...
-              delegate_to: localhost
-              become: false
               ansible.builtin.file:
                 path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
                 state: absent
@@ -134,8 +128,6 @@
     # Writing the file here in case the non-existing machines are in the same batch as existing ones
     # Otherwise the non-existing will just timeout waiting for the previous host to finish cloning
     - name: Creating /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done file...
-      delegate_to: localhost
-      become: false
       ansible.builtin.file:
         path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
         state: touch
@@ -202,8 +194,6 @@
       delay: 5
 
     - name: Removing cloning limiter file...
-      delegate_to: localhost
-      become: false
       ansible.builtin.file:
         path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
         state: absent

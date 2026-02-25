@@ -26,14 +26,30 @@
       retries: 6
       delay: 5
 
-    - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
-      community.proxmox.proxmox_kvm:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
-        state: absent
-        force: true
-        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-        validate_certs: "{{ proxmox_validate_certs }}"
+    - name: Trying to remove VM...
+      block:
+        - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
+          community.proxmox.proxmox_kvm:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+            state: absent
+            force: true
+            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+            validate_certs: "{{ proxmox_validate_certs }}"
+
+      rescue:
+        # Creating clone limiter file in case there is batch waiting from the filed VM clone operation to finish
+        - name: Creating /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done file...
+          ansible.builtin.file:
+            path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
+            state: touch
+            mode: "0644"
+
+        - name: REMOVING VM FAILED
+          ansible.builtin.fail:
+            msg: |
+              Failed to remove {{ custom_vm_name | default(vm_name) }} VM.
+              Check the errors above for more details.
 
     - name: Getting the time...
       ansible.builtin.setup:
