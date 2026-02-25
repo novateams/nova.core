@@ -22,38 +22,43 @@
       paloaltonetworks.panos.panos_import:
         provider: "{{ panos_connection_params }}"
         category: certificate
-        certificate_name: "{{ item.name }}"
+        certificate_name: "{{ crt.name }}"
         format: pem
-        filename: "{{ item.src }}"
+        filename: "{{ crt.src }}"
       loop: "{{ trusted_certificates_list }}"
       loop_control:
-        label: "{{ item.name }}"
-      when: not item.src.startswith('http')
+        loop_var: crt
+        label: "{{ crt.name }}"
+      when: not crt.src.startswith('http')
 
     - name: Downloading trusted certificates(s) to localhost...
       ansible.builtin.get_url:
-        url: "{{ item.src }}"
-        dest: "/tmp/{{ item.name }}.crt"
+        url: "{{ crt.src }}"
+        dest: "/tmp/{{ crt.name }}.crt"
         mode: "0644"
         timeout: 60
         validate_certs: "{{ trusted_certificates_validate_certs }}"
       delegate_to: localhost
       become: false
       loop: "{{ trusted_certificates_list }}"
-      when: item.src.startswith('http')
+      loop_control:
+        loop_var: crt
+        label: "{{ crt.name }}"
+      when: crt.src.startswith('http')
       register: download_trusted_certificates
 
     - name: Importing following trusted certificates to PanOS...
       paloaltonetworks.panos.panos_import:
         provider: "{{ panos_connection_params }}"
         category: certificate
-        certificate_name: "{{ item.item.name }}"
+        certificate_name: "{{ crt.item.name }}"
         format: pem
-        filename: "{{ item.invocation.module_args.dest }}"
+        filename: "{{ crt.invocation.module_args.dest }}"
       loop: "{{ download_trusted_certificates.results }}"
       loop_control:
-        label: "{{ item.invocation.module_args.dest | default('') }}"
-      when: item.invocation is defined
+        loop_var: crt
+        label: "{{ crt.invocation.module_args.dest | default('') }}"
+      when: crt.invocation is defined
 
     - name: Restoring panos_connection_params...
       ansible.builtin.set_fact:

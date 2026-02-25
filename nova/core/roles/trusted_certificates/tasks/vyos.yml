@@ -5,27 +5,29 @@
 
 - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.copy:
-    src: "{{ item.src }}"
-    dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
+    src: "{{ crt.src }}"
+    dest: /usr/local/share/ca-certificates/{{ crt.name }}.crt
     mode: "0644"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
-    label: /usr/local/share/ca-certificates/{{ item.name }}.crt
+    loop_var: crt
+    label: /usr/local/share/ca-certificates/{{ crt.name }}.crt
   become: true
-  when: not item.src.startswith('http')
+  when: not crt.src.startswith('http')
 
 - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.get_url:
-    url: "{{ item.src }}"
-    dest: /usr/local/share/ca-certificates/{{ item.name }}.crt
+    url: "{{ crt.src }}"
+    dest: /usr/local/share/ca-certificates/{{ crt.name }}.crt
     mode: "0644"
     timeout: 60
     validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
-    label: /usr/local/share/ca-certificates/{{ item.name }}.crt
+    loop_var: crt
+    label: /usr/local/share/ca-certificates/{{ crt.name }}.crt
   become: true
-  when: item.src.startswith('http')
+  when: crt.src.startswith('http')
 
 - name: Updating CA certificates...
   ansible.builtin.command: update-ca-certificates
