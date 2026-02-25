@@ -8,25 +8,27 @@
 
 - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.copy:
-    src: "{{ item.src }}"
-    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
+    src: "{{ crt.src }}"
+    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
     mode: "0644"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
-    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
-  when: not item.src.startswith('http')
+    loop_var: crt
+    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
+  when: not crt.src.startswith('http')
 
 - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.get_url:
-    url: "{{ item.src }}"
-    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
+    url: "{{ crt.src }}"
+    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
     mode: "0644"
     timeout: 60
     validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
-    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ item.name }}.crt"
-  when: item.src.startswith('http')
+    loop_var: crt
+    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
+  when: crt.src.startswith('http')
 
 - name: Updating CA certificates...
   ansible.builtin.command: update-ca-certificates
