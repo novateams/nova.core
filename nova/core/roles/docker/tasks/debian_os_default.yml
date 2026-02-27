@@ -26,7 +26,8 @@
     # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
     - name: Adding Docker repository...
       ansible.builtin.copy:
-        content: deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_facts.distribution_release }} stable
+        content: |
+          deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_facts.distribution_release }} stable
         dest: /etc/apt/sources.list.d/docker.list
         mode: "0644"
 
