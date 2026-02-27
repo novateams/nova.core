@@ -21,6 +21,8 @@
   ansible.windows.win_service:
     name: UsoSvc
     state: stopped
+  retries: 5
+  delay: 3
   when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
 
 - name: Cleaning up Windows machine logs...
