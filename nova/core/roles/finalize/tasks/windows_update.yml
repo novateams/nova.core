@@ -65,6 +65,8 @@
       ansible.windows.win_service:
         name: UsoSvc
         state: stopped
+      retries: 5
+      delay: 3
       when: ansible_facts['distribution_version'] is version('6.3.9600.0', '>')
 
     # Removing Windows Update cache using rd because Powershell (win_file module) can't do it in some cases although it's possible manually
