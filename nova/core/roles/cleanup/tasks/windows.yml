@@ -32,6 +32,14 @@
   retries: 10
   delay: 12
 
+# This flag is created during os_configuration role.
+# Removing it here in case the VM is a template to make sure that the host ssh keys are regenerated after the template is cloned into a new VM.
+- name: Removing C:\ProgramData\ssh\.regenerated...
+  ansible.windows.win_file:
+    path: C:\ProgramData\ssh\.regenerated
+    state: absent
+  when: template | default(false)
+
 - name: Setting reboot_on_finalize to true... # This will reboot the VM during nova.core.finalize role
   ansible.builtin.set_fact:
     reboot_on_finalize: true
