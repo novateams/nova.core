@@ -1,4 +1,12 @@
 ---
+- name: Adding hostname in hosts file...
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: ^127.0.1.1
+    line: 127.0.1.1       {{ fqdn }} {{ hostname }}
+    insertafter: ^127.0.0.1.*
+    state: present
+
 - name: Setting hostname...
   ansible.builtin.hostname:
     name: "{{ hostname }}"
@@ -9,14 +17,6 @@
   when:
     - os_configuration_linux_reboot_after_hostname_change # In some cases it might be required to reboot after hostname change
     - linux_hostname_changed.changed
-
-- name: Adding hostname in hosts file...
-  ansible.builtin.lineinfile:
-    path: /etc/hosts
-    regexp: ^127.0.1.1
-    line: 127.0.1.1       {{ fqdn }} {{ hostname }}
-    insertafter: ^127.0.0.1.*
-    state: present
 
 - name: Making sure locale exists...
   community.general.locale_gen:
