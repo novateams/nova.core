@@ -3,7 +3,7 @@
   microsoft.ad.group:
     name: "{{ item.name }}"
     scope: "{{ item.scope | default(domainlocal) }}"
-    path: "{{ item.ou }}"
+    path: "{{ item.ou | default(omit) }}"
     description: "{{ item.description | default(omit) }}"
   loop: "{{ domain_groups }}"
   loop_control:
@@ -14,7 +14,7 @@
   microsoft.ad.group:
     name: "{{ item.name }}"
     scope: "{{ item.scope | default(domainlocal) }}"
-    path: "{{ item.ou }}"
+    path: "{{ item.ou | default(omit) }}"
     description: "{{ item.description | default(omit) }}"
     members:
       set: "{{ item.members }}"
@@ -29,7 +29,7 @@
   microsoft.ad.group:
     name: "{{ item.name }}"
     scope: "{{ item.scope | default(domainlocal) }}"
-    path: "{{ item.ou }}"
+    path: "{{ item.ou | default(omit) }}"
     description: "{{ item.description | default(omit) }}"
     members:
       add: "{{ item.members }}"
