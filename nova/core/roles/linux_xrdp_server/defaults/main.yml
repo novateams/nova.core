@@ -1,6 +1,7 @@
 ---
 # Can be used to lock to a specific version when the latest is not desired or is temporarily broken
 linux_xrdp_server_xorgxrdp_version: {}
+linux_xrdp_server_xrdp_version: {}
 
 # Kali & Ubuntu 24 and later
 
