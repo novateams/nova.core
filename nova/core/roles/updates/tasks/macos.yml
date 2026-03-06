@@ -22,6 +22,21 @@
           Check that the host is up and running and try again.
       when: updates_rescue_loop_count | int > 3
 
+    # In some cases, MacOS update process can cause the machine to become temporarily unreachable.
+    # For those cases will try to use the Hypervisor to power cycle the machine and wait for it to come back up.
+    - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        powerstate_agent_info_timeout: 600
+        shutdown: true
+
+    - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        poweron: true
+
     - name: Waiting until ssh is up for {{ inventory_hostname }}...
       ansible.builtin.wait_for:
         host: "{{ ansible_host }}"
