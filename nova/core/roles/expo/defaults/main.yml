@@ -1,6 +1,7 @@
 ---
 ### general ###
 expo_git_repo:
+expo_git_branch: main
 expo_fqdn: expo.localhost
 expo_configuration_folder: XS/2023/XS23TR
 expo_project_mode: production
