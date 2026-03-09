@@ -23,6 +23,8 @@
     dest: /tmp/expo-{{ fqdn }}
     recursive: true
     depth: 1
+    single_branch: yes
+    version: "{{ expo_git_branch }}"
   delegate_to: localhost
   become: false
 
