@@ -135,7 +135,7 @@
       cn_validations: disabled
       code_signing_flag: "{{ certificate_role.vault_cert_code_signing | default(false) }}"
       country: "{{ certificate_role.vault_cert_country | default('') }}"
-      enforce_hostnames: true
+      enforce_hostnames: "{{ certificate_role.vault_cert_enforce_hostnames | default(true) }}"
       key_bits: "{{ certificate_role.vault_cert_key_bits }}"
       key_type: "{{ certificate_role.vault_cert_key_type }}"
       key_usage: "{{ certificate_role.vault_cert_key_usage | join(', ') | default('DigitalSignature, KeyAgreement, KeyEncipherment') }}"
