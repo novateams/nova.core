@@ -60,7 +60,7 @@ jobs:
 
             echo -n -e "${C_RED}"
             echo -e "Pull request version $PR_VERSION is <= than current version $CURRENT_VERSION."
-            echo -e "Please update the version in $VERSION_FILE file."
+            echo -e "Please update the version in $PR_VERSION_URL file."
             echo -n -e "${C_RST}"
             exit 1
 
