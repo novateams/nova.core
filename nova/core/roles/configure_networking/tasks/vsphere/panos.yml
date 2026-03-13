@@ -15,7 +15,7 @@
     - name: Including network configuration tasks...
       block:
         - name: Configuring MGMT interface on fresh deploy...
-          when: fresh_deploy
+          when: fresh_deploy or reconfigure_network | bool
           block:
             # When an IP address is reported by VMware Tools, it is ready to accept console input
             # Otherwise initial login attempt will just fail
@@ -23,9 +23,7 @@
               community.vmware.vmware_guest_tools_wait:
                 name: "{{ custom_vm_name | default(vm_name) }}"
               register: panos_boot_status
-              until:
-                panos_boot_status.instance.ipv4 is not ansible.builtin.falsy
-                or panos_boot_status.instance.ipv6 is not ansible.builtin.falsy
+              until: panos_boot_status.instance.hw_guest_id != none
               retries: "{{ (configure_networking_panos_boot_wait_time if configure_networking_panos_boot_wait_time >= 5 else 5) // 5 }}"
               delay: 5
 
@@ -293,11 +291,19 @@
           ansible.builtin.set_fact:
             configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
 
-        - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+        # Using shutdown > poweron instead of reboot to avoid potential race conditions
+        # where next tasks are already executing while the machine is still rebooting.
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
           ansible.builtin.include_role:
             name: nova.core.powerstate
           vars:
-            restart: true
+            shutdown: true
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
 
         - name: Re-including vSphere network configuration tasks...
           ansible.builtin.include_tasks: main.yml
