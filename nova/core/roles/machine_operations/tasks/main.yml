@@ -28,7 +28,7 @@
     - name: Including metadata generation role...
       ansible.builtin.include_role:
         name: nova.core.role_metadata_post
-      when: (just_create) or (deploy_mode == "undeploy") # Post metadata here only when undeploying or just creating the machine
+      when: (just_create | bool) or (deploy_mode == "undeploy") # Post metadata here only when undeploying or just creating the machine
 
 - name: Including type - host machine operations...
   when: customization_context == "host" # Alternative is container and then it's not creating it with this role
