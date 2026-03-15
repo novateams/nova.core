@@ -38,7 +38,7 @@
     groups: "{{ item.groups | default(root_group if item.username in admin_accounts | map(attribute='username') else 'users') }}"
     name: "{{ item.username }}"
     password: "{{ item.password | password_hash('sha512') }}"
-    shell: "{{ item.shell | default(unix_distro_shell_map[ansible_facts.distribution] | default('/bin/bash')) }}"
+    shell: "{{ item.shell | default(ansible_facts.env.SHELL) }}"
     skeleton: "{{ unix_distro_skel_map[ansible_facts.distribution] | default('/etc/skel') }}"
     uid: "{{ item.uid | default(omit) }}"
     update_password: "{{ item.update_password | default('always') }}" # always or on_create
