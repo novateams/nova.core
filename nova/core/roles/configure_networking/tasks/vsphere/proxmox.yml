@@ -93,6 +93,8 @@
             - name: Re-including vSphere network configuration tasks...
               ansible.builtin.include_tasks: main.yml
 
+        # Using shutdown > poweron instead of reboot to avoid potential race conditions
+        # where next tasks are already executing while the machine is still rebooting.
         - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
           ansible.builtin.include_role:
             name: nova.core.powerstate
