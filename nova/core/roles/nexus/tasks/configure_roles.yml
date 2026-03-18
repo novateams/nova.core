@@ -1,0 +1,35 @@
+---
+- name: Listing all roles...
+  ansible.builtin.uri:
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/roles
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: GET
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body_format: json
+    force_basic_auth: true
+    status_code: 200
+  register: all_roles
+  retries: 3
+  delay: 3
+
+- name: Creating local roles..
+  ansible.builtin.uri:
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/roles/{{ '' if item.id not in all_roles.json | map(attribute='id') else item.id }}
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: "{{ 'POST' if item.id not in all_roles.json | map(attribute='id') else 'PUT' }}"
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body: "{{ item }}"
+    body_format: json
+    force_basic_auth: true
+    status_code:
+      - 200
+      - 204
+  loop: "{{ nexus_extra_roles }}"
+  loop_control:
+    label: "{{ item.id }}"

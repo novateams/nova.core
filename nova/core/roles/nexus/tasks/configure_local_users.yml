@@ -1,0 +1,36 @@
+---
+- name: Listing all local users..
+  ansible.builtin.uri:
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/users?source=default
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: GET
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body_format: json
+    force_basic_auth: true
+    status_code: 200
+  register: all_local_users
+  retries: 3
+  delay: 3
+
+- name: Creating users..
+  ansible.builtin.uri:
+    url: https://{{ nexus_fqdn }}/service/rest/v1/security/users/{{ '' if item.userId not in all_local_users.json | map(attribute='userId') else item.userId }}
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: "{{ 'POST' if item.userId not in all_local_users.json | map(attribute='userId') else 'PUT' }}"
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body: "{{ item | combine({'source': 'default'}) }}"
+    body_format: json
+    force_basic_auth: true
+    status_code:
+      - 200
+      - 204
+  loop: "{{ nexus_local_users }}"
+  loop_control:
+    label: "{{ item.userId }}"
+  no_log: true

@@ -20,3 +20,11 @@
 - name: Including Nexus LDAP configuration tasks...
   ansible.builtin.include_tasks: configure_ldap.yml
   when: nexus_configure_ldap
+
+- name: Including Nexus role configuration tasks...
+  ansible.builtin.include_tasks: configure_roles.yml
+  when: nexus_configure_extra_roles
+
+- name: Including Nexus local users configuration tasks...
+  ansible.builtin.include_tasks: configure_local_users.yml
+  when: nexus_configure_local_users
