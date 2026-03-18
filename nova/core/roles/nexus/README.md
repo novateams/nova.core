@@ -5,6 +5,8 @@ This is a role for installing and configuring [Nexus Repository Manager 3](https
 - Install Nexus with Docker Compose
 - Run initial configuration of Nexus (optional)
 - Install LDAP configuration for Nexus (optional)
+- Configure custom roles outside of LDAP (optional)
+- Configure local (non-LDAP) users (optional)
 
 ## Requirements
 
@@ -70,4 +72,32 @@ Alternatively the whole `nexus_ldap_configuration` block can be defined as a sin
     nexus_groups_dn_under_searchbase: OU=Nexus,OU=Resources
     nexus_bind_dn_password: # lookup to a predefined password for the svc_nexus user
     nexus_ldap_administrators_group: Nexus Admins
+
+# Installs Nexus, configures it, and creates extra roles and local users (e.g. for CI/CD pipelines).
+- name: Installing & configuring Nexus with extra roles and local users...
+  ansible.builtin.include_role:
+    name: nova.core.nexus
+  vars:
+    nexus_configure: true
+    nexus_admin_password: # lookup to a predefined password
+    nexus_configure_extra_roles: true
+    nexus_extra_roles:
+      - id: nx-docker-push
+        name: Docker Push
+        description: Role for pushing images to the Docker hosted repository
+        privileges:
+          - nx-repository-view-docker-*-add
+          - nx-repository-view-docker-*-edit
+          - nx-repository-view-docker-*-read
+        roles: []
+    nexus_configure_local_users: true
+    nexus_local_users:
+      - userId: ci-pipeline
+        firstName: CI
+        lastName: Pipeline
+        emailAddress: ci-pipeline@example.com
+        password: # lookup to a predefined password
+        status: active
+        roles:
+          - nx-docker-push
 ```
