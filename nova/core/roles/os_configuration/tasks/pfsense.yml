@@ -56,6 +56,10 @@
     group: wheel
   notify: pf_sense_reboot
 
+- name: Reloading pfSense configuration for {{ inventory_hostname }}...
+  ansible.builtin.command: /etc/rc.reload_all
+  changed_when: true
+
 - name: Removing local config.xml file...
   ansible.builtin.file:
     path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_pfsense_config.xml
