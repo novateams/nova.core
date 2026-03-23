@@ -40,6 +40,11 @@
     owner: root
     group: wheel
 
+- name: Reloading configuration for {{ inventory_hostname }}...
+  ansible.builtin.service:
+    name: configd
+    state: restarted
+
 - name: Removing local config.xml file...
   ansible.builtin.file:
     path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
