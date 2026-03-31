@@ -1,3 +1,11 @@
 ---
 cleanup_remove_bash_history: true
 cleanup_post_reboot: false # Set to true to reboot the system after cleanup
+
+############
+# RouterOS #
+############
+
+# Use this variable to specify the commands to be executed on RouterOS devices during cleanup. By default, it clears the console history.
+cleanup_routeros_commands:
+  - /console clear-history
