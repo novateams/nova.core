@@ -5,8 +5,12 @@
   connection_interface: true
 {% endif %}
 {% for iface in interfaces %}
-- subnet_id: "{{ iface.cloud_id if machine_operations_aws_subnet_id == {} else machine_operations_aws_subnet_id }}"
-  assign_public_ip: false
+- assign_public_ip: false
+  {% if iface.cloud_id is ansible.builtin.truthy %}
+  subnet_id: "{{ iface.cloud_id }}"
+  {% elif machine_operations_aws_subnet_id is ansible.builtin.truthy %}
+  subnet_id: "{{ machine_operations_aws_subnet_id }}"
+  {% endif %}
   device_index: {{ loop.index0 }}
   delete_on_termination: true
   description: "{{ custom_vm_name | default(vm_name) }}-{{ iface.nic_name }}"

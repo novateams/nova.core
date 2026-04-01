@@ -44,7 +44,12 @@
   amazon.aws.ec2_instance_info:
     filters:
       tag:Name: "{{ custom_vm_name | default(vm_name) }}"
-      instance-state-name: ["pending", "running", "shutting-down", "stopping", "stopped"]
+      instance-state-name:
+        - pending
+        - running
+        - shutting-down
+        - stopped
+        - stopping
   register: ec2_instance_info
   delegate_to: localhost
   become: false

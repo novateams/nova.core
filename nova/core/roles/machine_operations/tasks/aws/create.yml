@@ -90,7 +90,7 @@
             name: "{{ custom_vm_name | default(vm_name) }}"
             key_name: "{{ custom_vm_name | default(vm_name) }}"
             network_interfaces: "{{ aws_interfaces }}"
-            vpc_subnet_id: "{{ omit if aws_connection_interface_subnet == [] else aws_connection_interface_subnet }}"
+            vpc_subnet_id: "{{ omit if aws_connection_interface_subnet is ansible.builtin.falsy else aws_connection_interface_subnet }}"
             instance_type: "{{ aws_vm_size | default('t3.micro') }}"
             security_group:
               "{{ omit if machine_operations_aws_security_group_names != []
