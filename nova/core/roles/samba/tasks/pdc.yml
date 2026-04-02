@@ -25,3 +25,7 @@
     --adminpass={{ samba_domain_admin_password }}
   changed_when: true
   when: samba_first_run | default(false)
+
+- name: Setting Samba domain password expiry policy...
+  ansible.builtin.command: samba-tool domain passwordsettings set --max-pwd-age={{ samba_domain_disable_password_expiry_days }}
+  changed_when: true

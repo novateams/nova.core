@@ -14,6 +14,9 @@ samba_domain_netbios: "{{ domain_netbios | default(ad_domain_name.split('.')[0] 
 samba_domain_admin_username: "{{ domain_admin_username | default('Administrator') }}"
 samba_domain_admin_password: "{{ domain_admin_password | default({}) }}"
 
+# Nr of days after which domain user passwords will expire. Set to 0 to disable password expiry.
+samba_domain_disable_password_expiry_days: 0
+
 #########
 # LDAPs #
 #########
