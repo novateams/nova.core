@@ -6,8 +6,6 @@ nexus_container_config_folder: /srv/nexus # Path where Nexus application data is
 nexus_fqdn: "{{ fqdn | default(ansible_facts.fqdn) }}" # FQDN of the Nexus server, usually comes from Providentia or all.yml
 nexus_configure: false # Set to true to also configure Nexus after installation
 nexus_configure_ldap: false # Set to true to also configure LDAP after installation
-nexus_configure_extra_roles: false # Set to true to also configure custom roles after installation
-nexus_configure_local_users: false # Set to true to also configure local (non-LDAP) users after installation
 nexus_create_repos: false # Set to true to also create default repositories after installation
 nexus_allow_anonymous_access: true # Set to false to disable anonymous access
 nexus_active_encryption_key_id: Primary Encryption Key # Name of the active encryption key that comes with this role
@@ -15,6 +13,16 @@ nexus_version: 3.90.2 # Nexus version to install
 
 # Default is the built-in Nexus admin user. If set to a different value than admin, the role will create the user.
 nexus_admin_username: admin
+
+# List of Nexus privileges to map to a specific LDAP group.
+# Refer to the role readme for an example
+nexus_privileges_to_ldap_role_map: []
+
+# List of custom roles to create/update outside of LDAP. Each item requires: id, name, description, privileges (list), roles (list)
+nexus_roles: []
+
+# List of local (non-LDAP) users to create/update. Each item requires: userId, firstName, lastName, emailAddress, password, status, roles (list)
+nexus_users: []
 
 # The value of the password that will be set for the built-in admin user.
 # This value is ONLY used if the nexus_admin_username value is something other than admin.
@@ -62,10 +70,6 @@ nexus_ldap_configuration:
   userRealNameAttribute: cn
   userSubtree: true
   useTrustStore: true
-
-nexus_extra_roles: [] # List of custom roles to create/update outside of LDAP. Each item requires: id, name, description, privileges (list), roles (list)
-
-nexus_local_users: [] # List of local (non-LDAP) users to create/update. Each item requires: userId, firstName, lastName, emailAddress, password, status, roles (list)
 
 nexus_remove_unmanaged_repos: true # By default remove repositories that are not in the nexus_repositories list during deploy
 nexus_repositories: "{{ nexus_default_repositories + nexus_extra_repositories }}" # List of repositories to create when nexus_create_repos is set to true

@@ -69,3 +69,24 @@
     status_code:
       - 200
       - 204
+
+- name: Mapping Privileges to LDAP groups...
+  ansible.builtin.uri:
+    url: https://{{ fqdn }}/service/rest/v1/security/roles/{{ '' if item.name not in all_roles.json | map(attribute='name') else item.id }}
+    user: "{{ nexus_admin_username }}"
+    password: "{{ nexus_admin_password }}"
+    method: "{{ 'POST' if item.name not in all_roles.json | map(attribute='name') else 'PUT' }}"
+    headers:
+      accept: application/json
+      Content-Type: application/json
+    body: "{{ item }}"
+    body_format: json
+    force_basic_auth: true
+    status_code:
+      - 200
+      - 204
+    validate_certs: false
+  loop: "{{ nexus_privileges_to_ldap_role_map }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: nexus_privileges_to_ldap_role_map != []
