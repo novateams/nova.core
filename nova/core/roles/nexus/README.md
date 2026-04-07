@@ -81,7 +81,7 @@ Alternatively the whole `nexus_ldap_configuration` block can be defined as a sin
     nexus_configure: true
     nexus_admin_password: # lookup to a predefined password
     nexus_configure_extra_roles: true
-    nexus_extra_roles:
+    nexus_roles:
       - id: nx-docker-push
         name: Docker Push
         description: Role for pushing images to the Docker hosted repository
@@ -91,7 +91,7 @@ Alternatively the whole `nexus_ldap_configuration` block can be defined as a sin
           - nx-repository-view-docker-*-read
         roles: []
     nexus_configure_local_users: true
-    nexus_local_users:
+    nexus_users:
       - userId: ci-pipeline
         firstName: CI
         lastName: Pipeline
@@ -100,4 +100,32 @@ Alternatively the whole `nexus_ldap_configuration` block can be defined as a sin
         status: active
         roles:
           - nx-docker-push
+
+# Installs Nexus, configures it, and creates extra roles and local users (e.g. for CI/CD pipelines).
+- name: Installing & configuring Nexus with extra roles and local users...
+  ansible.builtin.include_role:
+    name: nova.core.nexus
+  vars:
+    nexus_configure: true
+    nexus_admin_password: # lookup to a predefined password that will be applied to the admin user on first run
+    nexus_configure_ldap: true
+    nexus_ldap_name: example.com
+    nexus_ldap_host: dc1.example.com
+    nexus_ldap_search_base: OU=ORG,DC=example,DC=com
+    nexus_bind_user_dn: CN=svc_nexus,OU=Service Accounts,OU=ORG,DC=example,DC=com
+    nexus_groups_dn_under_searchbase: OU=Nexus,OU=Resources
+    nexus_bind_dn_password: # lookup to a predefined password for the svc_nexus user
+    nexus_ldap_administrators_group: Nexus Admins
+
+    # The id is an LDAP group
+    # The name is a Nexus role that will be created
+    # Privileges are defined in https://nexus.example.com/#admin/security/privileges
+    nexus_privileges_to_ldap_role_map:
+      - id: nexus_repo_users
+        name: repo_users
+        description: Repository users with browse and download access to a repository called repo
+        privileges:
+          - nx-repository-view-raw-repo-browse
+          - nx-repository-view-raw-repo-read
+        roles: []
 ```

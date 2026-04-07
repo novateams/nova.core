@@ -15,7 +15,7 @@
   retries: 3
   delay: 3
 
-- name: Creating local roles..
+- name: Creating following roles...
   ansible.builtin.uri:
     url: https://{{ nexus_fqdn }}/service/rest/v1/security/roles/{{ '' if item.id not in all_roles.json | map(attribute='id') else item.id }}
     user: "{{ nexus_admin_username }}"
@@ -30,6 +30,6 @@
     status_code:
       - 200
       - 204
-  loop: "{{ nexus_extra_roles }}"
+  loop: "{{ nexus_roles }}"
   loop_control:
-    label: "{{ item.id }}"
+    label: "{{ item.name }}"

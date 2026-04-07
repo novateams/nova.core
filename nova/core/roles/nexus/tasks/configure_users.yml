@@ -30,7 +30,7 @@
     status_code:
       - 200
       - 204
-  loop: "{{ nexus_local_users }}"
+  loop: "{{ nexus_users }}"
   loop_control:
     label: "{{ item.userId }}"
   no_log: true
