@@ -13,24 +13,40 @@
   loop: "{{ deploy_vars_post_roles }}"
   when: deploy_vars_post_roles != []
 
-- name: Using {{ deploy_vars_vault_auth_method | upper }} to get auth token for {{ vault_address }}...
-  community.hashi_vault.vault_login:
-    url: "{{ vault_address }}"
-    auth_method: "{{ deploy_vars_vault_auth_method }}"
-    token: "{{ deploy_vars_vault_root_token if deploy_vars_vault_auth_method == 'token' else omit }}"
-    username: "{{ vault_username }}"
-    password: "{{ vault_password }}"
-    mount_point: "{{ deploy_vars_vault_mount_point }}"
-    validate_certs: "{{ validate_vault_certs }}"
-    ca_cert: "{{ vault_ca_cert }}"
-  register: deploy_vars_vault_token
+- name: Delegating required tasks to localhost...
   delegate_to: localhost
   become: false
-  changed_when: false # It only does a web request to get a token so no need to mark as changed
-  when:
-    - vault_address != {}
-    - deploy_vars_get_vault_token | bool # | bool is required to pass the variable from the command line
-    - pre_role is not defined or deploy_vars_get_vault_token_with_pre_role | bool
+  block:
+    - name: Using {{ deploy_vars_vault_auth_method | upper }} to get auth token for {{ vault_address }}...
+      community.hashi_vault.vault_login:
+        url: "{{ vault_address }}"
+        auth_method: "{{ deploy_vars_vault_auth_method }}"
+        token: "{{ deploy_vars_vault_root_token if deploy_vars_vault_auth_method == 'token' else omit }}"
+        username: "{{ vault_username }}"
+        password: "{{ vault_password }}"
+        mount_point: "{{ deploy_vars_vault_mount_point }}"
+        validate_certs: "{{ validate_vault_certs }}"
+        ca_cert: "{{ vault_ca_cert }}"
+      register: deploy_vars_vault_token
+      delegate_to: localhost
+      become: false
+      changed_when: false # It only does a web request to get a token so no need to mark as changed
+      when:
+        - vault_address != {}
+        - deploy_vars_get_vault_token | bool # | bool is required to pass the variable from the command line
+        - pre_role is not defined or deploy_vars_get_vault_token_with_pre_role | bool
+
+    - name: Assuming AWS role {{ aws_role_arn }}...
+      amazon.aws.sts_assume_role:
+        access_key: "{{ aws_defaults.access_key }}"
+        secret_key: "{{ aws_defaults.secret_key }}"
+        role_arn: "{{ aws_role_arn }}"
+        role_session_name: "{{ aws_role_session_name | default('ansible-session') }}"
+      register: aws_assumed_role
+      when:
+        - aws_role_arn != {}
+        - aws_defaults.access_key is ansible.builtin.truthy
+        - aws_defaults.secret_key is ansible.builtin.truthy
 # # Uncomment to debug variables
 # - ansible.builtin.debug: msg="{{  }}"
 # - meta: end_play

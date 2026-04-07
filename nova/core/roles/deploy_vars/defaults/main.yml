@@ -169,20 +169,27 @@ vmware_workstation:
 # AWS #
 #######
 
+# The ARN of the AWS role to assume for deployment, example: arn:aws:iam::123456789012:role/RoleName
+# This is for more advanced use cases when multiple AWS accounts with one management account that contains the IAM user with an access key and secret
+# That access key and secret can then be used to assume a role in the target account with the required permissions for deployment
+# Prerequisite is that a role is created in the target account with a trust relationship to allow the management account's IAM user to assume the role
+# and that the required permissions for deployment are attached to the role
+aws_role_arn: {}
+
 aws_defaults:
   region: "{{ aws_region | default('eu-north-1') }}" # Default is Stockholm
   access_key:
-    "{{ lookup('vars', environment_name | default('') ~ '_aws_access_key_id')
+    "{{ aws_assumed_role.sts_creds.access_key | default(lookup('vars', environment_name | default('') ~ '_aws_access_key_id'))
     | default(lookup('vars', project_fullname | default('') ~ '_aws_access_key_id'))
     | default(lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key_id'))
     | default(aws_access_key_id) | default('') }}"
   secret_key:
-    "{{ lookup('vars', environment_name | default('') ~ '_aws_access_key')
+    "{{ aws_assumed_role.sts_creds.secret_key | default(lookup('vars', environment_name | default('') ~ '_aws_access_key'))
     | default(lookup('vars', project_fullname | default('') ~ '_aws_access_key'))
     | default(lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_access_key'))
     | default(aws_access_key) | default('') }}"
   session_token:
-    "{{ lookup('vars', environment_name | default('') ~ '_aws_session_token')
+    "{{ aws_assumed_role.sts_creds.session_token | default(lookup('vars', environment_name | default('') ~ '_aws_session_token'))
     | default(lookup('vars', project_fullname | default('') ~ '_aws_session_token'))
     | default(lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_aws_session_token'))
     | default(aws_session_token) | default(omit) }}"
