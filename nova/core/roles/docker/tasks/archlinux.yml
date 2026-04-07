@@ -5,6 +5,18 @@
   ansible.builtin.include_role:
     name: nova.core.updates
 
+# Required for latest Docker versions on Arch Linux
+- name: Enabling IP forwarding...
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: 1
+    sysctl_file: /etc/sysctl.d/99-ip_forwarding.conf
+    state: present
+    reload: true
+  loop:
+    - net.ipv4.ip_forward
+    - net.ipv6.conf.all.forwarding
+
 - name: Installing Docker and requirements...
   ansible.builtin.package:
     name:
