@@ -4,7 +4,9 @@ ipv4_template_file: etc/iptables/rules.v4
 ipv6_template_file: etc/iptables/rules.v6
 nftables_template_file: etc/nftables.conf
 
-firewall_config_file: fw.conf # Firewall config file to update sysctl values
+# Firewall config file to update sysctl values
+# Changes this variable to custom file path to use custom sysctl values.
+firewall_config_file: fw.conf
 
-allow_routing: true # Allow routing between interfaces
+firewall_allow_routing: "{{ allow_routing | default(true) }}" # Allow routing between interfaces
 mode: nftables # Can iptables or nftables
