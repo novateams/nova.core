@@ -19,9 +19,19 @@ IPv6AcceptRouterAdvertisements={{ 'yes' if item.addresses | map(attribute='mode'
 {% for ip_address in item.addresses %}
 {% if ip_address.mode == 'ipv4_static' %}
 Address={{ ip_address.address }}
+{% if extra_ipv4[interface_names[interface_index]] is defined %}
+{% for ip in extra_ipv4[interface_names[interface_index]] %}
+Address={{ ip }}
+{% endfor %}
+{% endif %}
 {% endif %}
 {% if ip_address.mode == 'ipv6_static' %}
 Address={{ ip_address.address }}
+{% if extra_ipv6[interface_names[interface_index]] is defined %}
+{% for ip in extra_ipv6[interface_names[interface_index]] %}
+Address={{ ip }}
+{% endfor %}
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
