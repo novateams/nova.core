@@ -21,8 +21,8 @@
       retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
       delay: 5
       when:
-        - powerstate_vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
-        - powerstate_vcenter_vm_info.guests[0].hw_power_status != "suspended"
+        - powerstate_vcenter_vm_info.guests[0].guest_tools_status != "guestToolsRunning"
+        - powerstate_vcenter_vm_info.guests[0].hw_power_status not in ["poweredOff", "suspended"]
         - not reset
         - not poweroff
 
