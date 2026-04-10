@@ -17,7 +17,7 @@
       when: template_user.stat.exists
 
 # There's a microsoft.ad.ou but this method is many times faster for large number of OUs
-- name: Creating OUs for {{ ad_domain_name }}...
+- name: Creating OUs for {{ ad_domain_name | default('') }}...
   ansible.windows.win_shell: "{{ lookup('ansible.builtin.template', 'Create-OUs.ps1') }}"
   when: ansible_facts.windows_domain_role == "Primary domain controller"
 
