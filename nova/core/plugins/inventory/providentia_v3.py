@@ -230,76 +230,63 @@ class InventoryModule(BaseInventoryPlugin):
     def fetch_creds(self):
         """
         Retrieve deployer credentials from Ansible Vault in the following order of precedence:
-        1. Environment specific deployer credentials eg. dev_deployer_username
-        2. Project specific deployer credentials eg. projectA_deployer_username
-        3. Environment and project specific deployer credentials eg. dev_projectA_deployer_username
-        4. Default deployer credentials eg. deployer_username
+        1. Environment specific credentials eg. dev_providentia_api_token or dev_deployer_username and dev_deployer_password
+        2. Project specific credentials eg. projectA_providentia_api_token or projectA_deployer_username and projectA_deployer_password
+        3. Environment and project specific credentials eg. dev_projectA_providentia_api_token or dev_projectA_deployer_username and dev_projectA_deployer_password
+        4. Default credentials eg. providentia_api_token or deployer_username and deployer_password
+
+        API token is preferred over username/password when both are available.
         """
-        if self.environment is not None:
-            env_project_deployer_username = self._options.get(f"{self.environment}_{self.project}_deployer_username")
-            env_project_deployer_password = self._options.get(f"{self.environment}_{self.project}_deployer_password")
+        # Build prefixes in precedence order
+        prefixes = []
+        if self.environment:
+            prefixes.append((f"{self.environment}_", 'env_'))
+        if self.project:
+            prefixes.append((f"{self.project}_", 'project_'))
+        if self.environment and self.project:
+            prefixes.append((f"{self.environment}_{self.project}_", 'project_'))
 
-            env_deployer_password = self._options.get(f"{self.environment}_deployer_password")
-            env_deployer_username = self._options.get(f"{self.environment}_deployer_username")
+        # Check for API token first (preferred over username/password)
+        for option_prefix, inv_prefix in prefixes:
+            api_token = self._options.get(f"{option_prefix}providentia_api_token")
+            if api_token is not None:
+                self.inventory.set_variable("all", f"{inv_prefix}providentia_api_token", api_token)
+                return {'api_token': api_token}
 
-        else:
-            env_project_deployer_username = None
-            env_project_deployer_password = None
+        default_api_token = self._options.get('providentia_api_token')
+        if default_api_token is not None:
+            return {'api_token': default_api_token}
 
-            env_deployer_password = None
-            env_deployer_username = None
+        # Fall back to username/password credentials
+        for option_prefix, inv_prefix in prefixes:
+            username = self._options.get(f"{option_prefix}deployer_username")
+            password = self._options.get(f"{option_prefix}deployer_password")
+            if username is not None and password is not None:
+                self.inventory.set_variable("all", f"{inv_prefix}deployer_username", username)
+                self.inventory.set_variable("all", f"{inv_prefix}deployer_password", password)
+                return {'username': username, 'password': password}
 
-        # Feature to allow project specific deployer credentials from Ansible vault
-        project_deployer_username = self._options.get(f"{self.project}_deployer_username")
-        project_deployer_password = self._options.get(f"{self.project}_deployer_password")
+        default_username = self.get_option('deployer_username')
+        default_password = self.get_option('deployer_password')
 
-        if env_deployer_username is not None and env_deployer_password is not None:
+        if default_username is None:
+            raise AnsibleParserError('Error - deployer_username not found in Ansible vault')
 
-            # Adding env specific deployer credentials as variables
-            self.inventory.set_variable("all", "env_deployer_username", env_deployer_username)
-            self.inventory.set_variable("all", "env_deployer_password", env_deployer_password)
+        if default_password is None:
+            raise AnsibleParserError('Error - deployer_password not found in Ansible vault')
 
-            return {
-                'username': env_deployer_username,
-                'password': env_deployer_password
-            }
-
-        elif project_deployer_username is not None and project_deployer_password is not None:
-
-            # Adding project specific deployer credentials as variables
-            self.inventory.set_variable("all", "project_deployer_username", project_deployer_username)
-            self.inventory.set_variable("all", "project_deployer_password", project_deployer_password)
-
-            return {
-                'username': project_deployer_username,
-                'password': project_deployer_password
-            }
-
-        elif env_project_deployer_username is not None and env_project_deployer_password is not None:
-
-            # Adding env and project specific deployer credentials as variables
-            self.inventory.set_variable("all", "project_deployer_username", env_project_deployer_username)
-            self.inventory.set_variable("all", "project_deployer_password", env_project_deployer_password)
-
-            return {
-                'username': env_project_deployer_username,
-                'password': env_project_deployer_password
-            }
-
-        else:
-
-            if self.get_option('deployer_username') is None:
-                raise AnsibleParserError('Error - deployer_username not found in Ansible vault')
-
-            if self.get_option('deployer_password') is None:
-                raise AnsibleParserError('Error - deployer_password not found in Ansible vault')
-
-            return {
-                'username': self.get_option('deployer_username'),
-                'password': self.get_option('deployer_password')
-            }
+        return {
+            'username': default_username,
+            'password': default_password
+        }
 
     def fetch_access_token(self, creds):
+        if 'api_token' in creds:
+            return {
+                'token_type': 'Bearer',
+                'access_token': creds['api_token'],
+            }
+
         oauth = OAuth2Session(client=LegacyApplicationClient(client_id=self.sso_client_id))
         token = oauth.fetch_token(
             token_url=self.sso_token_url,
