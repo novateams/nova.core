@@ -51,6 +51,7 @@ tuoni_listeners: # The list of listeners that will be created in Tuoni pass a cu
       sleep: 5
       sleepRandom: 5
 
+tuoni_payloads_delete_existing: false # Set to true to delete existing payloads in Tuoni before creating new ones.
 tuoni_payloads: # The list of payloads that will be created in Tuoni pass a custom list as a variable to override this default list
   - payloadTemplateId: shelldot.payload.windows-x64
     configuration:

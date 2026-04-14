@@ -29,7 +29,8 @@
 
 - name: Updating following listeners...
   ansible.builtin.uri:
-    url: https://{{ tuoni_fqdn }}:8443/api/v1/listeners/{{ tuoni_existing_listeners.json.values()
+    url:
+      https://{{ tuoni_fqdn }}:8443/api/v1/listeners/{{ tuoni_existing_listeners.json.values()
       | selectattr('name', 'equalto', item.name) | map(attribute='id') | first }}
     method: PATCH
     headers:
@@ -73,6 +74,33 @@
       loop: "{{ tuoni_listeners }}"
       loop_control:
         label: "{{ item.name }}"
+
+    - name: Removing existing payloads...
+      when: tuoni_payloads_delete_existing
+      block:
+        - name: Listing payloads...
+          ansible.builtin.uri:
+            url: https://{{ fqdn }}:8443/api/v1/payloads
+            method: GET
+            headers:
+              Authorization: Bearer {{ tuoni_api_token }}
+            status_code: 200
+          register: existing_tuoni_payloads
+
+        - name: Deleting following payloads...
+          ansible.builtin.uri:
+            url: https://{{ fqdn }}:8443/api/v1/payloads/{{ item.id }}
+            method: DELETE
+            headers:
+              Authorization: Bearer {{ tuoni_api_token }}
+            force_basic_auth: true
+            body: "{{ item }}"
+            body_format: json
+            status_code: 200
+          loop: "{{ existing_tuoni_payloads.json }}"
+          loop_control:
+            label: "{{ item.name }}"
+          when: existing_tuoni_payloads.json != []
 
     - name: Generating payloads...
       ansible.builtin.uri:
