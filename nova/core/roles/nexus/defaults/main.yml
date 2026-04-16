@@ -844,3 +844,123 @@ nexus_default_repositories:
         flat: false
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  #########################
+  # Container Proxy Repos #
+  #########################
+
+  # Docker proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: docker-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://registry-1.docker.io/
+        contentMaxAge: -1
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: true
+      docker:
+        forceBasicAuth: false
+        pathEnabled: "true"
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: false
+        indexType: REGISTRY
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Non-DockerHub proxies use port instead of routing to deal with issues
+  # Where different web proxies are unable to correctly route Docker specific requests to correct repos
+
+  # GitHub Container Registry proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: ghcr-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://ghcr.io/
+        contentMaxAge: -1
+        metadataMaxAge: 1440
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: true
+      docker:
+        httpPort: 10001
+        pathEnabled: "false"
+        forceBasicAuth: false
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: false
+        indexType: REGISTRY
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: quay-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://quay.io/
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      docker:
+        httpPort: 10002
+        pathEnabled: "false"
+        forceBasicAuth: false
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: true
+        indexType: REGISTRY
+        indexUrl: https://quay.io/
+        whitelistUrl[0]: ".*"
+
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: k8s-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://registry.k8s.io/
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      docker:
+        httpPort: 10003
+        pathEnabled: "false"
+        forceBasicAuth: false
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: true
+        indexType: REGISTRY
+        indexUrl: https://registry.k8s.io/
+        whitelistUrl[0]: ".*"
