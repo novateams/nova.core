@@ -21,8 +21,8 @@
       retries: "{{ (snapshots_agent_info_timeout if snapshots_agent_info_timeout >= 5 else 5) / 5 }}"
       delay: 5
       when:
-        - vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
         - vcenter_vm_info.guests[0].guest_tools_status != "guestToolsRunning"
+        - vcenter_vm_info.guests[0].hw_power_status not in ["poweredOff", "suspended"]
         - snapshot_mode != 'revert'
 
 - name: Including powerstate role...
