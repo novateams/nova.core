@@ -1,7 +1,19 @@
 ---
+- name: Waiting for VMware tools to report OS information...
+  community.vmware.vmware_guest_tools_wait:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+  register: vcenter_vm_info
+  until: vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'] is defined
+  retries: 24
+  delay: 5
+  become: false
+  delegate_to: localhost
+  when: configure_networking_os_info is not defined
+
 - name: Setting OS as fact...
   ansible.builtin.set_fact:
-    configure_networking_os: "{{ (vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
+    configure_networking_os: "{{ (configure_networking_os_info
+      | default(vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'])).split('prettyName=')[1] }}"
 
 - name: Including legacy VyOS network configuration tasks...
   ansible.builtin.include_tasks: vyos_legacy.yml
@@ -9,4 +21,4 @@
 
 - name: Including VyOS network configuration tasks...
   ansible.builtin.include_tasks: vyos_stream.yml
-  when: configure_networking_os is search('stream')
+  when: not configure_networking_os is search('rolling')

@@ -254,9 +254,11 @@
         attributes: "{{ machine_operations_vsphere_custom_attributes }}"
       when: machine_operations_vsphere_custom_attributes != []
 
-- name: Including nova.core.powerstate role...
-  ansible.builtin.include_role:
-    name: nova.core.powerstate
-  vars:
-    poweron: true
-  when: fresh_deploy or vcenter_vm_info.guests[0].hw_power_status != 'poweredOn'
+- name: Powering on {{ custom_vm_name | default(vm_name) }}...
+  vmware.vmware.vm_powerstate:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    datacenter: "{{ datacenter }}"
+    state: powered-on
+    force: true # Required to power on a VM that is in a suspended state
+  become: false
+  delegate_to: localhost
