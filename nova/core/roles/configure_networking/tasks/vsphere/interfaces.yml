@@ -12,10 +12,12 @@
       until: vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'] is defined
       retries: 12
       delay: 10
+      when: configure_networking_os_info is not defined
 
     - name: Setting OS as fact...
       ansible.builtin.set_fact:
-        configure_networking_os: "{{ (vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data']).split('prettyName=')[1] }}"
+        configure_networking_os: "{{ (configure_networking_os_info
+          | default(vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'])).split('prettyName=')[1] }}"
 
     - name: Templating interfaces...
       ansible.builtin.template:

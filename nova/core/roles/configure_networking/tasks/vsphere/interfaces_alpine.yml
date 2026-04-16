@@ -8,9 +8,10 @@
       community.vmware.vmware_guest_tools_wait:
         name: "{{ custom_vm_name | default(vm_name) }}"
       register: alpine_boot_status
-      until: alpine_boot_status.instance.advanced_settings['guestInfo.detailed.data'] is defined
-      retries: "{{ (configure_networking_alpine_boot_wait_time if configure_networking_alpine_boot_wait_time >= 5 else 5) // 5 }}"
-      delay: 5
+      until: alpine_boot_status.instance.hw_guest_id != none
+      retries: "{{ configure_networking_alpine_boot_wait_time }}"
+      delay: 1
+      when: configure_networking_hw_guest_id is ansible.builtin.falsy
 
     # For locking MAC addresses to interface names
     - name: Templating mactab...

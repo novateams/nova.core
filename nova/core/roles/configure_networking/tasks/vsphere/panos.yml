@@ -24,8 +24,8 @@
                 name: "{{ custom_vm_name | default(vm_name) }}"
               register: panos_boot_status
               until: panos_boot_status.instance.hw_guest_id != none
-              retries: "{{ (configure_networking_panos_boot_wait_time if configure_networking_panos_boot_wait_time >= 5 else 5) // 5 }}"
-              delay: 5
+              retries: "{{ configure_networking_panos_boot_wait_time }}"
+              delay: 1
 
             - name: Typing username to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -277,7 +277,7 @@
               ansible.builtin.wait_for:
                 host: "{{ detect_dhcp.instance.guest.ipAddress | default(connection_address) }}"
                 port: 22
-                timeout: 60
+                timeout: 120
 
       rescue:
         - name: NETWORK CONFIGURATION ERROR
@@ -287,7 +287,7 @@
               Check the errors above and {{ inventory_hostname }} host logs for more details.
           when: configure_networking_rescue_count | default(0) | int == 3
 
-        - name: Setting rescue loop count...
+        - name: Setting rescue loop count to {{ configure_networking_rescue_count | default(0) | int + 1 }}/3...
           ansible.builtin.set_fact:
             configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
 

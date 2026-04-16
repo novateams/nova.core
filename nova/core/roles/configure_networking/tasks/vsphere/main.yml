@@ -3,19 +3,6 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Waiting for VMware tools to become available...
-      community.vmware.vmware_guest_tools_wait:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vcenter_vm_info
-
-    - name: Setting VM ID fact and creating a list of MAC addresses...
-      ansible.builtin.set_fact:
-        configure_networking_vsphere_vm_id: "{{ vcenter_vm_info.instance.moid }}"
-        configure_networking_mac_addresses:
-          "{{ vcenter_vm_info.instance | dict2items | selectattr('key', 'match', '^hw_eth[0-9]+$')
-          | map(attribute='value.macaddress') | list }}"
-        configure_networking_hw_interfaces: "{{ vcenter_vm_info.instance.hw_interfaces }}"
-
     - name: Getting REST API token...
       ansible.builtin.uri:
         url: https://{{ vmware_defaults.hostname }}/api/session
@@ -28,6 +15,24 @@
         validate_certs: "{{ vmware_defaults.validate_certs }}"
       no_log: true
       register: vcenter_session_api_key
+
+    - name: Waiting for VMware tools to become available...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+
+    - name: Setting VM ID fact and creating a list of MAC addresses...
+      ansible.builtin.set_fact:
+        configure_networking_vsphere_vm_id: "{{ vcenter_vm_info.instance.moid }}"
+        configure_networking_mac_addresses:
+          "{{ vcenter_vm_info.instance | dict2items | selectattr('key', 'match', '^hw_eth[0-9]+$')
+          | map(attribute='value.macaddress') | list }}"
+        configure_networking_hw_interfaces: "{{ vcenter_vm_info.instance.hw_interfaces }}"
+        # Trying to set the OS information from the VMware tools if it's already present
+        # If not then setting it to an empty string so that it can be used as a condition to check again in later tasks
+        # This is to try and avoid running the vmware_guest_tools_wait task multiple times
+        configure_networking_os_info: "{{ vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'] | default(omit) }}"
+        configure_networking_hw_guest_id: "{{ vcenter_vm_info.instance.hw_guest_id }}"
 
 - name: Including {{ customization_method }} network configuration tasks...
   ansible.builtin.include_tasks: "{{ customization_method }}.yml"
