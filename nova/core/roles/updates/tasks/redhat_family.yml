@@ -6,6 +6,23 @@
   changed_when: dnf_remove_output.stdout is search("Remove.*Packages")
   when: ansible_facts.distribution != "Fedora"
 
+- name: Keeping only latest {{ updates_redhat_family_nr_of_kernels_to_keep }} kernel versions for {{ inventory_hostname }}...
+  ansible.builtin.shell: |
+    set -eo pipefail
+    keep={{ updates_redhat_family_nr_of_kernels_to_keep }}
+    kernels=$(rpm -q kernel | sort -V)
+    remove=$(echo "$kernels" | head -n -$keep)
+    for k in $remove; do
+      dnf -y remove "$k" || true
+    done
+    current=$(uname -r)
+    ls /boot/initramfs-* | grep -v "$current" | tail -n +3 | xargs -r rm -f
+  register: dnf_remove_output
+  changed_when: dnf_remove_output.stdout is ansible.builtin.truthy
+  when: ansible_facts.distribution == "Fedora"
+  args:
+    executable: /bin/bash
+
 - name: Updating all packages...
   ansible.builtin.dnf:
     name: "*"
