@@ -16,7 +16,7 @@
     path: /etc/sysctl.d/fw.conf
     state: absent
 
-- name: Templating sysctl config...
+- name: Copying sysctl config...
   ansible.builtin.copy:
     src: "{{ firewall_config_file }}"
     dest: /etc/sysctl.d/98-firewall.conf
