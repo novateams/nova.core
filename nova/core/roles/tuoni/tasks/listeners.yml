@@ -80,7 +80,7 @@
       block:
         - name: Listing payloads...
           ansible.builtin.uri:
-            url: https://{{ fqdn }}:8443/api/v1/payloads
+            url: https://{{ tuoni_fqdn }}:8443/api/v1/payloads
             method: GET
             headers:
               Authorization: Bearer {{ tuoni_api_token }}
@@ -89,7 +89,7 @@
 
         - name: Deleting following payloads...
           ansible.builtin.uri:
-            url: https://{{ fqdn }}:8443/api/v1/payloads/{{ item.id }}
+            url: https://{{ tuoni_fqdn }}:8443/api/v1/payloads/{{ item.id }}
             method: DELETE
             headers:
               Authorization: Bearer {{ tuoni_api_token }}
