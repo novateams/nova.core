@@ -119,7 +119,7 @@ nexus_default_repositories:
         timeToLive: 15
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
 
@@ -140,7 +140,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       nugetProxy:
         queryCacheItemMaxAge: 3600
         nugetVersion: V2
@@ -164,7 +164,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
 
@@ -210,7 +210,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: main
         flat: false
@@ -234,7 +234,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: noble-backports
         flat: false
@@ -258,7 +258,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: noble-security
         flat: false
@@ -282,7 +282,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: noble-updates
         flat: false
@@ -306,7 +306,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: noble
         flat: false
@@ -330,7 +330,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: jammy-backports
         flat: false
@@ -354,7 +354,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: jammy-security
         flat: false
@@ -378,7 +378,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: jammy-updates
         flat: false
@@ -402,7 +402,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: jammy
         flat: false
@@ -426,7 +426,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: focal-backports
         flat: false
@@ -450,7 +450,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: focal-security
         flat: false
@@ -474,7 +474,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: focal-updates
         flat: false
@@ -498,7 +498,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: focal
         flat: false
@@ -522,7 +522,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bullseye
         flat: false
@@ -546,7 +546,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bullseye-security
         flat: false
@@ -570,7 +570,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bullseye-updates
         flat: false
@@ -594,7 +594,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bookworm
         flat: false
@@ -618,7 +618,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bookworm-security
         flat: false
@@ -642,7 +642,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bookworm-updates
         flat: false
@@ -666,7 +666,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: trixie
         flat: false
@@ -690,7 +690,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: trixie-security
         flat: false
@@ -714,7 +714,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: trixie-updates
         flat: false
@@ -742,7 +742,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: noble
         flat: false
@@ -766,7 +766,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: jammy
         flat: false
@@ -790,7 +790,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: focal
         flat: false
@@ -814,7 +814,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bookworm
         flat: false
@@ -838,7 +838,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       apt:
         distribution: bullseye
         flat: false
@@ -866,7 +866,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       docker:
         forceBasicAuth: false
         pathEnabled: "true"
@@ -897,7 +897,7 @@ nexus_default_repositories:
         timeToLive: 1440
       httpClient:
         blocked: false
-        autoBlock: true
+        autoBlock: false
       docker:
         httpPort: 10001
         pathEnabled: "false"
