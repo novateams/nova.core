@@ -17,6 +17,13 @@
       ansible.builtin.set_fact:
         tuoni_vars: "{{ tuoni_config.content | b64decode | from_yaml }}"
 
+- name: Waiting for Tuoni API port to be open on {{ inventory_hostname }}...
+  ansible.builtin.wait_for:
+    host: "{{ tuoni_fqdn }}"
+    port: 8443
+    timeout: 120
+    state: started
+
 - name: Getting and setting Tuoni API token...
   when: tuoni_users != [] or tuoni_listeners != []
   block:
