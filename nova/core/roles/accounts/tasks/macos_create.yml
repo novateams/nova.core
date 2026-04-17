@@ -5,7 +5,7 @@
 
         echo Setting existing {{ item.username }} user password
         sysadminctl -resetPasswordFor {{ item.username }} -newPassword {{
-        item.password }} -adminUser {{ ansible_user }} -adminPassword {{ ansible_password }}
+        item.password }} -adminUser {{ ansible_user }} "{{ '' if ansible_password is not defined else '-adminPassword ' ~ ansible_password }}"
 
     else
 
