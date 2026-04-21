@@ -11,11 +11,16 @@ caddy_container_ports:
 
 caddy_enable_api: false # Set to true to enable Caddy API
 caddy_api_from_localhost_only: true # Set to false to allow API access from any IP
+
+# If Caddy API is enabled then there are 2 options for the ports to expose:
+# 1. Expose the API ports (2019) to localhost only and the Remote admin port (2021) to any IP
+# 2. Expose the API ports to any IP and the Remote admin port to localhost only, meaning that the Remote admin port will not be used
 caddy_api_container_ports:
   - "80:80"
   - "443:443"
   - "443:443/udp"
   - "{{ '127.0.0.1:' if caddy_api_from_localhost_only else '' }}2019:2019" # Caddy API port
+  - "{{ '' if caddy_api_from_localhost_only else '127.0.0.1:' }}2021:2021" # Caddy Remote admin port
 
 caddy_config_folder: /srv/caddy
 caddy_version: 2.11.2
