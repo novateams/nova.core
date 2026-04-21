@@ -21,10 +21,12 @@
     src: "{{ firewall_config_file }}"
     dest: /etc/sysctl.d/98-firewall.conf
     mode: "0644"
+  register: copy_sysctl_config
 
-- name: Reloading sysctl config...
+- name: Reloading sysctl config... # noqa: no-handler
   ansible.builtin.command: sysctl --system
   changed_when: true
+  when: copy_sysctl_config.changed
 
 - name: Notifying about deprecation of allow_routing variable...
   when: allow_routing is defined
