@@ -29,3 +29,7 @@
 - name: Setting Samba domain password expiry policy...
   ansible.builtin.command: samba-tool domain passwordsettings set --max-pwd-age={{ samba_domain_disable_password_expiry_days }}
   changed_when: true
+
+- name: Setting Samba domain minimum password age...
+  ansible.builtin.command: samba-tool domain passwordsettings set --min-pwd-age={{ samba_domain_minimum_password_age_days }}
+  changed_when: true
