@@ -217,6 +217,102 @@ nexus_default_repositories:
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
 
+  # Ubuntu resolute-backports apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: resolute-backports
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://archive.ubuntu.com/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: resolute-backports
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu resolute-security apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: resolute-security
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: http://security.ubuntu.com/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        timeToLive: 1440
+        enabled: true
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: resolute-security
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu resolute-updates apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: resolute-updates
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://archive.ubuntu.com/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: resolute-updates
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu resolute apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: resolute
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://archive.ubuntu.com/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: resolute
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
   # Ubuntu noble-backports apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
     repo_body:
@@ -724,6 +820,30 @@ nexus_default_repositories:
   ####################
   # Docker apt proxy #
   ####################
+
+  # Ubuntu resolute docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: resolute-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: noble
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
 
   # Ubuntu noble docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
