@@ -6,6 +6,14 @@
   changed_when: dnf_remove_output.stdout is search("Remove.*Packages")
   when: ansible_facts.distribution != "Fedora"
 
+# This is needed to cleanup /boot otherwise it'll fill up and updates start failing
+- name: Removing old kernel rescue images...
+  ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'cleanup-rescue.sh') }}"
+  register: remove_rescue_images_output
+  changed_when: remove_rescue_images_output.stdout_lines != []
+  args:
+    executable: /bin/bash
+
 - name: Keeping only latest {{ updates_redhat_family_nr_of_kernels_to_keep }} kernel versions for {{ inventory_hostname }}...
   ansible.builtin.shell: |
     set -eo pipefail
