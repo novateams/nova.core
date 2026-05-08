@@ -1,6 +1,6 @@
 namespace: nova
 name: core
-version: 8.0.1
+version: 8.0.2
 readme: README.md
 authors:
   - https://github.com/novateams
