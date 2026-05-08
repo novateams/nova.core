@@ -168,6 +168,7 @@ nexus_default_repositories:
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
 
+  # Microsoft apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
     repo_body:
       name: microsoft
@@ -186,7 +187,7 @@ nexus_default_repositories:
         blocked: false
         autoBlock: false
       apt:
-        distribution: all
+        distribution:
         flat: false
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
@@ -213,6 +214,423 @@ nexus_default_repositories:
         autoBlock: false
       apt:
         distribution: main
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: ubuntu
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://archive.ubuntu.com/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution:
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu-security apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: ubuntu-security
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: http://security.ubuntu.com/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        timeToLive: 1440
+        enabled: true
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution:
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Debian apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: debian
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: http://ftp.ee.debian.org/debian
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution:
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Debian-security apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: debian-security
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: http://security.debian.org/debian-security
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        timeToLive: 1440
+        enabled: true
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution:
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  ####################
+  # Docker apt proxy #
+  ####################
+
+  # Ubuntu Docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: ubuntu-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution:
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Debian Docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: debian-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/debian
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution:
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  #########################
+  # Container Proxy Repos #
+  #########################
+
+  # Docker proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: docker-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://registry-1.docker.io/
+        contentMaxAge: -1
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      docker:
+        forceBasicAuth: false
+        pathEnabled: "true"
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: false
+        indexType: REGISTRY
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Non-DockerHub proxies use port instead of routing to deal with issues
+  # Where different web proxies are unable to correctly route Docker specific requests to correct repos
+
+  # GitHub Container Registry proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: ghcr-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://ghcr.io/
+        contentMaxAge: -1
+        metadataMaxAge: 1440
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      docker:
+        httpPort: 10001
+        pathEnabled: "false"
+        forceBasicAuth: false
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: false
+        indexType: REGISTRY
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: quay-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://quay.io/
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      docker:
+        httpPort: 10002
+        pathEnabled: "false"
+        forceBasicAuth: false
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: true
+        indexType: REGISTRY
+        indexUrl: https://quay.io/
+        whitelistUrl[0]: ".*"
+
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
+    repo_body:
+      name: k8s-proxy
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://registry.k8s.io/
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      docker:
+        httpPort: 10003
+        pathEnabled: "false"
+        forceBasicAuth: false
+        v1Enabled: false
+      dockerProxy:
+        cacheForeignLayers: true
+        indexType: REGISTRY
+        indexUrl: https://registry.k8s.io/
+        whitelistUrl[0]: ".*"
+
+  #######################################################################
+  # DEPRECATED Repositories - These will be removed in future versions. #
+  # Use the universal Ubuntu and Debian proxies instead                 #
+  #######################################################################
+
+  # Ubuntu resolute docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: resolute-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: noble
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu noble docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: noble-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: noble
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu jammy docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: jammy-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: jammy
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Ubuntu focal docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: focal-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/ubuntu
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: focal
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Debian bookworm docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: bookworm-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/debian
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: bookworm
+        flat: false
+      cleanup:
+        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+
+  # Debian bullseye docker apt proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
+    repo_body:
+      name: bullseye-docker
+      online: true
+      storage:
+        blobStoreName: default
+        strictContentTypeValidation: true
+      proxy:
+        remoteUrl: https://download.docker.com/linux/debian
+        contentMaxAge: 15
+        metadataMaxAge: 15
+      negativeCache:
+        enabled: true
+        timeToLive: 1440
+      httpClient:
+        blocked: false
+        autoBlock: false
+      apt:
+        distribution: bullseye
         flat: false
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
@@ -816,271 +1234,3 @@ nexus_default_repositories:
         flat: false
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  ####################
-  # Docker apt proxy #
-  ####################
-
-  # Ubuntu resolute docker apt proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
-    repo_body:
-      name: resolute-docker
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://download.docker.com/linux/ubuntu
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      apt:
-        distribution: noble
-        flat: false
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  # Ubuntu noble docker apt proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
-    repo_body:
-      name: noble-docker
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://download.docker.com/linux/ubuntu
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      apt:
-        distribution: noble
-        flat: false
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  # Ubuntu jammy docker apt proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
-    repo_body:
-      name: jammy-docker
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://download.docker.com/linux/ubuntu
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      apt:
-        distribution: jammy
-        flat: false
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  # Ubuntu focal docker apt proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
-    repo_body:
-      name: focal-docker
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://download.docker.com/linux/ubuntu
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      apt:
-        distribution: focal
-        flat: false
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  # Debian bookworm docker apt proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
-    repo_body:
-      name: bookworm-docker
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://download.docker.com/linux/debian
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      apt:
-        distribution: bookworm
-        flat: false
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  # Debian bullseye docker apt proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
-    repo_body:
-      name: bullseye-docker
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://download.docker.com/linux/debian
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      apt:
-        distribution: bullseye
-        flat: false
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  #########################
-  # Container Proxy Repos #
-  #########################
-
-  # Docker proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
-    repo_body:
-      name: docker-proxy
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://registry-1.docker.io/
-        contentMaxAge: -1
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      docker:
-        forceBasicAuth: false
-        pathEnabled: "true"
-        v1Enabled: false
-      dockerProxy:
-        cacheForeignLayers: false
-        indexType: REGISTRY
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  # Non-DockerHub proxies use port instead of routing to deal with issues
-  # Where different web proxies are unable to correctly route Docker specific requests to correct repos
-
-  # GitHub Container Registry proxy
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
-    repo_body:
-      name: ghcr-proxy
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://ghcr.io/
-        contentMaxAge: -1
-        metadataMaxAge: 1440
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      docker:
-        httpPort: 10001
-        pathEnabled: "false"
-        forceBasicAuth: false
-        v1Enabled: false
-      dockerProxy:
-        cacheForeignLayers: false
-        indexType: REGISTRY
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
-
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
-    repo_body:
-      name: quay-proxy
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://quay.io/
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      docker:
-        httpPort: 10002
-        pathEnabled: "false"
-        forceBasicAuth: false
-        v1Enabled: false
-      dockerProxy:
-        cacheForeignLayers: true
-        indexType: REGISTRY
-        indexUrl: https://quay.io/
-        whitelistUrl[0]: ".*"
-
-  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
-    repo_body:
-      name: k8s-proxy
-      online: true
-      storage:
-        blobStoreName: default
-        strictContentTypeValidation: true
-      proxy:
-        remoteUrl: https://registry.k8s.io/
-        contentMaxAge: 15
-        metadataMaxAge: 15
-      negativeCache:
-        enabled: true
-        timeToLive: 1440
-      httpClient:
-        blocked: false
-        autoBlock: false
-      docker:
-        httpPort: 10003
-        pathEnabled: "false"
-        forceBasicAuth: false
-        v1Enabled: false
-      dockerProxy:
-        cacheForeignLayers: true
-        indexType: REGISTRY
-        indexUrl: https://registry.k8s.io/
-        whitelistUrl[0]: ".*"
