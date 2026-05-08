@@ -12,7 +12,7 @@
     # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
     ansible_facts:
       distribution_release: bookworm
-      distribution: Debian
+      distribution: debian
 
 # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
 - name: Adding Docker repository...
@@ -24,4 +24,4 @@
     # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
     ansible_facts:
       distribution_release: bookworm
-      distribution: Debian
+      distribution: debian

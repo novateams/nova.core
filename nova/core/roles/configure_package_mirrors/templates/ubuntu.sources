@@ -2,12 +2,12 @@
 
 Types: deb
 URIs: {{ package_mirror_ubuntu_uri.general }}
-Suites: noble noble-updates noble-backports
+Suites: {{ ansible_facts.distribution_release }} {{ ansible_facts.distribution_release }}-updates {{ ansible_facts.distribution_release }}-backports
 Components: main restricted universe multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
 Types: deb
 URIs: {{ package_mirror_ubuntu_uri.security }}
-Suites: noble-security
+Suites: {{ ansible_facts.distribution_release }}-security
 Components: main restricted universe multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
