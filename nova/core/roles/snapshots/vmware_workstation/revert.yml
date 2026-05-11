@@ -13,19 +13,9 @@
       register: powerstate
 
     - name: Shutting down {{ inventory_hostname }}...
-      ansible.builtin.command: vmcli power stop --opType trySoft {{ vmware_workstation.local_vmx_path }}
+      ansible.builtin.command: vmcli power stop --opType hard {{ vmware_workstation.local_vmx_path }}
       changed_when: true
       when: (powerstate.stdout | from_yaml).PowerState
-
-    - name: Waiting until {{ inventory_hostname }} is shut down...
-      ansible.builtin.command: vmcli power query {{ vmware_workstation.local_vmx_path }}
-      register: powerstate
-      until:
-        - (powerstate.stdout | from_yaml).PowerState is defined
-        - not (powerstate.stdout | from_yaml).PowerState
-      retries: 60
-      delay: 2
-      changed_when: true
 
     # Default is the latest snapshot
     - name: Reverting to latest snapshot...
@@ -34,7 +24,8 @@
       when: snapshot_name is not defined
 
     - name: Reverting to {{ snapshot_name | default('') }} snapshot...
-      ansible.builtin.command: vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots
+      ansible.builtin.command:
+        vmcli snapshot revert {{ (all_snapshots.stdout | from_yaml).snapshots
         | selectattr('displayName', 'equalto', snapshot_name) | map(attribute='uid') | first }} {{ vmware_workstation.local_vmx_path }}
       changed_when: true
       when: snapshot_name is defined
