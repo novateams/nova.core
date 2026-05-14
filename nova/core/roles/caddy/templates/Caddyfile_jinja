@@ -30,6 +30,11 @@
 	rewrite {{ server.caddy_server_reverse_proxy_rewrite }}
 	{% endif %}
 
+	{% if server.caddy_server_reverse_proxy_to_address is defined %}
 	reverse_proxy {{ server.caddy_server_reverse_proxy_to_address }}
+	{% elif server.caddy_file_server | default(false) %}
+	root * /srv/www
+	file_server
+	{% endif %}
 }
 {% endfor %}

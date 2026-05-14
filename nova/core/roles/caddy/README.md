@@ -17,6 +17,19 @@ Refer to the [defaults/main.yml](https://github.com/novateams/nova.core/blob/mai
 ## Example
 
 ```yaml
+# Installing Caddy server that servers static files from /srv/caddy/www directory and listens on all addresses
+- name: Installing Caddy...
+  ansible.builtin.include_role:
+    name: nova.core.caddy
+  vars:
+    caddy_servers:
+    - caddy_server_name: web.example.com # Name of the server
+        caddy_server_listen_addresses:
+        - ":"
+        caddy_file_server: true
+```
+
+```yaml
 # Installing Caddy server that listens on all addresses and reverse proxies to an internal server
 - name: Installing Caddy...
   ansible.builtin.include_role:
