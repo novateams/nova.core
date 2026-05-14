@@ -10,7 +10,7 @@ providentia_external_docker_network_config:
 
 # parallelism
 providentia_threads_per_process: 5
-providentia_concurrent_processes: "{{ ansible_processor_vcpus }}"
+providentia_concurrent_processes: "{{ ansible_facts.processor_vcpus }}"
 
 # dependencies
 providentia_builtin_keycloak: true # Should keycloak instance be deployed with Providentia
