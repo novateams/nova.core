@@ -10,16 +10,16 @@
 - name: Checking if samba-ad-dc service exists...
   when: ansible_facts.system | default('') in ["FreeBSD", "Linux"]
   block:
-    - name: Checking if samba-ad-dc service exists...
+    - name: Checking if Samba AD is provisioned...
       ansible.builtin.stat:
-        path: /usr/lib/systemd/system/samba-ad-dc.service
+        path: /var/lib/samba/private/sam.ldb
       changed_when: false
-      register: samba_ad_dc_service_exists
+      register: samba_ad_provisioned
 
     - name: Setting samba_primary_domain_controller fact...
       ansible.builtin.set_fact:
         samba_primary_domain_controller: true
-      when: samba_ad_dc_service_exists.stat.exists
+      when: samba_ad_provisioned.stat.exists
 
 - name: Initialize account lists to empty arrays
   ansible.builtin.set_fact:
