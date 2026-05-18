@@ -34,4 +34,4 @@ if ((Get-ScheduledTask | Select-Object -ExpandProperty TaskName) -like "packer*"
 Remove-Item C:\Windows\Temp\* -Recurse -Force -ErrorAction SilentlyContinue
 
 # Event log cleanup
-wevtutil el  | ForEach-Object {if ($_ -notlike "Microsoft-Windows-LiveId*") {wevtutil cl "$_"}}
+wevtutil el | ForEach-Object {if ($_ -notlike "Microsoft-Windows-LiveId*") {wevtutil cl "$_"}}

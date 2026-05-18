@@ -1,6 +1,6 @@
 ---
 - name: Renaming Proxmox node...
-  when: ansible_hostname != hostname
+  when: ansible_facts.hostname != hostname
   notify: starting_proxmox_services
   block:
     - name: Getting Proxmox version...
@@ -22,7 +22,7 @@
       ansible.builtin.lineinfile:
         dest: /etc/hosts
         regexp: ^127.0.1.2
-        line: 127.0.1.2       {{ fqdn }} {{ ansible_hostname }}
+        line: 127.0.1.2       {{ fqdn }} {{ ansible_facts.hostname }}
 
     # Using sed because it allows changing certain line nr
     - name: Updating /etc/hosts with new hostname... # noqa: command-instead-of-module
@@ -43,8 +43,8 @@
     - name: Moving node directories...
       ansible.builtin.command: "{{ item }}"
       loop:
-        - mv /var/lib/rrdcached/db/pve2-storage/{{ ansible_hostname }} /var/lib/rrdcached/db/pve2-storage/{{ hostname }}
-        - mv /var/lib/rrdcached/db/pve2-node/{{ ansible_hostname }} /var/lib/rrdcached/db/pve2-node/{{ hostname }}
+        - mv /var/lib/rrdcached/db/pve2-storage/{{ ansible_facts.hostname }} /var/lib/rrdcached/db/pve2-storage/{{ hostname }}
+        - mv /var/lib/rrdcached/db/pve2-node/{{ ansible_facts.hostname }} /var/lib/rrdcached/db/pve2-node/{{ hostname }}
       changed_when: true
       when: (pve_version.stdout).split('/')[1] is version('9.0.0','<')
 
@@ -52,8 +52,8 @@
     - name: Moving node directories...
       ansible.builtin.command: "{{ item }}"
       loop:
-        - mv /var/lib/rrdcached/db/pve-storage-9.0/{{ ansible_hostname }} /var/lib/rrdcached/db/pve-storage-9.0/{{ hostname }}
-        - mv /var/lib/rrdcached/db/pve-node-9.0/{{ ansible_hostname }} /var/lib/rrdcached/db/pve-node-9.0/{{ hostname }}
+        - mv /var/lib/rrdcached/db/pve-storage-9.0/{{ ansible_facts.hostname }} /var/lib/rrdcached/db/pve-storage-9.0/{{ hostname }}
+        - mv /var/lib/rrdcached/db/pve-node-9.0/{{ ansible_facts.hostname }} /var/lib/rrdcached/db/pve-node-9.0/{{ hostname }}
       changed_when: true
       when: (pve_version.stdout).split('/')[1] is version('9.0.0','>=')
 
