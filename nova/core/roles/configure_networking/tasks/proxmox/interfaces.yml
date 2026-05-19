@@ -45,7 +45,7 @@
               content: "{{ item.content }}"
               file: "{{ item.file }}"
             body_format: json
-            validate_certs: "{{ proxmox_validate_certs }}"
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
           loop_control:
             label: "{{ item.file }}"
           loop:
@@ -72,7 +72,7 @@
                 - sh
                 - /tmp/rebuild_initramfs.sh # Execute the script to rebuild initramfs and reboot
             body_format: json
-            validate_certs: "{{ proxmox_validate_certs }}"
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
 
       rescue:
         - name: NETWORK CONFIGURATION ERROR

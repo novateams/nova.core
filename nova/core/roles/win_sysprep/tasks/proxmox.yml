@@ -5,7 +5,7 @@
     headers:
       Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
     method: GET
-    validate_certs: "{{ proxmox_validate_certs }}"
+    validate_certs: "{{ proxmox_defaults.validate_certs }}"
   delegate_to: localhost
   become: false
   register: all_proxmox_node_vms
@@ -22,7 +22,7 @@
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: GET
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: proxmox_vm_current_status
       until: proxmox_vm_current_status.json.data.status == 'stopped'
       retries: 90

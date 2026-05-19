@@ -4,7 +4,6 @@
     storage: "{{ proxmox_storage }}"
     node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
     vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
-    validate_certs: "{{ proxmox_validate_certs }}"
   retries: 12
   delay: 5
   register: proxmox_unreferenced_disks
@@ -20,7 +19,7 @@
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: DELETE
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       loop_control:
         loop_var: disk
         label: "{{ disk.volid }}"
@@ -33,7 +32,6 @@
         storage: "{{ proxmox_storage }}"
         node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
-        validate_certs: "{{ proxmox_validate_certs }}"
       retries: 12
       delay: 5
       register: proxmox_relisted_disks
