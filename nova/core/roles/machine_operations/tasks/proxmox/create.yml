@@ -19,7 +19,6 @@
         - name: Looking up {{ vm_template }} info...
           community.proxmox.proxmox_vm_info:
             name: "{{ vm_template }}"
-            validate_certs: "{{ proxmox_validate_certs }}"
           register: proxmox_vm_template
           until: proxmox_vm_template is not failed
           retries: 24
@@ -79,7 +78,6 @@
                 storage: "{{ proxmox_storage if not linked_clone_status else omit }}"
                 target: "{{ proxmox_node }}"
                 timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-                validate_certs: "{{ proxmox_validate_certs }}"
 
             - name: Creating /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done file...
               ansible.builtin.file:
@@ -104,7 +102,6 @@
                 state: absent
                 force: true
                 timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-                validate_certs: "{{ proxmox_validate_certs }}"
 
             - name: Getting the time...
               ansible.builtin.setup:
@@ -139,7 +136,6 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         node: "{{ proxmox_node }}"
         migrate: true
-        validate_certs: "{{ proxmox_validate_certs }}"
       retries: 12
       delay: 5
 
@@ -150,7 +146,6 @@
         disk: "{{ machine_operations_proxmox_os_disk }}"
         size: "{{ hardware_primary_disk_size }}G"
         state: resized
-        validate_certs: "{{ proxmox_validate_certs }}"
       # hardware_primary_disk_size variable usually comes from Providentia
       when: hardware_primary_disk_size is defined
 
@@ -166,7 +161,6 @@
         onboot: "{{ machine_operations_proxmox_vm_start_on_boot }}"
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
         update: true
-        validate_certs: "{{ proxmox_validate_certs }}"
 
     - name: Attaching following networks interfaces...
       community.proxmox.proxmox_nic:
@@ -176,7 +170,6 @@
         bridge: "{{ nic.cloud_id }}"
         mtu: "{{ nic.mtu | default(1) }}"
         firewall: "{{ machine_operations_proxmox_enable_firewall }}"
-        validate_certs: "{{ proxmox_validate_certs }}"
       loop_control:
         loop_var: nic
         index_var: idx
@@ -189,7 +182,6 @@
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
         state: started
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-        validate_certs: "{{ proxmox_validate_certs }}"
       retries: 6
       delay: 5
 

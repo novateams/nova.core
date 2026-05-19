@@ -15,7 +15,7 @@
             - -c
             - "rm -rf /etc/systemd/network/* && rm -rf /etc/netplan/*"
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Including command run check task...
@@ -51,7 +51,7 @@
           content: "{{ item.content | b64decode }}"
           file: /etc/systemd/network/10-{{ interface_names[interface_index] }}.network
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       loop: "{{ file_contents.results }}"
       loop_control:
         index_var: interface_index
@@ -87,7 +87,7 @@
           content: "{{ item.content | b64decode }}"
           file: /etc/systemd/network/10-{{ interface_names[interface_index] }}.link
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       loop: "{{ file_contents.results }}"
       loop_control:
         index_var: interface_index
@@ -106,7 +106,7 @@
             - "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
               systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Including command run check task...
@@ -134,7 +134,7 @@
           content: "{{ resolv_file.content | b64decode }}"
           file: /etc/resolv.conf
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Getting OS type...
@@ -143,7 +143,7 @@
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: GET
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Setting OS type variable
@@ -172,7 +172,7 @@
                 - -c
                 - "update-initramfs -k all -u"
             body_format: json
-            validate_certs: "{{ proxmox_validate_certs }}"
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
           register: network_config_command
 
         - name: Including command run check task...
@@ -193,7 +193,7 @@
                     - -c
                     - 'if [ -x "$(command -v dhclient)" ]; then dhclient; else :; fi'
                 body_format: json
-                validate_certs: "{{ proxmox_validate_certs }}"
+                validate_certs: "{{ proxmox_defaults.validate_certs }}"
               register: network_config_command
 
             - name: Including command run check task...
@@ -214,7 +214,7 @@
                 - -c
                 - "mkinitcpio -P"
             body_format: json
-            validate_certs: "{{ proxmox_validate_certs }}"
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
           register: network_config_command
 
         - name: Including command run check task...

@@ -21,7 +21,7 @@
             - "Set-Content -Path C:\\Windows\\Temp\\SysprepStatus -Value (Get-ItemProperty -Path HKLM:\\SYSTEM\\Setup\\Status\\SysprepStatus
               | Select-Object -ExpandProperty GeneralizationState) -Force"
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
       retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
@@ -32,7 +32,7 @@
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: GET
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: sysprep_status
       retries: "{{ (configure_networking_proxmox_timeout if configure_networking_proxmox_timeout >= 5 else 5) // 5 }}"
       delay: 5
@@ -46,7 +46,6 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
-        validate_certs: "{{ proxmox_validate_certs }}"
       register: proxmox_agent_status
       until: proxmox_agent_status.msg | default('') is search('.*agent is not running.*')
       failed_when: proxmox_agent_status.failed and proxmox_agent_status.msg | default('') is not search('.*agent is not running.*')

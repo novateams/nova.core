@@ -5,7 +5,7 @@
     headers:
       Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
     method: POST
-    validate_certs: "{{ proxmox_validate_certs }}"
+    validate_certs: "{{ proxmox_defaults.validate_certs }}"
   delegate_to: localhost
   become: false
   when: proxmox_vm_info.proxmox_vms[0].status == 'running'

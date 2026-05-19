@@ -233,6 +233,9 @@ azure_defaults:
 # Proxmox #
 ###########
 
+proxmox_validate_certs: true
+proxmox_api_url: https://{{ proxmox_defaults.api_host }}:8006/api2/json
+
 proxmox_defaults:
   api_host: "{{ proxmox_api_host | default('') }}"
   api_user:
@@ -250,9 +253,7 @@ proxmox_defaults:
     | default(lookup('vars', project_fullname | default('') ~ '_proxmox_api_token_secret'))
     | default(lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_proxmox_api_token_secret'))
     | default(proxmox_api_token_secret) | default('') }}"
-
-proxmox_validate_certs: true
-proxmox_api_url: https://{{ proxmox_defaults.api_host }}:8006/api2/json
+  validate_certs: "{{ proxmox_validate_certs }}"
 
 # How long to wait for a Proxmox operation (like clone, powerstate and snapshots) to complete
 proxmox_machine_operations_operation_timeout: 180

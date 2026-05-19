@@ -27,7 +27,7 @@
             - -c
             - "rm -f /etc/netplan/*"
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Including command run check task...
@@ -43,7 +43,7 @@
           content: "{{ file_contents.content | b64decode }}"
           file: /etc/netplan/01-netcfg.yaml
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Applying netplan...
@@ -60,7 +60,7 @@
             # Doing that is still cheaper than a single reboot
             - "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply && netplan apply"
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Including command run check task...

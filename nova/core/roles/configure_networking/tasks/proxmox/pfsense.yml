@@ -9,7 +9,7 @@
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: GET
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: config_download
 
     - name: Saving /conf/config.xml to a temporary file...
@@ -128,7 +128,7 @@
           content: "{{ item | b64decode }}"
           file: /tmp/config_{{ '%03d' | format(file_loop) }}.xml
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       loop: "{{ file_contents.content | regex_findall('.{1,1700}') }}"
       loop_control:
         index_var: file_loop
@@ -152,7 +152,7 @@
             - "cat /tmp/config_*.xml > /conf/config.xml && rm -f /tmp/config_*.xml"
             - reboot
         body_format: json
-        validate_certs: "{{ proxmox_validate_certs }}"
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
 
     - name: Including command run check task...
