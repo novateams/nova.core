@@ -16,9 +16,9 @@
     - name: Removing following snapshots...
       community.proxmox.proxmox_snap:
         hostname: "{{ custom_vm_name | default(vm_name) }}"
-        snapname: "{{ snapshot_name }}"
+        snapname: "{{ snap_name }}"
         state: absent
       loop_control:
-        loop_var: snapshot_name
+        loop_var: snap_name
       loop: "{{ (snapshot_info.json.data | map(attribute='name'))[:-1] }}"
       when: remove_all_snapshots | bool
