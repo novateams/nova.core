@@ -134,6 +134,15 @@
       delay: 10
       when: machine_operations_aws_assign_public_ip
 
+- name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true
+  when:
+    - not fresh_deploy
+    - existing_instances[-1].state.name != "running"
+
 - name: Setting connection address to {{ eip_info.public_ip
     | default(created_ec2_instance.instances[0].public_ip_address)
     | default(existing_instances[-1].public_ip_address) | default('N/A') }}...

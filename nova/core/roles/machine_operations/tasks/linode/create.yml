@@ -33,6 +33,15 @@
         state: present
       register: linode_vm
 
+- name: Starting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    poweron: true
+  when:
+    - not fresh_deploy
+    - linode_vm_list.instances[0].status != "running"
+
 - name: Setting IP address facts for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
     connection_address: "{{ linode_vm.instance.ipv4[0] | ansible.utils.ipaddr('address') }}"
