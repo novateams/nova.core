@@ -7,7 +7,7 @@
     description: "{{ item.description | default(omit) }}"
   loop: "{{ domain_groups }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.name | default('') }}"
   when: item.members is not defined
 
 - name: Configuring following domain groups and replacing members...
@@ -20,7 +20,7 @@
       set: "{{ item.members }}"
   loop: "{{ domain_groups }}"
   loop_control:
-    label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name }}"
+    label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name | default('') }}"
   when:
     - item.members is defined
     - accounts_domain_groups_members_strategy == 'replace'
@@ -35,7 +35,7 @@
       add: "{{ item.members }}"
   loop: "{{ domain_groups }}"
   loop_control:
-    label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name }}"
+    label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name | default('') }}"
   when:
     - item.members is defined
     - accounts_domain_groups_members_strategy == 'add'

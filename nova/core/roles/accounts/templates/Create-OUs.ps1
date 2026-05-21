@@ -7,6 +7,7 @@ $Path = "{{ ou.path | regex_replace('^OU=[^,]+,(.*)$', '\\1') }}"
 $DistinguishedName = "{{ ou.path }}"
 $ProtectedFromAccidentalDeletion = ${{ accounts_protect_ou_from_accidental_deletion }}
 if($null -eq (Get-ADOrganizationalUnit -Filter * | Where-Object DistinguishedName -Like $DistinguishedName | Select-Object -ExpandProperty DistinguishedName)){
+    Write-Host "Creating OU: $Name at $Path"
     New-ADOrganizationalUnit -Name $Name -Path $Path -ProtectedFromAccidentalDeletion $ProtectedFromAccidentalDeletion
 }
 
