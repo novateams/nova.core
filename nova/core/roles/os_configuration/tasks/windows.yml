@@ -35,3 +35,8 @@
 - name: Including Windows on VMware Workstation configuration tasks...
   ansible.builtin.include_tasks: windows_vmware_workstation.yml
   when: infra_env == "vmware_workstation"
+  vars:
+    ansible_become: false
+    ansible_host: "{{ vmware_workstation.host }}"
+    ansible_python_interpreter: "{{ vmware_workstation.python_interpreter }}"
+    ansible_shell_type: "{{ vmware_workstation.shell_type }}"

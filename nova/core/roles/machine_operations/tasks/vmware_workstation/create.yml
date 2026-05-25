@@ -1,243 +1,240 @@
 ---
-- name: Including VMware Workstation tasks...
-  become: false
+- name: Checking if the {{ custom_vm_name | default(vm_name) }} already exists...
+  ansible.builtin.stat:
+    path: "{{ vmware_workstation.local_vmx_path }}"
+  register: vm_presence
+
+- name: INCORRECT DEPLOY METHOD
+  ansible.builtin.fail:
+    msg: "{{ custom_vm_name | default(vm_name) }} doesn't exist, run deploy or redeploy first!"
+  when:
+    - not vm_presence.stat.exists
+    - role_only is ansible.builtin.truthy
+      or role_only_wp is ansible.builtin.truthy
+      or single_role is defined
+
+- name: Creating {{ machine_operations_vmware_workstation_template_export_folder }} folder...
+  ansible.builtin.file:
+    path: "{{ machine_operations_vmware_workstation_template_export_folder }}"
+    state: directory
+    recurse: true
+
+- name: Creating and configuring {{ custom_vm_name | default(vm_name) }}...
+  when:
+    - machine_operations_vmware_workstation_download_template_from_vsphere
+    - not vm_presence.stat.exists
   block:
-    - name: Checking if the {{ custom_vm_name | default(vm_name) }} already exists...
+    - name: Checking if {{ vm_template }} template is already downloaded...
       ansible.builtin.stat:
-        path: "{{ vmware_workstation.local_vmx_path }}"
-      register: vm_presence
+        path: "{{ machine_operations_vmware_workstation_local_vmx_template_path }}"
+      register: vm_template_presence
 
-    - name: INCORRECT DEPLOY METHOD
-      ansible.builtin.fail:
-        msg: "{{ custom_vm_name | default(vm_name) }} doesn't exist, run deploy or redeploy first!"
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
+    - name: Downloading or updating VM template...
       when:
-        - not vm_presence.stat.exists
-        - role_only is ansible.builtin.truthy
-          or role_only_wp is ansible.builtin.truthy
-          or single_role is defined
+        - not vm_template_presence.stat.exists or ((ansible_facts.date_time.epoch | int) - (vm_template_presence.stat.ctime | round)
+          >= machine_operations_vmware_workstation_template_update_interval_days * 86400)
+        - not role_only
+        - not role_only_wp
+      block:
+        - name: Removing existing {{ vm_template }} template...
+          ansible.builtin.file:
+            path: "{{ machine_operations_vmware_workstation_template_export_folder }}/{{ vm_template }}"
+            state: absent
+          when: machine_operations_vmware_workstation_template_update
 
-    - name: Creating {{ machine_operations_vmware_workstation_template_export_folder }} folder...
+        - name: Downloading {{ vm_template }} template...
+          ansible.builtin.debug:
+            msg: Downloading new {{ vm_template }} template, this will take a while...
+
+        # regex_replace is required because urlib considers / as a safe character and doesn't encode it
+        - name: Downloading {{ vm_template }} since it's not present or is older than the update interval...
+          ansible.builtin.command:
+            ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode
+            | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ machine_operations_vmware_workstation_template_export_folder }}
+          changed_when: true
+
+    - name: Setting fresh_deploy fact...
+      ansible.builtin.set_fact:
+        fresh_deploy: true
+
+    - name: Checking for the correct deploy mode...
+      ansible.builtin.fail:
+        msg: |
+          Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
+      when:
+        - fresh_deploy
+        - role_only or role_only_wp or single_role is defined
+
+    - name: Create VM folder if it does not exist
       ansible.builtin.file:
-        path: "{{ machine_operations_vmware_workstation_template_export_folder }}"
+        path: "{{ vmware_workstation.local_vm_folder }}"
         state: directory
         recurse: true
 
-    - name: Creating and configuring {{ custom_vm_name | default(vm_name) }}...
-      when:
-        - machine_operations_vmware_workstation_download_template_from_vsphere
-        - not vm_presence.stat.exists
-      block:
-        - name: Checking if {{ vm_template }} template is already downloaded...
-          ansible.builtin.stat:
-            path: "{{ machine_operations_vmware_workstation_local_vmx_template_path }}"
-          register: vm_template_presence
+    - name: Checking for existing {{ machine_operations_vmware_workstation_local_vmx_template_path }}...
+      ansible.builtin.stat:
+        path: "{{ machine_operations_vmware_workstation_local_vmx_template_path }}"
+      register: vmx_template_presence
 
-        - name: Getting the time...
-          ansible.builtin.setup:
-            filter: "*_time"
+    - name: MISSING TEMPLATE FILE
+      ansible.builtin.fail:
+        msg: |
+          Template {{ vm_template }} is missing from {{ machine_operations_vmware_workstation_local_vmx_template_path }}
+          When not downloading from vSphere create the template by other means first.
+      when: not vmx_template_presence.stat.exists
 
-        - name: Downloading or updating VM template...
-          when:
-            - not vm_template_presence.stat.exists or ((ansible_facts.date_time.epoch | int) - (vm_template_presence.stat.ctime | round)
-              >= machine_operations_vmware_workstation_template_update_interval_days * 86400)
-            - not role_only
-            - not role_only_wp
-          block:
-            - name: Removing existing {{ vm_template }} template...
-              ansible.builtin.file:
-                path: "{{ machine_operations_vmware_workstation_template_export_folder }}/{{ vm_template }}"
-                state: absent
-              when: machine_operations_vmware_workstation_template_update
-
-            - name: Downloading {{ vm_template }} template...
-              ansible.builtin.debug:
-                msg: Downloading new {{ vm_template }} template, this will take a while...
-
-            # regex_replace is required because urlib considers / as a safe character and doesn't encode it
-            - name: Downloading {{ vm_template }} since it's not present or is older than the update interval...
-              ansible.builtin.command:
-                ovftool --noSSLVerify -tt=vmx -n={{ vm_template }} "vi://{{ vmware_defaults.username }}:{{ vmware_defaults.password | urlencode
-                | regex_replace('/', '%2F') }}@{{ templates_path }}/{{ vm_template }}" {{ machine_operations_vmware_workstation_template_export_folder }}
-              changed_when: true
-
-        - name: Setting fresh_deploy fact...
-          ansible.builtin.set_fact:
-            fresh_deploy: true
-
-        - name: Checking for the correct deploy mode...
-          ansible.builtin.fail:
-            msg: |
-              Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
-          when:
-            - fresh_deploy
-            - role_only or role_only_wp or single_role is defined
-
-        - name: Create VM folder if it does not exist
-          ansible.builtin.file:
-            path: "{{ vmware_workstation.local_vm_folder }}"
-            state: directory
-            recurse: true
-
-        - name: Checking for existing {{ machine_operations_vmware_workstation_local_vmx_template_path }}...
-          ansible.builtin.stat:
-            path: "{{ machine_operations_vmware_workstation_local_vmx_template_path }}"
-          register: vmx_template_presence
-
-        - name: MISSING TEMPLATE FILE
-          ansible.builtin.fail:
-            msg: |
-              Template {{ vm_template }} is missing from {{ machine_operations_vmware_workstation_local_vmx_template_path }}
-              When not downloading from vSphere create the template by other means first.
-          when: not vmx_template_presence.stat.exists
-
-        - name: Creating {{ custom_vm_name | default(vm_name) }} to vmxt template...
-          ansible.builtin.command:
-            vmcli {{ machine_operations_vmware_workstation_local_vmx_template_path }} vmtemplate create --path {{
-            vmware_workstation.local_vm_folder }}/{{ custom_vm_name
-            | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmtx --name {{ custom_vm_name | default(vm_name) }}
-          changed_when: true
-
-        - name: Deploying {{ custom_vm_name | default(vm_name) }} VM...
-          ansible.builtin.command:
-            vmcli vmtemplate deploy --path {{ vmware_workstation.local_vm_folder }}/{{ custom_vm_name
-            | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmtx
-          changed_when: true
-
-        - name: Configuring {{ custom_vm_name | default(vm_name) }} virtual machine...
-          ansible.builtin.lineinfile:
-            path: "{{ vmware_workstation.local_vmx_path }}"
-            regex: "{{ item.regex }}"
-            line: "{{ item.line }}"
-            state: present
-          loop_control:
-            label: "{{ item.line }}"
-          loop:
-            # Sets the network adapter to NAT
-            - regex: ethernet0.connectionType.*
-              line: ethernet0.connectionType = "nat"
-
-            # Otherwise Windows deploy will fail sometimes because of running sysprep
-            - regex: tools.upgrade.policy.*
-              line: tools.upgrade.policy = "manual"
-
-            # This fixes Windows BSOD when importing from vSphere
-            - regex: hpet0.present.*
-              line: hpet0.present = "TRUE"
-
-            # This fixes the issue where link keeps flapping https://github.com/mkubecek/vmware-host-modules/issues/54
-            - regex: vmnat.linkStatePropagation.disable.*
-              line: vmnat.linkStatePropagation.disable = "TRUE"
-
-            # Enabling nested virtualization
-            - regex: vhv.enable.*
-              line: vhv.enable = "TRUE"
-
-            # Enabling VMTools time synchronization with host
-            - regex: tools.syncTime.*
-              line: tools.syncTime = "TRUE"
-
-        # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
-        # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
-        - name: Setting compatible Darwin OS type...
-          ansible.builtin.lineinfile:
-            path: "{{ vmware_workstation.local_vmx_path }}"
-            regex: "{{ item.regex }}"
-            line: "{{ item.line }}"
-            state: present
-          loop_control:
-            label: "{{ item.line }}"
-          loop:
-            - regex: guestos.*
-              line: guestos = "darwin20-64"
-          when: ("os_macos" in group_names)
-
-        - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
-          ansible.builtin.lineinfile:
-            path: "{{ vmware_workstation.local_vmx_path }}"
-            regex: "{{ item.regex }}"
-            line: "{{ item.line }}"
-            state: present
-          loop_control:
-            label: "{{ item.line }}"
-          loop: "{{ machine_operations_vmware_workstation_custom_params }}"
-          when: machine_operations_vmware_workstation_custom_params != []
-
-    - name: Including shared folder tasks...
-      when:
-        - machine_operations_vmware_workstation_enable_shared_folder
-        - machine_operations_vmware_workstation_supported_shared_folder_os | intersect(group_names) | length > 0
-        - not role_only
-      block:
-        - name: Sharing VM folder with host...
-          ansible.builtin.lineinfile:
-            path: "{{ vmware_workstation.local_vmx_path }}"
-            regex: "{{ item.regex }}"
-            line: "{{ item.line }}"
-            state: present
-          loop_control:
-            label: "{{ item.line }}"
-          loop:
-            - regex: isolation.tools.hgfs.disable.*
-              line: isolation.tools.hgfs.disable = "FALSE"
-            - regex: sharedFolder0.present.*
-              line: sharedFolder0.present = "TRUE"
-            - regex: sharedFolder0.enabled.*
-              line: sharedFolder0.enabled = "TRUE"
-            - regex: sharedFolder0.readAccess.*
-              line: sharedFolder0.readAccess = "TRUE"
-            - regex: sharedFolder0.writeAccess.*
-              line: sharedFolder0.writeAccess = "TRUE"
-            - regex: sharedFolder0.hostPath.*
-              line: sharedFolder0.hostPath = "{{ machine_operations_vmware_workstation_host_shared_folder_path }}"
-            - regex: sharedFolder0.guestName.*
-              line: sharedFolder0.guestName = "{{ custom_vm_name | default(vm_name) }}"
-            - regex: sharedFolder0.expiration.*
-              line: sharedFolder0.expiration = "never"
-            - regex: sharedFolder.maxNum.*
-              line: sharedFolder.maxNum = "1"
-
-        - name: Creating a shared folder on the host...
-          ansible.builtin.file:
-            path: "{{ machine_operations_vmware_workstation_host_shared_folder_path }}"
-            state: directory
-            recurse: true
-
-    - name: Setting {{ inventory_hostname }} CPU value to {{ hardware_cpu }}...
-      ansible.builtin.command: vmcli ConfigParams SetEntry numvcpus {{ hardware_cpu }} {{ vmware_workstation.local_vmx_path }}
-      when: hardware_cpu != none
+    - name: Creating {{ custom_vm_name | default(vm_name) }} to vmxt template...
+      ansible.builtin.command:
+        vmcli {{ machine_operations_vmware_workstation_local_vmx_template_path }} vmtemplate create --path {{
+        vmware_workstation.local_vm_folder }}/{{ custom_vm_name
+        | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmtx --name {{ custom_vm_name | default(vm_name) }}
       changed_when: true
 
-    - name: Setting {{ inventory_hostname }} RAM value to {{ hardware_ram }}GB...
-      ansible.builtin.command: vmcli ConfigParams SetEntry memsize {{ hardware_ram * 1024 }} {{ vmware_workstation.local_vmx_path }}
-      when: hardware_ram != none
+    - name: Deploying {{ custom_vm_name | default(vm_name) }} VM...
+      ansible.builtin.command:
+        vmcli vmtemplate deploy --path {{ vmware_workstation.local_vm_folder }}/{{ custom_vm_name
+        | default(vm_name) }}/{{ custom_vm_name | default(vm_name) }}.vmtx
       changed_when: true
 
-    - name: Starting {{ inventory_hostname }} and waiting for IP address... # noqa: command-instead-of-shell
-      ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
-      register: vm_start
-      changed_when: vm_start.stdout != 'VMX is already running.'
+    - name: Configuring {{ custom_vm_name | default(vm_name) }} virtual machine...
+      ansible.builtin.lineinfile:
+        path: "{{ vmware_workstation.local_vmx_path }}"
+        regex: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        state: present
+      loop_control:
+        label: "{{ item.line }}"
+      loop:
+        # Sets the network adapter to NAT
+        - regex: ethernet0.connectionType.*
+          line: ethernet0.connectionType = "nat"
 
-    - name: Getting IP address for {{ inventory_hostname }}...
-      ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait
-      changed_when: false
-      register: vmip
-      retries: 60
-      delay: 3
-      until:
-        - vmip.rc == 0
-        - vmip.stdout != "unknown"
-        - vmip.stdout is ansible.utils.ipv4 # Waiting until IP address is a valid IPv4 address
+        # Otherwise Windows deploy will fail sometimes because of running sysprep
+        - regex: tools.upgrade.policy.*
+          line: tools.upgrade.policy = "manual"
 
-    # Needs to be enabled here again because otherwise VMWare Workstation disables shared folders for new machines on first run
-    - name: Enabling shared folders...
-      ansible.builtin.command: vmrun enableSharedFolders {{ vmware_workstation.local_vmx_path }}
-      changed_when: true
-      when:
-        - machine_operations_vmware_workstation_enable_shared_folder
-        - machine_operations_vmware_workstation_supported_shared_folder_os | intersect(group_names) | length > 0
+        # This fixes Windows BSOD when importing from vSphere
+        - regex: hpet0.present.*
+          line: hpet0.present = "TRUE"
 
-    - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
-      ansible.builtin.set_fact:
-        ansible_host: "{{ vmip.stdout }}"
-        connection_address: "{{ vmip.stdout }}"
-        connection_nic_ipv4: "{{ vmip.stdout }}"
+        # This fixes the issue where link keeps flapping https://github.com/mkubecek/vmware-host-modules/issues/54
+        - regex: vmnat.linkStatePropagation.disable.*
+          line: vmnat.linkStatePropagation.disable = "TRUE"
+
+        # Enabling nested virtualization
+        - regex: vhv.enable.*
+          line: vhv.enable = "TRUE"
+
+        # Enabling VMTools time synchronization with host
+        - regex: tools.syncTime.*
+          line: tools.syncTime = "TRUE"
+
+    # macos_has_python is a MacOS specific OS group var to indicate if Python is installed
+    # In this instance it can be used to determine if we should run MacOS specific tasks for Pythonless MacOS systems
+    - name: Setting compatible Darwin OS type...
+      ansible.builtin.lineinfile:
+        path: "{{ vmware_workstation.local_vmx_path }}"
+        regex: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        state: present
+      loop_control:
+        label: "{{ item.line }}"
+      loop:
+        - regex: guestos.*
+          line: guestos = "darwin20-64"
+      when: ("os_macos" in group_names)
+
+    - name: Configuring {{ custom_vm_name | default(vm_name) }} custom parameters...
+      ansible.builtin.lineinfile:
+        path: "{{ vmware_workstation.local_vmx_path }}"
+        regex: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        state: present
+      loop_control:
+        label: "{{ item.line }}"
+      loop: "{{ machine_operations_vmware_workstation_custom_params }}"
+      when: machine_operations_vmware_workstation_custom_params != []
+
+- name: Including shared folder tasks...
+  when:
+    - machine_operations_vmware_workstation_enable_shared_folder
+    - machine_operations_vmware_workstation_supported_shared_folder_os | intersect(group_names) | length > 0
+    - not role_only
+  block:
+    - name: Sharing VM folder with host...
+      ansible.builtin.lineinfile:
+        path: "{{ vmware_workstation.local_vmx_path }}"
+        regex: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        state: present
+      loop_control:
+        label: "{{ item.line }}"
+      loop:
+        - regex: isolation.tools.hgfs.disable.*
+          line: isolation.tools.hgfs.disable = "FALSE"
+        - regex: sharedFolder0.present.*
+          line: sharedFolder0.present = "TRUE"
+        - regex: sharedFolder0.enabled.*
+          line: sharedFolder0.enabled = "TRUE"
+        - regex: sharedFolder0.readAccess.*
+          line: sharedFolder0.readAccess = "TRUE"
+        - regex: sharedFolder0.writeAccess.*
+          line: sharedFolder0.writeAccess = "TRUE"
+        - regex: sharedFolder0.hostPath.*
+          line: sharedFolder0.hostPath = "{{ machine_operations_vmware_workstation_host_shared_folder_path }}"
+        - regex: sharedFolder0.guestName.*
+          line: sharedFolder0.guestName = "{{ custom_vm_name | default(vm_name) }}"
+        - regex: sharedFolder0.expiration.*
+          line: sharedFolder0.expiration = "never"
+        - regex: sharedFolder.maxNum.*
+          line: sharedFolder.maxNum = "1"
+
+    - name: Creating a shared folder on the host...
+      ansible.builtin.file:
+        path: "{{ machine_operations_vmware_workstation_host_shared_folder_path }}"
+        state: directory
+        recurse: true
+
+- name: Setting {{ inventory_hostname }} CPU value to {{ hardware_cpu }}...
+  ansible.builtin.command: vmcli ConfigParams SetEntry numvcpus {{ hardware_cpu }} {{ vmware_workstation.local_vmx_path }}
+  when: hardware_cpu != none
+  changed_when: true
+
+- name: Setting {{ inventory_hostname }} RAM value to {{ hardware_ram }}GB...
+  ansible.builtin.command: vmcli ConfigParams SetEntry memsize {{ hardware_ram * 1024 }} {{ vmware_workstation.local_vmx_path }}
+  when: hardware_ram != none
+  changed_when: true
+
+- name: Starting {{ inventory_hostname }} and waiting for IP address... # noqa: command-instead-of-shell
+  ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
+  register: vm_start
+  changed_when: vm_start.stdout != 'VMX is already running.'
+
+- name: Getting IP address for {{ inventory_hostname }}...
+  ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait
+  changed_when: false
+  register: vmip
+  retries: 60
+  delay: 3
+  until:
+    - vmip.rc == 0
+    - vmip.stdout != "unknown"
+    - vmip.stdout is ansible.utils.ipv4 # Waiting until IP address is a valid IPv4 address
+
+# Needs to be enabled here again because otherwise VMWare Workstation disables shared folders for new machines on first run
+- name: Enabling shared folders...
+  ansible.builtin.command: vmrun enableSharedFolders {{ vmware_workstation.local_vmx_path }}
+  changed_when: true
+  when:
+    - machine_operations_vmware_workstation_enable_shared_folder
+    - machine_operations_vmware_workstation_supported_shared_folder_os | intersect(group_names) | length > 0
+
+- name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_host: "{{ vmip.stdout }}"
+    connection_address: "{{ vmip.stdout }}"
+    connection_nic_ipv4: "{{ vmip.stdout }}"

@@ -5,7 +5,7 @@
 
 - name: Configuring VM connection in VMware Workstation environment...
   ansible.builtin.include_tasks: vmware_workstation.yml
-  when: infra_env == 'vmware_workstation'
+  when: infra_env == "vmware_workstation"
 
 - name: Configuring connection for your host... # The laptop or desktop you are running Ansible from
   ansible.builtin.include_tasks: my_host.yml

@@ -1,24 +1,25 @@
 ---
-- name: Setting correct connection parameters for VMware Workstation's host...
-  ansible.builtin.set_fact:
+- name: Checking that {{ vmware_workstation.host }} is reachable over {{ vmware_workstation.connection }}...
+  ansible.builtin.wait_for:
+    host: "{{ vmware_workstation.host }}"
+    port: 22
+    timeout: 10
+  become: false
+  delegate_to: localhost
+
+- name: Running VMware Workstation tasks in dedicated host...
+  vars:
+    ansible_become: false
     ansible_connection: "{{ vmware_workstation.connection }}"
     ansible_host: "{{ vmware_workstation.host }}"
     ansible_python_interpreter: "{{ vmware_workstation.python_interpreter }}"
     ansible_shell_type: "{{ vmware_workstation.shell_type }}"
     ansible_user: "{{ vmware_workstation.user }}"
     ansible_password: "{{ vmware_workstation.password | default(omit) }}"
+  block:
+    - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
+      ansible.builtin.include_tasks: remove.yml
+      when: deploy_mode in ['undeploy', 'redeploy']
 
-- name: Checking that {{ ansible_host }} is reachable over {{ vmware_workstation.connection }}...
-  ansible.builtin.wait_for:
-    host: "{{ ansible_host }}"
-    port: 22
-    timeout: 10
-  delegate_to: localhost
-  become: false
-
-- name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
-  ansible.builtin.include_tasks: remove.yml
-  when: deploy_mode in ['undeploy', 'redeploy']
-
-- name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
-  ansible.builtin.include_tasks: create.yml
+    - name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
+      ansible.builtin.include_tasks: create.yml
