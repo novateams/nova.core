@@ -4,10 +4,6 @@
     url: "{{ docker_apt_proxy }}/gpg"
     dest: /etc/apt/trusted.gpg.d/docker.asc
     mode: "0644"
-  register: docker_repo_key
-  until: not docker_repo_key.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
-  retries: 10
-  delay: 6
   vars:
     # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
     ansible_facts:
