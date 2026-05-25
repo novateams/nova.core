@@ -1,6 +1,6 @@
 #jinja2: lstrip_blocks: True, trim_blocks: True
 
-{% set ou_list = (domain_groups + domain_user_accounts) | selectattr('ou', 'defined') | map(attribute='ou') | list | unique %}
+{% set ou_list = (domain_groups + domain_user_accounts + admin_accounts) | selectattr('ou', 'defined') | map(attribute='ou') | list | unique %}
 
 {% if ou_list != [] %}
   {% set full_ou_list = [] %}
