@@ -1,17 +1,13 @@
 ---
+- name: Setting VMware Workstation hosts connection variables...
+  ansible.builtin.set_fact:
+    ansible_host: "{{ vmware_workstation.host }}"
+    ansible_user: "{{ vmware_workstation.user }}"
+    ansible_password: "{{ vmware_workstation.password | default(omit) }}"
+
 - name: Setting VMTools to auto update...
   when: os_configuration_vmware_workstation_vmtools_autoupdate
-  become: false
   block:
-    - name: Setting correct connection parameters for VMware Workstation's host...
-      ansible.builtin.set_fact:
-        ansible_connection: "{{ vmware_workstation.connection }}"
-        ansible_host: "{{ vmware_workstation.host }}"
-        ansible_python_interpreter: "{{ vmware_workstation.python_interpreter }}"
-        ansible_shell_type: "{{ vmware_workstation.shell_type }}"
-        ansible_user: "{{ vmware_workstation.user }}"
-        ansible_password: "{{ vmware_workstation.password | default(omit) }}"
-
     # Using lineinfile to check for file changes because it simpler and faster then reading the file and comparing it with the desired state
     - name: Checking VMTools auto-update state for {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.lineinfile:
@@ -38,26 +34,8 @@
           ansible.builtin.command: vmcli configparams setentry tools.upgrade.policy upgradeAtPowerCycle {{ vmware_workstation.local_vmx_path }}
           changed_when: true
 
-    - name: Getting IP address for {{ inventory_hostname }}...
-      ansible.builtin.command: vmrun getGuestIPAddress {{ vmware_workstation.local_vmx_path }} -wait
-      changed_when: false
-      register: vmip
-      retries: 60
-      delay: 3
-      until:
-        - vmip.rc == 0
-        - vmip.stdout != "unknown"
-        - vmip.stdout is ansible.utils.ipv4 # Waiting until IP address is a valid IPv4 address
-
-    - name: Setting {{ vmip.stdout }} for connection to {{ inventory_hostname }}...
+    - name: Restoring original connection variables...
       ansible.builtin.set_fact:
-        ansible_host: "{{ vmip.stdout }}"
-        connection_address: "{{ vmip.stdout }}"
-        connection_nic_ipv4: "{{ vmip.stdout }}"
-
-    # Re-including the connection role to reset the connection parameters
-    - name: Re-Including the connection role for {{ custom_vm_name | default(vm_name) }}...
-      ansible.builtin.include_role:
-        name: nova.core.connection
-      vars:
-        fresh_deploy: false # When the deploy has gotten to this point the accounts have already been created
+        ansible_host: "{{ connection_address }}"
+        ansible_user: "{{ ansible_deployer_username }}"
+        ansible_password: "{{ ansible_deployer_password | default(omit) }}"

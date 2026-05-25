@@ -4,53 +4,50 @@
     msg: "{{ inventory_hostname }} Has no_undeploy set and won't be removed"
   when: no_undeploy or ['no_undeploy', 'custom_no_undeploy'] | intersect(group_names) | length > 0
 
-- name: Including VMware Workstation remove tasks...
-  become: false
+- name: Checking if {{ inventory_hostname }} exists...
+  ansible.builtin.stat:
+    path: "{{ vmware_workstation.local_vmx_path }}"
+  register: vm_exists
+
+- name: Removing {{ inventory_hostname }} if it exists...
+  when: vm_exists.stat.exists
   block:
-    - name: Checking if {{ inventory_hostname }} exists...
-      ansible.builtin.stat:
-        path: "{{ vmware_workstation.local_vmx_path }}"
-      register: vm_exists
+    - name: Listing running VMs...
+      ansible.builtin.command: vmrun -T ws list
+      changed_when: true
+      register: running_vms
 
-    - name: Removing {{ inventory_hostname }} if it exists...
-      when: vm_exists.stat.exists
-      block:
-        - name: Listing running VMs...
-          ansible.builtin.command: vmrun -T ws list
-          changed_when: true
-          register: running_vms
+    - name: Stopping {{ inventory_hostname }}...
+      ansible.builtin.command: vmrun -T ws stop {{ vmware_workstation.local_vmx_path }} hard
+      changed_when: true
+      when: vmware_workstation.local_vmx_path in running_vms.stdout_lines
 
-        - name: Stopping {{ inventory_hostname }}...
-          ansible.builtin.command: vmrun -T ws stop {{ vmware_workstation.local_vmx_path }} hard
-          changed_when: true
-          when: vmware_workstation.local_vmx_path in running_vms.stdout_lines
+    - name: Getting all lock files in VM folder...
+      ansible.builtin.find:
+        paths: "{{ vmware_workstation.local_vmx_folder_path }}"
+        recurse: true
+        patterns: "*.lck"
+      register: lck_files
 
-        - name: Getting all lock files in VM folder...
-          ansible.builtin.find:
-            paths: "{{ vmware_workstation.local_vmx_folder_path }}"
-            recurse: true
-            patterns: "*.lck"
-          register: lck_files
-
-        - name: Removing following lock files...
-          ansible.builtin.file:
-            path: "{{ lock.path }}"
-            state: absent
-          loop: "{{ lck_files.files }}"
-          loop_control:
-            loop_var: lock
-            label: "{{ lock.path | basename }}"
-          when: lck_files.files != []
-
-        - name: Removing {{ inventory_hostname }}...
-          ansible.builtin.command: vmrun -T ws deleteVM {{ vmware_workstation.local_vmx_path }}
-          changed_when: true
-
-    - name: Removing {{ inventory_hostname }} folder...
+    - name: Removing following lock files...
       ansible.builtin.file:
-        path: "{{ vmware_workstation.local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
+        path: "{{ lock.path }}"
         state: absent
+      loop: "{{ lck_files.files }}"
+      loop_control:
+        loop_var: lock
+        label: "{{ lock.path | basename }}"
+      when: lck_files.files != []
 
-    - name: Stopping play...
-      ansible.builtin.meta: end_host
-      when: deploy_mode == 'undeploy'
+    - name: Removing {{ inventory_hostname }}...
+      ansible.builtin.command: vmrun -T ws deleteVM {{ vmware_workstation.local_vmx_path }}
+      changed_when: true
+
+- name: Removing {{ inventory_hostname }} folder...
+  ansible.builtin.file:
+    path: "{{ vmware_workstation.local_vm_folder }}/{{ custom_vm_name | default(vm_name) }}"
+    state: absent
+
+- name: Stopping play...
+  ansible.builtin.meta: end_host
+  when: deploy_mode == 'undeploy'

@@ -5,7 +5,7 @@
 
 - name: Getting IP for VM in VMware Workstation environment...
   ansible.builtin.include_tasks: vmware_workstation/main.yml
-  when: infra_env == 'vmware_workstation'
+  when: infra_env == "vmware_workstation"
 
 - name: Getting IP for VM in AWS EC2 environment...
   ansible.builtin.include_tasks: aws/main.yml

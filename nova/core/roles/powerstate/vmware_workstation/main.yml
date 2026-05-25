@@ -1,34 +1,44 @@
 ---
-- name: Setting correct connection parameters for VMware Workstation's host...
-  ansible.builtin.set_fact:
+- name: Running VMware Workstation tasks in dedicated host...
+  vars:
+    ansible_become: false
     ansible_connection: "{{ vmware_workstation.connection }}"
-    ansible_host: "{{ vmware_workstation.host }}"
     ansible_python_interpreter: "{{ vmware_workstation.python_interpreter }}"
     ansible_shell_type: "{{ vmware_workstation.shell_type }}"
-    ansible_user: "{{ vmware_workstation.user }}"
-    ansible_password: "{{ vmware_workstation.password | default(omit) }}"
+  block:
+    - name: Setting VMware Workstation hosts connection variables...
+      ansible.builtin.set_fact:
+        ansible_host: "{{ vmware_workstation.host }}"
+        ansible_user: "{{ vmware_workstation.user }}"
+        ansible_password: "{{ vmware_workstation.password | default(omit) }}"
 
-- name: Stopping {{ inventory_hostname }}...
-  ansible.builtin.command: vmcli power stop --opType hard {{ vmware_workstation.local_vmx_path }}
-  changed_when: true
-  when: poweroff | bool
+    - name: Stopping {{ inventory_hostname }}...
+      ansible.builtin.command: vmcli power stop --opType hard {{ vmware_workstation.local_vmx_path }}
+      changed_when: true
+      when: poweroff | bool
 
-- name: Starting {{ inventory_hostname }}...
-  ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
-  changed_when: true
-  when: poweron | bool
+    - name: Starting {{ inventory_hostname }}...
+      ansible.builtin.command: vmcli power start {{ vmware_workstation.local_vmx_path }}
+      changed_when: true
+      when: poweron | bool
 
-- name: Resetting {{ inventory_hostname }}...
-  ansible.builtin.command: vmcli power reset --opType hard {{ vmware_workstation.local_vmx_path }}
-  changed_when: true
-  when: reset | bool
+    - name: Resetting {{ inventory_hostname }}...
+      ansible.builtin.command: vmcli power reset --opType hard {{ vmware_workstation.local_vmx_path }}
+      changed_when: true
+      when: reset | bool
 
-- name: Restarting {{ inventory_hostname }}...
-  ansible.builtin.command: vmcli power reset --opType trySoft {{ vmware_workstation.local_vmx_path }}
-  changed_when: true
-  when: restart | bool
+    - name: Restarting {{ inventory_hostname }}...
+      ansible.builtin.command: vmcli power reset --opType trySoft {{ vmware_workstation.local_vmx_path }}
+      changed_when: true
+      when: restart | bool
 
-- name: Shutting down {{ inventory_hostname }}...
-  ansible.builtin.command: vmcli power stop --opType trySoft {{ vmware_workstation.local_vmx_path }}
-  changed_when: true
-  when: shutdown | bool
+    - name: Shutting down {{ inventory_hostname }}...
+      ansible.builtin.command: vmcli power stop --opType trySoft {{ vmware_workstation.local_vmx_path }}
+      changed_when: true
+      when: shutdown | bool
+
+    - name: Restoring original connection variables...
+      ansible.builtin.set_fact:
+        ansible_host: "{{ connection_address }}"
+        ansible_user: "{{ ansible_deployer_username }}"
+        ansible_password: "{{ ansible_deployer_password | default(omit) }}"
