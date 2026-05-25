@@ -1,15 +1,7 @@
 ---
-- name: Rebooting VyOS...
+- name: Rebooting...
+  ansible.builtin.reboot:
+  become: true
+  vars:
+    ansible_connection: ansible.builtin.ssh
   when: reboot_on_finalize
-  block:
-    - name: Setting SSH as connection plugin...
-      ansible.builtin.set_fact:
-        ansible_connection: ssh
-
-    - name: Rebooting...
-      ansible.builtin.reboot:
-      become: true
-
-    - name: Setting connection plugin back to default...
-      ansible.builtin.set_fact:
-        ansible_connection: "{{ default_connection_plugin }}"

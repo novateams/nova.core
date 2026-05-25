@@ -14,6 +14,7 @@
       ansible.builtin.set_fact:
         ansible_user: "{{ domain_join_user }}@{{ ad_domain_name }}"
         ansible_password: "{{ domain_join_password }}"
+        ansible_shell_type: powershell
       delegate_facts: true
 
     - name: Cleaning any existing computer account...
