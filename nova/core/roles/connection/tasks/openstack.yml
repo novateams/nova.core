@@ -1,11 +1,10 @@
 ---
 - name:
     Connecting as {{ openstack_template_username | default(template_username) if fresh_deploy else ansible_deployer_username
-    }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper
+    }} to {{ inventory_hostname }} using {{ ansible_connection | default('ssh') | upper
     }} over {{ connection_address_custom | default(connection_address) }}... # noqa: name[template]
   ansible.builtin.set_fact:
     ansible_host: "{{ connection_address_custom | default(connection_address) }}"
-    ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ openstack_template_username | default(template_username) if fresh_deploy else ansible_deployer_username }}"
     ansible_password: "{{ openstack_template_password | default(template_password) if fresh_deploy else ansible_deployer_password }}"
 

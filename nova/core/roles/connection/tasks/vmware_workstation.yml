@@ -1,8 +1,7 @@
 ---
 - name:
-    Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin
+    Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }} using {{ ansible_connection
     | upper }} over {{ ansible_host }}... # noqa: name[template]
   ansible.builtin.set_fact:
-    ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
     ansible_password: "{{ omit if connection_no_password else template_password if fresh_deploy else ansible_deployer_password }}"

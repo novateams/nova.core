@@ -10,11 +10,10 @@
 
 - name:
     Connecting as {{ aws_template_username | default(template_username) if fresh_deploy else ansible_deployer_username
-    }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper
+    }} to {{ inventory_hostname }} using {{ ansible_connection | default('ssh') | upper
     }} over {{ connection_address_custom | default(connection_address) }}... # noqa: name[template]
   ansible.builtin.set_fact:
     ansible_host: "{{ connection_address_custom | default(connection_address) }}"
-    ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ aws_template_username | default(template_username) if fresh_deploy else ansible_deployer_username }}"
     ansible_password: >-
       {%- if 'os_windows' in group_names and fresh_deploy -%}

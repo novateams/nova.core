@@ -1,8 +1,4 @@
 ---
-- name: Setting connection facts...
-  ansible.builtin.set_fact:
-    ansible_connection: "{{ default_connection_plugin }}"
-
 - name: Setting static IP connection facts... # noqa: jinja[invalid]
   ansible.builtin.set_fact:
     ansible_host:

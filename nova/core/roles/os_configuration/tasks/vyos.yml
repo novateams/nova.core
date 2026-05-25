@@ -11,23 +11,19 @@
       - set service ntp server {{ ntp_servers[0] }}
     save: true
 
-- name: Setting connection to SSH for {{ inventory_hostname }}...
-  ansible.builtin.set_fact:
-    ansible_connection: ssh
+- name: Running commands over SSH...
+  vars:
+    ansible_become: true
+    ansible_connection: ansible.builtin.ssh
+  block:
+    - name: Regenerating machine-id & host ssh keys...
+      ansible.builtin.shell: "{{ lookup('template', 'regenerate-machine-id.sh') }}"
+      args:
+        executable: /bin/bash
+      register: regenerate_machine_id
+      changed_when: regenerate_machine_id.stdout != "done"
 
-- name: Regenerating machine-id & host ssh keys...
-  ansible.builtin.shell: "{{ lookup('template', 'regenerate-machine-id.sh') }}"
-  args:
-    executable: /bin/bash
-  register: regenerate_machine_id
-  changed_when: regenerate_machine_id.stdout != "done"
-  become: true
-
-- name: Rebooting {{ inventory_hostname }}... # This is to avoid ssh connection issues because of the new ssh keys # noqa: no-handler
-  ansible.builtin.reboot:
-  when: regenerate_machine_id.changed
-  become: true
-
-- name: Setting connection back to {{ default_connection_plugin }} for {{ inventory_hostname }}...
-  ansible.builtin.set_fact:
-    ansible_connection: "{{ default_connection_plugin }}"
+    # This is to avoid ssh connection issues because of the new ssh keys
+    - name: Rebooting {{ inventory_hostname }}... # noqa: no-handler
+      ansible.builtin.reboot:
+      when: regenerate_machine_id.changed

@@ -13,11 +13,11 @@
             * ansible_deployer_username
             * ansible_deployer_password (optional when using SSH keys)
 
-- name:
-    Connecting as {{ ansible_deployer_username }} to {{ inventory_hostname }} using {{ default_connection_plugin | upper }} over {{
-    connection_address_custom | default(connection_address) }}... # noqa: name[template]
+- name: Connecting as {{ ansible_deployer_username }}
+    to {{ inventory_hostname }}
+    using {{ ansible_connection | default('ssh') | upper }}
+    over {{ connection_address_custom | default(connection_address) }}...
   ansible.builtin.set_fact:
     ansible_host: "{{ connection_address_custom | default(connection_address) }}"
-    ansible_connection: "{{ default_connection_plugin }}"
     ansible_user: "{{ ansible_deployer_username }}"
     ansible_password: "{{ omit if connection_no_password else ansible_deployer_password }}"
