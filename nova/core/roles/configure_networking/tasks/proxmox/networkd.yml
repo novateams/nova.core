@@ -170,7 +170,7 @@
               command:
                 - sh
                 - -c
-                - "update-initramfs -k all -u"
+                - "update-initramfs -u"
             body_format: json
             validate_certs: "{{ proxmox_defaults.validate_certs }}"
           register: network_config_command
