@@ -77,7 +77,7 @@
   when: ansible_facts.distribution | default('') == "Debian"
   block:
     - name: Configuring network interface(s) names on Debian...
-      ansible.builtin.command: update-initramfs -k all -u
+      ansible.builtin.command: update-initramfs -u
       changed_when: true
 
     - name: Getting DNS from DHCP...

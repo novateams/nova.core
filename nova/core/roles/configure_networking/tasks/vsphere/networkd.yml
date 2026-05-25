@@ -230,7 +230,7 @@
                 body:
                   credentials: "{{ rest_api_credentials }}"
                   spec:
-                    arguments: -c "update-initramfs -k all -u"
+                    arguments: -c "update-initramfs -u"
                     path: /bin/bash
                 status_code: 201
                 body_format: json
