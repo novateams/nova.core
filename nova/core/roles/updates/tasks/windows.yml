@@ -4,8 +4,6 @@
     name: wuauserv
     start_mode: auto
     state: started
-  register: wuauserv_service
-  until: not wuauserv_service.failed
   retries: 10
   delay: 30
 
@@ -14,8 +12,6 @@
     name: UsoSvc
     start_mode: auto
     state: started
-  register: usosvc_service
-  until: not usosvc_service.failed
   retries: 10
   delay: 30
   when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
@@ -49,7 +45,6 @@
       ansible.windows.win_updates:
         category_names: "{{ updates_category_names }}"
       register: win_updates
-      until: not win_updates.failed
       retries: 2
 
     - name: Rebooting and re-including Windows Update tasks...
@@ -96,8 +91,12 @@
     # The issue is most likely related to long paths
     - name: Removing C:\Windows\SoftwareDistribution...
       ansible.windows.win_shell: if ((Test-Path "C:\Windows\SoftwareDistribution") -eq $true) {cmd /c rd C:\Windows\SoftwareDistribution /S /Q}
-      register: remove_win_update_cache
-      until: not remove_win_update_cache.failed
+      retries: 5
+
+    - name: Removing C:\Windows\System32\catroot2...
+      ansible.windows.win_shell:
+        if ((Test-Path "C:\Windows\System32\catroot2") -eq $true)
+        {Stop-Service -Name CryptSvc -Force; Remove-Item -Path C:\Windows\System32\catroot2 -Recurse -Force}
       retries: 5
 
     - name: Setting rescue loop count to {{ updates_rescue_count | default(0) | int + 1 }}/3...
@@ -110,11 +109,16 @@
     - name: Re-including Windows Update tasks...
       ansible.builtin.include_tasks: windows.yml
 
+# Using async since these are nice to have features and we don't want to wait for them to finish
 - name: Reporting update state... # Useful when WSUS is used
   ansible.windows.win_command: wuauclt /reportnow
   changed_when: false
+  async: 60
+  poll: 0
 
 - name: Running interactive scan... # Runs a scan for updates to clean up the GUI
   ansible.windows.win_command: UsoClient.exe StartInteractiveScan
   changed_when: false
   when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
+  async: 60
+  poll: 0
