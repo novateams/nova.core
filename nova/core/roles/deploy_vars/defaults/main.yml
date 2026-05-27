@@ -254,9 +254,14 @@ proxmox_defaults:
     | default(lookup('vars', environment_name | default('') ~ '_' ~ project_fullname | default('') ~ '_proxmox_api_token_secret'))
     | default(proxmox_api_token_secret) | default('') }}"
   validate_certs: "{{ proxmox_validate_certs }}"
+  api_timeout: "{{ proxmox_api_timeout }}"
 
 # How long to wait for a Proxmox operation (like clone, powerstate and snapshots) to complete
 proxmox_machine_operations_operation_timeout: 180
+
+# How long to wait for a Proxmox API response before timing out
+# This is not the same as the machine operation timeout which is for waiting for operations to complete
+proxmox_api_timeout: 30
 
 #############
 # OpenStack #
