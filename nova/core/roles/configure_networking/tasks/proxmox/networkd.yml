@@ -244,3 +244,18 @@
             name: nova.core.powerstate
           vars:
             poweron: true
+
+  rescue:
+    - name: NETWORK CONFIGURATION ERROR
+      ansible.builtin.fail:
+        msg: |
+          Network configuration has failed {{ configure_networking_rescue_count | default(0) }} times.
+          Check the errors above and {{ inventory_hostname }} host logs for more details.
+      when: configure_networking_rescue_count | default(0) | int == 3
+
+    - name: Setting rescue loop count...
+      ansible.builtin.set_fact:
+        configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
+
+    - name: Re-including network configuration tasks...
+      ansible.builtin.include_tasks: main.yml
