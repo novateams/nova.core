@@ -1,6 +1,6 @@
 # gitlab
 
-This role installs and configures Gitlab with Docker Compose. https://docs.gitlab.com/
+This role installs and configures Gitlab with Docker Compose. <https://docs.gitlab.com/>
 Optionally it can also configure:
 
 - LDAP authentication
@@ -8,9 +8,11 @@ Optionally it can also configure:
 - Gitlab Pages
 - Gitlab Registry
 
+**NOTE**: When upgrading major versions of Gitlab you might need to update to previous minor or patch versions first before updating to the latest version. Refer to the [Gitlab documentation](https://docs.gitlab.com/update/#upgrading-to-a-new-major-version) and Docker container logs during the upgrade process for more information.
+
 ## Requirements
 
-- Tested on Ubuntu 22.04 but should work on any Debian based system.
+- Tested on Ubuntu LTS but should work on any Debian based system.
 - Requires an external reverse proxy (nginx, traefik, haproxy, caddy etc.) in front of Gitlab to handle GUI access and TLS termination.
 
 ## Role Variables
@@ -48,5 +50,5 @@ Include extra tasks by referring to them in your vm role, for example, include `
 
 ## Useful links
 
-https://www.unavco.org/gitlab/help/administration/troubleshooting/gitlab_rails_cheat_sheet.md
-https://docs.gitlab.com/ee/api/
+<https://www.unavco.org/gitlab/help/administration/troubleshooting/gitlab_rails_cheat_sheet.md>
+<https://docs.gitlab.com/ee/api/>
