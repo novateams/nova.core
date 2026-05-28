@@ -71,33 +71,38 @@
           times to install updates. Check the errors above and {{ inventory_hostname }} host logs for more details.
       when: updates_rescue_count | default(0) | int == 3
 
-    - name: Stopping Windows Update service...
-      ansible.windows.win_service:
-        name: wuauserv
-        state: stopped
-      retries: 5
-      delay: 3
+    # Sometimes a reboot is enough to fix Windows Update issues
+    # If the issue happens again after reboot, we try to clean up the Windows Update cache which is a common solution for Windows Update issues
+    - name: Cleaning up Windows Update cache on second fail...
+      when: updates_rescue_count | default(0) | int == 1
+      block:
+        - name: Stopping Windows Update service...
+          ansible.windows.win_service:
+            name: wuauserv
+            state: stopped
+          retries: 5
+          delay: 3
 
-    # Greater than Windows 8.1 & Server 2012 R2
-    - name: Stopping Update Orchestrator Service...
-      ansible.windows.win_service:
-        name: UsoSvc
-        state: stopped
-      retries: 5
-      delay: 3
-      when: ansible_facts.distribution_version is version('6.3.9600.0', '>')
+        # Greater than Windows 8.1 & Server 2012 R2
+        - name: Stopping Update Orchestrator Service...
+          ansible.windows.win_service:
+            name: UsoSvc
+            state: stopped
+          retries: 5
+          delay: 3
+          when: ansible_facts.distribution_version is version('6.3.9600.0', '>')
 
-    # Removing Windows Update cache using rd because Powershell (win_file module) can't do it in some cases although it's possible manually
-    # The issue is most likely related to long paths
-    - name: Removing C:\Windows\SoftwareDistribution...
-      ansible.windows.win_shell: if ((Test-Path "C:\Windows\SoftwareDistribution") -eq $true) {cmd /c rd C:\Windows\SoftwareDistribution /S /Q}
-      retries: 5
+        # Removing Windows Update cache using rd because Powershell (win_file module) can't do it in some cases although it's possible manually
+        # The issue is most likely related to long paths
+        - name: Removing C:\Windows\SoftwareDistribution...
+          ansible.windows.win_shell: if ((Test-Path "C:\Windows\SoftwareDistribution") -eq $true) {cmd /c rd C:\Windows\SoftwareDistribution /S /Q}
+          retries: 5
 
-    - name: Removing C:\Windows\System32\catroot2...
-      ansible.windows.win_shell:
-        if ((Test-Path "C:\Windows\System32\catroot2") -eq $true)
-        {Stop-Service -Name CryptSvc -Force; Remove-Item -Path C:\Windows\System32\catroot2 -Recurse -Force}
-      retries: 5
+        - name: Removing C:\Windows\System32\catroot2...
+          ansible.windows.win_shell:
+            if ((Test-Path "C:\Windows\System32\catroot2") -eq $true)
+            {Stop-Service -Name CryptSvc -Force; Remove-Item -Path C:\Windows\System32\catroot2 -Recurse -Force}
+          retries: 5
 
     - name: Setting rescue loop count to {{ updates_rescue_count | default(0) | int + 1 }}/3...
       ansible.builtin.set_fact:
@@ -105,6 +110,7 @@
 
     - name: Rebooting...
       ansible.windows.win_reboot:
+        reboot_timeout: 1800
 
     - name: Re-including Windows Update tasks...
       ansible.builtin.include_tasks: windows.yml
