@@ -77,3 +77,5 @@ monolith_extra_caddy_servers: []
 
 # Install and configure Samba4 domain controller on Monolith
 monolith_install_samba: false
+
+monolith_extra_dns_records: []

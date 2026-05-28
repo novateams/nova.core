@@ -136,4 +136,13 @@ dependencies:
       nexus_groups_dn_under_searchbase: OU=Groups # This is the search base for groups in LDAP under the nexus_ldap_search_base
       nexus_bind_dn_password: Password123 # This is the password for the bind user
       nexus_ldap_administrators_group: nexus-admins # This is the group that will be used for Nexus administrators
+
+      #######################
+      # Samba DC (Optional) #
+      #######################
+
+      monolith_extra_dns_records: # Extra DNS records to be created in Samba AD can be either IPv4 or IPv6
+        - host: gitlab
+          domain: example.com
+          address: 10.10.10.10
 ```
