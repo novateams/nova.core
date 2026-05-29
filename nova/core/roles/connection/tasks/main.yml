@@ -92,6 +92,8 @@
 
 - name: Optimizing Powershell...
   ansible.windows.win_shell: "{{ lookup('file', 'Optimize-PowerShell.ps1') }}"
+  async: 1
+  poll: 0 # Can have it run in the background and move on to the next task instead of waiting for it to finish
   when:
     - ansible_facts.system | default('') == "Win32NT"
     - not role_only
