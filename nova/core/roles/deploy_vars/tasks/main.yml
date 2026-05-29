@@ -34,7 +34,6 @@
       when:
         - vault_address != {}
         - deploy_vars_get_vault_token | bool # | bool is required to pass the variable from the command line
-        - pre_role is not defined or deploy_vars_get_vault_token_with_pre_role | bool
 
     - name: Assuming AWS role {{ aws_role_arn }}...
       amazon.aws.sts_assume_role:
