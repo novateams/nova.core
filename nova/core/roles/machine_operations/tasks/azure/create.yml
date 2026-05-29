@@ -52,15 +52,16 @@
         ip_configurations:
           "{{ [{'name': 'public_ip', 'public_ip_address_name': custom_vm_name | default(vm_name) + '_pip'}]
           if item.connection and machine_operations_azure_attach_public_ip else [] }}"
-      loop: "{{ interfaces }}"
+      loop: "{{ interfaces | selectattr('cloud_id') }}"
       loop_control:
         label: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
 
     - name: Creating a list of interface names for {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.set_fact:
-        azure_vm_network_interface_names: "{{ azure_vm_network_interface_names | default([])
+        azure_vm_network_interface_names:
+          "{{ azure_vm_network_interface_names | default([])
           + [custom_vm_name | default(vm_name) ~ '_' ~ item.nic_name] }}"
-      loop: "{{ interfaces }}"
+      loop: "{{ interfaces | selectattr('cloud_id') }}"
       loop_control:
         label: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
 

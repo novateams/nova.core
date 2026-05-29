@@ -19,9 +19,10 @@
         original_interfaces: "{{ interfaces }}"
 
     # This is done so the role does not try configure interfaces that do not exists in the hypervisor
+    # The cloud_id is used as the network/portgroup name in the hypervisor, so if it is not defined, it means that the interface is not meant to be configured
     - name: Removing non-existing networks from the interfaces list...
       ansible.builtin.set_fact:
-        interfaces: "{{ interfaces | rejectattr('cloud_id', 'in', ['', none]) }}"
+        interfaces: "{{ interfaces | selectattr('cloud_id') }}"
 
     - name: Checking if nic_name attribute is defined in any of the interfaces...
       when: interfaces | selectattr('nic_name', 'defined') == []
