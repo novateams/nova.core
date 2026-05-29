@@ -174,7 +174,7 @@
         loop_var: nic
         index_var: idx
         label: "{{ nic.cloud_id }}"
-      loop: "{{ interfaces }}"
+      loop: "{{ interfaces | selectattr('cloud_id') }}"
 
     - name: Starting {{ custom_vm_name | default(vm_name) }} VM... # noqa: no-handler
       community.proxmox.proxmox_kvm:

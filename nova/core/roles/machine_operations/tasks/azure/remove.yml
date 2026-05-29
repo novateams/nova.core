@@ -23,7 +23,7 @@
         resource_group: "{{ azure_resource_group }}"
         name: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
         state: absent
-      loop: "{{ interfaces }}"
+      loop: "{{ interfaces | selectattr('cloud_id') }}"
       loop_control:
         label: "{{ custom_vm_name | default(vm_name) }}_{{ item.nic_name }}"
 

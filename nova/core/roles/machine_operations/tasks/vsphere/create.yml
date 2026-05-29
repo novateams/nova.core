@@ -228,7 +228,8 @@
         label: "{{ item.value.label }}"
       when:
         - not fresh_deploy
-        - existing_interfaces | length != interfaces | length
+        # Only working with interfaces that have a cloud_id eg. VMware portgroup
+        - existing_interfaces | length != (interfaces | selectattr('cloud_id') | length)
 
     - name: Attaching following network interfaces to {{ custom_vm_name | default(vm_name) }}...
       community.vmware.vmware_guest_network:
@@ -240,7 +241,8 @@
         network_name: "{{ item.cloud_id }}"
         device_type: "{{ machine_operations_vsphere_nic_type | default('vmxnet3') }}"
         mac_address: "{{ existing_interfaces[idx].value.macaddress | default(omit) }}"
-      loop: "{{ interfaces }}"
+      # Only working with interfaces that have a cloud_id eg. VMware portgroup
+      loop: "{{ interfaces | selectattr('cloud_id') }}"
       loop_control:
         label: "{{ item.cloud_id }}"
         index_var: idx
