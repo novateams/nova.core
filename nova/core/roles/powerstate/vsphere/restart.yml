@@ -4,5 +4,5 @@
     name: "{{ custom_vm_name | default(vm_name) }}"
     datacenter: "{{ datacenter }}"
     state: "{{ 'reboot-guest' if powerstate_vcenter_vm_info.guests[0].hw_power_status == 'poweredOn' else 'powered-on' }}"
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
