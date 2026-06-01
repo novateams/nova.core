@@ -1,0 +1,9 @@
+---
+- name: Installing Docker...
+  community.general.apk:
+    name:
+      - docker
+      - docker-cli-buildx
+      - docker-cli-compose
+      - py3-requests
+    update_cache: true

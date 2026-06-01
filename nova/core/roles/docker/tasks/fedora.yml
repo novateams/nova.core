@@ -1,0 +1,37 @@
+---
+- name: Adding Docker repository for {{ ansible_facts.distribution }}...
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - $basearch
+    baseurl: "{{ docker_fedora_dnf_proxy }}/{{ ansible_facts.distribution_major_version }}/$basearch/stable"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "{{ docker_fedora_dnf_proxy }}/gpg"
+
+- name: Installing Docker and requirements...
+  ansible.builtin.dnf:
+    name:
+      - containerd.io
+      - docker-ce-cli{{ '-' + docker_engine_version | string + '*' if docker_engine_version != {} else '' }}
+      - docker-ce{{ '-' + docker_engine_version | string + '*' if docker_engine_version != {} else '' }}
+      - docker-compose-plugin
+      - python3-docker
+      - python3-jsondiff
+      - python3-pip
+      - python3-requests
+      - python3-setuptools
+      - python3-wheel
+    state: present
+    allow_downgrade: true
+    update_cache: true
+
+# This is to avoid updating Docker with dnf upgrade if a specific version is set
+- name: "{{ 'Locking' if docker_engine_version != {} else 'Unlocking' }} Docker engine version..."
+  community.general.dnf_versionlock:
+    name: "{{ docker_package }}"
+    state: "{{ 'present' if docker_engine_version != {} else 'absent' }}"
+  loop_control:
+    loop_var: docker_package
+  loop:
+    - docker-ce-cli
+    - docker-ce
