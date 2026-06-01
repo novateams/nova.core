@@ -175,7 +175,7 @@ nexus_default_repositories:
       online: true
       storage:
         blobStoreName: default
-        strictContentTypeValidation: true
+        strictContentTypeValidation: false # False to allow downloading signing keys through Nexus
       proxy:
         remoteUrl: https://packages.microsoft.com
         contentMaxAge: 15
