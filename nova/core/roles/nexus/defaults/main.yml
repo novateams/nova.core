@@ -72,8 +72,14 @@ nexus_ldap_configuration:
   useTrustStore: true
 
 nexus_remove_unmanaged_repos: true # By default remove repositories that are not in the nexus_repositories list during deploy
-nexus_repositories: "{{ nexus_default_repositories + nexus_extra_repositories }}" # List of repositories to create when nexus_create_repos is set to true
-nexus_extra_repositories: [] # List of extra repositories to be created in addition to the nexus_default_repositories list
+
+# List of repositories to create when nexus_create_repos is set to true
+# Contains also the deprecated repositories that will be removed in future versions. These are kept here for now to avoid breaking changes,
+# but it is recommended to move to the universal Ubuntu and Debian proxies instead of the specific ones.
+nexus_repositories: "{{ nexus_deprecated_repositories + nexus_default_repositories + nexus_extra_repositories }}"
+
+# List of extra repositories to be created in addition to the nexus_default_repositories list
+nexus_extra_repositories: []
 
 # List of cleanup policies to apply to each repository in nexus_repositories list
 # If empty, no cleanup policy will be applied.
@@ -486,11 +492,11 @@ nexus_default_repositories:
         indexUrl: https://registry.k8s.io/
         whitelistUrl[0]: ".*"
 
-  #######################################################################
-  # DEPRECATED Repositories - These will be removed in future versions. #
-  # Use the universal Ubuntu and Debian proxies instead                 #
-  #######################################################################
-
+#######################################################################
+# DEPRECATED Repositories - These will be removed in future versions. #
+# Use the universal Ubuntu and Debian proxies instead                 #
+#######################################################################
+nexus_deprecated_repositories:
   # Ubuntu resolute docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
     repo_body:
