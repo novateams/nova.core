@@ -1,0 +1,35 @@
+---
+- name: Creating /etc/docker directory...
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    mode: "0755"
+
+- name: Adding Docker daemon config...
+  ansible.builtin.template:
+    src: "{{ docker_daemon_template }}"
+    dest: /etc/docker/daemon.json
+    lstrip_blocks: true
+    mode: "0644"
+  register: daemon_config
+
+- name: Restarting docker service... # noqa: no-handler
+  ansible.builtin.systemd:
+    name: docker.service
+    enabled: true
+    daemon_reload: true
+    state: restarted
+  when: daemon_config.changed or docker_install.changed
+
+- name: Creating following Docker networks...
+  community.docker.docker_network:
+    name: "{{ docker_net.name }}"
+    enable_ipv6: "{{ docker_net.enable_ipv6 }}"
+    ipam_config:
+      - subnet: "{{ docker_net.ipv4_subnet }}"
+      - subnet: "{{ docker_net.ipv6_subnet }}"
+  loop: "{{ docker_networks }}"
+  loop_control:
+    loop_var: docker_net
+    label: "{{ docker_net.name }}"
+  when: docker_networks != []

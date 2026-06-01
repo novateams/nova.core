@@ -1,0 +1,6 @@
+---
+- name: Installing Docker requirements...
+  ansible.builtin.package:
+    name: python3-debian
+    state: present
+    update_cache: true
