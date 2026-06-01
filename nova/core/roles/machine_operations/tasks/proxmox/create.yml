@@ -31,10 +31,14 @@
                 vm_template: {{ vm_template }}
           when: proxmox_vm_template.proxmox_vms == []
 
-        # Excluding failed hosts to get a list of available hosts still in play
+        # Excluding failed hosts and non-Proxmox hosts to get a list of available hosts still in play
         - name: Getting available play hosts...
           ansible.builtin.set_fact:
-            available_play_hosts: "{{ ansible_play_batch | difference(ansible_failed_hosts | default([])) | sort }}"
+            available_play_hosts: "{{ available_play_hosts | default([]) + [pmx_deploy_host] }}"
+          loop_control:
+            loop_var: pmx_deploy_host
+          loop: "{{ ansible_play_batch | difference(ansible_failed_hosts | default([])) | sort }}"
+          when: hostvars[pmx_deploy_host].infra_env | default('') == 'proxmox'
 
         # Since Proxmox doesn't support locking or queuing operations, creating a limiter file
         # to make sure only one host in the batch is cloning at a time
