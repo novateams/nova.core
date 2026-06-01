@@ -1,27 +1,27 @@
 ---
-- name: Installing apt dependencies...
-  ansible.builtin.apt:
-    update_cache: true
-    name:
-      - gpg
-      - gpg-agent
-
-- name: Including Docker for default Debian based OS...
+- name: Installing Docker on Debian based OS...
   when: ansible_facts.distribution not in docker_non_default_debian_os_list
   block:
-    - name: Adding Docker repo key for {{ ansible_facts.distribution }}...
+    - name: Downloading Docker repo key for {{ ansible_facts.distribution }}...
       ansible.builtin.get_url:
-        url: "{{ docker_apt_proxy }}/gpg"
+        url: "{{ docker_apt_proxy | lower }}/gpg"
         dest: /etc/apt/trusted.gpg.d/docker.asc
         mode: "0644"
+        timeout: 60
 
-    # Using copy because ansible.builtin.apt_repository does not have a feature to override existing repository in *.list file
-    - name: Adding Docker repository...
-      ansible.builtin.copy:
-        content: |
-          deb [arch=amd64] {{ docker_apt_proxy }} {{ ansible_facts.distribution_release }} stable
-        dest: /etc/apt/sources.list.d/docker.list
-        mode: "0644"
+    - name: Adding Docker repository for {{ ansible_facts.distribution }}...
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: [deb]
+        uris: "{{ docker_apt_proxy | lower }}"
+        suites: ["{{ ansible_facts.distribution_release | lower }}"]
+        components: [stable]
+        signed_by: /etc/apt/trusted.gpg.d/docker.asc
+
+- name: Removing legacy Docker repository...
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
 
 - name: Installing Docker and requirements...
   ansible.builtin.apt:
@@ -63,32 +63,3 @@
   when:
     - docker_engine_version == {}
     - docker_dpkg_lock.changed
-
-- name: Adding Docker daemon config...
-  ansible.builtin.template:
-    src: "{{ docker_daemon_template }}"
-    dest: /etc/docker/daemon.json
-    lstrip_blocks: true
-    mode: "0644"
-  register: daemon_config
-
-- name: Restarting docker service... # noqa: no-handler
-  ansible.builtin.systemd:
-    name: docker.service
-    enabled: true
-    daemon_reload: true
-    state: restarted
-  when: daemon_config.changed
-
-- name: Creating following Docker networks...
-  community.docker.docker_network:
-    name: "{{ docker_net.name }}"
-    enable_ipv6: "{{ docker_net.enable_ipv6 }}"
-    ipam_config:
-      - subnet: "{{ docker_net.ipv4_subnet }}"
-      - subnet: "{{ docker_net.ipv6_subnet }}"
-  loop: "{{ docker_networks }}"
-  loop_control:
-    loop_var: docker_net
-    label: "{{ docker_net.name }}"
-  when: docker_networks != []
