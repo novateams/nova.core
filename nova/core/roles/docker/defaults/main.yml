@@ -33,6 +33,16 @@ docker_networks:
     ipv4_subnet: 172.18.0.0/16
     ipv6_subnet: fd42::/64
 
+##############
+# RedHat OS  #
+##############
+
+# Docker DNF repo for Fedora
+docker_fedora_dnf_proxy: https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}
+
+# Docker DNF repo for AlmaLinux and RHEL
+docker_rhel_dnf_proxy: https://download.docker.com/linux/rhel
+
 #############
 # Debian OS #
 #############
@@ -40,7 +50,7 @@ docker_networks:
 # Default is latest version available in the Docker APT repository but can be locked to a specific major version
 docker_engine_version: {}
 
-# Docker APT proxy
+# Docker APT repo
 docker_apt_proxy: https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}
 
 # Mapping for non-default Debian OS based distributions like Kali, Parrot, etc.

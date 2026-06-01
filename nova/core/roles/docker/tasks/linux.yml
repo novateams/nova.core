@@ -19,7 +19,7 @@
     enabled: true
     daemon_reload: true
     state: restarted
-  when: daemon_config.changed or docker_install.changed
+  when: daemon_config.changed
 
 - name: Creating following Docker networks...
   community.docker.docker_network:
