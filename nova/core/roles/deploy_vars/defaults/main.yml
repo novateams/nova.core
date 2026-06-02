@@ -17,7 +17,8 @@ datacenter_location: {} # Required when deploying to vSphere
 main_id: "{{ inventory_hostname }}" # For when using local inventory, main_id is a Providentia specific variable
 save_secrets_to_vault: false # Set to true to save accounts to vault, required a running HashiCorp Vault server with LDAP auth enabled
 gt_username: gt # Default non-root/Administrator username for deployment
-deploy_vars_post_roles: [] # List of roles to include after credentials facts have been set
+deploy_vars_pre_roles: "{{ deploy_vars_post_roles }}" # List of roles to include as the very first step of the deploy
+deploy_vars_post_roles: [] # DEPRECATED
 immutable: false # Set to true to stop running any role on the host or group
 
 # Defaulting to ansible_password when password is required for sudo
