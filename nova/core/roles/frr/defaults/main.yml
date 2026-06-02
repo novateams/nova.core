@@ -1,0 +1,14 @@
+---
+# By default not frr configuration parameters are enabled
+# You can enable them by setting the corresponding variables to true in your inventory's group/host/role variables
+frr_bfdd: false
+frr_bgp: false
+frr_ospf_ipv4: false
+frr_ospf_ipv6: false
+frr_pbr: false
+
+# Can be used to override the default frr repo address, for example if you want to use a local mirror
+frr_repo_address: https://deb.frrouting.org/frr
+
+# File names that will be looked for in the templates directory of the role that includes this role
+frr_template_file: frr.conf
