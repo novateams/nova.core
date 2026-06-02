@@ -3,7 +3,7 @@
 - name: Pulling gitlab/gitlab-ee:{{ gitlab_version }}
   community.docker.docker_image_pull:
     name: gitlab/gitlab-ee:{{ gitlab_version }}
-  async: 300
+  async: 3600
   poll: 0
   register: gitlab_pull
 

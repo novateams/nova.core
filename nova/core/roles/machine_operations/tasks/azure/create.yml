@@ -130,7 +130,7 @@
             virtual_machine_name: "{{ custom_vm_name | default(vm_name) }}"
             name: install_ssh_server
             state: absent
-          async: 0
+          async: 3600
           poll: 0
 
 - name: Getting public IP and setting it as connection_address...

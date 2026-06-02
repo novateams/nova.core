@@ -16,5 +16,5 @@
 
 - name: Running network configuration script...
   ansible.windows.win_shell: C:\Windows\Temp\Configure-Network.ps1
-  async: 10
+  async: 3600
   poll: 0

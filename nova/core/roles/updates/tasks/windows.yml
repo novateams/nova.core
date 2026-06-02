@@ -119,12 +119,12 @@
 - name: Reporting update state... # Useful when WSUS is used
   ansible.windows.win_command: wuauclt /reportnow
   changed_when: false
-  async: 60
+  async: 3600
   poll: 0
 
 - name: Running interactive scan... # Runs a scan for updates to clean up the GUI
   ansible.windows.win_command: UsoClient.exe StartInteractiveScan
   changed_when: false
   when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
-  async: 60
+  async: 3600
   poll: 0
