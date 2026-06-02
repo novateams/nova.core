@@ -16,6 +16,23 @@
     - name: Looking up template and cloning the VM...
       when: fresh_deploy
       block:
+        - name: Checking for IP conflict for non-automatic IP assignment...
+          when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac'] # The list of connection modes are the ones that are available in Providentia
+          block:
+            - name: Checking that nothing is already responding on {{ connection_address }}... # noqa: command-instead-of-shell
+              ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'Test-IPAddress.sh') }}"
+              register: response
+              failed_when: not (response.stdout is search("received.*packet"))
+              changed_when: false
+
+            - name: ADDRESS ALREADY IN USE
+              ansible.builtin.fail:
+                msg: |
+                  Looks like the address {{ connection_address }} is already in use!
+                  Cannot continue deploying {{ custom_vm_name | default(vm_name) }} to avoid IP conflicts!
+                  Check the VM management platform to if another device is using the same IP address.
+              when: not (response.stdout is search("100.*packet loss"))
+
         - name: Looking up {{ vm_template }} info...
           community.proxmox.proxmox_vm_info:
             name: "{{ vm_template }}"
