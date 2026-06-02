@@ -14,10 +14,9 @@
   register: daemon_config
 
 - name: Restarting docker service... # noqa: no-handler
-  ansible.builtin.systemd:
-    name: docker.service
+  ansible.builtin.service:
+    name: docker
     enabled: true
-    daemon_reload: true
     state: restarted
   when: daemon_config.changed
 
