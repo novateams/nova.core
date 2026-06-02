@@ -1,0 +1,86 @@
+---
+- name: Downloading frr repo key...
+  ansible.builtin.get_url:
+    url: "{{ frr_repo_address }}/keys.asc"
+    dest: /usr/share/keyrings/frr.asc
+    mode: "0644"
+
+- name: Adding frr repo...
+  ansible.builtin.deb822_repository:
+    name: frr
+    types: [deb]
+    uris: "{{ frr_repo_address }}"
+    suites: ["{{ ansible_facts.distribution_release }}"]
+    components: [frr-stable]
+    signed_by: /usr/share/keyrings/frr.asc
+
+- name: Removing legacy frr repo...
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/deb_frrouting_org_frr.list
+    state: absent
+
+- name: Installing frr...
+  ansible.builtin.package:
+    name:
+      - frr
+      - frr-pythontools
+    state: present
+    update_cache: true
+  register: frr_install
+  until: not frr_install.failed
+  retries: 6
+  delay: 5
+
+- name: Including frr configuration tasks...
+  notify: Restarting frr...
+  block:
+    - name: Allow syslog to write frr logs
+      ansible.builtin.file:
+        path: /var/log/frr
+        group: syslog
+        mode: g+w
+
+    - name: Enable bfdd in frr
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: ^bfdd=
+        line: bfdd=yes
+      when: frr_bfdd
+
+    - name: Enable bgp in frr
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: ^bgpd=
+        line: bgpd=yes
+      when: frr_bgp
+
+    - name: Enable osfpv2 for ipv4 in frr
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: ^ospfd=
+        line: ospfd=yes
+      when: frr_ospf_ipv4
+
+    - name: Enable ospfv3 for ipv6 in frr
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: ^ospf6d=
+        line: ospf6d=yes
+      when: frr_ospf_ipv6
+
+    - name: Enable pbr if frr
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: ^pbrd=
+        line: pbrd=yes
+      when: frr_pbr
+
+    - name: Templating frr configuration file...
+      ansible.builtin.template:
+        src: "{{ frr_template_file }}"
+        dest: /etc/frr/frr.conf
+        mode: "0600"
+        lstrip_blocks: true
+
+- name: Flushing handlers...
+  ansible.builtin.meta: flush_handlers

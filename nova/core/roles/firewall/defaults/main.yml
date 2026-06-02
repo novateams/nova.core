@@ -9,4 +9,7 @@ nftables_template_file: etc/nftables.conf
 firewall_config_file: fw.conf
 
 firewall_allow_routing: "{{ allow_routing | default(true) }}" # Allow routing between interfaces
-mode: nftables # Can iptables or nftables
+
+# Can iptables or nftables or none
+# If set to none only the sysctl values will be applied, but no firewall rules will be configured
+mode: nftables
