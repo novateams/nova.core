@@ -1,46 +1,80 @@
 ---
-- name: Enabling windows update for features installation...
+- name: Enabling and starting Windows Update service...
   ansible.windows.win_service:
     name: wuauserv
     start_mode: auto
     state: started
+  retries: 10
+  delay: 30
 
-- name: Installing Hyper-V & Containers with sub features and management tools...
-  ansible.windows.win_feature:
-    name:
-      - Containers
-      - Hyper-V
-    state: present
-    include_sub_features: true
-    include_management_tools: true
-  register: win_feature
+- name: Enabling and starting Update Orchestrator Service...
+  ansible.windows.win_service:
+    name: UsoSvc
+    start_mode: auto
+    state: started
+  retries: 10
+  delay: 30
+  when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
 
-- name: Rebooting... # noqa: no-handler
-  ansible.windows.win_reboot:
-  when: win_feature.changed
+- name: Installing WSL {{ docker_wsl_version }}...
+  ansible.windows.win_package:
+    path: "{{ docker_wsl_download_link }}"
+    product_id: "{0C25A4AA-B7AC-4436-8BCC-017CEDB0E43A}"
+  register: wsl_install
+  when: ansible_facts.distribution_version is version('10.0.19045.0', '>=') # Greater and equal to Windows 10 22H2 & Server 2022
 
-- name: Installing docker powershell module...
-  community.windows.win_psmodule:
-    name: DockerMsftProvider
-    state: present
+- name: Installing Docker on Windows Server...
+  when: ansible_facts.os_product_type == "server"
+  block:
+    - name: Installing Hyper-V & Containers features...
+      ansible.windows.win_feature:
+        name:
+          - Containers
+          - Hyper-V
+        state: present
+        include_sub_features: true
+        include_management_tools: true
+      register: win_feature
 
-- name: Installing docker powershell packages...
-  ansible.windows.win_shell: |
-    Install-Package -Name Docker -Provider DockerMsftProvider -Force
-    Install-Package -Name DockerCompletion, DockerComposeCompletion, DockerMachine -Force
+    - name: Rebooting...
+      ansible.windows.win_reboot:
+      when: win_feature.reboot_required
+
+    - name: Creating {{ post_scripts_folder_on_target }} folder...
+      ansible.windows.win_file:
+        path: "{{ post_scripts_folder_on_target }}"
+        state: directory
+
+    - name: Downloading Docker installation script...
+      ansible.windows.win_get_url:
+        url: https://raw.githubusercontent.com/microsoft/Windows-Containers/Main/helpful_tools/Install-DockerCE/install-docker-ce.ps1
+        dest: "{{ post_scripts_folder_on_target }}\\install-docker-ce.ps1"
+
+    - name: Installing Docker...
+      ansible.windows.win_shell: "{{ post_scripts_folder_on_target }}\\install-docker-ce.ps1"
+
+- name: Installing Docker on Windows Workstation...
+  when: ansible_facts.os_product_type == "workstation"
+  block:
+    - name: Installing Docker Desktop and WSL...
+      chocolatey.chocolatey.win_chocolatey:
+        name: docker-desktop
+        state: present
+
+    - name: Rebooting... # noqa: no-handler
+      ansible.windows.win_reboot:
+      when: wsl_install.changed
+
+    - name: Setting Docker Desktop to start on login...
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+        name: Docker Desktop
+        data: C:\Program Files\Docker\Docker\Docker Desktop.exe
+        type: string
+        state: present
+      when: docker_desktop_autostart
 
 - name: Installing Docker Compose...
   chocolatey.chocolatey.win_chocolatey:
     name: docker-compose
     state: present
-  register: win_chocolatey
-
-- name: Enabling docker service...
-  ansible.windows.win_service:
-    name: docker
-    start_mode: auto
-    state: started
-
-- name: Rebooting... # noqa: no-handler
-  ansible.windows.win_reboot:
-  when: win_chocolatey.changed
