@@ -10,8 +10,8 @@
 - name: Including following post-deploy_vars roles...
   ansible.builtin.include_role:
     name: "{{ item }}"
-  loop: "{{ deploy_vars_post_roles }}"
-  when: deploy_vars_post_roles != []
+  loop: "{{ deploy_vars_pre_roles }}"
+  when: deploy_vars_pre_roles != []
 
 - name: Delegating required tasks to localhost...
   delegate_to: localhost
