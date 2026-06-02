@@ -55,5 +55,5 @@
 
     - name: Running Group Policy Update...
       ansible.windows.win_command: gpupdate /force
-      async: 10 # It's a nice to have feature so we don't have to wait for it to finish
+      async: 3600 # It's a nice to have feature so we don't have to wait for it to finish
       poll: 0

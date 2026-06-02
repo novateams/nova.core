@@ -10,5 +10,5 @@
 
 - name: Running Sysprep...
   ansible.windows.win_shell: "{{ lookup('ansible.builtin.template', 'Windows-Sysprep.ps1') }}"
-  async: 60
+  async: 3600
   poll: 0
