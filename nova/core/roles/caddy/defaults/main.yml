@@ -1,4 +1,7 @@
 ---
+caddy_version: 2.11.4
+caddy_config_folder: /srv/caddy
+
 caddy_docker_network: local-network # Comes from nova.core.docker
 
 # Caddy configuration modes
@@ -21,9 +24,6 @@ caddy_api_container_ports:
   - "443:443/udp"
   - "{{ '127.0.0.1:' if caddy_api_from_localhost_only else '' }}2019:2019" # Caddy API port
   - "{{ '' if caddy_api_from_localhost_only else '127.0.0.1:' }}2021:2021" # Caddy Remote admin port
-
-caddy_config_folder: /srv/caddy
-caddy_version: 2.11.3
 
 # caddy_template_caddyfile mode variables
 caddy_caddyfile_src: caddyfile_src # Will look for the file in templates folder for the role that includes this role
