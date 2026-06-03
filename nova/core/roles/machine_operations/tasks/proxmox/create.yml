@@ -96,6 +96,7 @@
                 name: "{{ custom_vm_name | default(vm_name) }}"
                 newid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
                 node: "{{ proxmox_vm_template.proxmox_vms[0].node }}"
+                pool: "{{ omit if machine_operations_proxmox_pool == {} else machine_operations_proxmox_pool }}"
                 storage: "{{ proxmox_storage if not linked_clone_status else omit }}"
                 target: "{{ proxmox_node }}"
                 timeout: "{{ proxmox_machine_operations_operation_timeout }}"
@@ -177,11 +178,11 @@
         hotplug: "{{ machine_operations_proxmox_hotplug | join(',') }}"
         memory: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
-        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
         node: "{{ proxmox_node }}"
         onboot: "{{ machine_operations_proxmox_vm_start_on_boot }}"
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
         update: true
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
 
     - name: Attaching following networks interfaces...
       community.proxmox.proxmox_nic:
@@ -196,6 +197,38 @@
         index_var: idx
         label: "{{ nic.cloud_id }}"
       loop: "{{ interfaces | selectattr('cloud_id') }}"
+
+    - name: Checking and moving VM to pool..
+      when:
+        - machine_operations_proxmox_pool != {}
+        - not fresh_deploy # Fresh deploy means that the VM was just created and the pool was already set during creation
+      block:
+        - name: Listing members for pool {{ machine_operations_proxmox_pool }}...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/pools/{{ machine_operations_proxmox_pool }}"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: GET
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
+            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+          register: proxmox_pool_members
+          retries: 12
+          delay: 5
+
+        # Using direct API call until community.proxmox.proxmox_pool_member supports allow-move parameter
+        - name: Moving {{ custom_vm_name | default(vm_name) }} VM to pool {{ machine_operations_proxmox_pool }}...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/pools/{{ machine_operations_proxmox_pool }}"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: PUT
+            body_format: form-urlencoded
+            body:
+              vms: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+              allow-move: 1
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
+            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+          when: custom_vm_name | default(vm_name) not in proxmox_pool_members.json.data.members | map(attribute='name') | map('default', '')
 
     - name: Starting {{ custom_vm_name | default(vm_name) }} VM... # noqa: no-handler
       community.proxmox.proxmox_kvm:

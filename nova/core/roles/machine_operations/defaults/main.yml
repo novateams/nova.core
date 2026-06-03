@@ -209,6 +209,9 @@ machine_operations_proxmox_vm_start_on_boot: true
 # True or false for all interfaces. Use a custom role/task to enable/disable per interface if needed
 machine_operations_proxmox_enable_firewall: true
 
+# Pool name to place newly created VMs or or move existing VMs during deploy
+machine_operations_proxmox_pool: {}
+
 #############
 # OpenStack #
 #############
