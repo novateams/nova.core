@@ -10,7 +10,7 @@
         config: current
         network: true
       register: proxmox_vm_info
-      until: not proxmox_vm_info.failed
+      until: proxmox_vm_info.proxmox_vms[0].status | default('') == 'running'
       retries: 60
       delay: 5
 
