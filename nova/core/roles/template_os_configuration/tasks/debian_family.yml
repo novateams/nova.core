@@ -6,6 +6,7 @@
       - htop # Useful for monitoring system resources
       - kitty-terminfo # To pass your terminal settings over ssh
       - python3-apt # Required for Ansible
+      - python3-debian # Required modern deb822_repository module
       - python3-pip # Required for Ansible
       - python3-setuptools # Required for Ansible
     state: present
