@@ -9,11 +9,7 @@
     name: nftables
     state: present
     update_cache: true
-  register: firewall_dependencies_install
-  until: not firewall_dependencies_install.failed # Because sometimes the primary DNS is not up yet or egress FW is still being deployed
   notify: reboot_unix
-  retries: 10
-  delay: 6
 
 - name: Templating rules...
   ansible.builtin.template:
