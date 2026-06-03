@@ -123,6 +123,7 @@
                 vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
                 state: absent
                 force: true
+                destroy_unreferenced_disks: true
                 timeout: "{{ proxmox_machine_operations_operation_timeout }}"
 
             - name: Getting the time...
@@ -160,6 +161,7 @@
         migrate: true
       retries: 12
       delay: 5
+      when: not machine_operations_proxmox_enable_ha
 
     - name: Resizing {{ custom_vm_name | default(vm_name) }} VM disk...
       community.proxmox.proxmox_disk:
@@ -222,13 +224,37 @@
             headers:
               Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
             method: PUT
-            body_format: form-urlencoded
             body:
               vms: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
               allow-move: 1
             validate_certs: "{{ proxmox_defaults.validate_certs }}"
             timeout: "{{ proxmox_machine_operations_operation_timeout }}"
           when: custom_vm_name | default(vm_name) not in proxmox_pool_members.json.data.members | map(attribute='name') | map('default', '')
+
+    - name: Checking and configuring HA...
+      when: machine_operations_proxmox_enable_ha
+      block:
+        - name: Checking if {{ custom_vm_name | default(vm_name) }} VM is already an HA resource...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/cluster/ha/resources"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: GET
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
+            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+          register: proxmox_ha_resource
+
+        - name: Enabling HA for {{ custom_vm_name | default(vm_name) }} VM...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/cluster/ha/resources"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body: "{{ machine_operations_proxmox_ha_configuration }}"
+            body_format: json
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
+            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+          when: proxmox_ha_resource.json.data | selectattr('sid', 'equalto', 'vm:' ~ machine_operations_proxmox_ha_configuration.sid) == []
 
     - name: Starting {{ custom_vm_name | default(vm_name) }} VM... # noqa: no-handler
       community.proxmox.proxmox_kvm:

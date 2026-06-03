@@ -212,6 +212,19 @@ machine_operations_proxmox_enable_firewall: true
 # Pool name to place newly created VMs or or move existing VMs during deploy
 machine_operations_proxmox_pool: {}
 
+# Set to true to enable HA for the VM when supported by the Proxmox cluster
+machine_operations_proxmox_enable_ha: false
+
+# The default HA configuration for the VM when HA is enabled and supported by the Proxmox cluster
+# Added updated variable in your projects host_vars/group_vars to override the defaults
+machine_operations_proxmox_ha_configuration:
+  sid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+  auto-rebalance: 1
+  failback: 1
+  max_relocate: 1
+  max_restart: 1
+  state: started
+
 #############
 # OpenStack #
 #############
