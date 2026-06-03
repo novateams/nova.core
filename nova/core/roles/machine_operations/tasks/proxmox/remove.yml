@@ -34,6 +34,7 @@
             vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
             state: absent
             force: true
+            destroy_unreferenced_disks: true
             timeout: "{{ proxmox_machine_operations_operation_timeout }}"
 
       rescue:
