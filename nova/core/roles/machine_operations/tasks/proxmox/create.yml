@@ -117,27 +117,8 @@
                 state: touch
                 mode: "0644"
 
-            - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
-              community.proxmox.proxmox_kvm:
-                name: "{{ custom_vm_name | default(vm_name) }}"
-                vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
-                state: absent
-                force: true
-                destroy_unreferenced_disks: true
-                timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-
-            - name: Getting the time...
-              ansible.builtin.setup:
-                filter: "*_time"
-              register: proxmox_disk_cleanup_start_time
-
-            - name: Including disk_cleanup tasks...
-              ansible.builtin.include_tasks: disk_cleanup.yml
-
-            - name: Removing {{ custom_vm_name | default(vm_name) }} VM cloning limiter file...
-              ansible.builtin.file:
-                path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
-                state: absent
+            - name: Including remove tasks to clean up disks from failed cloning attempt...
+              ansible.builtin.include_tasks: remove.yml
 
             - name: FAILED CLONING ATTEMPT
               ansible.builtin.fail:
