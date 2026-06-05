@@ -10,9 +10,10 @@
         datacenter: "{{ datacenter }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         folder: "{{ folder }}"
+        schema: vsphere
         properties:
           - guest
-        schema: vsphere
+          - summary
       register: detect_dhcp
       until:
         - detect_dhcp.instance.guest.net != []
@@ -20,8 +21,12 @@
         - detect_dhcp.instance.guest.ipAddress != "0.0.0.0"
         - not (detect_dhcp.instance.guest.ipAddress | regex_search('169.254.*')) # Protection against APIPA address
         - not (detect_dhcp.instance.guest.ipAddress | ansible.utils.ipv6) # Protection against IPv6 link-local address
-      retries: 60
-      delay: 5
+
+        # To avoid detecting IP before the OS is fully booted and VMware tools are running
+        # Otherwise, in some cases, the incorrect IP can be detected
+        - detect_dhcp.instance.summary.quickStats.uptimeSeconds > 60
+      retries: 30
+      delay: 10
 
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }}
