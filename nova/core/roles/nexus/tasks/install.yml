@@ -1,20 +1,18 @@
 ---
-- name: Creating folders for configuration...
+- name: Creating {{ nexus_container_config_folder }}/data directory...
   ansible.builtin.file:
     path: "{{ nexus_container_config_folder }}/data"
-    owner: 200 # ID of the nexus container user
-    group: root # Host machine root group
-    mode: "0755"
+    owner: 200
+    group: 200
+    recurse: true
     state: directory
 
-- name: Templating Nexus configuration file(s)...
+- name: Templating Docker Compose file for Nexus...
   ansible.builtin.template:
     src: nexus.yml
     dest: "{{ nexus_container_config_folder }}/docker-compose.yml"
     mode: "0644"
     lstrip_blocks: true
-  loop_control:
-    loop_var: nexus_config_item
 
 - name: Checking if Nexus encryption file exists...
   ansible.builtin.stat:
@@ -25,8 +23,8 @@
   ansible.builtin.template:
     src: nexus.secrets.json
     dest: "{{ nexus_container_config_folder }}/data/nexus.secrets.json"
-    owner: 200 # ID of the nexus container user
-    group: root # Host machine root group
+    owner: 200
+    group: 200
     mode: "0600"
   when: not nexus_encryption_file.stat.exists
 
