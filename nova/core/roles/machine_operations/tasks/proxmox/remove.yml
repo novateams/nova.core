@@ -6,16 +6,16 @@
 
 - name: Removing machine...
   when: proxmox_vm_exists.proxmox_vms != []
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
   block:
     - name: Removing cloning limiter file...
-      delegate_to: localhost
-      become: false
       ansible.builtin.file:
         path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
         state: absent
 
+    # Stopping the VM before removing it, since it's much faster this way
+    # Also the community.proxmox.proxmox_kvm module stopped actually means shutdown
     - name: Stopping {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.uri:
         url: "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_exists.proxmox_vms[0].node }}/qemu/{{ proxmox_vm_exists.proxmox_vms[0].vmid }}/status/stop"
@@ -23,41 +23,21 @@
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: POST
         validate_certs: "{{ proxmox_defaults.validate_certs }}"
+        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
       retries: 6
-      delay: 5
 
-    - name: Trying to remove VM...
-      block:
-        - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
-          community.proxmox.proxmox_kvm:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
-            state: absent
-            force: true
-            destroy_unreferenced_disks: true
-            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-
-      rescue:
-        # Creating clone limiter file in case there is batch waiting from the filed VM clone operation to finish
-        - name: Creating /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done file...
-          ansible.builtin.file:
-            path: /tmp/proxmox_vm_clone_{{ project_fullname | default('') }}_{{ inventory_hostname }}.done
-            state: touch
-            mode: "0644"
-
-        - name: REMOVING VM FAILED
-          ansible.builtin.fail:
-            msg: |
-              Failed to remove {{ custom_vm_name | default(vm_name) }} VM.
-              Check the errors above for more details.
-
-    - name: Getting the time...
-      ansible.builtin.setup:
-        filter: "*_time"
-      register: proxmox_disk_cleanup_start_time
-
-    - name: Including disk_cleanup tasks...
-      ansible.builtin.include_tasks: disk_cleanup.yml
+    # Using custom timeout value here since on mass remove some VMs will be stuck getting storage lock
+    # Since we're using retries we don't need to use the default long time and can fail and recover fast with the retries
+    - name: Removing {{ custom_vm_name | default(vm_name) }} VM...
+      community.proxmox.proxmox_kvm:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+        destroy_unreferenced_disks: true
+        force: true
+        purge: true
+        state: absent
+        timeout: 30
+      retries: 3
 
 - name: Stopping play...
   ansible.builtin.meta: end_host
