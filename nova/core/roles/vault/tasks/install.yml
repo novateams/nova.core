@@ -31,6 +31,13 @@
       dest: docker-compose.yml
   register: template
 
+# https://github.com/hashicorp/vault/releases/tag/v2.0.2
+- name: Disabling swap on {{ inventory_hostname }}...
+  ansible.builtin.mount:
+    path: none
+    fstype: swap
+    state: absent
+
 - name: Composing Vault on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ vault_config_folder }}"

@@ -10,6 +10,7 @@
       "tls_disable": 1
     }
   },
-  "ui": true,
-  "log_level": "{{ vault_server_log_level }}"
+  "disable_mlock": true,
+  "log_level": "{{ vault_server_log_level }}",
+  "ui": true
 }
