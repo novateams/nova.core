@@ -5,6 +5,7 @@ set -e
 #----------End of variables, start of script----------#
 
 VAULT_UNSEAL_KEY="{{ vault_unseal_key }}"
+# shellcheck disable=SC1083
 CONTAINER_STATUS=$(sudo docker inspect -f {{ '{{.State.Running}}' }} {{ vault_container_name }})
 SEAL_STATUS=$(sudo docker exec vault vault status | grep 'Sealed' | awk '{print $2}')
 

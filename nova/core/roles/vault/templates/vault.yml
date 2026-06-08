@@ -14,8 +14,6 @@ services:
       - VAULT_API_ADDR=http://0.0.0.0:80
       - VAULT_ADDRESS=http://0.0.0.0:80
     command: server
-    cap_add:
-      - IPC_LOCK
     logging:
       driver: json-file
       options:
