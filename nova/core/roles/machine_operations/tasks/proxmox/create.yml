@@ -237,6 +237,34 @@
             timeout: "{{ proxmox_machine_operations_operation_timeout }}"
           when: proxmox_ha_resource.json.data | selectattr('sid', 'equalto', 'vm:' ~ machine_operations_proxmox_ha_configuration.sid) == []
 
+    - name: Applying pending configuration for {{ custom_vm_name | default(vm_name) }} VM...
+      when:
+        - machine_operations_reconfigure_vm_on_deploy
+        - not fresh_deploy
+      block:
+        # Using API instead of community.proxmox.proxmox_vm_info module since it reports incorrectly
+        - name: Checking if {{ custom_vm_name | default(vm_name) }} has pending configuration...
+          ansible.builtin.uri:
+            url:
+              "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_exists.proxmox_vms[0].node }}/qemu/{{
+              proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}/pending"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: GET
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
+            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+          register: proxmox_vm_pending_info
+          until: proxmox_vm_pending_info is not failed
+          retries: 5
+          delay: 3
+
+        - name: Restarting {{ custom_vm_name | default(vm_name) }} to apply the pending configuration...
+          community.proxmox.proxmox_kvm:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            state: restarted
+            timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+          when: (proxmox_vm_pending_info.json.data | selectattr('pending', 'defined') | list | length) > 0
+
     - name: Starting {{ custom_vm_name | default(vm_name) }} VM... # noqa: no-handler
       community.proxmox.proxmox_kvm:
         name: "{{ custom_vm_name | default(vm_name) }}"
