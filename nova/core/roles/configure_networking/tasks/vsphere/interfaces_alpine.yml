@@ -126,9 +126,29 @@
             keys_send:
               - ENTER
 
+        - name: Detecting DHCP address for {{ custom_vm_name | default(vm_name) }}...
+          community.vmware.vmware_guest_info:
+            datacenter: "{{ datacenter }}"
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            folder: "{{ folder }}"
+            properties:
+              - guest.ipAddress
+            schema: vsphere
+          delegate_to: localhost
+          become: false
+          register: detect_dhcp
+          until:
+            - detect_dhcp.instance.guest.ipAddress != none
+            - detect_dhcp.instance.guest.ipAddress != "0.0.0.0"
+            - not (detect_dhcp.instance.guest.ipAddress | regex_search('169.254.*')) # Protection against APIPA address
+            - not (detect_dhcp.instance.guest.ipAddress | ansible.utils.ipv6) # Protection against IPv6 link-local address
+          retries: 60
+          delay: 5
+          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+
         - name: Waiting for the network to be configured...
           ansible.builtin.wait_for:
-            host: "{{ connection_address }}"
+            host: "{{ detect_dhcp.instance.guest.ipAddress | default(connection_address) }}"
             port: 22
             timeout: 60
 
