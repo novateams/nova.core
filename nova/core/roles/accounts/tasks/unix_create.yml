@@ -123,7 +123,7 @@
       become: true
 
     - name: Restarting SSHD... # noqa: no-handler
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         name: "{{ accounts_os_family_service_name[ansible_facts.os_family] | default('sshd') }}"
         state: restarted
       when: maxauthtries.changed
