@@ -37,7 +37,44 @@
         purge: true
         state: absent
         timeout: 30
-      retries: 3
+      retries: 5
+
+- name: Removing unreferenced disks...
+  become: false
+  delegate_to: localhost
+  block:
+    # Sometimes during high load the unreferenced disk cleanup can fail in the previous task
+    # So checking if there are unreferenced disks and trying to remove them before finishing the play
+    - name: Listing {{ custom_vm_name | default(vm_name) }} unreferenced disks...
+      community.proxmox.proxmox_storage_contents_info:
+        storage: "{{ proxmox_storage }}"
+        node: "{{ proxmox_vm_exists.proxmox_vms[0].node | default(proxmox_node) }}"
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+        validate_certs: "{{ proxmox_validate_certs }}"
+      retries: 12
+      delay: 5
+      register: proxmox_unreferenced_disks
+
+    - name: Removing following {{ custom_vm_name | default(vm_name) }} unreferenced disks...
+      ansible.builtin.uri:
+        url:
+          "{{ proxmox_api_url }}/nodes/{{ proxmox_vm_exists.proxmox_vms[0].node
+          | default(proxmox_node) }}/storage/{{ proxmox_storage }}/content/{{ disk.volid }}"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: DELETE
+        validate_certs: "{{ proxmox_validate_certs }}"
+      loop_control:
+        loop_var: disk
+        label: "{{ disk.volid }}"
+      loop: "{{ proxmox_unreferenced_disks.proxmox_storage_content }}"
+      when: proxmox_unreferenced_disks.proxmox_storage_content != []
+      retries: 12
+      delay: 5
+
+    - name: Re-including remove tasks...
+      ansible.builtin.include_tasks: remove.yml
+      when: proxmox_unreferenced_disks.proxmox_storage_content != []
 
 - name: Stopping play...
   ansible.builtin.meta: end_host

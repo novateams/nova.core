@@ -237,6 +237,7 @@
     line: "{{ sshd_config_item.line }}"
   loop_control:
     loop_var: sshd_config_item
+    label: "{{ sshd_config_item.regexp }}"
   loop:
     - regexp: ^.*Match Group administrators$
       line: "#Match Group administrators"
