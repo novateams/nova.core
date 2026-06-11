@@ -32,7 +32,7 @@
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }}
     to {{ inventory_hostname }}
     using {{ ansible_connection | default('ssh') | upper }}
-    over {{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}... # noqa: name[template]
+    over {{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}...
   ansible.builtin.set_fact:
     ansible_host: "{{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}"
     ansible_user: "{{ template_username if fresh_deploy else ansible_deployer_username }}"
