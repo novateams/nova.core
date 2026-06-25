@@ -1,0 +1,78 @@
+---
+services:
+  caddy:
+    image: caddy:{{ caddy_version }}
+    hostname: caddy
+    container_name: caddy
+    restart: unless-stopped
+    {% if caddy_enable_api %}
+    command: caddy run --resume
+    environment:
+      - CADDY_ADMIN=0.0.0.0:2019
+    {% endif %}
+    ports:
+      {% if caddy_enable_api %}
+      {% for port in caddy_api_container_ports %}
+      - "{{ port }}"
+      {% endfor %}
+      {% else %}
+      {% for port in caddy_container_ports %}
+      - "{{ port }}"
+      {% endfor %}
+      {% endif %}
+    volumes:
+      - caddy_etc:/etc/caddy
+      - caddy_data:/data/caddy
+      - caddy_config:/config/caddy
+      - caddy_logs:/srv/logs
+      - caddy_www:/srv/www
+      - caddy_certs:/srv/certs
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+
+volumes:
+  caddy_etc:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ caddy_config_folder }}/etc"
+
+  caddy_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ caddy_config_folder }}/data"
+
+  caddy_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ caddy_config_folder }}/config"
+
+  caddy_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ caddy_config_folder }}/logs"
+
+  caddy_www:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ caddy_config_folder }}/www"
+
+  caddy_certs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ caddy_certificates_folder }}"
+
+networks:
+  default:
+    name: "{{ caddy_docker_network }}"
+    external: true

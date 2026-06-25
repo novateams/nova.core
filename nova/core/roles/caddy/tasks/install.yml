@@ -23,7 +23,6 @@
     state: directory
     recurse: true
   loop:
-    - "{{ caddy_config_folder }}"
     - "{{ caddy_config_folder }}/etc"
     - "{{ caddy_config_folder }}/data"
     - "{{ caddy_config_folder }}/config"
@@ -33,7 +32,7 @@
 
 - name: Templating Caddy configuration files for {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: caddy.yml
+    src: docker-compose.yml
     dest: "{{ caddy_config_folder }}/docker-compose.yml"
     mode: "0644"
     lstrip_blocks: true
