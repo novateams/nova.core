@@ -90,5 +90,5 @@
     status_code: 200
   register: gitlab_uri
   until: gitlab_uri.status == 200
-  retries: 12
-  delay: 5
+  retries: 18
+  delay: 10
