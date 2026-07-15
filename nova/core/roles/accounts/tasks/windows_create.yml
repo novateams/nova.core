@@ -54,8 +54,16 @@
     - name: Creating OUs for {{ ad_domain_name | default('') }}...
       ansible.windows.win_shell: "{{ lookup('ansible.builtin.template', 'Create-OUs.ps1') }}"
 
-    - name: Configuring Domain groups...
-      ansible.builtin.include_tasks: create_domain_groups.yml
+    # Creating all domain groups without members first, since some members may not exist yet
+    - name: Creating following Domain groups...
+      microsoft.ad.group:
+        name: "{{ item.name }}"
+        scope: "{{ item.scope | default('domainlocal') }}"
+        path: "{{ item.ou | default(omit) }}"
+        description: "{{ item.description | default(omit) }}"
+      loop: "{{ domain_groups }}"
+      loop_control:
+        label: "{{ item.name | default('') }}"
 
     - name: Creating following domain accounts...
       microsoft.ad.user:
@@ -86,6 +94,38 @@
       when:
         win_domain_user.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
         | list | intersect([ansible_deployer_username]) | length > 0
+
+    # Configuring all domains groups with members now that all domain accounts have been created with replace strategy
+    - name: Configuring following domain groups and replacing members...
+      microsoft.ad.group:
+        name: "{{ item.name }}"
+        scope: "{{ item.scope | default('domainlocal') }}"
+        path: "{{ item.ou | default(omit) }}"
+        description: "{{ item.description | default(omit) }}"
+        members:
+          set: "{{ item.members }}"
+      loop: "{{ domain_groups }}"
+      loop_control:
+        label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name | default('') }}"
+      when:
+        - item.members is defined
+        - accounts_domain_groups_members_strategy == 'replace'
+
+    # Configuring all domains groups with members now that all domain accounts have been created with add strategy
+    - name: Configuring following domain groups and adding members...
+      microsoft.ad.group:
+        name: "{{ item.name }}"
+        scope: "{{ item.scope | default('domainlocal') }}"
+        path: "{{ item.ou | default(omit) }}"
+        description: "{{ item.description | default(omit) }}"
+        members:
+          add: "{{ item.members }}"
+      loop: "{{ domain_groups }}"
+      loop_control:
+        label: "{{ item.members | default(['no_members']) | join(', ') }} to {{ item.name | default('') }}"
+      when:
+        - item.members is defined
+        - accounts_domain_groups_members_strategy == 'add'
 
 # To make sure that we are setting the password for the correct account on non-primary domain controller
 - name: Setting correct password for {{ ansible_deployer_username }}...
