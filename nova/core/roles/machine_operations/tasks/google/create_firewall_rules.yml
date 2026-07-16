@@ -3,6 +3,7 @@
   google.cloud.gcp_compute_firewall:
     name: "{{ machine_operations_google_firewall_rule.name }}"
     allowed: "{{ machine_operations_google_firewall_rule.allowed }}"
+    source_ranges: "{{ machine_operations_google_firewall_rule.source_ranges }}"
     network:
       selfLink: "{{ create_network_result.results[loop_index].selfLink }}"
     state: present

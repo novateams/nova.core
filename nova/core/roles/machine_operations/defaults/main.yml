@@ -277,3 +277,5 @@ machine_operations_google_firewall_rule:
   name: "{{ item.cloud_id }}-allow-all" # The cloud_id comes from the interfaces list
   allowed:
     - ip_protocol: all
+  source_ranges:
+    - 0.0.0.0/0
