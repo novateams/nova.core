@@ -283,3 +283,20 @@ machine_operations_google_firewall_rule:
     - ip_protocol: all
   source_ranges:
     - 0.0.0.0/0
+
+###########
+# Orchard #
+###########
+
+# If this is set Orchard will attach new VMs to the network with this name
+# If not defined --net-softnet parameter will be used
+machine_operations_orchard_bridge_network_name: {}
+
+# List of labels to add to the VM when created, labels are used to schedule the VM to a specific  worker
+# If the worker does not have the same labels the VM will not start
+# Pass the machine_operations_orchard_labels dict variable in your host_vars/group_vars to override the defaults
+# Example of how to set the labels in your host_vars/group_vars:
+# machine_operations_orchard_labels:
+#   project_fullname: "{{ project_fullname | default('') }}"
+#   infra_env: "{{ infra_env }}"
+machine_operations_orchard_labels: {}

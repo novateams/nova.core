@@ -65,6 +65,10 @@
       ansible.builtin.include_tasks: google/main.yml
       when: infra_env == "google"
 
+    - name: Including Orchard environment tasks...
+      ansible.builtin.include_tasks: orchard/main.yml
+      when: infra_env == "orchard"
+
     - name: Including external environment tasks...
       ansible.builtin.include_tasks: external/main.yml
       when: infra_env == "external"

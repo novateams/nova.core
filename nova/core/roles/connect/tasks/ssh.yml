@@ -4,6 +4,7 @@
   ansible.builtin.copy:
     content:
       "{{ 'sshpass -p ' ~ connect_password if connect_password != {} else '' }} ssh
+      {{ orchard_ssh_proxy_args if infra_env == 'orchard' else '' }} -o ConnectTimeout=5 -o StrictHostKeyChecking=no
       -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ '-o PreferredAuthentications=password' if
       connect_connection_method_ssh_preferred_authentication_password else '' }} {{
       ansible_ssh_extra_args | default('') }} {{ connect_user }}@{{ ansible_host }} {{ '-A'

@@ -321,3 +321,16 @@ google_cloud_defaults:
 
 # This can be used to define default for all FortiOS modules
 fortios_defaults: {}
+
+###########
+# Orchard #
+###########
+
+orchard_controller_address: "" # The address of the Orchard controller - https://orchard.example.com:6120
+orchard_deployer_username: "" # The name of service-account created in controller for creating and managing VMs
+orchard_deployer_token: "" # The token for the service-account created in controller for creating and managing VMs
+
+# The SSH ProxyJump arguments to use when connecting to a VM in Orchard environment, through a jump host (the Orchard controller)
+# The address is taken from the orchard_controller_address and the port 6122 is the default orchard SSH proxy port
+# Update this variable as needed if the Orchard controller is using a different values
+orchard_ssh_proxy_args: -o ProxyJump={{ orchard_deployer_username }}@{{ orchard_controller_address.split('://')[1].split(':')[0] }}:6122
