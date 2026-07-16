@@ -8,6 +8,7 @@ startup-script: |
   MaxAuthTries 30
   EOF
   systemctl restart ssh
+  # This is a temporary password for the root user, which will be changed as soon as the accounts role is reached.
   echo root:{{ template_password }} | chpasswd
 
   # Needed during os_configuration role

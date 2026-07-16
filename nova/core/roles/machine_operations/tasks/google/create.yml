@@ -43,7 +43,7 @@
             boot: true
             initialize_params:
               disk_size_gb: "{{ os_disk_size | default(hardware_primary_disk_size) | default(omit) }}"
-              disk_type: "{{ google_cloud_disk_type | default(omit) }}"
+              disk_type: "{{ google_cloud_disk_type }}"
               source_image: "{{ google_cloud_vm_image.path ~ '/' ~ google_image_info.resources[-1].name | default(omit) }}"
         network_interfaces: "{{ omit if not fresh_deploy else lookup('ansible.builtin.template', 'google_cloud_interfaces.yml') | from_yaml }}"
         metadata:

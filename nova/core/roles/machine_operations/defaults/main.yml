@@ -256,6 +256,9 @@ machine_operations_google_assign_public_ip: true
 
 machine_operations_google_temp_sshd_config_path: /etc/ssh/sshd_config.d/00-{{ infra_env }}-first-run.conf
 
+# The default disk type to use for the VM
+google_cloud_disk_type: pd-ssd
+
 # Will try and pre-create the network for a VM based on the interfaces variable
 # Set to false if network(s) are already pre-created by other means
 machine_operations_google_create_networks: true

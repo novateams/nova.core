@@ -17,6 +17,7 @@ windows-startup-script-ps1: |
     Start-Transcript -Path $LogPath
 
 {% if infra_env in ["aws", "google"] %}
+    # This is a temporary password for the Administrator user, which will be changed as soon as the accounts role is reached.
     Write-Host "Setting Administrator password"
     $Password = "{{ template_password }}"
     $SecurePassword = ConvertTo-SecureString $Password -AsPlainText -Force
