@@ -12,14 +12,25 @@
     mode: "0644"
   when: not apt_backup_file.stat.exists
 
-- name: Templating custom debian-{{ ansible_facts.distribution_release }}.list to {{ inventory_hostname }}...
+- name: Removing legacy /etc/apt/sources.list file...
+  ansible.builtin.file:
+    path: /etc/apt/sources.list
+    state: absent
+
+- name: Getting {{ inventory_hostname }} architecture...
+  ansible.builtin.command: dpkg --print-architecture
+  changed_when: false
+  register: dpkg_architecture
+
+- name: Templating debian.sources...
   ansible.builtin.template:
-    src: debian-{{ ansible_facts.distribution_release }}.list
-    dest: /etc/apt/sources.list
+    src: debian.sources
+    dest: /etc/apt/sources.list.d/debian.sources
     mode: "0644"
-  register: apt_sources
+  register: repos_changed
 
 - name: Running apt update... # noqa: no-handler
   ansible.builtin.apt:
     update_cache: true
-  when: apt_sources.changed
+  retries: 2
+  when: repos_changed.changed

@@ -1,0 +1,37 @@
+# The original debian.sources is backed up as /etc/apt/sources.list_backup
+
+Types: deb
+URIs: {{ package_mirror_debian_uri.general }}
+Suites: {{ ansible_facts.lsb.codename }}
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: {{ package_mirror_debian_uri.general }}
+Suites: {{ ansible_facts.lsb.codename }}
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: {{ package_mirror_debian_uri.security }}
+Suites: {{ ansible_facts.lsb.codename }}-security
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: {{ package_mirror_debian_uri.security }}
+Suites: {{ ansible_facts.lsb.codename }}-security
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: {{ package_mirror_debian_uri.updates }}
+Suites: {{ ansible_facts.lsb.codename }}-updates
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: {{ package_mirror_debian_uri.updates }}
+Suites: {{ ansible_facts.lsb.codename }}-updates
+Components: main non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

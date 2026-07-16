@@ -20,13 +20,6 @@
         mode: "0644"
       when: not kali_sources_backup.stat.exists
 
-    - name: Templating custom kali.sources to {{ inventory_hostname }}...
-      ansible.builtin.template:
-        src: kali.sources
-        dest: /etc/apt/sources.list.d/kali.sources
-        mode: "0644"
-      register: kali_sources_templated
-
 - name: Configuring sources.list...
   when: not kali_sources.stat.exists
   block:
@@ -43,16 +36,30 @@
         mode: "0644"
       when: not apt_backup_file.stat.exists
 
-    - name: Templating custom kali.list to {{ inventory_hostname }}...
-      ansible.builtin.template:
-        src: kali-sources.list
-        dest: /etc/apt/sources.list
-        mode: "0644"
-      register: list_apt_sources
+- name: Removing legacy /etc/apt/sources.list file...
+  ansible.builtin.file:
+    path: /etc/apt/sources.list
+    state: absent
+
+- name: Getting {{ inventory_hostname }} architecture...
+  ansible.builtin.command: dpkg --print-architecture
+  changed_when: false
+  register: dpkg_architecture
+
+- name: Adding Kali repository...
+  ansible.builtin.deb822_repository:
+    name: kali
+    architectures:
+      - "{{ dpkg_architecture.stdout }}"
+    types: [deb]
+    uris: "{{ package_mirror_kali_uri.general }}"
+    suites: [kali-rolling]
+    components: [main contrib non-free non-free-firmware]
+    signed_by: /usr/share/keyrings/kali-archive-keyring.gpg
+  register: repos_changed
 
 - name: Running apt update... # noqa: no-handler
   ansible.builtin.apt:
     update_cache: true
   retries: 2
-  when: list_apt_sources.changed | default(false)
-    or kali_sources_templated.changed | default(false)
+  when: repos_changed.changed

@@ -1,6 +1,11 @@
 ---
-- name: Configuring Ubuntu < 24.04 sources.list
-  when: ansible_facts.distribution_major_version | int < 24
+- name: Checking if ubuntu.sources is used...
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/ubuntu.sources
+  register: ubuntu_sources
+
+- name: Configuring ubuntu.sources...
+  when: not ubuntu_sources.stat.exists
   block:
     - name: Checking if sources.list backup exists...
       ansible.builtin.stat:
@@ -15,15 +20,8 @@
         mode: "0644"
       when: not legacy_apt_backup_file.stat.exists
 
-    - name: Templating custom ubuntu-sources.list to {{ inventory_hostname }}...
-      ansible.builtin.template:
-        src: ubuntu-sources.list
-        dest: /etc/apt/sources.list
-        mode: "0644"
-      register: legacy_apt_sources
-
-- name: Configuring Ubuntu 24.04+ sources.list
-  when: ansible_facts.distribution_major_version | int >= 24
+- name: Configuring ubuntu.sources...
+  when: ubuntu_sources.stat.exists
   block:
     - name: Checking if ubuntu.sources backup exists...
       ansible.builtin.stat:
@@ -38,14 +36,25 @@
         mode: "0644"
       when: not apt_backup_file.stat.exists
 
-    - name: Templating custom ubuntu-sources.list to {{ inventory_hostname }}...
-      ansible.builtin.template:
-        src: ubuntu.sources
-        dest: /etc/apt/sources.list.d/ubuntu.sources
-        mode: "0644"
-      register: apt_sources
+- name: Removing legacy /etc/apt/sources.list file...
+  ansible.builtin.file:
+    path: /etc/apt/sources.list
+    state: absent
 
-- name: Running apt update...
+- name: Getting {{ inventory_hostname }} architecture...
+  ansible.builtin.command: dpkg --print-architecture
+  changed_when: false
+  register: dpkg_architecture
+
+- name: Templating ubuntu.sources...
+  ansible.builtin.template:
+    src: ubuntu.sources
+    dest: /etc/apt/sources.list.d/ubuntu.sources
+    mode: "0644"
+  register: repos_changed
+
+- name: Running apt update... # noqa: no-handler
   ansible.builtin.apt:
     update_cache: true
-  when: legacy_apt_sources.changed | default(false) or apt_sources.changed | default(false)
+  retries: 2
+  when: repos_changed.changed

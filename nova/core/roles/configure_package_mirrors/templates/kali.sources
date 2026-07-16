@@ -1,7 +1,0 @@
-# The original kali.sources is backed up as /etc/apt/kali.sources_backup
-
-Types: deb
-URIs: {{ package_mirror_kali_uri.general }}
-Suites: kali-rolling
-Components: main contrib non-free non-free-firmware
-Signed-By: /usr/share/keyrings/kali-archive-keyring.gpg
