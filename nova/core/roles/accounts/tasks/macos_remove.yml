@@ -1,10 +1,11 @@
 ---
+# Ignoring symbolic links and only listing user accounts that have a .created file in their home directory, which indicates they were created by this role.
 - name: Listing user accounts created with {{ ansible_role_name }}...
   ansible.builtin.raw: |
-    for profile in /Users/*/; do
-        if [[ -f $profile/.created ]]; then
-            echo $(basename $profile)
-        fi
+    for profile in /Users/*; do
+      if [[ -f "$profile/.created" && ! -L "$profile" ]]; then
+        basename "$profile"
+      fi
     done
   register: home_profiles
   changed_when: false
@@ -21,8 +22,10 @@
   block:
     - name: Removing following accounts...
       ansible.builtin.raw: |
-        dscl . -delete /Users/{{ item }}
-        rm -rf /Users/{{ item }}
+        pkill -9 -u {{ item }}
+        sysadminctl -deleteUser {{ item }}
+        # rm -rf /Users/{{ item }}
+        # dscl . -delete /Users/{{ item }}
       loop: "{{ user_profiles_to_remove }}"
       changed_when: true
 
@@ -37,10 +40,17 @@
           # because the connection is lost before the reboot command completes.
           # To avoid this, we can ignore unreachable hosts after issuing the reboot command.
           ignore_unreachable: true
+          when: not darwin_with_python
+
+        - name: Rebooting
+          ansible.builtin.reboot:
+          when: darwin_with_python
 
     - name: Removing following accounts...
       ansible.builtin.raw: |
-        dscl . -delete /Users/{{ item }}
-        rm -rf /Users/{{ item }}
+        pkill -9 -u {{ item }}
+        sysadminctl -deleteUser {{ item }}
+        # rm -rf /Users/{{ item }}
+        # dscl . -delete /Users/{{ item }}
       loop: "{{ user_profiles_to_remove }}"
       changed_when: true

@@ -1,17 +1,43 @@
 ---
+- name: MISSING OR INCORRECT VARIABLE(S)
+  ansible.builtin.fail:
+    msg: |
+      The **ansible_deployer_password** variable is required and **connection_no_password** variable must be false.
+      MacOS requires a password as secure token to create and edit user accounts.
+  when: ansible_deployer_password | default(false) is ansible.builtin.falsy
+    or connection_no_password | default(false) is ansible.builtin.truthy
+
+# This required so this role can clean up the default cloud users if they are not in the local_accounts_with_password list
+- name: Adding source creation flag for default cloud account...
+  when: lookup('vars', infra_env ~ '_template_username') | default('') not in [admin_account, '']
+  block:
+    - name: Checking if {{ lookup('vars', infra_env ~ '_template_username') | default('') }} user exists...
+      ansible.builtin.raw: |
+        if dscl . -list /Users | grep -q "^{{ lookup('vars', infra_env ~ '_template_username') | default('') }}$"; then
+            echo "User exists"
+        else
+            echo "User does not exist"
+        fi
+      changed_when: false
+      register: template_user
+
+    - name: Adding account creation source flag for {{ lookup('vars', infra_env ~ '_template_username') | default('') }}...
+      ansible.builtin.raw: |
+        echo "This account was created with {{ ansible_role_name
+          }} role" > /Users/{{ lookup('vars', infra_env ~ '_template_username') | default('') }}/.created
+        chown {{ lookup('vars', infra_env ~ '_template_username') | default('')
+          }}:staff /Users/{{ lookup('vars', infra_env ~ '_template_username') | default('') }}/.created
+      changed_when: true
+      when: template_user.stdout.find('User exists') != -1
+
 - name: Configuring following users...
   ansible.builtin.raw: |
     if dscl . -list /Users | grep -q "^{{ item.username }}$"; then
-
-        echo Setting existing {{ item.username }} user password
-        sysadminctl -resetPasswordFor {{ item.username }} -newPassword {{
-        item.password }} -adminUser {{ ansible_user }} "{{ '' if ansible_password is not defined else '-adminPassword ' ~ ansible_password }}"
-
+      sysadminctl -resetPasswordFor {{ item.username }} -newPassword '{{ item.password }}' -adminUser {{ ansible_user }} -adminPassword '{{ ansible_password }}'
     else
-
-        echo Creating new {{ item.username }} account
-        sysadminctl -addUser {{ item.username }} -password {{ item.password }} -admin -shell /bin/zsh
-
+      echo "Creating new {{ item.username }} account"
+      sysadminctl -addUser {{ item.username }} -password {{ item.password }} -admin -shell /bin/zsh
+      sysadminctl -adminUser {{ ansible_user }} -adminPassword {{ ansible_password }} -secureTokenOn {{ item.username }} -password {{ item.password }}
     fi
   changed_when: true
   loop: "{{ admin_accounts_with_password }}"
@@ -48,8 +74,7 @@
 - name: Adding ssh keys for...
   ansible.builtin.raw: |
     line="$( echo {{ item.ssh_key }} )"
-    if [ "{{ admin_account }}" = "{{ item.username }}" ];
-    then
+    if [ "{{ admin_account }}" = "{{ item.username }}" ]; then
         echo "Adding ssh key to root user"
         file=/var/root/.ssh/authorized_keys
         mkdir -p /var/root/.ssh/
@@ -66,3 +91,15 @@
   loop_control:
     label: "{{ item.username }}"
   when: item.ssh_key is defined
+
+- name: Configuring SSHD in cloud environments...
+  when: accounts_configure_ssh_maxauthtries
+  block:
+    # This to avoid errors when someone has more that 6 SSH keys in their agent
+    - name: Setting SSHD MaxAuthTries to {{ accounts_ssh_maxauthtries }}...
+      ansible.builtin.raw: sed -i "" "s/.*MaxAuthTries.*/MaxAuthTries {{ accounts_ssh_maxauthtries }}/g" /etc/ssh/sshd_config
+      changed_when: true
+
+    - name: Restarting SSHD... # noqa: no-handler
+      ansible.builtin.raw: launchctl kickstart -k system/com.openssh.sshd
+      changed_when: true
