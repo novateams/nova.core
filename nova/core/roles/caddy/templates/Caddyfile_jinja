@@ -22,6 +22,9 @@
 		}
 	}
 
+	{% if caddy_enable_compression %}
+	encode
+	{% endif %}
 	request_body {
 		max_size {{ server.caddy_server_request_body_size | default("10MB") }}
 	}

@@ -39,3 +39,4 @@ caddy_certificates_folder: /srv/certs/
 caddy_auto_https: "disable_certs" # https://caddyserver.com/docs/caddyfile/options#auto-https
 caddy_ocsp_stapling: false
 caddy_use_tls: true # Set to false to disable TLS for all servers or add it as a variable per server
+caddy_enable_compression: true # Set to false to disable compression for all servers or add it as a variable per server
