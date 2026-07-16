@@ -1,19 +1,29 @@
 ---
-- name: Including enable RDP task...
-  include_tasks: enable.yml
+- name: Enabling RDP...
   when: configuration == 'enable'
+  block:
+    - name: Enabling RDP from registry...
+      ansible.windows.win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\
+        name: fDenyTSConnections
+        data: 0
+        type: dword
 
-- name: Including disable RDP task...
-  include_tasks: disable.yml
+    - name: Enabling Windows Firewall rules for RDP...
+      community.windows.win_firewall_rule:
+        name: "{{ item }}"
+        enabled: true
+      loop:
+        - Remote Desktop - Shadow (TCP-In)
+        - Remote Desktop - User Mode (TCP-In)
+        - Remote Desktop - User Mode (UDP-In)
+        - Remote Desktop - (TCP-WS-In)
+        - Remote Desktop - (TCP-WSS-In)
+
+- name: Disabling RDP...
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\
+    name: fDenyTSConnections
+    data: 1
+    type: dword
   when: configuration == 'disable'
-
-- name: Enabling Windows Firewall rules for RDP...
-  community.windows.win_firewall_rule:
-    name: "{{ item }}"
-    enabled: yes
-  loop:
-    - Remote Desktop - Shadow (TCP-In)
-    - Remote Desktop - User Mode (TCP-In)
-    - Remote Desktop - User Mode (UDP-In)
-    - Remote Desktop - (TCP-WS-In)
-    - Remote Desktop - (TCP-WSS-In)
