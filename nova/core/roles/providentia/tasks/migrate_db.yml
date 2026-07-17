@@ -1,0 +1,30 @@
+---
+- name: Check if old docker volume exists
+  community.docker.docker_volume_info:
+    name: providentia_database_storage
+  register: old_volume
+
+- name: Check if new docker volume exists
+  community.docker.docker_volume_info:
+    name: providentia_postgresql_data
+  register: new_volume
+
+- name: Run the migration script
+  when:
+    - old_volume.exists
+    - not new_volume.exists
+  block:
+    - name: Migrate to new postgresql setup
+      ansible.builtin.template:
+        src: db_migrator.sh
+        dest: "{{ providentia_install_dir }}/db_migrator.sh"
+        mode: "0755"
+
+    - name: Run the postgresql migrator
+      ansible.builtin.command: bash "{{ providentia_install_dir }}/db_migrator.sh"
+      changed_when: true
+
+    - name: Remove the migrator script
+      ansible.builtin.file:
+        path: "{{ providentia_install_dir }}/db_migrator.sh"
+        state: absent

@@ -1,0 +1,5 @@
+---
+production:
+  {% for feat in providentia_enabled_features %}
+  {{ feat }}: true
+  {% endfor %}

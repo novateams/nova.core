@@ -1,14 +1,8 @@
 ---
-- name: Install host dependencies
-  ansible.builtin.package:
-    name:
-      - git
-      - make
-
-- name: Check if previous installation is prebuilt
+- name: Check if previous installation exists
   ansible.builtin.stat:
-    path: "{{ providentia_install_dir }}/docker-compose.yml"
-  register: providentia_prebuilt_compose_file
+    path: "{{ providentia_install_dir }}"
+  register: providentia_dir
 
 - name: Stop previous installation
   community.docker.docker_compose_v2:
@@ -16,26 +10,15 @@
     state: absent
     build: never
     wait: true
-  when: providentia_prebuilt_compose_file.stat.exists
+  when: providentia_dir.stat.exists
 
-- name: Clear previous installation dir
+- name: Removing following old installation folders...
   ansible.builtin.file:
-    path: "{{ providentia_install_dir }}"
+    path: "{{ item }}"
     state: absent
-  when: providentia_prebuilt_compose_file.stat.exists
-
-- name: Check for leftover git dir
-  ansible.builtin.stat:
-    path: "{{ providentia_install_dir_git }}"
-  register: providentia_pre_existing_git_dir
-
-- name: Clear previous git dir
-  ansible.builtin.file:
-    path: "{{ providentia_install_dir_git }}"
-    state: absent
-  when:
-    - providentia_prebuilt_compose_file.stat.exists
-    - providentia_pre_existing_git_dir.stat.exists
+  loop:
+    - "{{ providentia_install_dir }}"
+    - "{{ providentia_install_dir_git }}"
 
 - name: Clone Providentia repo
   ansible.builtin.git:
@@ -46,39 +29,45 @@
     force: true
     separate_git_dir: "{{ providentia_install_dir_git }}"
 
-- name: Test if using newer image with entrypoint set on image
-  ansible.builtin.command: "grep ENTRYPOINT {{ providentia_install_dir }}/Dockerfile"
+- name: Get current git tag # noqa: command-instead-of-module
+  ansible.builtin.command:
+    cmd: git describe --tags --abbrev=0
+    chdir: "{{ providentia_install_dir }}"
   changed_when: false
-  ignore_errors: true
-  register: entrypoint_present
+  register: git_tag
 
-- name: Template Providentia configuration
+- name: Use latest support files
+  ansible.builtin.include_tasks: update_support_files.yml
+
+- name: Parse the semantic version git tag
+  ansible.builtin.set_fact:
+    providentia_worker_needed: "{{ providentia_version_major | int > 26 and providentia_version_minor | int >= 2 }}"
+  vars:
+    version_label: "{{ git_tag.stdout }}"
+    providentia_version_major: "{{ version_label | regex_search('v?(\\d+)\\.', '\\1') | int }}"
+    providentia_version_minor: "{{ version_label | regex_search('\\.(\\d+)\\.', '\\1') | int }}"
+    providentia_version_patch: "{{ version_label | regex_search('\\.(\\d+)(?:[-+]|$)', '\\1') | int }}"
+
+- name: Templating configuration
   ansible.builtin.template:
-    src: "{{ conf.src }}"
-    dest: "{{ providentia_install_dir }}/{{ conf.dest | default(conf.src) }}"
+    src: "{{ item }}"
+    dest: "{{ providentia_install_dir }}/"
     lstrip_blocks: true
     mode: "0644"
-  loop_control:
-    loop_var: conf
   loop:
-    - src: docker-compose.yml
-    - src: initdb_keycloak.sql
-    - src: keycloak-config.yml
-    - src: Makefile
-  vars:
-    cmd_and_entrypoint_needed: "{{ entrypoint_present.rc != 0 }}"
+    - compose.yaml
+    - features.yml
+    - .env
+    - Makefile
 
-- name: Replace app URI-s in keycloak config
-  ansible.builtin.replace:
-    path: "{{ providentia_install_dir }}/docker/prod/providentia.yaml"
-    regexp: 'providentia\.localhost'
-    replace: "{{ providentia_app_fqdn }}"
-  when: providentia_builtin_keycloak
-
-- name: Update version file
-  ansible.builtin.shell:
-    cmd: "git describe --tags >CURRENT_VERSION"
+- name: Update version file # noqa: command-instead-of-module
+  ansible.builtin.command:
+    cmd: git describe --tags >CURRENT_VERSION
     chdir: "{{ providentia_install_dir }}"
+  changed_when: false
+
+- name: Include db migration
+  ansible.builtin.include_tasks: migrate_db.yml
 
 - name: Start Providentia containers
   community.docker.docker_compose_v2:

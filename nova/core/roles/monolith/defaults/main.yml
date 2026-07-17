@@ -57,7 +57,7 @@ monolith_default_caddy_servers:
     caddy_server_certificate_key_path: /srv/certs/{{ monolith_providentia_certificate_file_name | default(fqdn + '_key') }}.crt
     caddy_server_listen_addresses:
       - "{{ monolith_providentia_fqdn }}"
-    caddy_server_reverse_proxy_to_address: http://providentia-web:3000
+    caddy_server_reverse_proxy_to_address: http://providentia-web-1:3000
 
   - caddy_server_name: "{{ monolith_nexus_fqdn }}"
     caddy_server_certificate_path: /srv/certs/{{ monolith_nexus_certificate_file_name | default(fqdn + '_fullchain') }}.crt

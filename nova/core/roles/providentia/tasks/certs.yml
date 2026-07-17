@@ -1,0 +1,53 @@
+---
+- name: Making sure that {{ providentia_builtin_reverse_proxy_tls_certificates_folder }} folder exists...
+  ansible.builtin.file:
+    path: "{{ providentia_builtin_reverse_proxy_tls_certificates_folder }}"
+    state: directory
+    recurse: true
+
+- name: Checking for existing self-signed certificate...
+  ansible.builtin.stat:
+    path: "{{ providentia_builtin_reverse_proxy_tls_pregenerated_cert }}"
+  register: certificate
+
+- name: Getting info about existing self-signed certificate...
+  when: certificate.stat.exists
+  community.crypto.x509_certificate_info:
+    path: "{{ providentia_builtin_reverse_proxy_tls_pregenerated_cert }}"
+    valid_at:
+      certificate_valid: "+20d"
+  register: certificate_is_valid
+
+- name: Generating self-signed certificate...
+  when: (not certificate.stat.exists or not certificate_is_valid.valid_at.certificate_valid)
+  block:
+    - name: Generating selfsigned private key...
+      community.crypto.openssl_privatekey:
+        path: "{{ providentia_builtin_reverse_proxy_tls_pregenerated_key }}"
+        curve: secp256r1
+        type: ECC
+
+    - name: Generating selfsigned CSR...
+      community.crypto.openssl_csr:
+        path: /tmp/selfsigned_{{ providentia_app_fqdn }}.csr
+        privatekey_path: "{{ providentia_builtin_reverse_proxy_tls_pregenerated_key }}"
+        common_name: "{{ providentia_app_fqdn }}"
+        subject_alt_name: "DNS:{{ providentia_app_fqdn }},DNS:{{ providentia_builtin_sso_fqdn }}"
+
+    - name: Signing selfsigned CSR...
+      community.crypto.x509_certificate:
+        path: "{{ providentia_builtin_reverse_proxy_tls_pregenerated_cert }}"
+        privatekey_path: "{{ providentia_builtin_reverse_proxy_tls_pregenerated_key }}"
+        csr_path: /tmp/selfsigned_{{ providentia_app_fqdn }}.csr
+        provider: selfsigned
+
+    - name: Trust newly generated cert
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ providentia_builtin_reverse_proxy_tls_pregenerated_cert }}"
+        dest: /usr/local/share/ca-certificates/providentia_selfsigned.crt
+        mode: "0644"
+
+    - name: Update CA store
+      ansible.builtin.command: update-ca-certificates
+      changed_when: true

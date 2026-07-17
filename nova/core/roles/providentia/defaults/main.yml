@@ -13,17 +13,28 @@ providentia_threads_per_process: 5
 providentia_concurrent_processes: "{{ ansible_facts.processor_vcpus }}"
 
 # dependencies
-providentia_builtin_keycloak: true # Should keycloak instance be deployed with Providentia
+providentia_builtin_sso: true # Should SSO instance be deployed with Providentia
 providentia_builtin_database: true # Should postgres instance be deployed with Providentia
 providentia_builtin_reverse_proxy: true # Should a reverse proxy be deployed with Providentia
 
-# dependencies config
-providentia_builtin_keycloak_fqdn: keycloak.{{ providentia_app_fqdn }} # The FQDN for builtin keycloak instance
-providentia_builtin_keycloak_admin_password: secret # builtin keycloak admin user password
-providentia_builtin_database_db_password: secret # builtin keycloak db credentials (defined in providentia repo)
+# dependencies config (SSO)
+providentia_builtin_sso_fqdn: sso-{{ providentia_app_fqdn }} # The FQDN for builtin sso instance
+providentia_builtin_sso_admin_password: Password1! # builtin sso admin user password
+providentia_builtin_sso_database_name: zitadel # The name for the builtin sso database
+providentia_builtin_sso_database_user: zitadel_user # The user for the builtin sso database
+providentia_builtin_sso_database_password: secret # The password for the builtin sso database
+
+providentia_builtin_database_image: postgres:15-alpine
+providentia_builtin_database_superuser: postgres # postgres superuser
+providentia_builtin_database_superuser_password: secret # postgres superuser password
+providentia_builtin_database_name: providentia
+providentia_builtin_database_app_user: providentia_user # dedicated providentia database user
+providentia_builtin_database_app_password: secret # dedicated providentia database password
+
 providentia_builtin_reverse_proxy_tls_mode: selfsigned # one of `selfsigned` or `pregenerated`
-providentia_builtin_reverse_proxy_tls_pregenerated_cert: # path to TLS cert on host
-providentia_builtin_reverse_proxy_tls_pregenerated_key: # path to TLS key on host
+providentia_builtin_reverse_proxy_tls_certificates_folder: /srv/certs # folder where the self-signed or pregenerated certificates are stored
+providentia_builtin_reverse_proxy_tls_pregenerated_cert: /srv/certs/cert.pem
+providentia_builtin_reverse_proxy_tls_pregenerated_key: /srv/certs/key.pem
 
 # deployment config
 # if providentia_deploy_branch is set, the code is cloned from github and image will be built on host
@@ -37,7 +48,9 @@ providentia_install_dir_git: /srv/providentia.git # path where git configuration
 providentia_app_fqdn: "{{ fqdn }}" # fqdn for deployed instance
 
 # full database URL used by the app, defaults to builtin postgres
-providentia_db_url: postgres://providentia:{{ providentia_builtin_database_db_password }}@postgresql/providentia?pool=5
+providentia_db_url:
+  postgres://{{ providentia_builtin_database_app_user }}:{{ providentia_builtin_database_app_password
+  }}@postgresql/{{ providentia_builtin_database_name }}?pool=5
 
 providentia_sentry_dsn: # Sentry exception tracking endpoint
 providentia_sentry_env: production # Sentry production value
@@ -49,29 +62,31 @@ providentia_enabled_features: []
 
 # app config (SSO)
 # The URL for OpenID Connect endpoint (.well-known should be under this)
-providentia_oidc_issuer: "http://{{ providentia_builtin_keycloak_fqdn }}/realms/Providentia"
+providentia_oidc_issuer: "https://{{ providentia_builtin_sso_fqdn }}"
 
-providentia_auth_mode: resource_access # One of `resource_access` or `scope`, specifying where in access token the authorization fields are located
 providentia_oidc_client_id: Providentia # The client ID for OpenID Connect
 providentia_oidc_client_secret: 00000000-0000-0000-0000-000000000000 # The client secret for OpenID Connect (depending on configuration)
-providentia_oidc_extra_scopes: "" # list of extra scopes to request from OpenID Connect, eg. "profile email"
+providentia_oidc_extra_scopes: "profile,email" # comma separated list of extra scopes to request from OpenID Connect
 
-# The claim in the OpenID Connect token that contains the roles, defaults to `resource_access.{{ providentia_oidc_client_id }}.roles` for Keycloak
-providentia_oidc_authorization_roles_claim: resource_access.{{ providentia_oidc_client_id }}.roles
+# The claim in the OpenID Connect token that contains the roles,
+# defaults to Zitadel default value when builtin SSO included, old Keycloak pattern if not
+providentia_oidc_authorization_roles_claim:
+  "{{ providentia_builtin_sso | ternary('urn:zitadel:iam:org:project:roles', 'resource_access.'
+  ~ providentia_oidc_client_id ~ '.roles') }}"
 
 ######################
 # Permissions groups #
 ######################
 
 # Permissions groups are used to control access to Providentia.
-# If Keycloak is used with Active Directory (AD) as the user federation provider these will be the AD group names.
+# If SSO is used with Active Directory (AD) as the user federation provider these will be the AD group names.
 
 # The group is required login to Providentia
 # This group must be assigned to all users need to login to Providentia, even members of the providentia_administrators_group
-providentia_login_group: Providentia_User
+providentia_login_group: "{{ providentia_builtin_sso | ternary('User', 'Providentia_User') }}"
 
 # The group that gives full administrator access to Providentia
-providentia_administrators_group: Providentia_Super_Admin
+providentia_administrators_group: "{{ providentia_builtin_sso | ternary('Super_Admin', 'Providentia_Super_Admin') }}"
 
 # The group that allows users to create environments in Providentia
-providentia_environment_creator_group: Providentia_Environment_Creator
+providentia_environment_creator_group: "{{ providentia_builtin_sso | ternary('Environment_Creator', 'Providentia_Environment_Creator') }}"

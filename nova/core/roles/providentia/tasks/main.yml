@@ -11,22 +11,39 @@
       {% endfor %}
 
       For new variables refer to the Permissions groups section in defaults:
-      https://github.com/novateams/nova.core/blob/main/nova/core/roles/providentia/defaults/main.yml
+      https://github.com/ClarifiedSecurity/nova.core/blob/main/nova/core/roles/providentia/defaults/main.yml
   vars:
     deprecated_variables:
       - providentia_resource_prefix
       - providentia_resource_login
       - providentia_resource_superadmin
       - providentia_resource_env_creator
+      - providentia_builtin_keycloak
+      - providentia_builtin_database_db_password
   when: providentia_resource_prefix is defined
     or providentia_resource_login is defined
     or providentia_resource_superadmin is defined
     or providentia_resource_env_creator is defined
+    or providentia_builtin_keycloak is defined
+    or providentia_builtin_database_db_password is defined
 
 - name: Installing docker
   ansible.builtin.include_role:
     name: nova.core.docker
   when: providentia_install_docker
+
+- name: Install host dependencies
+  ansible.builtin.package:
+    name:
+      - git
+      - make
+      - python3-cryptography
+
+- name: Generate selfsigned certificates
+  when:
+    - providentia_builtin_reverse_proxy_tls_mode == 'selfsigned'
+    - providentia_builtin_reverse_proxy
+  ansible.builtin.include_tasks: certs.yml
 
 - name: Including clone and build tasks...
   ansible.builtin.include_tasks: clone_and_build.yml

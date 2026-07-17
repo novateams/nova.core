@@ -1,0 +1,45 @@
+---
+- name: Ensure directories exist
+  ansible.builtin.file:
+    path: "{{ providentia_install_dir }}/support"
+    state: directory
+    recurse: true
+
+- name: Downloading docker compose support (app)
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ClarifiedSecurity/Providentia/refs/heads/main/support/compose-web.yml
+    dest: "{{ providentia_install_dir }}/support/compose-web.yml"
+    mode: "0644"
+    force: true
+
+- name: Downloading docker compose support (database)
+  when: providentia_builtin_database
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ClarifiedSecurity/Providentia/refs/heads/main/support/compose-postgresql.yml
+    dest: "{{ providentia_install_dir }}/support/compose-postgresql.yml"
+    mode: "0644"
+    force: true
+
+- name: Downloading docker compose support (SSO)
+  when: providentia_builtin_sso
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ClarifiedSecurity/Providentia/refs/heads/main/support/compose-zitadel.yml
+    dest: "{{ providentia_install_dir }}/support/compose-zitadel.yml"
+    mode: "0644"
+    force: true
+
+- name: Downloading SSO configuration template
+  when: providentia_builtin_sso
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ClarifiedSecurity/Providentia/refs/heads/main/support/zitadel.tf
+    dest: "{{ providentia_install_dir }}/support/zitadel.tf"
+    mode: "0644"
+    force: true
+
+- name: Downloading docker compose support (reverse proxy)
+  when: providentia_builtin_reverse_proxy
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ClarifiedSecurity/Providentia/refs/heads/main/support/compose-caddy.yml
+    dest: "{{ providentia_install_dir }}/support/compose-caddy.yml"
+    mode: "0644"
+    force: true

@@ -19,8 +19,9 @@ import-db: ## Import database from dump
 	docker compose stop
 	docker compose up -d postgresql --wait
 	docker compose cp $(DUMP) postgresql:/dump.sql
-	docker compose exec postgresql psql -Uprovidentia -c '\i /dump.sql'
-	docker compose stop postgresql
+	docker compose exec postgresql dropdb -U{{ providentia_builtin_database_superuser }} --if-exists {{ providentia_builtin_database_name }}
+	docker compose exec postgresql createdb -U{{ providentia_builtin_database_superuser }} {{ providentia_builtin_database_name }}
+	docker compose exec postgresql psql -U{{ providentia_builtin_database_superuser }} {{ providentia_builtin_database_name }} -c '\i /dump.sql'
 
 clear-cache: ## Clear cache
 	docker compose exec web bin/rails r 'Rails.cache.clear'

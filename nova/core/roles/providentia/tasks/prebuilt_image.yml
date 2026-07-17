@@ -1,50 +1,64 @@
 ---
-- name: Check if previous installation is cloned
+- name: Check if previous installation exists
   ansible.builtin.stat:
-    path: /{{ providentia_install_dir }}/CURRENT_VERSION
-  register: providentia_current_version_stat
+    path: "{{ providentia_install_dir }}/docker-compose.yml"
+  register: providentia_old_docker_compose
 
 - name: Stop previous installation
-  community.general.make:
-    chdir: "{{ providentia_install_dir }}"
-    target: stop
-  when: providentia_current_version_stat.stat.exists
+  when: providentia_old_docker_compose.stat.exists
+  community.docker.docker_compose_v2:
+    project_src: "{{ providentia_install_dir }}"
+    state: absent
+    remove_orphans: true
+    wait: true
 
-- name: Pulling ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}
+- name: Use latest support files
+  ansible.builtin.include_tasks: update_support_files.yml
+
+- name: Pull the app image
   community.docker.docker_image_pull:
-    name: ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}
+    name: ghcr.io/clarifiedsecurity/providentia
+    tag: "{{ providentia_image_version }}"
 
-- name: Get image info
+- name: Get app image info
   community.docker.docker_image_info:
     name: ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}
-  register: providentia_image
+  register: image_info
 
-- name: Template Providentia configuration
-  ansible.builtin.template:
-    src: "{{ item }}"
-    dest: "{{ providentia_install_dir }}/"
-    lstrip_blocks: true
-    mode: "0644"
-  loop:
-    - docker-compose.yml
-    - Makefile
+- name: Parse the semantic version of container image
+  ansible.builtin.set_fact:
+    providentia_worker_needed: "{{ providentia_version_major | int > 26 and providentia_version_minor | int >= 2 }}"
   vars:
-    cmd_and_entrypoint_needed: "{{ providentia_image.images[0].Config.Entrypoint is ansible.builtin.falsy }}"
+    version_label: "{{ image_info.images[0].Config.Labels['org.opencontainers.image.version'] }}"
+    providentia_version_major: "{{ version_label | regex_search('v?(\\d+)\\.', '\\1') | int }}"
+    providentia_version_minor: "{{ version_label | regex_search('\\.(\\d+)\\.', '\\1') | int }}"
+    providentia_version_patch: "{{ version_label | regex_search('\\.(\\d+)(?:[-+]|$)', '\\1') | int }}"
 
-- name: Template builtin keycloak configuration
+- name: Templating configuration
   ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ providentia_install_dir }}/"
     lstrip_blocks: true
     mode: "0644"
   loop:
-    - initdb_keycloak.sql
-    - keycloak-config.yml
-  when: providentia_builtin_keycloak
+    - compose.yaml
+    - features.yml
+    - .env
+    - Makefile
+
+- name: Include db migration
+  ansible.builtin.include_tasks: migrate_db.yml
+
+- name: Remove old docker compose config
+  when: providentia_old_docker_compose.stat.exists
+  ansible.builtin.file:
+    path: "{{ providentia_install_dir }}/docker-compose.yml"
+    state: absent
 
 - name: Composing Providentia...
   community.docker.docker_compose_v2:
     project_src: "{{ providentia_install_dir }}"
     state: present
+    remove_orphans: true
     build: never
     wait: true

@@ -5,6 +5,7 @@ This is a role for installing [Providentia](https://github.com/ClarifiedSecurity
 ## Requirements
 
 - Tested on Ubuntu 22.04 but should work on any Debian based system.
+- Minimum supported Providentia version: **v25.4.0**
 
 ## Role Variables
 
@@ -14,16 +15,22 @@ Required variables:
 
 - `providentia_app_fqdn` - which DNS name will be used for the application
 
-If included, the keycloak will be using `keycloak.{{ providentia_app_fqdn }}` as its FQDN.
+If included, the SSO will be using `sso-{{ providentia_app_fqdn }}` as its default FQDN.
 
 ## Dependencies
 
 - Depends on Docker and Docker Compose being installed on the host. By default, [nova.core.docker](https://github.com/novateams/nova.core/tree/main/nova/core/roles/docker) role is included, this can be disabled by setting `providentia_install_docker` to false.
-- Certificates for reverse proxy, if used with TLS
+- (Optional) Certificates for reverse proxy, if used with TLS, uses self-signed certificates if not provided
 
 ## Notes
 
-The builtin Keycloak is _not_ secure by default: it is configured with HTTP (as Providentia does not trust self-signed certificates) by default and very weak passwords. This can and should be altered in real deployments!
+The builtin SSO is _not_ secure by default and is meant as a placeholder for a real SSO setup
+
+- it is configured to work with HTTP (as Providentia does not trust self-signed certificates)
+- the accounts created are described on [main repository page](https://github.com/ClarifiedSecurity/Providentia#demo-credentials)
+- it allows redirection to any origin
+
+This can and should be altered in real deployments!
 
 By default, the prebuilt image will be pulled from github - setting `providentia_deploy_branch` variable will clone the repository and build the image on host instead.
 
@@ -57,7 +64,7 @@ By default, the prebuilt image will be pulled from github - setting `providentia
     providentia_builtin_reverse_proxy_tls_pregenerated_cert: "/srv/certs/providentia.example.com_fullchain.crt"
     providentia_builtin_reverse_proxy_tls_pregenerated_key: "/srv/certs/providentia.example.com_key.crt"
 
-    providentia_builtin_keycloak: false
+    providentia_builtin_sso: false
     providentia_oidc_issuer: https://keycloak.example.com/realms/Providentia
     providentia_oidc_client_id: ProvidentiaLive
     providentia_oidc_client_secret: 12345

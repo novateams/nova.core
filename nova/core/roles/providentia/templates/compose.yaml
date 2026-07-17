@@ -1,0 +1,100 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+---
+name: providentia
+
+include:
+  {% if providentia_builtin_database or providentia_builtin_sso %}
+  - support/compose-postgresql.yml
+  {% endif %}
+  {% if providentia_builtin_sso %}
+  - support/compose-zitadel.yml
+  {% endif %}
+
+services:
+  web:
+    extends:
+      file: support/compose-web.yml
+      service: web
+    depends_on: !override
+      {% if providentia_builtin_database or providentia_builtin_sso %}
+      postgresql:
+        condition: service_healthy
+      {% endif %}
+      {% if providentia_builtin_sso %}
+      zitadel-configurator:
+        condition: service_completed_successfully
+      {% endif %}
+    {% if providentia_deploy_branch %}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    {% else %}
+    image: "ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}"
+    {% endif %}
+    volumes: !override
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+      - ./features.yml:/srv/app/config/features.yml
+      {% if providentia_builtin_sso %}
+      - dynamic_env:/srv/env
+      {% endif %}
+    environment: !override {}
+    env_file: .env
+    labels:
+      caddy.tls: /certs/cert.pem /certs/key.pem
+
+  {% if providentia_worker_needed %}
+  worker:
+    extends:
+      file: support/compose-web.yml
+      service: worker
+    depends_on: !override
+      {% if providentia_builtin_database or providentia_builtin_sso %}
+      postgresql:
+        condition: service_healthy
+      {% endif %}
+    {% if providentia_deploy_branch %}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    {% else %}
+    image: "ghcr.io/clarifiedsecurity/providentia:{{ providentia_image_version }}"
+    {% endif %}
+    volumes: !override
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
+      - ./features.yml:/srv/app/config/features.yml
+      {% if providentia_builtin_sso %}
+      - dynamic_env:/srv/env
+      {% endif %}
+    environment: !override {}
+    env_file: .env
+  {% endif %}
+
+  {% if providentia_builtin_reverse_proxy %}
+  caddy:
+    extends:
+      file: support/compose-caddy.yml
+      service: caddy
+    volumes:
+      - {{ providentia_builtin_reverse_proxy_tls_pregenerated_cert }}:/certs/cert.pem
+      - {{ providentia_builtin_reverse_proxy_tls_pregenerated_key }}:/certs/key.pem
+    labels: !override
+      caddy_0:
+      caddy_0.local_certs:
+  {% endif %}
+
+volumes:
+  {% if providentia_builtin_reverse_proxy %}
+  caddy_data:
+  {% endif %}
+  {% if providentia_builtin_sso %}
+  dynamic_env:
+  {% endif %}
+  {% if providentia_builtin_database or providentia_builtin_sso %}
+  database_storage:
+  {% endif %}
+
+{% if providentia_external_docker_network %}
+{{ providentia_external_docker_network_config | to_nice_yaml(indent=2) }}
+{% endif %}

@@ -49,7 +49,6 @@ services:
       - OIDC_RESOURCE_SUPERADMIN={{ providentia_administrators_group }}
       - OIDC_RESOURCE_ENV_CREATOR={{ providentia_environment_creator_group }}
       - BASE_URI=https://{{ providentia_app_fqdn }}
-      - AUTH_MODE={{ providentia_auth_mode }}
       {% if providentia_sentry_dsn %}
       - SENTRY_DSN={{ providentia_sentry_dsn }}
       - SENTRY_ENV={{ providentia_sentry_env }}
