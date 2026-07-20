@@ -189,22 +189,16 @@
     - item.ssh_key is defined
     - not item.ssh_key_exclusive | default(accounts_exclusive_ssh_key)
 
-- name: Creating administrators_authorized_keys file...
-  ansible.windows.win_file:
-    path: C:\ProgramData\ssh\administrators_authorized_keys
-    state: touch
-
-- name: Adding administrators_authorized_keys public keys for admins...
-  community.windows.win_lineinfile:
-    path: C:\ProgramData\ssh\administrators_authorized_keys
-    line: "{{ item.ssh_key }}"
+# Adding keys to administrators_authorized_keys in case it's used.
+# Careful with this feature since it allows any ssh key under administrators_authorized_keys to be used to login as any user in the Administrators group.
+# This feature needs the following lines to be enabled in sshd_config:
+# Match Group administrators
+#         AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys
+- name: Adding admin_accounts ssh public keys to administrators_authorized_keys file...
+  ansible.windows.win_copy:
+    content: "{{ admin_accounts_with_password | selectattr('ssh_key', 'defined') | map(attribute='ssh_key') | list | unique | join('\n')}}"
+    dest: C:\ProgramData\ssh\administrators_authorized_keys
     create: true
-  loop: "{{ admin_accounts_with_password }}"
-  loop_control:
-    label: "{{ item.username }}"
-  when:
-    - item.username == ansible_deployer_username # Because C:\ProgramData\ssh\administrators_authorized_keys supports only one key
-    - item.ssh_key is defined
 
 - name: Configuring SSHD in cloud environments...
   when: accounts_configure_ssh_maxauthtries
