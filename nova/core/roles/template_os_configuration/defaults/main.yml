@@ -8,6 +8,9 @@ template_os_configuration_update_system: true # Update OS during this role
 template_os_configuration_increase_maxauthtries: true
 template_os_configuration_increase_maxauthtries_value: 20
 
+# Will disable the default Windows SSHD config so that each user can use their own SSH key under $HOME/.ssh/authorized_keys
+template_os_configuration_configure_administrators_authorized_keys: true
+
 # Will create a fresh snapshot after all configuration is done on the template VM
 # Set to false to skip snapshot creation
 template_os_configuration_create_snapshot: true

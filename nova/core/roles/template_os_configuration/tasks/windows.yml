@@ -244,3 +244,4 @@
 
     - regexp: ^.*AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys$
       line: "        #AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys"
+  when: template_os_configuration_configure_administrators_authorized_keys
