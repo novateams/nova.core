@@ -15,6 +15,9 @@ debian_family_unattended_upgrades_allow_reboot: false
 # Upgrade method for Debian family
 updates_debian_family_upgrade_method: dist
 
+# Will try and update firmware on Debian family systems if fwupdmgr is installed
+debian_family_updates_firmware: true
+
 ################
 # Linux RedHat #
 ################

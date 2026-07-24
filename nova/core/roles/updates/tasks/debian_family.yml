@@ -12,6 +12,19 @@
   retries: 3
   delay: 3
 
+- name: Updating firmware...
+  ansible.builtin.shell: |
+    if [ -x "$(command -v fwupdmgr)" ]; then
+      fwupdmgr refresh --no-remote-check --assume-yes --force
+      fwupdmgr update --assume-yes --no-reboot-check
+    else
+      echo "fwupdmgr not found, skipping firmware update"
+    fi
+  register: debian_family_firmware_update
+  changed_when: debian_family_firmware_update.stdout is search("Successfully installed firmware")
+  failed_when: debian_family_firmware_update.rc == 1
+  when: debian_family_updates_firmware
+
 - name: Checking if reboot is required...
   ansible.builtin.stat:
     path: /var/run/reboot-required
