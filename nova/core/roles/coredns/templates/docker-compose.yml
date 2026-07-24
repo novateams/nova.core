@@ -1,0 +1,38 @@
+---
+services:
+  coredns:
+    image: "{{ coredns_version }}"
+    container_name: coredns
+    restart: unless-stopped
+    volumes:
+      - "{{ coredns_config_folder }}/Corefile:/Corefile"
+      - coredns_zones:/zones
+      - coredns_extra_config:/etc/coredns/conf.d
+    ports:
+      - "53:53"
+      - "53:53/udp"
+    logging:
+      driver: json-file
+      options:
+        max-size: 250m
+        max-file: "1"
+
+volumes:
+  coredns_zones:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ coredns_config_folder }}/zones"
+
+  coredns_extra_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ coredns_config_folder }}/conf.d"
+
+networks:
+  default:
+    name: "{{ coredns_docker_network }}"
+    external: true

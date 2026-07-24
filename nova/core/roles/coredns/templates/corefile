@@ -1,0 +1,28 @@
+. {
+    reload 30s
+
+    auto {
+        directory /zones
+    }
+
+    forward . tls://1.1.1.1 tls://1.0.0.1 dns://127.0.0.1:5301 {
+        tls_servername cloudflare-dns.com
+        policy sequential
+        health_check 30s
+    }
+    log
+    errors
+}
+
+# Fallback to Google DNS if Cloudflare is down
+.:5301 {
+    bind 127.0.0.1
+    forward . tls://8.8.8.8 tls://8.8.4.4 {
+        tls_servername dns.google
+        health_check 30s
+        failfast_all_unhealthy_upstreams
+    }
+    errors
+}
+
+import /etc/coredns/conf.d/*.conf

@@ -1,0 +1,26 @@
+---
+coredns_version: coredns/coredns:1.14.6
+coredns_config_folder: /srv/coredns
+coredns_docker_network: local-network # This is the default for nova.core.docker role
+
+# List of DNS server that will go to resolve.conf file, in order of preference.
+# By default, the first entry is the IP address of CoreDNS itself and the rest are public DNS servers.
+# This is to avoid race conditions when setting up CoreDNS for the first time and disabling systemd-resolved service causing DNS resolution to fail.
+coredns_upstream_dns_servers:
+  - "{{ connection_address }}"
+  - 1.1.1.1
+  - 8.8.8.8
+
+# The default CoreDNS configuration file template to use. Default comes with this role.
+# This can be overridden by providing a different path for the template file.
+coredns_corefile: corefile
+
+# The list of DNS records to be created in CoreDNS.
+# Refer to this roles README for the format of the records.
+# By leaving this empty, no records will be created,
+# this is useful if you want to generate the zonefiles outside of this role and just want to use this role to setup CoreDNS.
+coredns_records: []
+
+# The list of DNS forwarders to be used in CoreDNS. These will forward matching domains to the specified DNS servers.
+# Refer to this roles README for the format of the forwarders.
+coredns_forwarders: []

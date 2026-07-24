@@ -1,0 +1,120 @@
+---
+# Needed for verifying zonefiles with named-checkzone command
+- name: Installing bind9 utilities
+  ansible.builtin.package:
+    name: bind9-utils
+    state: present
+
+- name: Check if systemd-resolved service exists
+  ansible.builtin.systemd:
+    name: systemd-resolved
+  register: resolved_service
+
+- name: Stopping & disabling systemd-resolved if it exists...
+  when: resolved_service.status.LoadState != "not-found"
+  block:
+    - name: Stopping & disabling systemd-resolved...
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: false
+        masked: true
+
+    - name: Configuring custom resolv.conf...
+      ansible.builtin.copy:
+        content: |
+          {% for ns in coredns_upstream_dns_servers %}
+          nameserver {{ ns }}
+          {% endfor %}
+        dest: /etc/resolv.conf
+        mode: "0644"
+
+- name: Creating CoreDNS configuration folder...
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: true
+  loop:
+    - "{{ coredns_config_folder }}"
+    - "{{ coredns_config_folder }}/zones"
+    - "{{ coredns_config_folder }}/conf.d"
+
+- name: Templating CoreDNS configuration files...
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  register: coredns_template_results
+  loop:
+    - src: corefile
+      dest: "{{ coredns_config_folder }}/Corefile"
+
+    - src: docker-compose.yml
+      dest: "{{ coredns_config_folder }}/docker-compose.yml"
+
+- name: Getting the time...
+  ansible.builtin.setup:
+    filter: "*_time"
+
+- name: Templating zonefile(s) for following domain(s)...
+  ansible.builtin.template:
+    src: zonefile_template
+    dest: "{{ coredns_config_folder }}/zones/db.{{ zone.domain }}"
+    mode: "0644"
+    lstrip_blocks: true
+  when: coredns_records != []
+  loop: "{{ coredns_records }}"
+  loop_control:
+    loop_var: zone
+    label: "{{ zone.domain }}"
+
+- name: Verifying zonefile(s) for following domain(s)...
+  ansible.builtin.command: named-checkzone {{ zone.domain }} {{ coredns_config_folder }}/zones/db.{{ zone.domain }}
+  register: checkzone_results
+  changed_when: false
+  loop: "{{ coredns_records }}"
+  loop_control:
+    loop_var: zone
+    label: "{{ zone.domain }}"
+
+- name: Templating following forwarders...
+  ansible.builtin.template:
+    src: forwarder_template.conf
+    dest: "{{ coredns_config_folder }}/conf.d/{{ forwarder.domains | join('_') }}.conf"
+    mode: "0644"
+    lstrip_blocks: true
+  when: coredns_forwarders != []
+  loop: "{{ coredns_forwarders }}"
+  loop_control:
+    loop_var: forwarder
+    label: "{{ forwarder.domains | join(', ') }}"
+
+- name: Adding conf file placeholders...
+  when: coredns_forwarders == [] # Placeholder is not needed if there's at least one forwarder
+  block:
+    - name: Checking if any conf.d files exist...
+      ansible.builtin.find:
+        paths: "{{ coredns_config_folder }}/conf.d"
+        patterns: "*.conf"
+      register: existing_conf_files
+
+    - name: Deploying an empty placeholder conf.d file...
+      ansible.builtin.copy:
+        dest: "{{ coredns_config_folder }}/conf.d/00-placeholder.conf"
+        content: |
+          # Empty placeholder file to avoid warnings in CoreDNS when no other conf.d files exist.
+        mode: "0644"
+      when: existing_conf_files.matched == 0
+
+    - name: Remove empty placeholder conf.d file...
+      ansible.builtin.file:
+        path: "{{ coredns_config_folder }}/conf.d/00-placeholder.conf"
+        state: absent
+      when: existing_conf_files.matched > 1
+
+- name: Composing CoreDNS container...
+  community.docker.docker_compose_v2:
+    project_src: "{{ coredns_config_folder }}"
+    state: present
+    recreate: "{{ 'always' if coredns_template_results.changed else 'auto' }}"
+    wait: true

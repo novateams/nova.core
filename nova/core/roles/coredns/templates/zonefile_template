@@ -1,0 +1,35 @@
+$TTL 60
+
+@   IN SOA ns.{{ zone.domain }}. hostmaster.{{ zone.domain }}. (
+        {{ ansible_facts.date_time.epoch_int }} ; serial
+        7200       ; refresh
+        3600       ; retry
+        1209600    ; expire
+        0 )      ; negative-cache TTL
+
+    {% if zone.nameservers is defined %}
+    {% for ns in zone.nameservers | map(attribute='name') | unique %}
+    IN NS   {{ ns }}.{{ zone.domain }}.
+    {% endfor %}
+    {% else %}
+    IN NS   ns.{{ zone.domain }}.
+    {% endif %}
+
+; Nameservers
+{% if zone.nameservers is defined %}
+{% for ns in zone.nameservers %}
+{{ "%-24s IN %-6s %s" | format(ns.name, 'A' if ns.address is ansible.utils.ipv4 else 'AAAA', ns.address) }}
+{% endfor %}
+{% else %}
+{{ "%-24s IN %-6s %s" | format('ns', 'A' if connection_address is ansible.utils.ipv4 else 'AAAA', connection_address) }}
+{% endif %}
+
+; From coredns_records variable
+{% for record in zone.records %}
+{% set record_name = '@' if record.name == zone.domain else record.name %}
+{% set record_value = '"' + (record.value | regex_replace("[\"']", '')) + '"' if record.type == 'TXT' else record.value %}
+{% if record.type == 'CNAME' %}
+{% set record_value = record.value if record.value.endswith('.') else record.value + '.' %}
+{% endif %}
+{{ "%-24s IN %-6s %s" | format(record_name, record.type, record_value) }}
+{% endfor %}
