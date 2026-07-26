@@ -11,7 +11,42 @@
   changed_when: pfsense_update.stdout is search("Installing.*")
   when: ansible_network_os | default('') == "pfsense"
 
-- name: Rebooting...
-  ansible.builtin.reboot:
+- name: Gathering facts with potentially updated Python version for {{ inventory_hostname }}... # noqa: no-handler
+  when: opnsense_update.changed or pfsense_update.changed
+  block:
+    - name: Clearing existing facts for {{ inventory_hostname }}...
+      ansible.builtin.meta: clear_facts
+
+    # The Python might get updated with the previous task
+    - name: Looking up the current Python version...
+      ansible.builtin.raw: python3 --version | awk '{print $2}' | cut -d. -f1,2
+      changed_when: false
+      register: current_python_version
+
+    - name: Re-gathering facts for {{ inventory_hostname }}...
+      ansible.builtin.setup:
+        gather_timeout: 60
+      vars:
+        ansible_python_interpreter: /usr/local/bin/python{{ current_python_version.stdout }}
+
+- name: Upgrading {{ inventory_hostname }}...
+  ansible.builtin.command: opnsense-update -u
+  register: opnsense_upgrade
+  changed_when: opnsense_upgrade.stdout is search("Please reboot.*")
+  failed_when:
+    - opnsense_upgrade.rc != 0
+    - opnsense_upgrade.stdout is not search("No known packages set to fetch was specified.")
+  when:
+    - ansible_network_os | default('') == "opnsense"
+    - updates_opnsense_upgrade
+
+- name: Rebooting and re-including updates tasks...
   when: ("Please reboot." in opnsense_update.stdout_lines | default(''))
+    or ("Please reboot." in opnsense_upgrade.stdout_lines | default(''))
     or ("Please reboot." in pfsense_update.stdout_lines | default(''))
+  block:
+    - name: Rebooting...
+      ansible.builtin.reboot:
+
+    - name: Re-including updates tasks in case there are more updates available...
+      ansible.builtin.include_tasks: sense.yml

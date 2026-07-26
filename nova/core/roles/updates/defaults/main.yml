@@ -48,3 +48,10 @@ reboot_on_finalize: false
 # This variable can be set to true to always reboot after updates are applied
 # This is required because some updates will stop services like VMTools or QEMU Guest Agent from working properly until the system is rebooted
 updates_freebsd_reboot_after_updates: true
+
+########################
+# pfSense and OPNsense #
+########################
+
+# Whether to do a major and minor version upgrade for OPNsense systems
+updates_opnsense_upgrade: false

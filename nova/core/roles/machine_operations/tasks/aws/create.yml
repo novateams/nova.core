@@ -150,7 +150,7 @@
 
 - name: Setting connection address to {{ eip_info.public_ip
     | default(created_ec2_instance.instances[0].public_ip_address)
-    | default(existing_instances[-1].public_ip_address) | default('N/A') }}...
+    | default(existing_instances[-1].public_ip_address) | default('N/A') }}
   ansible.builtin.set_fact:
     connection_address: "{{ eip_info.public_ip
       | default(created_ec2_instance.instances[0].public_ip_address)
