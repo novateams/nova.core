@@ -1,0 +1,89 @@
+---
+- name: Purging existing networking packages...
+  ansible.builtin.package:
+    name:
+      - netplan.io
+      - cloud-init
+    state: absent
+    purge: true
+  become: true
+
+- name: Cleaning up old network configuration files...
+  ansible.builtin.shell: |
+    rm -rf /etc/systemd/network/*
+    rm -rf /etc/netplan/*
+  changed_when: true
+  become: true
+
+- name: Installing NetworkManager package...
+  ansible.builtin.package:
+    name: network-manager
+    state: present
+    update_cache: true
+  become: true
+
+- name: Templating nmcli configuration files...
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+    lstrip_blocks: true
+  loop_control:
+    label: "{{ item.src }}"
+  loop:
+    - src: 70-persistent-net.rules
+      dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+    - src: nmcli.sh
+      dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+  become: false
+  delegate_to: localhost
+
+- name: Uploading nmcli configuration files...
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  loop_control:
+    label: "{{ item.src }}"
+  loop:
+    - src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+      dest: /etc/udev/rules.d/70-persistent-net.rules
+      mode: "0644"
+    - src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+      dest: /tmp/nmcli.sh
+      mode: "0755"
+  become: true
+
+- name: Running nmcli configuration script...
+  ansible.builtin.command: /tmp/nmcli.sh
+  changed_when: true
+  become: true
+  async: 3600
+  poll: 0
+
+- name: Waiting until SSH is down for {{ custom_vm_name | default(vm_name) }} over {{ connection_address }}...
+  ansible.builtin.wait_for:
+    host: "{{ connection_address }}"
+    port: 22
+    state: stopped
+    timeout: 300
+  become: false
+  delegate_to: localhost
+
+- name: Waiting until SSH is up for {{ custom_vm_name | default(vm_name) }} over {{ connection_address }}...
+  ansible.builtin.wait_for:
+    host: "{{ connection_address }}"
+    port: 22
+    state: started
+    timeout: 300
+  become: false
+  delegate_to: localhost
+# - name: Removing temporary files...
+#   ansible.builtin.file:
+#     path: /var/tmp/nmcli.sh
+#     state: absent
+# - name: Rebooting {{ custom_vm_name | default(vm_name) }} VM...
+#   ansible.builtin.include_role:
+#     name: nova.core.powerstate
+#   vars:
+#     restart: true

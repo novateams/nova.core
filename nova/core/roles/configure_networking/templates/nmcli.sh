@@ -85,4 +85,6 @@ fi
 {% endif %}
 {% endfor %}
 
-nmcli networking off && nmcli networking on
+{% if infra_env == "aws" %}
+reboot
+{% endif %}

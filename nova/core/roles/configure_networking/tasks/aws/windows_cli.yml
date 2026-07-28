@@ -1,5 +1,4 @@
 ---
-# This step is not actually very useful for debugging
 - name: Templating network configuration script...
   ansible.builtin.template:
     src: Configure-Network.ps1
