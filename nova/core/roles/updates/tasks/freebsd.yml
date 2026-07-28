@@ -6,8 +6,24 @@
     autoremove: true
   register: pkgng_update
 
-- name: Rebooting if required after package updates... # noqa: no-handler
-  ansible.builtin.reboot:
-  when:
-    - pkgng_update.changed
-    - updates_freebsd_reboot_after_updates | bool
+- name: Gathering facts with potentially updated Python version for {{ inventory_hostname }}... # noqa: no-handler
+  when: pkgng_update.changed
+  block:
+    - name: Clearing existing facts for {{ inventory_hostname }}...
+      ansible.builtin.meta: clear_facts
+
+    # The Python might get updated with the previous task
+    - name: Looking up the current Python version...
+      ansible.builtin.raw: python3 --version | awk '{print $2}' | cut -d. -f1,2
+      changed_when: false
+      register: current_python_version
+
+    - name: Re-gathering facts for {{ inventory_hostname }}...
+      ansible.builtin.setup:
+        gather_timeout: 60
+      vars:
+        ansible_python_interpreter: /usr/local/bin/python{{ current_python_version.stdout }}
+
+    - name: Rebooting if required after package updates... # noqa: no-handler
+      ansible.builtin.reboot:
+      when: updates_freebsd_reboot_after_updates | bool
