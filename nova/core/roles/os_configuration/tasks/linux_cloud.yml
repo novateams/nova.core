@@ -1,9 +1,10 @@
 ---
-- name: Removing cloud managed hostname...
-  ansible.builtin.replace:
-    dest: /etc/cloud/cloud.cfg
-    regexp: ^ - update_etc_hosts
-    replace: "# - update_etc_hosts"
+# After the initial configuration is done its not needed and will slow down boot in most cases
+- name: Purging cloud-init...
+  ansible.builtin.package:
+    name: cloud-init
+    state: absent
+    purge: true
 
 - name: Installing Gnome for Ubuntu Desktop...
   when: group_names | select('match', '^os_ubuntu_desktop') | list | length > 0
