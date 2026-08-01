@@ -17,7 +17,9 @@
       when: fresh_deploy
       block:
         - name: Checking for IP conflict for non-automatic IP assignment...
-          when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac'] # The list of connection modes are the ones that are available in Providentia
+          when:
+            - pmx_cloning_rescue_loop_count is not defined # Not needed when trying to re-clone after a failed attempt
+            - connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac'] # The list of connection modes are the ones that are available in Providentia
           block:
             - name: Checking that nothing is already responding on {{ connection_address }}... # noqa: command-instead-of-shell
               ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'Test-IPAddress.sh') }}"
@@ -120,11 +122,20 @@
             - name: Including remove tasks to clean up disks from failed cloning attempt...
               ansible.builtin.include_tasks: remove.yml
 
+            - name: Setting cloning rescue loop count to {{ pmx_cloning_rescue_loop_count | default(0) | int + 1 }}/3...
+              ansible.builtin.set_fact:
+                pmx_cloning_rescue_loop_count: "{{ pmx_cloning_rescue_loop_count | default(0) | int + 1 }}"
+
+            - name: Re-including cloning tasks...
+              ansible.builtin.include_tasks: main.yml
+              when: pmx_cloning_rescue_loop_count | default(0) | int <= 3
+
             - name: FAILED CLONING ATTEMPT
               ansible.builtin.fail:
                 msg: |
-                  Cloning {{ custom_vm_name | default(vm_name) }} failed.
+                  Cloning {{ custom_vm_name | default(vm_name) }} failed {{ pmx_cloning_rescue_loop_count | default(0) }} times.
                   Check the errors above for this host and try again.
+              when: pmx_cloning_rescue_loop_count | default(0) | int >= 3
 
     # Writing the file here in case the non-existing machines are in the same batch as existing ones
     # Otherwise the non-existing will just timeout waiting for the previous host to finish cloning
