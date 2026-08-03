@@ -3,24 +3,53 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Templating following network configuration files...
+    - name: Getting OS type...
+      ansible.builtin.uri:
+        url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-read?file=/etc/os-release"
+        headers:
+          Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+        method: GET
+        validate_certs: "{{ proxmox_defaults.validate_certs }}"
+      register: network_config_command
+
+    - name: Setting OS type variable
+      ansible.builtin.set_fact:
+        configure_networking_os: >-
+          {% if 'ID=debian' in network_config_command.json.data['content'] | trim %}
+          Debian
+          {% elif 'ID=alpine' in network_config_command.json.data['content'] | trim %}
+          Alpine
+          {% else %}
+          Unknown
+          {% endif %}
+
+    - name: Templating interfaces...
       ansible.builtin.template:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
+        src: interfaces.j2
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
         lstrip_blocks: true
         mode: "0644"
-      loop_control:
-        label: "{{ item.dest }}"
-      loop:
-        - src: interfaces.j2
-          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
 
-        - src: resolv.conf
-          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+    - name: Templating resolv.conf...
+      ansible.builtin.template:
+        src: resolv.conf
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        lstrip_blocks: true
+        mode: "0644"
 
-        # For locking MAC addresses to interface names
-        - src: mactab
-          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+    - name: Templating udev persistent net rules...
+      ansible.builtin.template:
+        src: 70-persistent-net.rules
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        mode: "0644"
+        lstrip_blocks: true
+
+    - name: Templating mactab persistent net rules...
+      ansible.builtin.template:
+        src: mactab
+        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+        mode: "0644"
+        lstrip_blocks: true
 
     - name: Getting network configuration file contents...
       ansible.builtin.slurp:
@@ -29,13 +58,15 @@
       loop:
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
 
     # Since the Proxmox API can be quite unstable especially under load, we implement a rescue loop here
     # to retry the network configuration up to 3 times before failing the task completely.
     - name: Including network configuration tasks...
       block:
-        - name: Writing following configuration to {{ custom_vm_name | default(vm_name) }}...
+        - name: Writing following Debian configuration to {{ custom_vm_name | default(vm_name) }}...
+          when: configure_networking_os is search('Debian')
           ansible.builtin.uri:
             url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-write"
             headers:
@@ -53,12 +84,39 @@
               file: /etc/network/interfaces
 
             - content: "{{ network_files.results[1].content | b64decode }}"
-              file: /etc/resolv.conf
+              file: /tmp/resolv.conf
 
             - content: "{{ network_files.results[2].content | b64decode }}"
+              file: /etc/udev/rules.d/70-persistent-net.rules
+
+            - content: update-initramfs -u && cp /tmp/resolv.conf /etc/resolv.conf && reboot
+              file: /tmp/rebuild_initramfs.sh
+
+        - name: Writing following Alpine configuration to {{ custom_vm_name | default(vm_name) }}...
+          when: configure_networking_os is search('Alpine')
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-write"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body:
+              content: "{{ item.content }}"
+              file: "{{ item.file }}"
+            body_format: json
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
+          loop_control:
+            label: "{{ item.file }}"
+          loop:
+            - content: "{{ network_files.results[0].content | b64decode }}"
+              file: /etc/network/interfaces
+
+            - content: "{{ network_files.results[1].content | b64decode }}"
+              file: /tmp/resolv.conf
+
+            - content: "{{ network_files.results[3].content | b64decode }}"
               file: /etc/mactab
 
-            - content: mkinitfs && reboot
+            - content: mkinitfs && cp /tmp/resolv.conf /etc/resolv.conf && reboot
               file: /tmp/rebuild_initramfs.sh
 
         - name: Rebuilding initramfs on {{ custom_vm_name | default(vm_name) }}...
