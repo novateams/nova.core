@@ -40,18 +40,27 @@ network:
       {% if (ip_address.mode == "ipv4_static") and (ip_address.gateway is defined) and (ip_address.gateway != none) %}
         - to: default
           via: "{{ ip_address.gateway }}"
+          {% if ip_address.on_link is defined and ip_address.on_link %}
+          on-link: true
+          {% endif %}
       {% endif %}
       {% endfor %}
       {% for ip_address in interface.addresses %}
       {% if (ip_address.mode == "ipv6_static") and (ip_address.gateway is defined) and (ip_address.gateway != none) %}
         - to: default
           via: "{{ ip_address.gateway }}"
+          {% if ip_address.on_link is defined and ip_address.on_link %}
+          on-link: true
+          {% endif %}
       {% endif %}
       {% endfor %}
       {% if extra_routes[interface_names[interface_loop]] is defined %}
       {% for route in extra_routes[interface_names[interface_loop]] %}
         - to: {{ route.to }}
           via: "{{ route.via }}"
+          {% if route.on_link is defined and route.on_link %}
+          on-link: true
+          {% endif %}
       {% endfor %}
       {% endif %}
       {% if extra_ipv4 is defined or extra_ipv6 is defined %}
