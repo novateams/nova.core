@@ -1,13 +1,27 @@
 ---
-- name: Checking for required variables...
+- name: MISSING SECRETS
   ansible.builtin.fail:
     msg: |
-      Following variables are required to run this role:
+      You are missing following secrets:
+
+      {% for variable in required_variables %}
+      {% if vars[variable] is defined %}
+      {% set evaluated = lookup('vars', variable) %}
+      {% if evaluated is ansible.builtin.falsy %}
+        - {{ variable }}
+      {% endif %}
+      {% else %}
+        - {{ variable }}
+      {% endif %}
+      {% endfor %}
+
+      You can add them to your Ansible Vault file or define external lookups in your group_vars/host_vars files.
+  vars:
+    required_variables:
       - proxmox_api_user
       - proxmox_api_token_id
       - proxmox_api_token_secret
-  when: >
-    proxmox_defaults.api_user is ansible.builtin.falsy
+  when: proxmox_defaults.api_user is ansible.builtin.falsy
     or proxmox_defaults.api_token_id is ansible.builtin.falsy
     or proxmox_defaults.api_token_secret is ansible.builtin.falsy
 

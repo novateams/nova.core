@@ -1,8 +1,23 @@
 ---
-- name: Missing required variables...
+- name: MISSING SECRETS
   ansible.builtin.fail:
     msg: |
-      Following variables are required to run this role:
+      You are missing following secrets:
+
+      {% for variable in required_variables %}
+      {% if vars[variable] is defined %}
+      {% set evaluated = lookup('vars', variable) %}
+      {% if evaluated is ansible.builtin.falsy %}
+        - {{ variable }}
+      {% endif %}
+      {% else %}
+        - {{ variable }}
+      {% endif %}
+      {% endfor %}
+
+      You can add them to your Ansible Vault file or define external lookups in your group_vars/host_vars files.
+  vars:
+    required_variables:
       - linode_api_token
   when: linode_api_token == {}
 
