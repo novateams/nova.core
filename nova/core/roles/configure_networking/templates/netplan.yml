@@ -63,11 +63,7 @@ network:
           {% endif %}
       {% endfor %}
       {% endif %}
-      {% if extra_ipv4 is defined or extra_ipv6 is defined %}
-      {{ '# Since one of the interfaces contains multiple IP addresses,' }}
-      {{ '# The DNS servers are configured in /etc/resolv.conf' }}
-      {% else %}
-      {% if ((interface.connection) or (interface.egress)) and (dns_server_combined != []) %}
+      {% if interface.egress and dns_server_combined != [] %}
       nameservers:
         addresses:
           {% if (dns_servers != []) and (interface.addresses | map(attribute='mode') | regex_search(".*ipv4.*")) %}
@@ -82,7 +78,6 @@ network:
           {% endif %}
         search:
           - {{ domain }}
-      {% endif %}
       {% endif %}
       {% endif %}
   {% endfor %}
