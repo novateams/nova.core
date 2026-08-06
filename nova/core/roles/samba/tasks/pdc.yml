@@ -23,6 +23,10 @@
     --realm={{ samba_domain_name }}
     --domain={{ samba_domain_netbios }}
     --adminpass={{ samba_domain_admin_password }}
+    {% if samba_domain_functional_level is ansible.builtin.truthy %}
+    --function-level={{ samba_domain_functional_level }}
+    --option="ad dc functional level = {{ samba_domain_functional_level }}"
+    {% endif %}
   changed_when: true
   when: samba_first_run | default(false)
 

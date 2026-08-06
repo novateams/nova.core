@@ -20,6 +20,11 @@ samba_domain_disable_password_expiry_days: 0
 # Nr of days before how long a user must wait to change their password.
 samba_domain_minimum_password_age_days: 0
 
+# The functional level of the domain. This can be set to one of the following values:
+# 2000, 2003, 2008, 2008_R2, 2016
+# When left empty, the default functional level will be used for the version of Samba being used that's most likely 2008_R2
+samba_domain_functional_level: {}
+
 #########
 # LDAPs #
 #########
