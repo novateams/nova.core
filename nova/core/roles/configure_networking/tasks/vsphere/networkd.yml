@@ -177,9 +177,7 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments:
-                  -c "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
-                  systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
+                arguments: -c "systemctl enable systemd-networkd --now && systemctl enable systemd-udev-trigger --now"
                 path: /bin/bash
             status_code: 201
             body_format: json

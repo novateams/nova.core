@@ -3,17 +3,27 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Templating network configuration to localhost...
+    - name: Templating netplan configuration files...
       ansible.builtin.template:
-        src: netplan.yml
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
-        lstrip_blocks: true
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         mode: "0644"
+        lstrip_blocks: true
+      loop_control:
+        label: "{{ item.src }}"
+      loop:
+        - src: 70-persistent-net.rules
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - src: netplan.yml
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
 
-    - name: Getting network configuration file contents...
+    - name: Getting configuration files' contents
       ansible.builtin.slurp:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+        path: "{{ item }}"
       register: file_contents
+      loop:
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
 
     - name: Removing any existing netplan configurations...
       ansible.builtin.uri:
@@ -33,18 +43,23 @@
     - name: Including command run check task...
       ansible.builtin.include_tasks: command_run_check.yml
 
-    - name: Writing netplan configuration to {{ custom_vm_name | default(vm_name) }}...
+    - name: Writing network configuration to {{ custom_vm_name | default(vm_name) }}...
       ansible.builtin.uri:
         url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/file-write"
         headers:
           Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
         method: POST
         body:
-          content: "{{ file_contents.content | b64decode }}"
-          file: /etc/netplan/01-netcfg.yaml
+          content: "{{ file_contents.results[file_index].content | b64decode }}"
+          file: "{{ item }}"
         body_format: json
         validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
+      loop_control:
+        index_var: file_index
+      loop:
+        - /etc/udev/rules.d/70-persistent-net.rules
+        - /etc/netplan/01-netcfg.yaml
 
     - name: Applying netplan...
       ansible.builtin.uri:

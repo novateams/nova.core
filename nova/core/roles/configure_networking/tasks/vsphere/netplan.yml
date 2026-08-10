@@ -3,17 +3,27 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Templating network netplan.yml...
+    - name: Templating netplan configuration files...
       ansible.builtin.template:
-        src: netplan.yml
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
-        lstrip_blocks: true
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         mode: "0644"
+        lstrip_blocks: true
+      loop_control:
+        label: "{{ item.src }}"
+      loop:
+        - src: 70-persistent-net.rules
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - src: netplan.yml
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
 
-    - name: Getting file info...
+    - name: Getting configuration files' info...
       ansible.builtin.stat:
-        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+        path: "{{ item }}"
       register: file_size
+      loop:
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
 
     # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
     # to retry the network configuration up to 3 times before failing the task completely.
@@ -30,12 +40,17 @@
               spec:
                 attributes:
                   overwrite: true
-                  size: "{{ file_size.stat.size }}"
-                path: /etc/netplan/01-netcfg.yaml
+                  size: "{{ file_size.results[file_index].stat.size }}"
+                path: "{{ item }}"
             status_code: 201
             body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
+            validate_certs: "{{ vmware_defaults.validate_certs }}"
           register: file_upload_prep
+          loop_control:
+            index_var: file_index
+          loop:
+            - /etc/udev/rules.d/70-persistent-net.rules
+            - /etc/netplan/01-netcfg.yaml
 
         - name: Removing existing netplan configuration file(s)...
           ansible.builtin.uri:
@@ -58,14 +73,19 @@
 
         - name: Uploading file...
           ansible.builtin.uri:
-            url: "{{ file_upload_prep.json }}"
+            url: "{{ file_upload_prep.results[file_upload_index].json }}"
             method: PUT
             headers:
               vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+            src: "{{ item }}"
             status_code: 200
             body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
+            validate_certs: "{{ vmware_defaults.validate_certs }}"
+          loop_control:
+            index_var: file_upload_index
+          loop:
+            - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+            - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
 
         - name: Configuring network...
           ansible.builtin.uri:
