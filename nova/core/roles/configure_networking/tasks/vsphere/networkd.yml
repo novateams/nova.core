@@ -228,7 +228,8 @@
                 body:
                   credentials: "{{ rest_api_credentials }}"
                   spec:
-                    arguments: -c "update-initramfs -u"
+                    # Removal of the dhcpcd-base package to avoid it overwriting the /etc/resolv.conf
+                    arguments: -c "apt purge dhcpcd-base -y && update-initramfs -u"
                     path: /bin/bash
                 status_code: 201
                 body_format: json

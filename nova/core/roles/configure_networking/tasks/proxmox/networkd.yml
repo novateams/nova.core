@@ -103,8 +103,7 @@
           command:
             - sh
             - -c
-            - "systemctl enable systemd-networkd && systemctl restart systemd-networkd &&
-              systemctl enable systemd-udev-trigger && systemctl restart systemd-udev-trigger"
+            - "systemctl enable systemd-networkd --now && systemctl enable systemd-udev-trigger --now"
         body_format: json
         validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
@@ -170,7 +169,7 @@
               command:
                 - sh
                 - -c
-                - "update-initramfs -u"
+                - "apt purge dhcpcd-base -y && update-initramfs -u"
             body_format: json
             validate_certs: "{{ proxmox_defaults.validate_certs }}"
           register: network_config_command
