@@ -195,6 +195,10 @@ machine_operations_proxmox_hotplug:
   - network
   - usb
 
+# Proxmox VM disk type SSD
+# Set to false when using spinning disks
+machine_operations_proxmox_disk_ssd: true
+
 # Proxmox VM default disk
 machine_operations_proxmox_os_disk: scsi0
 

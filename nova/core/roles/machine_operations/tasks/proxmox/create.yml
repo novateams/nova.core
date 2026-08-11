@@ -155,6 +155,16 @@
       delay: 5
       when: not machine_operations_proxmox_enable_ha
 
+    - name: Configuring {{ custom_vm_name | default(vm_name) }} VM disk...
+      community.proxmox.proxmox_disk:
+        discard: true
+        disk: "{{ machine_operations_proxmox_os_disk }}"
+        iothread: true
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        ssd: "{{ machine_operations_proxmox_disk_ssd }}"
+        state: present
+        vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+
     - name: Resizing {{ custom_vm_name | default(vm_name) }} VM disk...
       community.proxmox.proxmox_disk:
         name: "{{ custom_vm_name | default(vm_name) }}"
