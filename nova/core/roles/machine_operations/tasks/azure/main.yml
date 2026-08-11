@@ -57,6 +57,15 @@
             fresh_deploy: true
           when: azure_vm_info.vms == [] or deploy_mode == "redeploy"
 
+        - name: Checking for the correct deploy mode...
+          ansible.builtin.fail:
+            msg: Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
+          when:
+            - fresh_deploy is ansible.builtin.truthy
+            - role_only is ansible.builtin.truthy
+              or role_only_wp is ansible.builtin.truthy
+              or single_role is defined
+
 - name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
   ansible.builtin.include_tasks: remove.yml
   when: deploy_mode in ['undeploy', 'redeploy']

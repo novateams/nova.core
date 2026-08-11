@@ -6,16 +6,6 @@
       Please define it in your project group or host vars
   when: azure_resource_group is ansible.builtin.falsy
 
-- name: Checking for the correct deploy mode...
-  ansible.builtin.fail:
-    msg: |
-      Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
-  when:
-    - fresh_deploy is ansible.builtin.truthy
-    - role_only is ansible.builtin.truthy
-      or role_only_wp is ansible.builtin.truthy
-      or single_role is defined
-
 # For Windows templates the Administrator account gets restored with post-script since it's not allowed to be used when creating the VM
 # For Linux templates new user gets added so already using the ansible_deployer_username there
 - name: Setting template_username value based on OS...
