@@ -46,7 +46,7 @@
     mode: "0644"
   register: coredns_template_results
   loop:
-    - src: corefile
+    - src: "{{ coredns_corefile }}"
       dest: "{{ coredns_config_folder }}/Corefile"
 
     - src: docker-compose.yml
