@@ -1,16 +1,4 @@
 ---
-- name: Downloading Docker repo key for {{ ansible_facts.distribution }}...
-  ansible.builtin.get_url:
-    url: "{{ docker_apt_proxy | lower }}/gpg"
-    dest: /etc/apt/trusted.gpg.d/docker.asc
-    mode: "0644"
-    timeout: 60
-  vars:
-    # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
-    ansible_facts:
-      distribution_release: trixie
-      distribution: debian
-
 - name: Getting {{ inventory_hostname }} architecture...
   ansible.builtin.command: dpkg --print-architecture
   changed_when: false
@@ -25,7 +13,7 @@
     uris: "{{ docker_apt_proxy | lower }}"
     suites: ["{{ ansible_facts.distribution_release | lower }}"]
     components: [stable]
-    signed_by: /etc/apt/trusted.gpg.d/docker.asc
+    signed_by: "{{ docker_apt_proxy | lower }}/gpg"
   vars:
     # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
     ansible_facts:
