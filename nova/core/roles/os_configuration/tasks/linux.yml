@@ -67,12 +67,10 @@
     lstrip_blocks: true
   when: resolv_conf_dns_servers != []
 
-- name: Set NTP server for Debian and Archlinux like OS...
-  when:
-    - ntp_servers != []
-    - ansible_facts.os_family in [ "Debian", "Archlinux" ]
+- name: Set NTP server for timesyncd...
+  when: ntp_servers != []
   block:
-    - name: Check if timesyncd.conf file exists...
+    - name: Check if /etc/systemd/timesyncd.conf file exists...
       ansible.builtin.stat:
         path: /etc/systemd/timesyncd.conf
       register: timesyncd_conf_exists
@@ -83,6 +81,8 @@
         line: "{{ item.line }}"
         regexp: "{{ item.regexp }}"
         state: present
+        create: true
+        mode: "0644"
       loop_control:
         label: "{{ item.line }}"
       loop:
@@ -91,12 +91,10 @@
       when: timesyncd_conf_exists.stat.exists
       notify: restart_systemd_timesyncd
 
-- name: Set NTP server for ReadHat like OS...
-  when:
-    - ntp_servers != []
-    - ansible_facts.os_family in [ "RedHat" ]
+- name: Set NTP server for chronyd...
+  when: ntp_servers != []
   block:
-    - name: Check if chrony.conf file exists...
+    - name: Check if /etc/chrony.conf file exists...
       ansible.builtin.stat:
         path: /etc/chrony.conf
       register: chrony_conf_exists
@@ -120,6 +118,26 @@
           loop_control:
             label: "{{ item }}"
           loop: "{{ ntp_servers }}"
+          notify: restart_chronyd
+
+    - name: Check if /etc/chrony/sources.d folder exists...
+      ansible.builtin.stat:
+        path: /etc/chrony/sources.d
+      register: chrony_conf_dir_exists
+
+    - name: Configuring NTP in chrony/sources.d/ntp.conf...
+      when:
+        - chrony_conf_dir_exists.stat.exists
+        - not chrony_conf_exists.stat.exists
+      block:
+        - name: Creating /etc/chrony/sources.d/ntp.sources...
+          ansible.builtin.copy:
+            content: |
+              {% for ntp_server in ntp_servers %}
+              server {{ ntp_server }} iburst
+              {% endfor %}
+            dest: /etc/chrony/sources.d/ntp.sources
+            mode: "0644"
           notify: restart_chronyd
 
 - name: Set NTP server for Alpine...
