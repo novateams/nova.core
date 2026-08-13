@@ -25,6 +25,10 @@ samba_domain_minimum_password_age_days: 0
 # When left empty, the default functional level will be used for the version of Samba being used that's most likely 2008_R2
 samba_domain_functional_level: {}
 
+# Enable Samba DC logging in json format in
+samba_enable_logging: true
+samba_logging_json_path: /var/log/samba/json
+
 #########
 # LDAPs #
 #########
@@ -35,7 +39,7 @@ samba_ldaps_enable: true
 
 # Path to Root CA file for LDAPs connections
 # Can be left empty if it's already in OS trust store
-samba_ldaps_ca_file:
+samba_ldaps_ca_file: {}
 
 # Path to LDAPs certificate private key file
 samba_ldaps_key_file: /srv/certs/{{ fqdn }}_key.crt
@@ -47,4 +51,4 @@ samba_ldaps_cert_file: /srv/certs/{{ fqdn }}_fullchain.crt
 # DNS #
 #######
 
-samba_dns_forwarders: "{{ (dns_forwarders | default(['1.1.1.1', '8.8.8.8'])) + (dns_forwarders6 | default(['2606:4700:4700::1111', '2001:4860:4860::8888'])) }}"
+samba_dns_forwarders: "{{ (dns_forwarders6 | default(['2606:4700:4700::1111', '2001:4860:4860::8888'])) + (dns_forwarders | default(['1.1.1.1', '8.8.8.8'])) }}"

@@ -121,42 +121,72 @@
   ansible.builtin.include_tasks: dc.yml
   when: samba_dc_role | lower == "dc"
 
-- name: Adding DNS forwarders...
-  ansible.builtin.lineinfile:
-    path: /etc/samba/smb.conf
-    insertafter: '\[global\]'
-    line: "        dns forwarder = {{ samba_dns_forwarders | join(' ') }}"
-    regexp: .*dns forwarder =.*
+- name: Configuring /etc/samba/smb.conf...
   notify: samba_service_restart
-  when: samba_dns_forwarders != []
-
-- name: Configuring LDAPs...
-  when: samba_ldaps_enable
   block:
-    # Samba service needs to be started once before enabling LDAPs, otherwise the service won't start later
-    - name: Starting and enabling Samba services...
-      ansible.builtin.systemd:
-        name: samba
-        state: started
+    - name: Configuring LDAPs...
+      when: samba_ldaps_enable
+      block:
+        # Samba service needs to be started once before enabling LDAPs, otherwise the service won't start later
+        - name: Starting and enabling Samba services...
+          ansible.builtin.systemd:
+            name: samba
+            state: started
+            enabled: true
 
-    - name: Enabling LDAPs...
-      ansible.builtin.lineinfile:
+        - name: Configuring LDAPs TLS settings...
+          community.general.ini_file:
+            path: /etc/samba/smb.conf
+            section: global
+            option: "{{ item.option }}"
+            value: "{{ item.value }}"
+            mode: "0644"
+          loop_control:
+            label: "{{ item.option }} > {{ item.value }}"
+          loop:
+            - option: tls cafile
+              value: "{{ samba_ldaps_ca_file }}"
+            - option: tls keyfile
+              value: "{{ samba_ldaps_key_file }}"
+            - option: tls certfile
+              value: "{{ samba_ldaps_cert_file }}"
+            - option: tls enabled
+              value: "yes"
+            - option: tls trust system cas
+              value: "yes"
+          when: item.value is ansible.builtin.truthy
+
+    - name: Adding DNS forwarders...
+      community.general.ini_file:
         path: /etc/samba/smb.conf
-        insertafter: '\[global\]'
-        line: "{{ item.line }}"
-        regexp: "{{ item.regexp }}"
-      loop_control:
-        label: "{{ item.line | trim }}"
-      loop:
-        - line: "        tls cafile = {{ samba_ldaps_ca_file }}"
-          regexp: .*tls cafile =.*
-        - line: "        tls keyfile = {{ samba_ldaps_key_file }}"
-          regexp: .*tls keyfile =.*
-        - line: "        tls certfile = {{ samba_ldaps_cert_file }}"
-          regexp: .*tls certfile =.*
-        - line: "        tls enabled = yes"
-          regexp: .*tls enabled =.*
-      notify: samba_service_restart
+        section: global
+        option: dns forwarder
+        value: "{{ samba_dns_forwarders | join(' ') }}"
+        mode: "0644"
+      when: samba_dns_forwarders != []
+
+    - name: Configuring logging...
+      when: samba_enable_logging
+      block:
+        - name: Ensure JSON audit log directory exists
+          ansible.builtin.file:
+            path: "{{ samba_logging_json_path }}"
+            state: directory
+            mode: "0755"
+
+        - name: Enabling logging...
+          community.general.ini_file:
+            path: /etc/samba/smb.conf
+            section: global
+            option: log level
+            value: >-
+              1
+              auth_json_audit:5@{{ samba_logging_json_path }}/auth.json
+              dsdb_json_audit:5@{{ samba_logging_json_path }}/dsdb.json
+              dsdb_group_json_audit:5@{{ samba_logging_json_path }}/group.json
+              dsdb_password_json_audit:5@{{ samba_logging_json_path }}/password.json
+              dsdb_transaction_json_audit:5@{{ samba_logging_json_path }}/transaction.json
+            mode: "0644"
 
 # Rebooting only on initial domain controller provisioning
 - name: Rebooting...
