@@ -29,7 +29,7 @@
 
 - name: Including Samba AD objects creation/update tasks...
   ansible.builtin.include_tasks: unix_create_samba.yml
-  when: samba_primary_domain_controller | default(false)
+  when: samba_primary_domain_controller | bool
 
 - name: Creating accounts for...
   ansible.builtin.user:

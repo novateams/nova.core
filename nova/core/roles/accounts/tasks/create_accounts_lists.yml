@@ -7,7 +7,8 @@
 # - Accounts with random generated passwords when passwordless sudo or similar is used (Unix only)
 
 # Checking if the host is a Samba Domain controller...
-- name: Checking if samba-ad-dc service exists...
+# Only setting this for the primary (first) domain controller, to avoid running accounts and groups creation tasks on all domain controllers.
+- name: Checking if the host is a Samba Domain controller...
   when: ansible_facts.system | default('') in ["FreeBSD", "Linux"]
   block:
     - name: Checking if Samba AD is provisioned...
@@ -16,10 +17,25 @@
       changed_when: false
       register: samba_ad_provisioned
 
-    - name: Setting samba_primary_domain_controller fact...
-      ansible.builtin.set_fact:
-        samba_primary_domain_controller: true
+    - name: Looking up the PDC...
       when: samba_ad_provisioned.stat.exists
+      block:
+        # Using host command to lookup the service record for the PDC
+        # It needs to find the fqdn address of the PDC domain controller for the domain, so it can be compared with the current host fqdn.
+        # If it errors out then there's a problem with the DNS configuration and the domain controller cannot be found, so the task will fail.
+        - name: Checking if the host is a Samba Primary Domain Controller...
+          ansible.builtin.shell: |
+            set -eo pipefail
+            host -t SRV _ldap._tcp.pdc._msdcs.{{ samba_domain_name | default(ad_domain_name | default(domain)) }} | awk '{print $NF}'
+          args:
+            executable: /bin/bash
+          changed_when: false
+          register: samba_pdc_lookup
+
+        - name: Setting samba_primary_domain_controller fact...
+          ansible.builtin.set_fact:
+            samba_primary_domain_controller: true
+          when: samba_pdc_lookup.stdout.split('.') | first == hostname
 
 - name: Initialize account lists to empty arrays
   ansible.builtin.set_fact:
@@ -54,7 +70,7 @@
 - name: Generating domain users and OUs lists...
   when:
     ansible_facts.windows_domain_role | default('') == "Primary domain controller"
-    or samba_primary_domain_controller | default(false)
+    or samba_primary_domain_controller | bool
   block:
     - name: Adding a password key for following domain accounts...
       ansible.builtin.set_fact:

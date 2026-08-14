@@ -99,3 +99,9 @@ accounts_samba_group_scope_map:
   global: Global
   domainlocal: Domain
   universal: Universal
+
+# This variable determines if the host is a Samba Primary Domain Controller (PDC)
+# It's important to avoid running accounts and groups creation tasks on all domain controllers, only on the primary one.
+# By default it's dynamically set in the create_accounts_lists.yml using the _ldap._tcp.pdc._msdcs SRV record lookup for the domain.
+# In some edge cases it might be required to set this variable manually in the host or group vars
+samba_primary_domain_controller: false

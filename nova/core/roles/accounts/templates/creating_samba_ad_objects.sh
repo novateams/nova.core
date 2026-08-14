@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 ########################
 # Organizational Units #
 ########################
@@ -13,13 +15,14 @@ OUS=(
 
 mapfile -t EXISTING_OUS < <(samba-tool ou list --full-dn)
 
+echo Configuring Organizational Units:
 for ou in "${OUS[@]}"
 do
     # Check if the OU already exists
     if [[ " ${EXISTING_OUS[*]} " == *" $ou "* ]]; then
-        echo "The organizational unit already exists - $ou"
+        echo "OU already exists - $ou"
     else
-        echo "Creating $ou organizational unit..."
+        echo "Creating $ou OU..."
         samba-tool ou add "$ou"
     fi
 done
@@ -38,6 +41,8 @@ GROUPS_DETAILS=(
 
 mapfile -t EXISTING_GROUPS < <(samba-tool group list --full-dn)
 
+echo
+echo Configuring Groups:
 for entry in "${GROUPS_DETAILS[@]}"
 do
     IFS='|' read -r group scope description groupou group_path <<< "$entry"
@@ -64,6 +69,8 @@ USER_DETAILS=(
 
 mapfile -t EXISTING_USERS < <(samba-tool user list)
 
+echo
+echo Configuring Users:
 for entry in "${USER_DETAILS[@]}"
 do
     IFS='|' read -r username password groups update_password userou <<< "$entry"
@@ -104,6 +111,8 @@ GROUP_MEMBERS_DETAILS=(
     {% endfor %}
 )
 
+echo
+echo Configuring Group Members:
 for entry in "${GROUP_MEMBERS_DETAILS[@]}"
 do
     IFS='|' read -r group members <<< "$entry"

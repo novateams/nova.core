@@ -51,11 +51,11 @@
   when:
     - darwin_with_python is defined
     - not darwin_with_python
-# Useful when debugging facts gathered from different operating systems
+# # Useful when debugging facts gathered from different operating systems
 # - name: Saving ansible_facts to file...
 #   ansible.builtin.copy:
 #     content: "{{ ansible_facts | to_nice_yaml }}"
 #     dest: "{{ inventory_hostname }}.yml"
 #     mode: "0644"
-#   delegate_to: localhost
 #   become: false
+#   delegate_to: localhost

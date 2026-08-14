@@ -25,7 +25,7 @@
       ansible.builtin.include_role:
         name: nova.core.samba
       vars:
-        samba_dc_role: pdc
+        samba_dc_role: "{{ monolith_samba_dc_role | default('pdc') }}"
 
     # This is needed in case the dc.yml gets included since the dc.yml will do a reboot as the last step
     - name: Waiting until {{ monolith_vault_fqdn }} is unsealed...
