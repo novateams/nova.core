@@ -63,7 +63,7 @@
     - samba_first_run | default(false)
   block:
     - name: Checking that the domain does not already exist in DNS...
-      ansible.builtin.command: dig {{ samba_domain_name }} +short
+      ansible.builtin.shell: host {{ samba_domain_name }} 2>/dev/null || true
       changed_when: false
       register: domain_dns_record
 
@@ -72,7 +72,7 @@
         msg: |
           The domain {{ samba_domain_name }} already exists in DNS (returned {{ domain_dns_record.stdout }}).
           Cannot proceed with new domain provisioning.
-      when: domain_dns_record.stdout_lines != []
+      when: domain_dns_record.stdout is search("has.*address")
 
 - name: Removing existing smb.conf if domain is not yet provisioned...
   when: samba_first_run | default(false)
