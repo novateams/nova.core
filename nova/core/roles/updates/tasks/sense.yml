@@ -1,15 +1,29 @@
 ---
+- name: Updating pfSense...
+  when: ansible_network_os | default('') == "pfsense"
+  block:
+    # pfSense can have automated package checks running in the background
+    # So we need to wait until no update process is running before we can run the update command
+    - name: Waiting until existing pfSense update process is finished...
+      ansible.builtin.stat:
+        path: /tmp/pfSense-upgrade.lock
+      register: pfsense_upgrade_lock
+      until: not pfsense_upgrade_lock.stat.exists
+      retries: 20
+      delay: 30
+
+    - name: Updating {{ inventory_hostname }}...
+      ansible.builtin.command: pfSense-upgrade -d -y
+      register: pfsense_update
+      changed_when: pfsense_update.stdout is search("Installing.*")
+      retries: 5 # There might be an automated package check running in the background, so we retry a few times to avoid false failures
+      delay: 60
+
 - name: Updating {{ inventory_hostname }}...
   ansible.builtin.command: opnsense-update -bkp
   register: opnsense_update
   changed_when: opnsense_update.stdout is search("Installing.*")
   when: ansible_network_os | default('') == "opnsense"
-
-- name: Updating {{ inventory_hostname }}...
-  ansible.builtin.command: pfSense-upgrade -d -y
-  register: pfsense_update
-  changed_when: pfsense_update.stdout is search("Installing.*")
-  when: ansible_network_os | default('') == "pfsense"
 
 - name: Including restore Python tasks... # noqa: no-handler
   ansible.builtin.include_tasks: restore_python.yml
