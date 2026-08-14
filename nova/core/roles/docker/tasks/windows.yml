@@ -60,6 +60,7 @@
       chocolatey.chocolatey.win_chocolatey:
         name: docker-desktop
         state: present
+        ignore_checksums: true
 
     - name: Rebooting... # noqa: no-handler
       ansible.windows.win_reboot:

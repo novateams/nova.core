@@ -15,7 +15,7 @@
     find /boot -maxdepth 1 -type f \( -name 'vmlinuz-*' -o -name 'initrd.img-*' -o -name 'config-*' -o -name 'System.map-*' \) \
       ! -path "$VMLINUZ" ! -path "$INITRD" ! -path "$CONFIG" ! -path "$SYSMAP" -print -exec rm -f {} \;
 
-    apt --fix-broken install -y
+    apt-get --fix-broken install -y
   vars:
     exec: /bin/bash
   register: remove_unused_kernels
@@ -34,6 +34,10 @@
   until: not apt_updates.failed
   retries: 3
   delay: 3
+
+- name: Including restore Python tasks... # noqa: no-handler
+  ansible.builtin.include_tasks: restore_python.yml
+  when: apt_updates.changed
 
 - name: Updating firmware...
   ansible.builtin.shell: |

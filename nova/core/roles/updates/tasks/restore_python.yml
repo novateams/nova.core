@@ -1,0 +1,14 @@
+---
+# This task is for re-detecting the Python version after an update and setting the ansible_python_interpreter variable accordingly
+# Otherwise Ansible will fail since the Python interpreter is no longer valid after an update.
+
+- name: Looking up the current Python version...
+  ansible.builtin.raw: command -v "python$(python3 --version | awk '{print $2}' | cut -d. -f1,2)"
+  args:
+    executable: /bin/sh
+  changed_when: false
+  register: current_python_version
+
+- name: Setting updated Python interpreter for {{ inventory_hostname }}...
+  ansible.builtin.set_fact:
+    ansible_python_interpreter: "{{ current_python_version.stdout_lines[-1] }}"
