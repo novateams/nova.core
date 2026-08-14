@@ -32,8 +32,8 @@
       until:
         - vm_tools.value.run_state is defined
         - vm_tools.value.run_state == "RUNNING"
-      retries: 18
-      delay: 10
+      retries: "{{ (vcenter_vmtools_policy_timeout if vcenter_vmtools_policy_timeout >= 5 else 5) / 5 }}"
+      delay: 5
 
     - name: Upgrading VMware Tools...
       community.vmware.vmware_guest_tools_upgrade:
@@ -42,6 +42,8 @@
       when:
         - vm_tools.value.version_status != "UNMANAGED"
         - vmtools_upgrade_policy == "MANUAL"
+      retries: "{{ (vcenter_vmtools_policy_timeout if vcenter_vmtools_policy_timeout >= 5 else 5) / 5 }}"
+      delay: 5
 
     - name: VMware Tools are managed by the operating system...
       ansible.builtin.debug:
