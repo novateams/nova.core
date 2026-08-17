@@ -6,10 +6,10 @@
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
       register: vm_tools
       until: vm_tools.guests[0].hw_power_status == "poweredOff"
-      retries: 90
-      delay: 10
-      delegate_to: localhost
+      retries: "{{ (win_sysprep_timeout if win_sysprep_timeout >= 30 else 30) / 30 }}"
+      delay: 30
       become: false
+      delegate_to: localhost
 
   rescue:
     - name: SYSPREP WAIT TIMEOUT
