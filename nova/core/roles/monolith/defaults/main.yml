@@ -71,11 +71,19 @@ monolith_default_caddy_servers:
 # For an example some extra Docker proxy servers can be added here
 monolith_extra_caddy_servers: []
 
-##########
-# Samba4 #
-##########
+#########
+# Samba #
+#########
 
-# Install and configure Samba4 domain controller on Monolith
+# Install and configure Samba domain controller on Monolith
 monolith_install_samba: false
 
+# Extra DNS records to be added to the Samba domain controller
+# Refer to the role readme for the format of the records
 monolith_extra_dns_records: []
+
+# Samba secrets engine configuration for Vault. This is for when generating initial service accounts and saving them to Vault
+# These values can be used to make sure that when adding more secrets with the nova.core.accounts role
+# they end up in the same path as the default service accounts
+monolith_samba_secrets_engine: monolith
+monolith_samba_secrets_path: ad
