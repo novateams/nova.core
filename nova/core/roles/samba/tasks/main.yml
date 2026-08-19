@@ -124,6 +124,22 @@
 - name: Configuring /etc/samba/smb.conf...
   notify: samba_service_restart
   block:
+    - name: Binding Samba to {{ samba_bind_interfaces | join(', ') }} interfaces
+      community.general.ini_file:
+        path: /etc/samba/smb.conf
+        section: global
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+        mode: "0644"
+      loop_control:
+        label: "{{ item.option }} > {{ item.value }}"
+      loop:
+        - option: interfaces
+          value: "{{ samba_bind_interfaces | join(' ') }}"
+        - option: bind interfaces only
+          value: "yes"
+      when: samba_bind_interfaces is ansible.builtin.truthy
+
     - name: Configuring LDAPs...
       when: samba_ldaps_enable
       block:

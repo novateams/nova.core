@@ -52,3 +52,9 @@ samba_ldaps_cert_file: /srv/certs/{{ fqdn }}_fullchain.crt
 #######
 
 samba_dns_forwarders: "{{ (dns_forwarders6 | default(['2606:4700:4700::1111', '2001:4860:4860::8888'])) + (dns_forwarders | default(['1.1.1.1', '8.8.8.8'])) }}"
+
+# The interface to bind Samba to. This is usually the interface that has the IP address of the machine in the domain.
+# Otherwise Samba will bind to all interfaces and can start generating DNS names for localhost and Docker containers which can cause issues
+# The default is the egress network interface of the host set it to [] not to bind to any interface and let Samba bind to all interfaces
+samba_bind_interfaces:
+  - "{{ egress_network_info.nic_name }}"
