@@ -1,9 +1,10 @@
 $ErrorActionPreference = 'Stop'
 
 # Time
-$TimeZone = "UTC"
+w32tm /config /manualpeerlist:"{{ ntp_servers | join(' ') }}" /syncfromflags:manual /update
+$TimeZone = "{{ os_configuration_timezone }}"
 Set-Service W32Time -StartupType Automatic
-Start-Service W32Time
+Restart-Service W32Time
 Set-TimeZone -Id $TimeZone
 
 # Power
