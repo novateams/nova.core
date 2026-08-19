@@ -1,7 +1,7 @@
 ---
 services:
   coredns:
-    image: "{{ coredns_version }}"
+    image: coredns/coredns:{{ coredns_version }}
     container_name: coredns
     restart: unless-stopped
     volumes:

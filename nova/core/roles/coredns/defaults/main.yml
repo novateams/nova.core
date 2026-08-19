@@ -1,5 +1,5 @@
 ---
-coredns_version: coredns/coredns:1.14.6
+coredns_version: 1.14.7
 coredns_config_folder: /srv/coredns
 coredns_docker_network: local-network # This is the default for nova.core.docker role
 
