@@ -57,4 +57,5 @@ samba_dns_forwarders: "{{ (dns_forwarders6 | default(['2606:4700:4700::1111', '2
 # Otherwise Samba will bind to all interfaces and can start generating DNS names for localhost and Docker containers which can cause issues
 # The default is the egress network interface of the host set it to [] not to bind to any interface and let Samba bind to all interfaces
 samba_bind_interfaces:
+  - lo
   - "{{ egress_network_info.nic_name }}"
