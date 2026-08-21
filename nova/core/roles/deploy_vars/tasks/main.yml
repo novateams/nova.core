@@ -22,6 +22,7 @@
   loop_control:
     index_var: idx
     label: "{{ item.nic_name }}"
+  when: interfaces_extras != []
 
 - name: Delegating required tasks to localhost...
   become: false
