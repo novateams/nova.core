@@ -105,3 +105,6 @@ accounts_samba_group_scope_map:
 # By default it's dynamically set in the create_accounts_lists.yml using the _ldap._tcp.pdc._msdcs SRV record lookup for the domain.
 # In some edge cases it might be required to set this variable manually in the host or group vars
 samba_primary_domain_controller: false
+
+# AD domain's DistinguishedName
+domain_dn: DC={{ samba_domain_name | default(ad_domain_name) | split('.') | join(',DC=') | trim }}
