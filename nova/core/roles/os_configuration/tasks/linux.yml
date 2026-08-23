@@ -71,23 +71,6 @@
   ansible.builtin.include_tasks: linux_ntp.yml
   when: ntp_servers != []
 
-- name: Waiting until {{ wait_for_address }} is reachable...
-  ansible.builtin.wait_for:
-    host: "{{ wait_for_address }}"
-    port: "{{ wait_for_port }}"
-    timeout: "{{ wait_for_timeout }}"
-  when: wait_for_host
-
-- name: Waiting until {{ os_configuration_wait_for_site_url }} is responding...
-  ansible.builtin.uri:
-    url: "{{ os_configuration_wait_for_site_url }}"
-    method: GET
-  register: wait_for_site_result
-  until: wait_for_site_result.status == 200
-  retries: "{{ os_configuration_wait_for_site_retries }}"
-  delay: 10
-  when: os_configuration_wait_for_site
-
 - name: Regenerating Snakeoil certificates... # noqa: command-instead-of-shell
   ansible.builtin.shell: "{{ lookup('template', 'regenerate-snakeoil-certificates.sh') }}"
   register: regenerate_snakeoil_certs
@@ -126,6 +109,13 @@
         name: NetworkManager.service
         state: restarted
       when: networkmanager_service_exists.status.LoadState in ["enabled", "loaded"]
+
+- name: Waiting until {{ wait_for_address }} is reachable over {{ wait_for_port }}...
+  ansible.builtin.wait_for:
+    host: "{{ wait_for_address }}"
+    port: "{{ wait_for_port }}"
+    timeout: "{{ wait_for_timeout }}"
+  when: wait_for_host
 
 - name: Including Linux in Cloud configuration tasks...
   ansible.builtin.include_tasks: linux_cloud.yml

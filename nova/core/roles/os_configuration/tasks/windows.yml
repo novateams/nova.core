@@ -1,5 +1,5 @@
 ---
-- name: Waiting for internet...
+- name: Waiting until {{ wait_for_address }} is reachable over {{ wait_for_port }}...
   ansible.windows.win_wait_for:
     host: "{{ wait_for_address }}"
     port: "{{ wait_for_port }}"
