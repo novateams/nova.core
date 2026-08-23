@@ -1,5 +1,4 @@
 ---
-infra_env: {}
 user_accounts: []
 domain_user_accounts: []
 domain_groups: []

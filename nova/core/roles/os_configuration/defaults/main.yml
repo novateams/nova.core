@@ -3,7 +3,6 @@
 # General #
 ###########
 
-fqdn: "{{ hostname }}.{{ domain | default('localdomain') }}" # Fully qualified domain name to be set if fqdn is not defined in host or group vars
 hostname: "{{ inventory_hostname }}" # Defaults to inventory_hostname if nothing else is defined
 hosts_file_values: [] # Custom hosts file entries to be added.
 install_trusted_certificates: true # Set to false to skip trusted certificates installation with nova.core.trusted_certificates role
@@ -11,10 +10,12 @@ os_configuration_locale: en_US.UTF-8 # Default locale to be set
 os_configuration_post_roles: [] # List of extra roles to be included as one of the last steps of this role
 os_configuration_timezone: UTC # The default timezone to be set where applicable
 resolv_conf_dns_servers: []
-wait_for_address: 1.1.1.1 # Host to check in Waiting for internet... task
+
+# Wait for external connection before moving on
+wait_for_address: 1.1.1.1 # Host to to be reachable, can be an IP address or fqdn, leave empty to skip waiting for external connection
 wait_for_host: false # Set true to wait for external connection before moving on
-wait_for_port: 53 # Port to check in Waiting for internet... task
-wait_for_timeout: 300 # How many seconds to wait for wait_for_host
+wait_for_port: 53 # Port to check in wait_for_address
+wait_for_timeout: 300 # How many seconds to wait for wait_for_address
 
 # Creates a snapshot when just_clone is true, set do false to skip snapshot creation
 os_configuration_create_snapshot_with_just_clone: true
@@ -23,25 +24,19 @@ os_configuration_create_snapshot_with_just_clone: true
 # This can be useful when during development to have a snapshot created but still continue with the play
 deploy_with_mid_snapshot: false
 
-# Set true to wait for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
-os_configuration_wait_for_site: false
-os_configuration_wait_for_site_url: https://google.com # URL to wait for
-# How many times to retry waiting for site defined in os_configuration_wait_for_site_url respond with HTTP 200 before moving on with Linux hosts
-os_configuration_wait_for_site_retries: 30
+# Define your OS disk expansion role name in your host or group vars to included it with this role
+os_configuration_expand_os_disk_role_name: {}
 
-os_configuration_expand_os_disk_role_name: {} # Define your OS disk expansion role name in your host or group vars to included it with this role
-infra_env: {}
+# NTP servers to be configured for the system
 ntp_servers:
   - "0.pool.ntp.org"
   - "1.pool.ntp.org"
-
-os_configuration_configure_ssh_maxauthtries: true # Set to false to disable increasing SSHD MaxAuthTries on cloud machines
-os_configuration_ssh_maxauthtries: 20 # Value to set for SSHD MaxAuthTries on cloud machines
 
 # List of cloud environments where this role will perform cloud specific tasks
 os_configuration_cloud_envs:
   - aws
   - azure
+  - google
   - linode
   - openstack
 
