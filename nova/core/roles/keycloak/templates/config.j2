@@ -214,19 +214,20 @@ clients:
       browser: {{ client.auth_flow_override_browser }}
     {% endif %}
     attributes:
-       {% if client.protocol | default('openid-connect') == 'openid-connect' %}
-       access.token.lifespan: {{ client.access_token_lifespan | default(omit) }}
-       client.session.max.lifespan: {{ client.client_session_max_lifespan | default(omit) }}
-       client.session.idle.timeout: {{ client.client_session_idle_timeout | default(omit) }}
-       {% endif %}
-       {% if client.protocol | default('openid-connect') == 'saml' %}
-       saml.client.signature: {{ client.saml_require_client_signature | default(true) }}
-       saml.signing.certificate: {{ client.saml_client_signing_certificate | default(omit) }}
-       saml.encrypt: {{ client.saml_encrypt_assertions | default(false) }}
-       saml.encryption.certificate: {{ client.saml_assertions_encryption_certificate | default(omit) }}
-       saml_name_id_format: {{ client.saml_name_id_format | default("username") }}
-       saml_force_name_id_format: {{ client.saml_force_name_id_format | default("false") }}
-       {% endif %}
+      {% if client.protocol | default('openid-connect') == 'openid-connect' %}
+      access.token.lifespan: {{ client.access_token_lifespan | default(omit) }}
+      client.session.max.lifespan: {{ client.client_session_max_lifespan | default(omit) }}
+      client.session.idle.timeout: {{ client.client_session_idle_timeout | default(omit) }}
+      post.logout.redirect.uris: {{ client.post_logout_redirect_uris | join('##') | default('""')  }}
+      {% endif %}
+      {% if client.protocol | default('openid-connect') == 'saml' %}
+      saml.client.signature: {{ client.saml_require_client_signature | default(true) }}
+      saml.signing.certificate: {{ client.saml_client_signing_certificate | default(omit) }}
+      saml.encrypt: {{ client.saml_encrypt_assertions | default(false) }}
+      saml.encryption.certificate: {{ client.saml_assertions_encryption_certificate | default(omit) }}
+      saml_name_id_format: {{ client.saml_name_id_format | default("username") }}
+      saml_force_name_id_format: {{ client.saml_force_name_id_format | default("false") }}
+      {% endif %}
   {% endfor %}
 clientScopes:
   {% for client in realm.clients %}
