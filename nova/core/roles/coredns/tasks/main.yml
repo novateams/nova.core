@@ -36,8 +36,9 @@
     recurse: true
   loop:
     - "{{ coredns_config_folder }}"
-    - "{{ coredns_config_folder }}/zones"
     - "{{ coredns_config_folder }}/conf.d"
+    - "{{ coredns_config_folder }}/zones"
+    - "{{ coredns_config_folder }}/zones_include"
 
 - name: Templating CoreDNS configuration files...
   ansible.builtin.template:
@@ -56,26 +57,39 @@
   ansible.builtin.setup:
     filter: "*_time"
 
-- name: Templating zonefile(s) for following domain(s)...
-  ansible.builtin.template:
-    src: zonefile_template
-    dest: "{{ coredns_config_folder }}/zones/db.{{ zone.domain }}"
-    mode: "0644"
-    lstrip_blocks: true
+- name: Configuring zonefiles if coredns_records variable is defined...
   when: coredns_records != []
-  loop: "{{ coredns_records }}"
-  loop_control:
-    loop_var: zone
-    label: "{{ zone.domain }}"
+  block:
+    # This is a placeholder so that the zones_include folder is not empty, which would cause CoreDNS to throw warnings on startup.
+    - name: Creating zonefile include for following domain(s)...
+      ansible.builtin.file:
+        path: "{{ coredns_config_folder }}/zones_include/db.{{ include }}"
+        state: touch
+        mode: "0644"
+      loop: "{{ coredns_records | map(attribute='domain') | unique | sort }}"
+      loop_control:
+        loop_var: include
+        label: "{{ coredns_config_folder }}/zones_include/db.{{ include }}"
 
-- name: Verifying zonefile(s) for following domain(s)...
-  ansible.builtin.command: named-checkzone {{ zone.domain }} {{ coredns_config_folder }}/zones/db.{{ zone.domain }}
-  register: checkzone_results
-  changed_when: false
-  loop: "{{ coredns_records }}"
-  loop_control:
-    loop_var: zone
-    label: "{{ zone.domain }}"
+    - name: Templating zonefile for following domain(s)...
+      ansible.builtin.template:
+        src: zonefile_template
+        dest: "{{ coredns_config_folder }}/zones/db.{{ zone.domain }}"
+        mode: "0644"
+        lstrip_blocks: true
+      loop: "{{ coredns_records }}"
+      loop_control:
+        loop_var: zone
+        label: "{{ zone.domain }}"
+
+    - name: Verifying zonefile(s) for following domain(s)...
+      ansible.builtin.command: named-checkzone {{ check }} {{ coredns_config_folder }}/zones/db.{{ check }}
+      register: checkzone_results
+      changed_when: false
+      loop: "{{ coredns_records | map(attribute='domain') | unique | sort }}"
+      loop_control:
+        loop_var: check
+        label: "{{ check }}"
 
 - name: Templating following forwarders...
   ansible.builtin.template:
