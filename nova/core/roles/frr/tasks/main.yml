@@ -13,6 +13,7 @@
     suites: ["{{ ansible_facts.distribution_release }}"]
     components: [frr-stable]
     signed_by: /usr/share/keyrings/frr.asc
+    install_python_debian: true
 
 - name: Removing legacy frr repo...
   ansible.builtin.file:

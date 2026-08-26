@@ -51,6 +51,7 @@
     suites: [kali-rolling]
     components: [main contrib non-free non-free-firmware]
     signed_by: /usr/share/keyrings/kali-archive-keyring.gpg
+    install_python_debian: true
   register: repos_changed
 
 - name: Emptying the legacy /etc/apt/sources.list file...

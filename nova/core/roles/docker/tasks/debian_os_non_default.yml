@@ -14,6 +14,7 @@
     suites: ["{{ ansible_facts.distribution_release | lower }}"]
     components: [stable]
     signed_by: "{{ docker_apt_proxy | lower }}/gpg"
+    install_python_debian: true
   vars:
     # Overriding ansible_facts.distribution and ansible_facts.distribution_release to match Debian
     ansible_facts:
