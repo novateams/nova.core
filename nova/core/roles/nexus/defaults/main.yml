@@ -71,7 +71,9 @@ nexus_ldap_configuration:
   userSubtree: true
   useTrustStore: true
 
-nexus_remove_unmanaged_repos: true # By default remove repositories that are not in the nexus_repositories list during deploy
+# Set to true to remove unmanaged repositories from Nexus
+# This removes all not in nexus_extra_repositories list
+nexus_remove_unmanaged_repos: false
 
 # List of repositories to create when nexus_create_repos is set to true
 # Contains also the deprecated repositories that will be removed in future versions. These are kept here for now to avoid breaking changes,
