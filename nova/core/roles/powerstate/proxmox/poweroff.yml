@@ -14,7 +14,6 @@
     - name: Waiting until {{ custom_vm_name | default(vm_name) }} to be stopped...
       community.proxmox.proxmox_vm_info:
         name: "{{ custom_vm_name | default(vm_name) }}"
-
       register: proxmox_vm_stop
       until: proxmox_vm_stop.proxmox_vms[0].status == "stopped"
       when: proxmox_vm_info.proxmox_vms[0].status != "stopped"
