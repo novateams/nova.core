@@ -11,6 +11,7 @@
     rm -f /root/.vim/*
     rm -f /root/.viminfo
     rm -f /root/.vnc/*.log
+    rm -f /root/*ks.cfg
     rm -f /root/selfconf
     rm -f /var/log/*.gz
     rm -f /var/log/alternatives*
