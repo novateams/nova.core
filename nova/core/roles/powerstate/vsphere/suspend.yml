@@ -4,5 +4,7 @@
     name: "{{ custom_vm_name | default(vm_name) }}"
     datacenter: "{{ datacenter }}"
     state: suspended
+  retries: 3
+  delay: 10
   become: false
   delegate_to: localhost
