@@ -1,38 +1,27 @@
 ---
-# Since by default RedHat boot partition is only 1GB and kernel updates can quickly fill it up
-# 1 is not allowed so if defaulting to 2 if the user has set it to 1
 - name:
     Keeping only latest {{ 2 if updates_redhat_family_nr_of_kernels_to_keep < 2
     else updates_redhat_family_nr_of_kernels_to_keep }} kernel versions for {{ inventory_hostname }}...
-  ansible.builtin.command:
-    dnf remove --oldinstallonly --setopt installonly_limit={{ 2 if updates_redhat_family_nr_of_kernels_to_keep < 2
-    else updates_redhat_family_nr_of_kernels_to_keep }} -y kernel
+  ansible.builtin.shell: |
+    set -eo pipefail
+    keep={{ 2 if updates_redhat_family_nr_of_kernels_to_keep < 2 else updates_redhat_family_nr_of_kernels_to_keep }}
+    kernels=$(rpm -q kernel | sort -V)
+    remove=$(echo "$kernels" | head -n -$keep)
+    for k in $remove; do
+      dnf -y remove "$k"
+    done
+    current=$(uname -r)
+    ls /boot/initramfs-* | grep -v "$current" | tail -n +3 | xargs -r rm -f
   register: dnf_remove_output
-  changed_when: dnf_remove_output.stdout is search("Remove.*Packages")
-  when: ansible_facts.distribution != "Fedora"
+  changed_when: dnf_remove_output.stdout is ansible.builtin.truthy
+  args:
+    executable: /bin/bash
 
 # This is needed to cleanup /boot otherwise it'll fill up and updates start failing
 - name: Removing old kernel rescue images...
   ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'cleanup-rescue.sh') }}"
   register: remove_rescue_images_output
   changed_when: remove_rescue_images_output.stdout_lines != []
-  args:
-    executable: /bin/bash
-
-- name: Keeping only latest {{ updates_redhat_family_nr_of_kernels_to_keep }} kernel versions for {{ inventory_hostname }}...
-  ansible.builtin.shell: |
-    set -eo pipefail
-    keep={{ updates_redhat_family_nr_of_kernels_to_keep }}
-    kernels=$(rpm -q kernel | sort -V)
-    remove=$(echo "$kernels" | head -n -$keep)
-    for k in $remove; do
-      dnf -y remove "$k" || true
-    done
-    current=$(uname -r)
-    ls /boot/initramfs-* | grep -v "$current" | tail -n +3 | xargs -r rm -f
-  register: dnf_remove_output
-  changed_when: dnf_remove_output.stdout is ansible.builtin.truthy
-  when: ansible_facts.distribution == "Fedora"
   args:
     executable: /bin/bash
 
