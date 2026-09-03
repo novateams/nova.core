@@ -65,6 +65,24 @@
     # to retry the network configuration up to 3 times before failing the task completely.
     - name: Including network configuration tasks...
       block:
+        - name: Removing potentially conflicting network configuration files...
+          ansible.builtin.uri:
+            url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
+            headers:
+              Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
+            method: POST
+            body:
+              command:
+                - sh
+                - -c
+                - "rm -rf /etc/netplan/* && rm -rf /etc/systemd/network/* && rm -rf /etc/network/interfaces"
+            body_format: json
+            validate_certs: "{{ proxmox_defaults.validate_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
         - name: Writing following Debian configuration to {{ custom_vm_name | default(vm_name) }}...
           when: configure_networking_os is search('Debian')
           ansible.builtin.uri:

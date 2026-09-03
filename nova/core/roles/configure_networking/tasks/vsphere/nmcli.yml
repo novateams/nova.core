@@ -98,7 +98,7 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments: -c "rm -rf /etc/netplan/*"
+                arguments: -c "rm -rf /etc/netplan/* && rm -rf /etc/systemd/network/* && rm -rf /etc/network/interfaces"
                 path: /bin/bash
             status_code: 201
             body_format: json

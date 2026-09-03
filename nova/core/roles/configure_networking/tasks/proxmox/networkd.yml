@@ -3,7 +3,7 @@
   become: false
   delegate_to: localhost
   block:
-    - name: Removing any existing network configurations...
+    - name: Removing potentially conflicting network configuration files...
       ansible.builtin.uri:
         url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
         headers:
@@ -13,7 +13,7 @@
           command:
             - sh
             - -c
-            - "rm -rf /etc/systemd/network/* && rm -rf /etc/netplan/*"
+            - "rm -rf /etc/netplan/* && rm -rf /etc/systemd/network/* && rm -rf /etc/network/interfaces"
         body_format: json
         validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command
@@ -169,7 +169,7 @@
               command:
                 - sh
                 - -c
-                - "apt purge dhcpcd-base -y && update-initramfs -u"
+                - "update-initramfs -u"
             body_format: json
             validate_certs: "{{ proxmox_defaults.validate_certs }}"
           register: network_config_command
