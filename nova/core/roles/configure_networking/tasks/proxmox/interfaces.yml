@@ -23,33 +23,20 @@
           Unknown
           {% endif %}
 
-    - name: Templating interfaces...
+    - name: Templating network configuration files...
       ansible.builtin.template:
-        src: interfaces.j2
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         lstrip_blocks: true
         mode: "0644"
-
-    - name: Templating resolv.conf...
-      ansible.builtin.template:
-        src: resolv.conf
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
-        lstrip_blocks: true
-        mode: "0644"
-
-    - name: Templating udev persistent net rules...
-      ansible.builtin.template:
-        src: 70-persistent-net.rules
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
-        mode: "0644"
-        lstrip_blocks: true
-
-    - name: Templating mactab persistent net rules...
-      ansible.builtin.template:
-        src: mactab
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
-        mode: "0644"
-        lstrip_blocks: true
+      register: network_config_files
+      loop_control:
+        label: "{{ item.src }}"
+      loop:
+        - src: interfaces.j2
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
+        - src: resolv.conf
+          dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
 
     - name: Getting network configuration file contents...
       ansible.builtin.slurp:
@@ -58,8 +45,36 @@
       loop:
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
-        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
-        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+
+    - name: Templating Debian files...
+      when: configure_networking_os is search('Debian')
+      block:
+        - name: Templating udev persistent net rules...
+          ansible.builtin.template:
+            src: 70-persistent-net.rules
+            dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+            mode: "0644"
+            lstrip_blocks: true
+
+        - name: Getting udev configuration file contents...
+          ansible.builtin.slurp:
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+          register: udev_file
+
+    - name: Templating Alpine files...
+      when: configure_networking_os is search('Alpine')
+      block:
+        - name: Templating mactab persistent net rules...
+          ansible.builtin.template:
+            src: mactab
+            dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+            mode: "0644"
+            lstrip_blocks: true
+
+        - name: Getting mactab configuration file contents...
+          ansible.builtin.slurp:
+            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
+          register: mactab_file
 
     # Since the Proxmox API can be quite unstable especially under load, we implement a rescue loop here
     # to retry the network configuration up to 3 times before failing the task completely.
@@ -104,7 +119,7 @@
             - content: "{{ network_files.results[1].content | b64decode }}"
               file: /tmp/resolv.conf
 
-            - content: "{{ network_files.results[2].content | b64decode }}"
+            - content: "{{ udev_file.content | b64decode }}"
               file: /etc/udev/rules.d/70-persistent-net.rules
 
             - content: update-initramfs -u && cp /tmp/resolv.conf /etc/resolv.conf && reboot
@@ -131,7 +146,7 @@
             - content: "{{ network_files.results[1].content | b64decode }}"
               file: /tmp/resolv.conf
 
-            - content: "{{ network_files.results[3].content | b64decode }}"
+            - content: "{{ mactab_file.content | b64decode }}"
               file: /etc/mactab
 
             - content: mkinitfs && cp /tmp/resolv.conf /etc/resolv.conf && reboot

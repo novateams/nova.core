@@ -59,10 +59,15 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
       register: resolv_file_size
 
-    - name: Getting file info...
+    - name: Getting interfaces file info...
       ansible.builtin.stat:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
-      register: file_size
+      register: interfaces_file_size
+
+    - name: Getting udev rules file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+      register: udev_rules_file_size
 
     # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
     # to retry the network configuration up to 3 times before failing the task completely.
@@ -87,7 +92,7 @@
         - name: Including command run check task...
           ansible.builtin.include_tasks: command_run_check.yml
 
-        - name: Preparing file upload...
+        - name: Preparing udev rules file upload...
           ansible.builtin.uri:
             url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
             method: POST
@@ -98,14 +103,43 @@
               spec:
                 attributes:
                   overwrite: true
-                  size: "{{ file_size.stat.size }}"
+                  size: "{{ udev_rules_file_size.stat.size }}"
+                path: /etc/udev/rules.d/70-persistent-net.rules
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: file_upload_prep
+
+        - name: Uploading udev rules file...
+          ansible.builtin.uri:
+            url: "{{ file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+
+        - name: Preparing interfaces file upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ interfaces_file_size.stat.size }}"
                 path: /etc/network/interfaces
             status_code: 201
             body_format: json
             validate_certs: "{{ validate_vmware_certs }}"
           register: file_upload_prep
 
-        - name: Uploading file...
+        - name: Uploading interfaces file...
           ansible.builtin.uri:
             url: "{{ file_upload_prep.json }}"
             method: PUT
@@ -148,6 +182,28 @@
             status_code: 200
             body_format: json
             validate_certs: "{{ validate_vmware_certs }}"
+
+        - name: Getting DNS from DHCP...
+          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+          block:
+            - name: Triggering DHCP request...
+              ansible.builtin.uri:
+                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    arguments: -c 'if [ -x "$(command -v dhclient)" ]; then dhclient; elif [ -x "$(command -v dhcpcd)" ]; then dhcpcd; else :; fi'
+                    path: /bin/bash
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: network_config_command
+
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
 
       rescue:
         - name: NETWORK CONFIGURATION ERROR
