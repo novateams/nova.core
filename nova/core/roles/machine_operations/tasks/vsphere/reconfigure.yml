@@ -77,7 +77,6 @@
           community.vmware.vmware_guest_info:
             datacenter: "{{ datacenter }}"
             name: "{{ custom_vm_name | default(vm_name) }}"
-            folder: "{{ folder }}"
             schema: vsphere
             properties:
               - config.hardware.device
@@ -89,7 +88,6 @@
           community.vmware.vmware_guest_snapshot_info:
             datacenter: "{{ datacenter }}"
             name: "{{ custom_vm_name | default(vm_name) }}"
-            folder: "{{ folder }}"
           register: snapshot_info
 
         - name: Checking if disk is expandable...
@@ -113,7 +111,6 @@
             - name: Getting {{ custom_vm_name | default(vm_name) }} VM disk info...
               community.vmware.vmware_guest_disk_info:
                 name: "{{ custom_vm_name | default(vm_name) }}"
-                folder: "{{ folder }}"
                 datacenter: "{{ datacenter }}"
               register: vm_disk_info
 
