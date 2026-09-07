@@ -28,6 +28,19 @@ ansible_become_password: "{{ ansible_password | default('no_password_set') }}"
 # Defaults when using Providentia or interfaces list that is based on Providentia API output
 # To make sure these values can be used as hostvar lookups they also need to be defined in projects group_vars all.yml file
 
+# Can be used to supplement existing interfaces list with additional information that is not provided by Providentia API, like firewall, mtu, etc.
+# That information can then be used in subsequent roles to configure the system with required settings
+# The interfaces_extras list is merged by the nic_name key
+# Example:
+# interfaces_extras:
+#   - nic_name: interface1
+#     firewall: true
+#     mtu: 9000
+#     tags:
+#       - name: tag_name
+#         value: tag_value
+interfaces_extras: []
+
 connection_address_info: "{{ interfaces | nova.core.addresses('connection_address_info') }}"
 connection_address: "{{ interfaces | nova.core.addresses('connection_address') | first | ansible.utils.ipaddr('address') }}"
 connection_mode: "{{ interfaces | nova.core.addresses('connection_mode') | first }}"
