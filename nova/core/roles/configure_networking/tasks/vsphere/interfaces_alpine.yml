@@ -13,14 +13,6 @@
       delay: 1
       when: configure_networking_hw_guest_id is ansible.builtin.falsy
 
-    # For locking MAC addresses to interface names
-    - name: Templating mactab...
-      ansible.builtin.template:
-        src: mactab
-        dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
-        mode: "0644"
-        lstrip_blocks: true
-
     - name: Slurping network configuration files...
       ansible.builtin.slurp:
         src: "{{ item }}"
@@ -28,7 +20,6 @@
       loop:
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
         - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
-        - /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
 
     # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
     # to retry the network configuration up to 3 times before failing the task completely.
@@ -102,18 +93,6 @@
             keys_send:
               - ENTER
 
-        # Network interface persistence
-        - name: Sending network interface persistence config to {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            string_send: "echo {{ slurped_network_files.results[2].content }} > /tmp/mactab_base64 && base64 -d /tmp/mactab_base64 > /etc/mactab"
-            name: "{{ custom_vm_name | default(vm_name) }}"
-
-        - name: Committing network interface persistence update for {{ custom_vm_name | default(vm_name) }}...
-          community.vmware.vmware_guest_sendkey:
-            name: "{{ custom_vm_name | default(vm_name) }}"
-            keys_send:
-              - ENTER
-
         # Restarting networking
         - name: Sending networking restart command to {{ custom_vm_name | default(vm_name) }}...
           community.vmware.vmware_guest_sendkey:
@@ -126,6 +105,7 @@
             keys_send:
               - ENTER
 
+        # Last 2 tasks are to test network configuration and decide whether to continue or rescue the task
         - name: Detecting DHCP address for {{ custom_vm_name | default(vm_name) }}...
           community.vmware.vmware_guest_info:
             datacenter: "{{ datacenter }}"

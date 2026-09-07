@@ -39,16 +39,17 @@
         dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
         mode: "0644"
         lstrip_blocks: true
+      when: configure_networking_os is not search('Alpine')
 
 # This is done since VMTools on alpine does not allow file uploads or code execution
 - name: Including Alpine specific networking tasks...
-  when: configure_networking_os is search('Alpine')
   ansible.builtin.include_tasks: interfaces_alpine.yml
+  when: configure_networking_os is search('Alpine')
 
 - name: Configuring interfaces over VMTools...
   become: false
   delegate_to: localhost
-  when: not configure_networking_os is search('Alpine')
+  when: configure_networking_os is not search('Alpine')
   block:
     ###################
     # interfaces file #
@@ -225,3 +226,4 @@
     name: nova.core.powerstate
   vars:
     restart: true
+  when: configure_networking_os is not search('Alpine') # Alpine already reboots before this task is reached, so we don't need to restart it again

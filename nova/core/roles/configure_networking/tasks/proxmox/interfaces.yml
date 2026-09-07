@@ -61,21 +61,6 @@
             path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
           register: udev_file
 
-    - name: Templating Alpine files...
-      when: configure_networking_os is search('Alpine')
-      block:
-        - name: Templating mactab persistent net rules...
-          ansible.builtin.template:
-            src: mactab
-            dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
-            mode: "0644"
-            lstrip_blocks: true
-
-        - name: Getting mactab configuration file contents...
-          ansible.builtin.slurp:
-            path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_mactab
-          register: mactab_file
-
     # Since the Proxmox API can be quite unstable especially under load, we implement a rescue loop here
     # to retry the network configuration up to 3 times before failing the task completely.
     - name: Including network configuration tasks...
@@ -145,9 +130,6 @@
 
             - content: "{{ network_files.results[1].content | b64decode }}"
               file: /tmp/resolv.conf
-
-            - content: "{{ mactab_file.content | b64decode }}"
-              file: /etc/mactab
 
             - content: mkinitfs && cp /tmp/resolv.conf /etc/resolv.conf && reboot
               file: /tmp/rebuild_initramfs.sh
