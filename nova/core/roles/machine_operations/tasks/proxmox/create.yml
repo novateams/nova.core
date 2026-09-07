@@ -187,7 +187,7 @@
         interface: "net{{ idx }}"
         bridge: "{{ nic.cloud_id }}"
         mtu: "{{ nic.mtu | default(1) }}"
-        firewall: "{{ machine_operations_proxmox_enable_firewall }}"
+        firewall: "{{ nic.firewall | default(machine_operations_proxmox_enable_firewall) }}"
       loop_control:
         loop_var: nic
         index_var: idx

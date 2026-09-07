@@ -13,6 +13,16 @@
   loop: "{{ deploy_vars_pre_roles }}"
   when: deploy_vars_pre_roles != []
 
+- name: Generating updated interfaces list...
+  ansible.builtin.set_fact:
+    interfaces: "{{ ((idx == 0) | ternary([], interfaces)) + [item | combine(extras, recursive=true)] }}"
+  loop: "{{ interfaces }}"
+  vars:
+    extras: "{{ interfaces_extras | selectattr('nic_name', 'equalto', item.nic_name) | first | default({}) }}"
+  loop_control:
+    index_var: idx
+    label: "{{ item.nic_name }}"
+
 - name: Delegating required tasks to localhost...
   become: false
   delegate_to: localhost
