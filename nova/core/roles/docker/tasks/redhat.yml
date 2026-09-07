@@ -15,9 +15,21 @@
       - docker-ce-cli{{ '-' + docker_engine_version | string + '*' if docker_engine_version != {} else '' }}
       - docker-ce{{ '-' + docker_engine_version | string + '*' if docker_engine_version != {} else '' }}
       - docker-compose-plugin
+      - python3-dnf-plugin-versionlock
       - python3-pip
       - python3-requests
       - python3-setuptools
     state: present
     allow_downgrade: true
     update_cache: true
+
+# This is to avoid updating Docker with dnf upgrade if a specific version is set
+- name: "{{ 'Locking' if docker_engine_version != {} else 'Unlocking' }} Docker engine version..."
+  community.general.dnf_versionlock:
+    name: "{{ docker_package }}"
+    state: "{{ 'present' if docker_engine_version != {} else 'absent' }}"
+  loop_control:
+    loop_var: docker_package
+  loop:
+    - docker-ce-cli
+    - docker-ce

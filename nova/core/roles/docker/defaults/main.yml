@@ -40,7 +40,7 @@ docker_networks:
 # Docker DNF repo for Fedora
 docker_fedora_dnf_proxy: https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}
 
-# Docker DNF repo for AlmaLinux and RHEL
+# Docker DNF repo for non-Fedora RedHat based distributions
 docker_rhel_dnf_proxy: https://download.docker.com/linux/rhel
 
 #############
@@ -63,6 +63,6 @@ docker_non_default_debian_os_list:
 # Windows #
 ###########
 
-docker_wsl_version: 2.9.3
+docker_wsl_version: 2.7.13
 docker_wsl_download_link: https://github.com/microsoft/WSL/releases/download/{{ docker_wsl_version }}/wsl.{{ docker_wsl_version }}.0.x64.msi
 docker_desktop_autostart: true
