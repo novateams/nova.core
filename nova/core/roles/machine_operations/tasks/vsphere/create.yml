@@ -61,7 +61,6 @@
             datastore: "{{ datastore }}"
             library_item_name: "{{ vm_template }}"
             library_name: "{{ machine_operations_vsphere_content_library_name }}"
-            vm_folder: "{{ folder }}"
             vm_name: "{{ custom_vm_name | default(vm_name) }}"
 
     - name: Looking up template from exiting VMs...
@@ -177,7 +176,6 @@
     - name: Increasing video memory
       community.vmware.vmware_guest_video:
         name: "{{ custom_vm_name | default(vm_name) }}"
-        folder: "{{ folder }}"
         datacenter: "{{ datacenter }}"
         video_memory_mb: "{{ machine_operations_vsphere_video_memory }}"
         enable_3D: "{{ machine_operations_vsphere_video_3d }}"
