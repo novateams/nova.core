@@ -1,8 +1,12 @@
 ---
-- name: Restarting {{ custom_vm_name | default(vm_name) }}...
-  vmware.vmware.vm_powerstate:
-    name: "{{ custom_vm_name | default(vm_name) }}"
-    datacenter: "{{ datacenter }}"
-    state: "{{ 'reboot-guest' if powerstate_vcenter_vm_info.guests[0].hw_power_status == 'poweredOn' else 'powered-on' }}"
+- name: Rebooting VM...
   become: false
   delegate_to: localhost
+  block:
+    - name: Restarting {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware.vm_powerstate:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        datacenter: "{{ datacenter }}"
+        state: "{{ 'reboot-guest' if powerstate_vcenter_vm_info.guests[0].hw_power_status == 'poweredOn' else 'powered-on' }}"
+      retries: 3
+      delay: 10

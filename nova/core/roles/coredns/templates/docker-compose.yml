@@ -8,6 +8,9 @@ services:
       - "{{ coredns_config_folder }}/Corefile:/Corefile"
       - coredns_zones:/zones
       - coredns_extra_config:/etc/coredns/conf.d
+
+      # Needs to be the same outside and inside the container so named-checkzone can find the zonefiles
+      - coredns_zones_include:{{ coredns_config_folder }}/zones_include
     ports:
       - "53:53"
       - "53:53/udp"
@@ -24,6 +27,13 @@ volumes:
       type: none
       o: bind
       device: "{{ coredns_config_folder }}/zones"
+
+  coredns_zones_include:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ coredns_config_folder }}/zones_include"
 
   coredns_extra_config:
     driver: local

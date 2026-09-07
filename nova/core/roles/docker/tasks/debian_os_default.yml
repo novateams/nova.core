@@ -17,6 +17,7 @@
         suites: ["{{ ansible_facts.distribution_release | lower }}"]
         components: [stable]
         signed_by: "{{ docker_apt_proxy | lower }}/gpg"
+        install_python_debian: true
 
 - name: Removing legacy Docker repository...
   ansible.builtin.file:

@@ -24,9 +24,11 @@
   ansible.builtin.include_tasks: fedora.yml
   when: ansible_facts.distribution | default('') == "Fedora"
 
-- name: Including Docker installation tasks on AlmaLinux or RHEL...
+- name: Including Docker installation tasks on RedHat based Linux...
   ansible.builtin.include_tasks: redhat.yml
-  when: ansible_facts.distribution | default('') in ["AlmaLinux", "RedHat"]
+  when:
+    - ansible_facts.distribution_file_variety | default('') in ["RedHat"]
+    - ansible_facts.distribution | default('') != "Fedora"
 
 - name: Including Docker installation tasks on Alpine...
   ansible.builtin.include_tasks: alpine.yml

@@ -35,6 +35,10 @@
   ansible.builtin.include_tasks: google.yml
   when: infra_env == "google"
 
+- name: Configuring connection in Orchard environment...
+  ansible.builtin.include_tasks: orchard.yml
+  when: infra_env == "orchard"
+
 - name: Configuring connection for external or pre-existing machine...
   ansible.builtin.include_tasks: external.yml
   when: infra_env == "external"

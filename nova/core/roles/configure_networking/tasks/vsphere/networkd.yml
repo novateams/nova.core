@@ -55,7 +55,7 @@
     # to retry the network configuration up to 3 times before failing the task completely.
     - name: Including network configuration tasks...
       block:
-        - name: Removing existing systemd-networkd configuration...
+        - name: Removing potentially conflicting network configuration files...
           ansible.builtin.uri:
             url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
             method: POST
@@ -64,7 +64,7 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments: -c "rm -rf /etc/systemd/network/*"
+                arguments: -c "rm -rf /etc/netplan/* && rm -rf /etc/systemd/network/* && rm -rf /etc/network/interfaces"
                 path: /bin/bash
             status_code: 201
             body_format: json
@@ -228,8 +228,7 @@
                 body:
                   credentials: "{{ rest_api_credentials }}"
                   spec:
-                    # Removal of the dhcpcd-base package to avoid it overwriting the /etc/resolv.conf
-                    arguments: -c "apt purge dhcpcd-base -y && update-initramfs -u"
+                    arguments: -c "update-initramfs -u"
                     path: /bin/bash
                 status_code: 201
                 body_format: json
@@ -242,7 +241,7 @@
             - name: Getting DNS from DHCP...
               when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
               block:
-                - name: Getting DNS from DHCP...
+                - name: Triggering DHCP request...
                   ansible.builtin.uri:
                     url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
                     method: POST
@@ -251,7 +250,7 @@
                     body:
                       credentials: "{{ rest_api_credentials }}"
                       spec:
-                        arguments: -c 'if [ -x "$(command -v dhclient)" ]; then dhclient; else :; fi'
+                        arguments: -c 'if [ -x "$(command -v dhclient)" ]; then dhclient; elif [ -x "$(command -v dhcpcd)" ]; then dhcpcd; else :; fi'
                         path: /bin/bash
                     status_code: 201
                     body_format: json

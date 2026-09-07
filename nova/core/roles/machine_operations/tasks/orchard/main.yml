@@ -1,0 +1,78 @@
+---
+- name: MISSING SECRETS
+  ansible.builtin.fail:
+    msg: |
+      You are missing following secrets:
+
+      {% for variable in required_variables %}
+      {% if vars[variable] is defined %}
+      {% set evaluated = lookup('vars', variable) %}
+      {% if evaluated is ansible.builtin.falsy %}
+        - {{ variable }}
+      {% endif %}
+      {% else %}
+        - {{ variable }}
+      {% endif %}
+      {% endfor %}
+
+      You can add them to your Ansible Vault file or define external lookups in your group_vars/host_vars files.
+  vars:
+    required_variables:
+      - orchard_controller_address
+      - orchard_deployer_username
+      - orchard_deployer_token
+  when: orchard_controller_address is ansible.builtin.falsy
+    or orchard_deployer_username is ansible.builtin.falsy
+    or orchard_deployer_token is ansible.builtin.falsy
+
+- name: Logging into Orchard...
+  ansible.builtin.shell: |
+    set -o pipefail
+    if orchard context list | grep -q {{ orchard_deployer_username }}; then
+      echo "Already logged in to {{ orchard_controller_address }} Orchard controller as {{ orchard_deployer_username }}"
+    else
+      orchard context create --name {{ orchard_deployer_username }} --service-account-name {{ orchard_deployer_username }} \
+      --service-account-token {{ orchard_deployer_token }} {{ orchard_controller_address }}
+    fi
+  become: false
+  delegate_to: localhost
+  register: orchard_login
+  retries: 3
+  changed_when: orchard_login.stdout.find("Already logged in") == -1
+
+- name: Checking if {{ custom_vm_name | default(vm_name) }} exists...
+  ansible.builtin.command: orchard list vms
+  changed_when: false
+  become: false
+  delegate_to: localhost
+  register: orchard_vm_info
+
+- name: Setting {{ custom_vm_name | default(vm_name) }} exists facts...
+  ansible.builtin.set_fact:
+    orchard_vm_exists: true
+  when: orchard_vm_info.stdout.find(custom_vm_name | default(vm_name)) != -1
+
+- name: Setting fresh_deploy fact...
+  ansible.builtin.set_fact:
+    fresh_deploy: true
+  when: deploy_mode == "redeploy" or orchard_vm_info.stdout.find(custom_vm_name | default(vm_name)) == -1
+
+- name: Checking for the correct deploy mode...
+  ansible.builtin.fail:
+    msg: Virtual Machine {{ custom_vm_name | default(vm_name) }} doesn't exist, use the deploy command first!
+  when:
+    - fresh_deploy is ansible.builtin.truthy
+    - role_only is ansible.builtin.truthy
+      or role_only_wp is ansible.builtin.truthy
+      or single_role is defined
+
+- name: Including {{ custom_vm_name | default(vm_name) }} removal tasks...
+  ansible.builtin.include_tasks: remove.yml
+  when: deploy_mode in ['undeploy', 'redeploy']
+
+- name: Including {{ custom_vm_name | default(vm_name) }} creation tasks...
+  ansible.builtin.include_tasks: create.yml
+  when:
+    - not role_only
+    - not role_only_wp
+    - single_role is not defined

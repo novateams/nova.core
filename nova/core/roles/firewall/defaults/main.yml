@@ -8,7 +8,14 @@ nftables_template_file: etc/nftables.conf
 # Changes this variable to custom file path to use custom sysctl values.
 firewall_config_file: fw.conf
 
-firewall_allow_routing: "{{ allow_routing | default(true) }}" # Allow routing between interfaces
+# Allow routing between interfaces
+firewall_allow_routing: true
+
+# Allow IPv4 routing between interfaces, set to false to disable IPv4 routing between interfaces
+firewall_allow_ipv4_routing: true
+
+# Allow IPv6 routing between interfaces, set to false to disable IPv6 routing between interfaces
+firewall_allow_ipv6_routing: true
 
 # Can iptables or nftables or none
 # If set to none only the sysctl values will be applied, but no firewall rules will be configured

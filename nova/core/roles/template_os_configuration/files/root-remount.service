@@ -1,0 +1,15 @@
+[Unit]
+Description=Force / read-write if the boot-time remount did not happen
+DefaultDependencies=no
+After=systemd-remount-fs.service
+Before=local-fs.target sysinit.target shutdown.target
+Conflicts=shutdown.target
+ConditionPathIsReadWrite=!/
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/root-remount.sh
+
+[Install]
+WantedBy=local-fs.target

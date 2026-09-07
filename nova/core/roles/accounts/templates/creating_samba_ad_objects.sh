@@ -35,7 +35,7 @@ done
 {% if domain_groups != [] %}
 GROUPS_DETAILS=(
     {% for group in domain_groups %}
-    "{{ group.name }}|{{ accounts_samba_group_scope_map[group.scope] | default('Global') }}|{{ group.description | default('Missing description') }}|{{ group.ou }}|{{ group.ou | regex_replace(',' ~ domain_dn, '') }}"
+    "{{ group.name }}|{{ accounts_samba_group_scope_map[group.scope] | default('Global') }}|{{ group.description | default('Missing description') }}|{{ group.ou | default('CN=Users,' ~ domain_dn) | regex_replace(',' ~ domain_dn, '') }}|{{ group.ou | default('CN=Users,' ~ domain_dn) | regex_replace(',' ~ domain_dn, '') | regex_replace(',' ~ domain_dn, '') }}"
     {% endfor %}
 )
 

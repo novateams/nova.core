@@ -1,0 +1,16 @@
+---
+- name: Creating {{ custom_vm_name | default(vm_name) }}...
+  ansible.builtin.command:
+    orchard create vm {{ custom_vm_name | default(vm_name) }}
+    --image {{ orchard_vm_image }}
+    --restart-policy OnFailure {{
+    '--nested' if 'os_linux' in group_names else '' }} {{
+    '--net-softnet' if machine_operations_orchard_bridge_network_name is ansible.builtin.falsy
+    else '--net-bridged ' ~ machine_operations_orchard_bridge_network_name }} {{
+    '--os linux' if 'os_linux' in group_names else '--os darwin' }} {{
+    '--labels ' ~ machine_operations_orchard_labels.items() | map('join', '=') | join(',')
+    if machine_operations_orchard_labels is not ansible.builtin.falsy else '' }}
+  changed_when: true
+  become: false
+  delegate_to: localhost
+  when: not orchard_vm_exists | default(false) or fresh_deploy

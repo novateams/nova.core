@@ -7,19 +7,27 @@ auto {{ interface_names[interface_loop] }}
 {% for ip in interface.addresses %}
 {% if ip.mode == 'ipv4_dhcp' %}
 iface {{ interface_names[interface_loop] }} inet dhcp
+    {% if configure_networking_os is search('Alpine') %}
     pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+    {% endif %}
 {% endif %}
 {% if ip.mode == 'ipv6_dhcp' %}
 iface {{ interface_names[interface_loop] }} inet6 dhcp
+    {% if configure_networking_os is search('Alpine') %}
     pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+    {% endif %}
 {% endif %}
 {% if ip.mode == 'ipv6_slaac' %}
 iface {{ interface_names[interface_loop] }} inet6 auto
+    {% if configure_networking_os is search('Alpine') %}
     pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+    {% endif %}
 {% endif %}
 {% if ip.mode == 'ipv4_static' %}
 iface {{ interface_names[interface_loop] }} inet static
+    {% if configure_networking_os is search('Alpine') %}
     pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+    {% endif %}
     address {{ ip.address | ansible.utils.ipaddr('address') }}
     netmask {{ ip.address | ansible.utils.ipaddr('netmask') }}
     {% if ip.gateway is ansible.builtin.truthy %}
@@ -28,7 +36,9 @@ iface {{ interface_names[interface_loop] }} inet static
 {% endif %}
 {% if ip.mode == 'ipv6_static' %}
 iface {{ interface_names[interface_loop] }} inet6 static
+    {% if configure_networking_os is search('Alpine') %}
     pre-up nameif -s {{ interface_names[interface_loop] }} {{ configure_networking_mac_addresses[interface_loop] }}
+    {% endif %}
     address {{ ip.address | ansible.utils.ipaddr('address') }}
     netmask {{ ip.address | ansible.utils.ipaddr('prefix') }}
     {% if ip.gateway is ansible.builtin.truthy %}

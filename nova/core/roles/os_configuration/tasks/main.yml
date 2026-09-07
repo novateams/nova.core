@@ -82,7 +82,7 @@
     - name: Flushing handlers...
       ansible.builtin.meta: flush_handlers
 
-    # This needs to be last because the play stops after that
+    # This needs to be last because the play stops after that if just_clone or deploy_with_mid_snapshot is true
     - name: Creating snapshot, getting IP and stopping play...
       when: just_clone | bool or deploy_with_mid_snapshot | bool
       block:

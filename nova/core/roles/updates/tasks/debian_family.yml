@@ -26,12 +26,20 @@
   ansible.builtin.apt:
     update_cache: true
     state: present
-    autoclean: true
-    autoremove: true
     upgrade: "{{ updates_debian_family_upgrade_method }}"
     allow_downgrade: true
   register: apt_updates
   until: not apt_updates.failed
+  retries: 3
+  delay: 3
+
+# Separate task for cleaning up packages to avoid issues
+- name: Cleaning up packages...
+  ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+  register: apt_cleanup
+  until: not apt_cleanup.failed
   retries: 3
   delay: 3
 

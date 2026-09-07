@@ -1,10 +1,20 @@
 ---
-- name: Shutting down {{ custom_vm_name | default(vm_name) }}...
-  community.proxmox.proxmox_kvm:
-    name: "{{ custom_vm_name | default(vm_name) }}"
-    state: stopped
-    timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
-  delay: 5
-  delegate_to: localhost
+- name: Shutting down VM
   become: false
+  delegate_to: localhost
+  block:
+    - name: Shutting down {{ custom_vm_name | default(vm_name) }}...
+      community.proxmox.proxmox_kvm:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        state: stopped
+        timeout: "{{ proxmox_machine_operations_operation_timeout }}"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
+      delay: 5
+
+    - name: Waiting until {{ custom_vm_name | default(vm_name) }} is stopped...
+      community.proxmox.proxmox_vm_info:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: proxmox_shutdown_state
+      until: proxmox_shutdown_state.proxmox_vms[0].status == "stopped"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
+      delay: 5

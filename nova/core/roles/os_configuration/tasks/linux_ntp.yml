@@ -1,0 +1,100 @@
+---
+# Always checking if config file and service exists before making changes to avoid errors on systems that don't have them installed
+
+- name: Checking if systemd exists...
+  ansible.builtin.stat:
+    path: /run/systemd/system
+  register: systemd_exists
+
+- name: Configuring NTP on systems with systemd...
+  when: systemd_exists.stat.exists
+  block:
+    - name: Checking if systemd-timesyncd service exists...
+      ansible.builtin.systemd_service:
+        name: systemd-timesyncd
+      register: systemd_timesyncd_service_exists
+
+    - name: Check if /etc/systemd/timesyncd.conf file exists...
+      ansible.builtin.stat:
+        path: /etc/systemd/timesyncd.conf
+      register: timesyncd_conf_exists
+
+    - name: Setting following NTP servers in timesyncd.conf...
+      ansible.builtin.lineinfile:
+        dest: /etc/systemd/timesyncd.conf
+        line: "{{ item.line }}"
+        regexp: "{{ item.regexp }}"
+        state: present
+        create: true
+        mode: "0644"
+      loop_control:
+        label: "{{ item.line }}"
+      loop:
+        - line: NTP={{ ntp_servers | join(' ') }}
+          regexp: "^[#]?NTP="
+      when:
+        - systemd_timesyncd_service_exists.status.LoadState in ["enabled", "loaded"]
+        - timesyncd_conf_exists.stat.exists
+      notify: restart_systemd_timesyncd
+
+    - name: Check if /etc/chrony.conf file exists...
+      ansible.builtin.stat:
+        path: /etc/chrony.conf
+      register: chrony_conf_exists
+
+    - name: Check if /etc/chrony/sources.d folder exists...
+      ansible.builtin.stat:
+        path: /etc/chrony/sources.d
+      register: chrony_conf_dir_exists
+
+    - name: Checking if chronyd service exists...
+      ansible.builtin.systemd_service:
+        name: chronyd
+      register: chronyd_service_exists
+
+    - name: Configuring NTP in chrony.conf...
+      when:
+        - chrony_conf_exists.stat.exists
+        - chronyd_service_exists.status.LoadState in ["enabled", "loaded"]
+      block:
+        - name: Remove existing NTP servers from chrony.conf...
+          ansible.builtin.lineinfile:
+            dest: /etc/chrony.conf
+            state: absent
+            regexp: .*iburst
+
+        - name: Setting following NTP servers in chrony.conf...
+          ansible.builtin.lineinfile:
+            dest: /etc/chrony.conf
+            line: pool {{ item }} iburst
+            insertafter: "^# Please consider"
+            firstmatch: true
+            state: present
+          loop_control:
+            label: "{{ item }}"
+          loop: "{{ ntp_servers }}"
+          notify: restart_chronyd
+
+    - name: Configuring NTP in chrony/sources.d/ntp.conf...
+      when:
+        - chronyd_service_exists.status.LoadState in ["enabled", "loaded"]
+        - chrony_conf_dir_exists.stat.exists
+        - not chrony_conf_exists.stat.exists
+      block:
+        - name: Creating /etc/chrony/sources.d/ntp.sources...
+          ansible.builtin.copy:
+            content: |
+              {% for ntp_server in ntp_servers %}
+              server {{ ntp_server }} iburst
+              {% endfor %}
+            dest: /etc/chrony/sources.d/ntp.sources
+            mode: "0644"
+          notify: restart_chronyd
+
+- name: Configuring NTP in /etc/conf.d/ntpd for Alpine...
+  ansible.builtin.copy:
+    content: |
+      NTPD_OPTS="-s {{ ntp_servers | join(' -s ') }}"
+    dest: /etc/conf.d/ntpd
+    mode: "0644"
+  when: ansible_facts.os_family == 'Alpine'

@@ -1,6 +1,4 @@
 ---
-infra_env: {}
-
 # If true then either defined_become_password needs to be defined or ansible_deployer_username needs to be able to use it's ansible_deployer_password for sudo
 sudo_requires_password: true
 connection_no_password: false # Set this to true if you are using SSH keys and do not want to use ansible_deployer_password for connection (example Ciso IOS)

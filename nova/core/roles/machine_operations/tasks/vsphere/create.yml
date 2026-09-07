@@ -156,8 +156,8 @@
           memory_mb: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
           memory_reservation_lock: "{{ machine_operations_vsphere_memory_reservation_lock }}"
           mem_reservation:
-            "{{ 0 if machine_operations_vsphere_memory_reservation_gb == {}
-            else omit if machine_operations_vsphere_memory_reservation_lock
+            "{{ omit if machine_operations_vsphere_memory_reservation_lock
+            else 0 if machine_operations_vsphere_memory_reservation_gb == {}
             else machine_operations_vsphere_memory_reservation_gb * 1024 }}"
         cdrom: "{{ machine_operations_vsphere_cdrom_config }}"
         disk: "{{ omit if os_disk_size is not defined else machine_operations_vsphere_disk_config }}"
@@ -207,7 +207,6 @@
     - name: Getting {{ custom_vm_name | default(vm_name) }} interfaces...
       community.vmware.vmware_guest_info:
         datacenter: "{{ datacenter }}"
-        folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
       register: existing_vm_info
 
@@ -219,7 +218,6 @@
     - name: Removing existing network interfaces from {{ custom_vm_name | default(vm_name) }}...
       community.vmware.vmware_guest_network:
         datacenter: "{{ datacenter }}"
-        folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: absent
         mac_address: "{{ item.value.macaddress }}"
@@ -234,7 +232,6 @@
     - name: Attaching following network interfaces to {{ custom_vm_name | default(vm_name) }}...
       community.vmware.vmware_guest_network:
         datacenter: "{{ datacenter }}"
-        folder: "{{ folder }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: present
         force: true
@@ -251,7 +248,6 @@
       community.vmware.vmware_guest_custom_attributes:
         name: "{{ custom_vm_name | default(vm_name) }}"
         datacenter: "{{ datacenter }}"
-        folder: "{{ folder }}"
         state: present
         attributes: "{{ machine_operations_vsphere_custom_attributes }}"
       when: machine_operations_vsphere_custom_attributes != []

@@ -38,3 +38,13 @@
 - name: Including Caddyfile API configuration tasks...
   ansible.builtin.include_tasks: caddy_api.yml
   when: caddy_enable_api
+
+# This lookup and set_fact can be useful in other roles when using Caddy as a reverse proxy a service running on the host or Docker host network
+- name: Getting {{ caddy_docker_network }} network info...
+  community.docker.docker_network_info:
+    name: "{{ caddy_docker_network }}"
+  register: caddy_network_info
+
+- name: Setting {{ caddy_docker_network }} network facts...
+  ansible.builtin.set_fact:
+    caddy_network_gateways: "{{ caddy_network_info.network.IPAM.Config | map(attribute='Gateway') }}"

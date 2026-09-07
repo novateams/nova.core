@@ -6,7 +6,8 @@ services:
     image: "{{ db_container_image }}"
     restart: unless-stopped
     volumes:
-      - "{{ db_container_folder }}/database-data:/var/lib/postgresql/data"
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_backup:/srv/backup
     environment:
       - POSTGRES_USER={{ postgres_user }}
       - POSTGRES_PASSWORD={{ postgres_password }}
@@ -29,11 +30,8 @@ services:
     hostname: "{{ redis_container_name }}"
     image: "{{ redis_container_image }}"
     restart: unless-stopped
-    volumes:
-      - "{{ redis_container_folder }}/redis.conf:/redis.conf"
     command:
-      - "redis-server"
-      - "/redis.conf"
+      - redis-server
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -52,7 +50,7 @@ services:
     restart: unless-stopped
     volumes:
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt
-      - "{{ outline_local_file_storage_folder }}:/var/lib/outline/data"
+      - outline_data:/var/lib/outline/data
     environment:
       - DATABASE_CONNECTION_POOL_MAX=25
       - DATABASE_CONNECTION_POOL_MIN=5
@@ -95,6 +93,28 @@ services:
       options:
         max-size: 250m
         max-file: "1"
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ db_container_folder }}/database-data"
+
+  postgres_backup:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ db_container_folder }}/backup"
+
+  outline_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ outline_local_file_storage_folder }}"
 
 networks:
   default:

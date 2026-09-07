@@ -21,26 +21,38 @@
     - path: "{{ keycloak_container_config_folder }}/postgres"
       owner: 999
 
-- name: Templating configuration to machine...
+- name: Templating Docker Compose to {{ inventory_hostname }}...
   ansible.builtin.template:
-    src: "{{ config.src }}"
-    dest: "{{ keycloak_container_config_folder }}/{{ config.dest }}"
+    src: keycloak.yml
+    dest: "{{ keycloak_container_config_folder }}/docker-compose.yml"
     lstrip_blocks: true
     mode: "0644"
-  register: template
-  loop_control:
-    loop_var: config
-  loop:
-    - src: keycloak.yml
-      dest: docker-compose.yml
-    - src: "{{ keycloak_config_template }}"
-      dest: config.yml
+  register: compose_template
+
+- name: Templating configuration to machine...
+  ansible.builtin.template:
+    src: "{{ keycloak_config_template }}"
+    dest: "{{ keycloak_container_config_folder }}/config.yml"
+    lstrip_blocks: true
+    mode: "0644"
+  register: config_template
 
 - name: Composing Keycloak on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ keycloak_container_config_folder }}"
     state: present
-    recreate: "{{ 'always' if template.changed else 'auto' }}"
+    recreate: "{{ 'always' if compose_template.changed else 'auto' }}"
+    build: never
+    wait: true
+
+# This is so as not to restart the whole container on every config change
+- name: Composing Keycloak-config on {{ inventory_hostname }}...
+  community.docker.docker_compose_v2:
+    project_src: "{{ keycloak_container_config_folder }}"
+    services:
+      - keycloak_config
+    state: present
+    recreate: "{{ 'always' if config_template.changed and not compose_template.changed else 'auto' }}"
     build: never
     wait: true
 
@@ -62,7 +74,7 @@
 - name: Finding and restarting proxy container...
   when:
     - keycloak_proxy_container_name != {}
-    - template.changed
+    - compose_template.changed
   block:
     - name: Looking for container - {{ keycloak_proxy_container_name }}...
       community.docker.docker_container_info:

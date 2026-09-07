@@ -2,7 +2,7 @@
 - name: Setting hostname to {{ hostname }}...
   ansible.builtin.raw: scutil --set {{ item }}
   changed_when: true
-  with_items:
+  loop:
     - HostName {{ hostname }}
     - LocalHostName {{ hostname }}
     - ComputerName {{ hostname }}

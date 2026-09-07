@@ -34,19 +34,16 @@
     or outline_utils_secret_key | default(false) is ansible.builtin.falsy
     or postgres_password | default(false) is ansible.builtin.falsy
 
-- name: Create directories
+- name: Creating following folders...
   ansible.builtin.file:
-    path: "{{ item.path }}"
+    path: "{{ item }}"
     recurse: true
     state: directory
-    owner: "{{ item.owner | default(omit) }}"
-  with_items:
-    - path: "{{ app_container_folder }}"
-    - path: "{{ redis_container_folder }}"
-    - path: "{{ db_container_folder }}"
-    - path: "{{ db_container_folder }}/database-data"
-    - path: "{{ outline_local_file_storage_folder }}"
-      owner: 1001 # nodejs user inside the container
+  loop:
+    - "{{ app_container_folder }}"
+    - "{{ db_container_folder }}/backup"
+    - "{{ db_container_folder }}/database-data"
+    - "{{ outline_local_file_storage_folder }}"
 
 - name: Templating Docker Compose file for Outline...
   ansible.builtin.template:
@@ -58,5 +55,4 @@
   community.docker.docker_compose_v2:
     project_src: "{{ app_container_folder }}"
     state: present
-    build: never
     wait: true

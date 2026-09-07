@@ -50,6 +50,8 @@
           "{{ omit if not fresh_deploy else lookup('ansible.builtin.template', 'Configure-CloudWindows.ps1') | from_yaml if 'os_windows' in group_names
           else lookup('ansible.builtin.template', 'google_cloud_linux_startup_script.yml') | from_yaml }}"
         zone: "{{ google_cloud_zone }}"
+        state: present
+        status: RUNNING
       register: google_instance
 
     - name: Installing SSH...

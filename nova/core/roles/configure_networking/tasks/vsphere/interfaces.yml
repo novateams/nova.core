@@ -39,16 +39,17 @@
         dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
         mode: "0644"
         lstrip_blocks: true
+      when: configure_networking_os is not search('Alpine')
 
 # This is done since VMTools on alpine does not allow file uploads or code execution
 - name: Including Alpine specific networking tasks...
-  when: configure_networking_os is search('Alpine')
   ansible.builtin.include_tasks: interfaces_alpine.yml
+  when: configure_networking_os is search('Alpine')
 
 - name: Configuring interfaces over VMTools...
   become: false
   delegate_to: localhost
-  when: not configure_networking_os is search('Alpine')
+  when: configure_networking_os is not search('Alpine')
   block:
     ###################
     # interfaces file #
@@ -59,16 +60,40 @@
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_resolv.conf
       register: resolv_file_size
 
-    - name: Getting file info...
+    - name: Getting interfaces file info...
       ansible.builtin.stat:
         path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_interfaces
-      register: file_size
+      register: interfaces_file_size
+
+    - name: Getting udev rules file info...
+      ansible.builtin.stat:
+        path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+      register: udev_rules_file_size
 
     # Since the vSphere API can be quite unstable especially under load, we implement a rescue loop here
     # to retry the network configuration up to 3 times before failing the task completely.
     - name: Including network configuration tasks...
       block:
-        - name: Preparing file upload...
+        - name: Removing potentially conflicting network configuration files...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "rm -rf /etc/netplan/* && rm -rf /etc/systemd/network/* && rm -rf /etc/network/interfaces"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
+        - name: Preparing udev rules file upload...
           ansible.builtin.uri:
             url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
             method: POST
@@ -79,14 +104,43 @@
               spec:
                 attributes:
                   overwrite: true
-                  size: "{{ file_size.stat.size }}"
+                  size: "{{ udev_rules_file_size.stat.size }}"
+                path: /etc/udev/rules.d/70-persistent-net.rules
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: file_upload_prep
+
+        - name: Uploading udev rules file...
+          ansible.builtin.uri:
+            url: "{{ file_upload_prep.json }}"
+            method: PUT
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+            status_code: 200
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+
+        - name: Preparing interfaces file upload...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/filesystem?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                attributes:
+                  overwrite: true
+                  size: "{{ interfaces_file_size.stat.size }}"
                 path: /etc/network/interfaces
             status_code: 201
             body_format: json
             validate_certs: "{{ validate_vmware_certs }}"
           register: file_upload_prep
 
-        - name: Uploading file...
+        - name: Uploading interfaces file...
           ansible.builtin.uri:
             url: "{{ file_upload_prep.json }}"
             method: PUT
@@ -130,6 +184,28 @@
             body_format: json
             validate_certs: "{{ validate_vmware_certs }}"
 
+        - name: Getting DNS from DHCP...
+          when: connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
+          block:
+            - name: Triggering DHCP request...
+              ansible.builtin.uri:
+                url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+                method: POST
+                headers:
+                  vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+                body:
+                  credentials: "{{ rest_api_credentials }}"
+                  spec:
+                    arguments: -c 'if [ -x "$(command -v dhclient)" ]; then dhclient; elif [ -x "$(command -v dhcpcd)" ]; then dhcpcd; else :; fi'
+                    path: /bin/bash
+                status_code: 201
+                body_format: json
+                validate_certs: "{{ validate_vmware_certs }}"
+              register: network_config_command
+
+            - name: Including command run check task...
+              ansible.builtin.include_tasks: command_run_check.yml
+
       rescue:
         - name: NETWORK CONFIGURATION ERROR
           ansible.builtin.fail:
@@ -145,8 +221,9 @@
         - name: Re-including vSphere network configuration tasks...
           ansible.builtin.include_tasks: main.yml
 
-    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
-      ansible.builtin.include_role:
-        name: nova.core.powerstate
-      vars:
-        restart: true
+- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    restart: true
+  when: configure_networking_os is not search('Alpine') # Alpine already reboots before this task is reached, so we don't need to restart it again

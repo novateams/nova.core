@@ -1,0 +1,9 @@
+---
+- name:
+    Connecting as {{ orchard_template_username if fresh_deploy else ansible_deployer_username }}
+    to {{ inventory_hostname }} using Orchard controller as SSH jump host
+  ansible.builtin.set_fact:
+    ansible_host: "{{ custom_vm_name | default(vm_name) }}"
+    ansible_user: "{{ orchard_template_username if fresh_deploy else ansible_deployer_username }}"
+    ansible_password: "{{ orchard_template_password if fresh_deploy else omit if connection_no_password else ansible_deployer_password }}"
+    ansible_ssh_common_args: "{{ orchard_ssh_proxy_args }} {{ '-o PreferredAuthentications=password' if fresh_deploy else '' }}"

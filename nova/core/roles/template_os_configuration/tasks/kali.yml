@@ -1,0 +1,23 @@
+---
+# Kali has an issue with the root filesystem being mounted as read-only on boot.
+# This is an extra safeguard to verify that the root filesystem is not corrupted and is mounted as read-write.
+- name: Copying root-remount service files to {{ inventory_hostname }}
+  ansible.builtin.copy:
+    src: "{{ root_remount.src }}"
+    dest: "{{ root_remount.dest }}"
+    mode: "{{ root_remount.mode }}"
+  loop_control:
+    loop_var: root_remount
+  loop:
+    - src: root-remount.service
+      dest: /etc/systemd/system/root-remount.service
+      mode: "0644"
+
+    - src: root-remount.sh
+      dest: /usr/local/sbin/root-remount.sh
+      mode: "0755"
+
+- name: Enabling root-remount service...
+  ansible.builtin.systemd:
+    name: root-remount.service
+    enabled: true

@@ -1,15 +1,30 @@
 ---
-- name: Enabling IP forwarding...
-  ansible.posix.sysctl:
-    name: "{{ item }}"
-    value: 1
-    sysctl_file: /etc/sysctl.d/99-ip-forwarding.conf
-    state: present
-    reload: true
-  loop:
-    - net.ipv4.ip_forward
-    - net.ipv6.conf.all.forwarding
+- name: Configuring forwarding...
   when: firewall_allow_routing
+  block:
+    - name: Enabling IPv4 forwarding...
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        sysctl_file: /etc/sysctl.d/99-ip-forwarding.conf
+        state: "{{ 'present' if firewall_allow_ipv4_routing else 'absent' }}"
+        reload: true
+      when: firewall_allow_ipv4_routing
+
+    - name: Enabling IPv6 forwarding...
+      ansible.posix.sysctl:
+        name: net.ipv6.conf.all.forwarding
+        value: 1
+        sysctl_file: /etc/sysctl.d/99-ip-forwarding.conf
+        state: "{{ 'present' if firewall_allow_ipv6_routing else 'absent' }}"
+        reload: true
+      when: firewall_allow_ipv6_routing
+
+- name: Disabling forwarding...
+  ansible.builtin.file:
+    path: /etc/sysctl.d/99-ip-forwarding.conf
+    state: absent
+  when: not firewall_allow_routing
 
 - name: Removing legacy fw.conf file...
   ansible.builtin.file:

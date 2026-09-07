@@ -29,29 +29,6 @@
     # to retry the network configuration up to 3 times before failing the task completely.
     - name: Including network configuration tasks...
       block:
-        # Check if root is mounted read-only and remount as read-write
-        # This an issue specific to Kali where sometimes root is mounted read-only
-        # Done here because the check needs to happen in the very early stage of the boot
-        - name: Checking if root is mounted read-only...
-          ansible.builtin.uri:
-            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
-            method: POST
-            headers:
-              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
-            body:
-              credentials: "{{ rest_api_credentials }}"
-              spec:
-                arguments: |
-                  -c 'if grep -q ID=kali /etc/os-release; then while mount | grep "on / " | grep -q ro,; do mount -o remount,rw / || true; sleep 1; done; fi'
-                path: /bin/bash
-            status_code: 201
-            body_format: json
-            validate_certs: "{{ validate_vmware_certs }}"
-          register: network_config_command
-
-        - name: Including command run check task...
-          ansible.builtin.include_tasks: command_run_check.yml
-
         # Not running command_run_check.yml here because if that fails the next step will also fail and that is faster then running the check
         - name: Pre-Creating temp file...
           ansible.builtin.uri:
@@ -121,7 +98,7 @@
             body:
               credentials: "{{ rest_api_credentials }}"
               spec:
-                arguments: -c "rm -rf /etc/netplan/*"
+                arguments: -c "rm -rf /etc/netplan/* && rm -rf /etc/systemd/network/* && rm -rf /etc/network/interfaces"
                 path: /bin/bash
             status_code: 201
             body_format: json
@@ -162,18 +139,25 @@
           ansible.builtin.set_fact:
             configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
 
-        - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+        # Shutdown and start makes sure that the VM tools are actually running
+        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM to try and reconfigure network...
           ansible.builtin.include_role:
             name: nova.core.powerstate
           vars:
-            restart: true
+            shutdown: true
+
+        - name: Starting {{ custom_vm_name | default(vm_name) }} VM to try and reconfigure network...
+          ansible.builtin.include_role:
+            name: nova.core.powerstate
+          vars:
+            poweron: true
 
         - name: Re-including vSphere network configuration tasks...
           ansible.builtin.include_tasks: main.yml
 
-    # Reboot is required for udev rules to take effect
-    - name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
-      ansible.builtin.include_role:
-        name: nova.core.powerstate
-      vars:
-        restart: true
+# Reboot is required for udev rules to take effect
+- name: Restarting {{ custom_vm_name | default(vm_name) }} to finish network configuration...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    restart: true

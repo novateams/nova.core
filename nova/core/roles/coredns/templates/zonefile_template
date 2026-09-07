@@ -19,6 +19,7 @@ $TTL 60
 {% if zone.nameservers is defined %}
 {% for ns in zone.nameservers %}
 {{ "%-24s IN %-6s %s" | format(ns.name, 'A' if ns.address is ansible.utils.ipv4 else 'AAAA', ns.address) }}
+{{ "%-24s IN %-6s %s" | format('ns', 'A' if ns.address is ansible.utils.ipv4 else 'AAAA', ns.address) }}
 {% endfor %}
 {% else %}
 {{ "%-24s IN %-6s %s" | format('ns', 'A' if connection_address is ansible.utils.ipv4 else 'AAAA', connection_address) }}
@@ -33,3 +34,8 @@ $TTL 60
 {% endif %}
 {{ "%-24s IN %-6s %s" | format(record_name, record.type, record_value) }}
 {% endfor %}
+
+; By default empty fils that can be used to include additional records in the zonefile.
+; This is useful for adding records that are not managed by {{ role_name }} role
+; Needs to be the same outside and inside the container so named-checkzone can find the zonefiles
+$INCLUDE {{ coredns_config_folder }}/zones_include/db.{{ zone.domain }}

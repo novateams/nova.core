@@ -10,7 +10,7 @@ tuoni_password: {} # Set custom default (first) user password that will be creat
 
 tuoni_container_repo: {} # Set the container repository to pull Tuoni containers from. If left empty the default repository (ghcr.io) will be used
 tuoni_version: {} # Set the version of Tuoni to install. If left empty the latest version will be installed
-tuoni_branch: main # Set the branch of Tuoni to install. If left empty the main branch will be installed
+tuoni_branch: main # Set the branch to install Tuoni from.
 tuoni_docker_ipv6_enabled: false # Set to true to enable IPv6 in Tuoni Docker. If left empty IPv6 will be disabled
 
 tuoni_licence_key: {} # Set the Tuoni licence key to install licensed plugins

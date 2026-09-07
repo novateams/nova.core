@@ -50,7 +50,7 @@
         - src: nmcli.sh
           dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
 
-    - name: Removing any existing netplan configurations...
+    - name: Removing potentially conflicting network configuration files...
       ansible.builtin.uri:
         url: "{{ proxmox_api_url }}/nodes/{{ cfg_net_proxmox_node }}/qemu/{{ cfg_net_proxmox_vmid }}/agent/exec"
         headers:
@@ -60,7 +60,7 @@
           command:
             - sh
             - -c
-            - "rm -f /etc/netplan/*"
+            - "rm -rf /etc/netplan/* && rm -rf /etc/systemd/network/* && rm -rf /etc/network/interfaces"
         body_format: json
         validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command

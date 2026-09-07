@@ -17,7 +17,7 @@
         - name: Configuring MGMT interface on fresh deploy...
           when: fresh_deploy or reconfigure_network | bool
           block:
-            # When an IP address is reported by VMware Tools, it is ready to accept console input
+            # When hw_guest_id is reported by VMware Tools, it is ready to accept console input
             # Otherwise initial login attempt will just fail
             - name: Waiting for {{ custom_vm_name | default(vm_name) }} to be ready for console input...
               community.vmware.vmware_guest_tools_wait:
@@ -26,6 +26,19 @@
               until: panos_boot_status.instance.hw_guest_id != none
               retries: "{{ configure_networking_panos_boot_wait_time }}"
               delay: 1
+
+            # This is not an ideal solution but if trying to login to quickly
+            # PanOS will not accept the credentials or reset you back to login prompt
+            - name: Sleeping for a minute for PanOS to settle down...
+              ansible.builtin.wait_for:
+                timeout: 60
+
+            - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
+              community.vmware.vmware_guest_sendkey:
+                name: "{{ custom_vm_name | default(vm_name) }}"
+                sleep_time: 2
+                keys_send:
+                  - ENTER
 
             - name: Typing username to {{ custom_vm_name | default(vm_name) }}...
               community.vmware.vmware_guest_sendkey:
@@ -164,7 +177,7 @@
                 - name: Committing changes for {{ custom_vm_name | default(vm_name) }}...
                   community.vmware.vmware_guest_sendkey:
                     name: "{{ custom_vm_name | default(vm_name) }}"
-                    string_send: commit
+                    string_send: commit force
 
                 - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
                   community.vmware.vmware_guest_sendkey:
@@ -239,7 +252,7 @@
                 - name: Committing changes for {{ custom_vm_name | default(vm_name) }}...
                   community.vmware.vmware_guest_sendkey:
                     name: "{{ custom_vm_name | default(vm_name) }}"
-                    string_send: commit
+                    string_send: commit force
 
                 - name: Sending ENTER to {{ custom_vm_name | default(vm_name) }}...
                   community.vmware.vmware_guest_sendkey:
@@ -402,3 +415,8 @@
             name: "{{ custom_vm_name | default(vm_name) }}"
             keys_send:
               - ENTER
+
+        - name: Waiting for {{ custom_vm_name | default(vm_name) }} to be ready for console input...
+          community.vmware.vmware_guest_tools_wait:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+          register: panos_boot_status

@@ -29,8 +29,14 @@
   vmware.vmware.guest_info:
     guest_name: "{{ custom_vm_name | default(vm_name) }}"
   register: vcenter_vm_info
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
+
+- name: MULTIPLE VIRTUAL MACHINES WITH THE SAME NAME
+  ansible.builtin.fail:
+    msg: |
+      There are multiple VMs with the same name {{ custom_vm_name | default(vm_name) }} in vCenter. Please make sure that the VM name is unique.
+  when: vcenter_vm_info.guests | length > 1
 
 - name: Setting fresh_deploy fact...
   ansible.builtin.set_fact:
