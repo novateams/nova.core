@@ -7,6 +7,9 @@
   {% endif %}
   "experimental": {{ docker_enable_experimental_features | lower }},
   "features": {
+    {% if docker_containerd_snapshotter != "default" %}
+    "containerd-snapshotter": {{ docker_containerd_snapshotter | lower }},
+    {% endif %}
     "buildkit": {{ docker_buildkit | lower }}
   },
   "ipv6": {{ docker_enable_ipv6 | lower }},
