@@ -26,7 +26,7 @@
     or vmware_defaults.password is ansible.builtin.falsy
 
 - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
-  vmware.vmware.guest_info:
+  vmware.vmware.vm_info:
     guest_name: "{{ custom_vm_name | default(vm_name) }}"
   register: vcenter_vm_info
   become: false

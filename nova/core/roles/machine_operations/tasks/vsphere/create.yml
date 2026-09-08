@@ -67,7 +67,7 @@
       when: machine_operations_vsphere_content_library_name == {}
       block:
         - name: Getting {{ vm_template | default(false) }} CPU & RAM info...
-          vmware.vmware.guest_info:
+          vmware.vmware.vm_info:
             name: "{{ vm_template if not template else base_vm_template }}"
           register: template_search_result
 

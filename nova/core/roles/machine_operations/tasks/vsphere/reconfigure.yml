@@ -85,7 +85,7 @@
           delay: 5
 
         - name: Checking if {{ custom_vm_name | default(vm_name) }} has snapshots...
-          community.vmware.vmware_guest_snapshot_info:
+          vmware.vmware.vm_snapshot_info:
             datacenter: "{{ datacenter }}"
             moid: "{{ vcenter_vm_info.guests[0].moid }}"
           register: snapshot_info
