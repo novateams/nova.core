@@ -2,7 +2,7 @@
 - name: Waiting for Sysprep to finish...
   block:
     - name: Waiting until {{ custom_vm_name | default(vm_name) }} is powered off...
-      vmware.vmware.guest_info:
+      vmware.vmware.vm_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
       register: vm_tools
       until: vm_tools.guests[0].hw_power_status == "poweredOff"
