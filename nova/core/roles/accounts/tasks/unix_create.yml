@@ -31,6 +31,11 @@
   ansible.builtin.include_tasks: unix_create_samba.yml
   when: samba_primary_domain_controller | bool
 
+- name: Listing existing users on {{ inventory_hostname }}...
+  ansible.builtin.getent:
+    database: passwd
+  register: existing_users
+
 - name: Creating accounts for...
   ansible.builtin.user:
     append: true
@@ -38,7 +43,11 @@
     groups: "{{ item.groups | default(root_group if item.username in admin_accounts | map(attribute='username') else 'users') }}"
     name: "{{ item.username }}"
     password: "{{ item.password | password_hash('sha512') }}"
-    shell: "{{ item.shell | default(ansible_facts.env.SHELL) }}"
+    shell:
+      # If no shell defined default to the existing shell for the user if it exists, otherwise use the admin account shell (usually root)
+      # This avoids overwriting the shell for existing users
+      "{{ item.shell | default((existing_users.ansible_facts.getent_passwd[item.username] | last)
+      | default(existing_users.ansible_facts.getent_passwd[admin_account] | last)) }}"
     skeleton: "{{ unix_distro_skel_map[ansible_facts.distribution] | default('/etc/skel') }}"
     uid: "{{ item.uid | default(omit) }}"
     update_password: "{{ item.update_password | default('always') }}" # always or on_create
