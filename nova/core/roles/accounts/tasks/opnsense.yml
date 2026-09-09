@@ -101,6 +101,13 @@
     owner: root
     group: wheel
 
+# This is required to apply the new configuration
+- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    restart: true
+
 - name: Removing local config.xml file...
   ansible.builtin.file:
     path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
@@ -108,20 +115,7 @@
   delegate_to: localhost
   become: false
 
-# This is required because sometimes the new configuration will apply on upload and Ansible will try to connect to the host again with invalid credentials
-- name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
-  ansible.builtin.include_role:
-    name: nova.core.powerstate
-  vars:
-    shutdown: true
-
 - name: Setting correct password for {{ ansible_deployer_username }}...
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ admin_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-
-- name: Starting {{ custom_vm_name | default(vm_name) }} VM...
-  ansible.builtin.include_role:
-    name: nova.core.powerstate
-  vars:
-    poweron: true
