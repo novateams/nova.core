@@ -408,6 +408,7 @@ nexus_default_repositories:
 
   # Non-DockerHub proxies use port instead of routing to deal with issues
   # Where different web proxies are unable to correctly route Docker specific requests to correct repos
+  # The port can be a variable or is unique random between 10000-32000 calculated from the repo name
 
   # GitHub Container Registry proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
@@ -428,7 +429,7 @@ nexus_default_repositories:
         blocked: false
         autoBlock: false
       docker:
-        httpPort: 10001
+        httpPort: "{{ nexus_ghcr_proxy_port | default(10000 + (('ghcr-proxy' | hash('sha256'))[:8] | int(base=16) % 22001)) }}"
         pathEnabled: "false"
         forceBasicAuth: false
         v1Enabled: false
@@ -456,7 +457,7 @@ nexus_default_repositories:
         blocked: false
         autoBlock: false
       docker:
-        httpPort: 10002
+        httpPort: "{{ nexus_quay_proxy_port | default(10000 + (('quay-proxy' | hash('sha256'))[:8] | int(base=16) % 22001)) }}"
         pathEnabled: "false"
         forceBasicAuth: false
         v1Enabled: false
@@ -484,7 +485,7 @@ nexus_default_repositories:
         blocked: false
         autoBlock: false
       docker:
-        httpPort: 10003
+        httpPort: "{{ nexus_k8s_proxy_port | default(10000 + (('k8s-proxy' | hash('sha256'))[:8] | int(base=16) % 22001)) }}"
         pathEnabled: "false"
         forceBasicAuth: false
         v1Enabled: false
