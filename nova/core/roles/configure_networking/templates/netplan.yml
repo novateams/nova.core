@@ -1,5 +1,8 @@
 network:
   version: 2
+  {% if configure_networking_netplan_renderer is defined %}
+  renderer: {{ configure_networking_netplan_renderer }}
+  {% endif %}
   ethernets:
   {% for interface in interfaces %}
   {% set interface_loop = loop.index0 %}
@@ -16,6 +19,9 @@ network:
       dhcp6: {{ true | lower if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp','ipv6_slaac']) else false | lower }}
       accept-ra: {{ true | lower if interface.addresses | map(attribute='mode') | intersect(['ipv6_dhcp','ipv6_slaac']) else false | lower }}
       {% if interface.addresses | map(attribute='mode') | intersect(['ipv4_static', 'ipv6_static']) | list | length > 0 %}
+      {% if interface.mtu is defined %}
+      mtu: {{ interface.mtu }}
+      {% endif %}
       addresses:
         {% for ip_address in interface.addresses %}
         {% if ip_address.mode in ['ipv4_static', 'ipv6_static'] and ip_address.address != none %}
