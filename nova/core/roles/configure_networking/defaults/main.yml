@@ -3,6 +3,10 @@ skip_network_configuration: false # Skip network configuration tasks
 fresh_deploy: false
 interfaces: []
 
+# Configure networking for an existing host
+# False by default, since can break existing network configuration and lose connectivity
+configure_networking_external_host: false
+
 #######
 # DNS #
 #######

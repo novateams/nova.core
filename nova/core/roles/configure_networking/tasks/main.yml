@@ -14,32 +14,20 @@
     - not skip_network_configuration | bool
     - interfaces != []
   block:
-    - name: Saving the original interfaces list...
-      ansible.builtin.set_fact:
-        original_interfaces: "{{ interfaces }}"
-
     # This is done so the role does not try configure interfaces that do not exists in the hypervisor
-    # The cloud_id is used as the network/portgroup name in the hypervisor, so if it is not defined, it means that the interface is not meant to be configured
-    - name: Removing non-existing networks from the interfaces list...
-      ansible.builtin.set_fact:
-        interfaces: "{{ interfaces | selectattr('cloud_id') }}"
-
-    - name: Checking if nic_name attribute is defined in any of the interfaces...
-      when: interfaces | selectattr('nic_name', 'defined') == []
+    # The cloud_id is used as the network/portgroup name in the hypervisor, so if it is not defined
+    # It means that the interface is not meant to be configured
+    # Excluding external infra_env from interface cleanup since all interfaces need to be configured
+    - name: Cleaning up interfaces...
+      when: infra_env != "external"
       block:
-        - name: NO nic_name FOUND
-          ansible.builtin.debug:
-            msg: |
-              No nic_name attribute found in interfaces list!
-              Do one of the following to fix this:
-                - Update Providentia to latest version
-                - When NOT using Providentia, add nic_name key to the interfaces list in your host/group vars
+        - name: Saving the original interfaces list...
+          ansible.builtin.set_fact:
+            original_interfaces: "{{ interfaces }}"
 
-        - name: SLEEPING TO READ
-          ansible.builtin.wait_for:
-            timeout: 30
-          become: false
-          delegate_to: localhost
+        - name: Removing non-existing networks from the interfaces list...
+          ansible.builtin.set_fact:
+            interfaces: "{{ interfaces | selectattr('cloud_id') }}"
 
     # This is done to avoid issues with duplicate interface names in network configuration
     # Different OSs can use the same list and logic for interface naming
@@ -63,20 +51,27 @@
 
     - name: Configuring VM network in vSphere environment...
       ansible.builtin.include_tasks: vsphere/main.yml
-      when: infra_env == 'vsphere'
+      when: infra_env == "vsphere"
 
     - name: Configuring VM network in Proxmox environment...
       ansible.builtin.include_tasks: proxmox/main.yml
-      when: infra_env == 'proxmox'
+      when: infra_env == "proxmox"
 
     - name: Configuring VM network in AWS environment...
       ansible.builtin.include_tasks: aws/main.yml
-      when: infra_env == 'aws'
+      when: infra_env == "aws"
+
+    - name: Including existing host network configuration tasks...
+      ansible.builtin.include_tasks: external/main.yml
+      when:
+        - infra_env == "external"
+        - configure_networking_external_host
 
     # This is to restore the original interfaces list so it can be used in later roles
     - name: Restoring the original interfaces list...
       ansible.builtin.set_fact:
         interfaces: "{{ original_interfaces }}"
+      when: infra_env != "external"
 
 - name: Including following configure_networking post-roles...
   ansible.builtin.include_role:
