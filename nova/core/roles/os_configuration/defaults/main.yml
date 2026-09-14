@@ -7,6 +7,7 @@ hostname: "{{ inventory_hostname }}" # Defaults to inventory_hostname if nothing
 hosts_file_values: [] # Custom hosts file entries to be added.
 install_trusted_certificates: true # Set to false to skip trusted certificates installation with nova.core.trusted_certificates role
 os_configuration_locale: en_US.UTF-8 # Default locale to be set
+os_configuration_pre_roles: [] # List of extra roles to be included as one of the first steps of this role
 os_configuration_post_roles: [] # List of extra roles to be included as one of the last steps of this role
 os_configuration_timezone: UTC # The default timezone to be set where applicable
 resolv_conf_dns_servers: []
