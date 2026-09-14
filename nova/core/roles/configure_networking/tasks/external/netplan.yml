@@ -2,8 +2,10 @@
 - name: Cleaning up old network configuration files...
   ansible.builtin.shell: |
     rm -rf /etc/netplan/*
+    rm -rf /run/netplan/*
     rm -rf /etc/network/interfaces
     rm -rf /etc/systemd/network/*
+  become: true
   changed_when: true
 
 - name: Templating network configuration files to localhost...
@@ -38,7 +40,9 @@
       mode: "0644"
 
 - name: Applying netplan configuration... # noqa: no-handler
-  ansible.builtin.command: netplan apply
+  ansible.builtin.shell: |
+    netplan apply
+    update-initramfs -u
   changed_when: true
   become: true
   when: netplan_config.changed

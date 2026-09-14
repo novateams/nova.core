@@ -85,6 +85,13 @@ fi
 {% endif %}
 {% endfor %}
 
+# Updating initramfs for udev interface rules to apply
+if command -v initramfs-update; then
+    initramfs-update -u
+elif command -v dracut; then
+    dracut -f
+fi
+
 {% if infra_env == "aws" %}
 reboot
 {% endif %}

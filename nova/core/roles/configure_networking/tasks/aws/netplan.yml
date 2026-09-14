@@ -1,33 +1,47 @@
 ---
 - name: Cleaning up old network configuration files...
   ansible.builtin.shell: |
-    rm -rf /etc/systemd/network/*
     rm -rf /etc/netplan/*
+    rm -rf /etc/network/interfaces
+    rm -rf /etc/systemd/network/*
   changed_when: true
   become: true
 
-# This step is not actually needed as netplan but is very useful for debugging
-- name: Templating network configuration to localhost...
+- name: Templating network configuration files to localhost...
   ansible.builtin.template:
-    src: netplan.yml
-    dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     lstrip_blocks: true
     mode: "0644"
   become: false
   delegate_to: localhost
+  loop:
+    - src: netplan.yml
+      dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+    - src: 70-persistent-net.rules
+      dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
 
-- name: Copying netplan configuration to {{ custom_vm_name | default(vm_name) }}...
+- name: Copying network configuration files to {{ custom_vm_name | default(vm_name) }}...
   ansible.builtin.copy:
-    src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
-    dest: /etc/netplan/01-netcfg.yaml
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     owner: root
     group: root
-    mode: "0600"
+    mode: "{{ item.mode }}"
   register: netplan_config
   become: true
+  loop:
+    - src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_netplan.yml
+      dest: /etc/netplan/01-netcfg.yaml
+      mode: "0600"
+    - src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+      dest: /etc/udev/rules.d/70-persistent-net.rules
+      mode: "0644"
 
 - name: Applying netplan configuration... # noqa: no-handler
-  ansible.builtin.command: netplan apply
+  ansible.builtin.shell: |
+    netplan apply
+    update-initramfs -u
   changed_when: true
   become: true
   when: netplan_config.changed

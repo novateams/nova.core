@@ -36,11 +36,6 @@
         mode: "0644"
       when: not apt_backup_file.stat.exists
 
-- name: Getting {{ inventory_hostname }} architecture...
-  ansible.builtin.command: dpkg --print-architecture
-  changed_when: false
-  register: dpkg_architecture
-
 - name: Templating ubuntu.sources...
   ansible.builtin.template:
     src: ubuntu.sources

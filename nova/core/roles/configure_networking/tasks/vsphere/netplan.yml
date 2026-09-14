@@ -98,7 +98,7 @@
               spec:
                 # 3x netplan apply is required for Ubuntu Desktop versions otherwise the network configuration doesn't get applied correctly for some reason
                 # Doing that is still cheaper than a single reboot
-                arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply && netplan apply"
+                arguments: -c "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply && netplan apply && update-initramfs -u"
                 path: /bin/bash
             status_code: 201
             body_format: json
