@@ -4,6 +4,12 @@
     - customization_context == "host" # Alternative is container and then it doesn't need os_configuration
     - infra_env != "my_host" # my_host is computer where you run the play from
   block:
+    - name: Including following pre-os_configuration roles...
+      ansible.builtin.include_role:
+        name: "{{ item }}"
+      loop: "{{ os_configuration_pre_roles }}"
+      when: os_configuration_pre_roles != []
+
     - name: Configuring non-Network OS ...
       when: ansible_network_os is not defined
       block:
