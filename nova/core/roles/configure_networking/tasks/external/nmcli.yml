@@ -1,0 +1,54 @@
+---
+- name: Cleaning up old network configuration files...
+  ansible.builtin.shell: |
+    rm -rf /etc/netplan/*
+    rm -rf /etc/network/interfaces
+    rm -rf /etc/systemd/network/*
+  changed_when: true
+  become: true
+
+- name: Installing NetworkManager package...
+  ansible.builtin.package:
+    name: network-manager
+    state: present
+    update_cache: true
+  become: true
+
+- name: Templating nmcli configuration files...
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+    lstrip_blocks: true
+  loop_control:
+    label: "{{ item.src }}"
+  loop:
+    - src: 70-persistent-net.rules
+      dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+    - src: nmcli.sh
+      dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+  become: false
+  delegate_to: localhost
+
+- name: Uploading nmcli configuration files...
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  loop_control:
+    label: "{{ item.src }}"
+  loop:
+    - src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
+      dest: /etc/udev/rules.d/70-persistent-net.rules
+      mode: "0644"
+    - src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_nmcli.sh
+      dest: /tmp/nmcli.sh
+      mode: "0755"
+  become: true
+
+- name: Running nmcli configuration script...
+  ansible.builtin.command: /tmp/nmcli.sh
+  changed_when: true
+  become: true
+  async: 3600
+  poll: 0
