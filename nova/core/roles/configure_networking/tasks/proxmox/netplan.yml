@@ -73,7 +73,7 @@
             - -c
             # 3x netplan apply is required for Ubuntu Desktop versions otherwise the network configuration doesn't get applied correctly for some reason
             # Doing that is still cheaper than a single reboot
-            - "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply && netplan apply"
+            - "chmod 600 /etc/netplan/01-netcfg.yaml && netplan apply && netplan apply && netplan apply && update-initramfs -u"
         body_format: json
         validate_certs: "{{ proxmox_defaults.validate_certs }}"
       register: network_config_command

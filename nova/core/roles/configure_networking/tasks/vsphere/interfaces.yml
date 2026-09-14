@@ -206,6 +206,25 @@
             - name: Including command run check task...
               ansible.builtin.include_tasks: command_run_check.yml
 
+        - name: Updating initramfs...
+          ansible.builtin.uri:
+            url: https://{{ vmware_defaults.hostname }}/api/vcenter/vm/{{ configure_networking_vsphere_vm_id }}/guest/processes?action=create
+            method: POST
+            headers:
+              vmware-api-session-id: "{{ vcenter_session_api_key.json }}"
+            body:
+              credentials: "{{ rest_api_credentials }}"
+              spec:
+                arguments: -c "update-initramfs -u"
+                path: /bin/bash
+            status_code: 201
+            body_format: json
+            validate_certs: "{{ validate_vmware_certs }}"
+          register: network_config_command
+
+        - name: Including command run check task...
+          ansible.builtin.include_tasks: command_run_check.yml
+
       rescue:
         - name: NETWORK CONFIGURATION ERROR
           ansible.builtin.fail:
