@@ -40,12 +40,15 @@
 - name: Composing Keycloak on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ keycloak_container_config_folder }}"
+    services:
+      - keycloak
+      - keycloak_postgres
     state: present
     recreate: "{{ 'always' if compose_template.changed else 'auto' }}"
     build: never
     wait: true
 
-# This is so as not to restart the whole container on every config change
+# This is so as not to restart the whole compose on every config change
 - name: Composing Keycloak-config on {{ inventory_hostname }}...
   community.docker.docker_compose_v2:
     project_src: "{{ keycloak_container_config_folder }}"

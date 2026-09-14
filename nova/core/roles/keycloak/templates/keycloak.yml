@@ -69,7 +69,7 @@ services:
       KEYCLOAK_PASSWORD: "{{ keycloak_admin_password }}"
       KEYCLOAK_AVAILABILITYCHECK_ENABLED: true
       KEYCLOAK_AVAILABILITYCHECK_TIMEOUT: "{{ keycloak_config_timeout_seconds }}s"
-      IMPORT_FILES: "/config/*"
+      IMPORT_FILES_LOCATIONS: "/config/*"
     logging:
       driver: json-file
       options:
