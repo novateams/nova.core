@@ -10,13 +10,7 @@
     validate_certs: "{{ proxmox_defaults.validate_certs }}"
   register: network_config_command_status
   retries: "{{ (configure_networking_command_wait_timeout if configure_networking_command_wait_timeout >= 3 else 3) // 3 }}"
-  delay: 3
-
-- name: ERROR
-  ansible.builtin.fail:
-    msg: |
-      Network configuration command failed for {{ custom_vm_name | default(vm_name) }}:
-      {{ network_config_command_status.json.data | to_nice_yaml }}
-  when:
+  until:
     - network_config_command_status.json.data.exitcode is defined
-    - network_config_command_status.json.data.exitcode != 0
+    - network_config_command_status.json.data.exitcode == 0
+  delay: 3
