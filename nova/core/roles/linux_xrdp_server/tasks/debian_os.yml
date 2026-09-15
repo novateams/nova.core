@@ -35,6 +35,8 @@
     dest: "{{ xrdp_config.dest }}"
     regexp: "{{ xrdp_config.regexp }}"
     line: "{{ xrdp_config.line }}"
+    create: true
+    mode: "0644"
   loop_control:
     loop_var: xrdp_config
     label: "{{ xrdp_config.line }}"
