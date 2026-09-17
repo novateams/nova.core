@@ -51,12 +51,12 @@
 
 - name: Adding account creation source flag...
   ansible.builtin.raw: |
-    echo "This account was created with {{ ansible_role_name }} role" > /Users/{{ item.username }}/.created
-    chown {{ item.username }}:staff /Users/{{ item.username }}/.created
-  loop: "{{ local_accounts_with_password }}"
+    echo "This account was created with {{ ansible_role_name }} role" > /Users/{{ item }}/.created
+    chown {{ item }}:staff /Users/{{ item }}/.created
+  loop: "{{ local_accounts_with_password | map(attribute='username') }}"
   loop_control:
-    label: "{{ item.username }}"
-  when: item.username != admin_account # Cannot remove root user
+    label: "{{ item }}"
+  when: item != admin_account # Cannot remove root user
   changed_when: true
 
 - name: Enabling password requirement for sudo...
