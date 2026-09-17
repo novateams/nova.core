@@ -66,16 +66,16 @@
 
 - name: Adding account creation source flag...
   ansible.builtin.lineinfile:
-    dest: /home/{{ item.username }}/.created
+    dest: /home/{{ item }}/.created
     line: This account was created with {{ ansible_role_name }} role
     state: present
     create: true
-    owner: "{{ item.username }}"
+    owner: "{{ item }}"
     mode: "0600"
-  loop: "{{ local_accounts_with_password }}"
+  loop: "{{ local_accounts_with_password | map(attribute='username') }}"
   loop_control:
-    label: "{{ item.username }}"
-  when: item.username != admin_account # Cannot remove admin (usually root) account
+    label: "{{ item }}"
+  when: item != admin_account # Cannot remove admin (usually root) account
 
 - name: Adding authorized keys for...
   ansible.posix.authorized_key:

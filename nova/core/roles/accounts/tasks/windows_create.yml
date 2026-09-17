@@ -136,13 +136,13 @@
 
 - name: Creating a profiles for...
   ansible.windows.win_user_profile:
-    username: "{{ item.username }}"
-    name: "{{ item.username }}"
+    username: "{{ item }}"
+    name: "{{ item }}"
     state: present
-  loop: "{{ accounts }}"
+  loop: "{{ accounts | map(attribute='username') }}"
   loop_control:
-    label: "{{ item.username }}"
-  when: item.username not in domain_user_accounts | map(attribute='username') # This to avoid configuring domain users on DCs
+    label: "{{ item }}"
+  when: item not in domain_user_accounts | map(attribute='username') # This to avoid configuring domain users on DCs
 
 - name: Adding account creation source flag for following admin accounts...
   community.windows.win_lineinfile:
