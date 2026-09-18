@@ -46,10 +46,16 @@
     name: kali
     architectures:
       - "{{ dpkg_architecture.stdout }}"
-    types: [deb]
+    types:
+      - deb
     uris: "{{ package_mirror_kali_uri.general }}"
-    suites: [kali-rolling]
-    components: [main contrib non-free non-free-firmware]
+    suites:
+      - kali-rolling
+    components:
+      - main
+      - contrib
+      - non-free
+      - non-free-firmware
     signed_by: /usr/share/keyrings/kali-archive-keyring.gpg
     install_python_debian: true
   register: repos_changed
