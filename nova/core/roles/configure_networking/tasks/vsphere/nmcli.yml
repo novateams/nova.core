@@ -139,18 +139,11 @@
           ansible.builtin.set_fact:
             configure_networking_rescue_count: "{{ configure_networking_rescue_count | default(0) | int + 1 }}"
 
-        # Shutdown and start makes sure that the VM tools are actually running
-        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM to try and reconfigure network...
+        - name: Restarting {{ custom_vm_name | default(vm_name) }} VM to try and reconfigure network...
           ansible.builtin.include_role:
             name: nova.core.powerstate
           vars:
-            shutdown: true
-
-        - name: Starting {{ custom_vm_name | default(vm_name) }} VM to try and reconfigure network...
-          ansible.builtin.include_role:
-            name: nova.core.powerstate
-          vars:
-            poweron: true
+            restart: true
 
         - name: Re-including vSphere network configuration tasks...
           ansible.builtin.include_tasks: main.yml

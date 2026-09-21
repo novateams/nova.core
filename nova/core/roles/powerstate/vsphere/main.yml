@@ -51,3 +51,10 @@
     - name: Including {{ custom_vm_name | default(vm_name) }} shutdown tasks...
       ansible.builtin.include_tasks: shutdown.yml
       when: shutdown | bool
+
+    # To ensure that VMware tools are available after powering on or restarting the VM
+    - name: Waiting for VMware tools to become available...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        timeout: "{{ powerstate_agent_info_timeout }}"
+      when: (poweron | bool) or (restart | bool)
