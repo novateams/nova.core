@@ -40,7 +40,7 @@
           retries: 30 # Because Windows is still coming up from initial sysprep
           delay: 10
 
-        - name: Uploading file...
+        - name: Uploading /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_Configure-Network.ps1...
           ansible.builtin.uri:
             url: "{{ file_upload_prep.json }}"
             method: PUT

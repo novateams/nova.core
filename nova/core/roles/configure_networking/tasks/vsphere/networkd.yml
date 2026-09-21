@@ -302,22 +302,3 @@
         name: nova.core.powerstate
       vars:
         restart: true
-      when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
-
-    # For DHCP doing shutdown and start otherwise there will be a a race condition where incorrect IP is reported by the VM
-    - name: Shutting down and starting {{ custom_vm_name | default(vm_name) }} VM...
-      when:
-        - configure_networking_os is search('Debian')
-        - connection_mode in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
-      block:
-        - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
-          ansible.builtin.include_role:
-            name: nova.core.powerstate
-          vars:
-            shutdown: true
-
-        - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
-          ansible.builtin.include_role:
-            name: nova.core.powerstate
-          vars:
-            poweron: true

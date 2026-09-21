@@ -10,3 +10,12 @@
         state: "{{ 'reboot-guest' if powerstate_vcenter_vm_info.guests[0].hw_power_status == 'poweredOn' else 'powered-on' }}"
       retries: 3
       delay: 10
+
+    # To ensure that VM has started the reboot cycle
+    - name: Waiting until VMTools is NOT running on {{ custom_vm_name | default(vm_name) }} anymore...
+      vmware.vmware.vm_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_tools
+      until: vm_tools.guests[0].guest_tools_status | default('') != "guestToolsRunning"
+      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 2 else 2) // 2 }}"
+      delay: 2
