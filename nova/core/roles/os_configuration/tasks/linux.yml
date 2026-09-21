@@ -44,11 +44,15 @@
     mode: "0755"
   when: ansible_facts.os_family == 'Alpine'
 
-- name: Enabling SSH forwarding for sudo...
-  ansible.builtin.lineinfile:
-    dest: /etc/sudoers
-    insertafter: ^#?\s*Defaults\s+env_keep\b
-    line: Defaults    env_keep += "SSH_AUTH_SOCK"
+- name: Adding sudoers extra configuration...
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/{{ role_name }}_extras
+    content: "{{ os_configuration_sudoers_extra }}"
+    mode: "0440"
+
+- name: Setting the timezone to {{ os_configuration_timezone }}
+  community.general.timezone:
+    name: "{{ os_configuration_timezone }}"
 
 - name: Adding custom values to hosts file...
   ansible.builtin.lineinfile:

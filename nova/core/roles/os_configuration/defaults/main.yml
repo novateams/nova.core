@@ -57,6 +57,12 @@ os_configuration_regenerate_windows_host_keys: true # Set to false to skip regen
 # Reboot Linux after hostname change
 os_configuration_linux_reboot_after_hostname_change: false
 
+# Sudoers extra configuration that will be placed to /etc/sudoers.d/{{ role_name }}_extras
+# Set to an empty string "" to clear the extra sudoers configuration
+os_configuration_sudoers_extra: |
+  # Useful when delegating tasks to different hosts
+  Defaults    env_keep += "SSH_AUTH_SOCK"
+
 #############
 # Cisco IOS #
 #############
