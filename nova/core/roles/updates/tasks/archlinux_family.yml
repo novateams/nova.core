@@ -5,14 +5,6 @@
     upgrade: true
   register: pacman_update
 
-# This is needed since Python can be upgraded during the package upgrade
-# and Ansible may fail later due to version mismatch
-- name: Clearing facts and gathering facts... # noqa: no-handler
+- name: Including restore Python tasks... # noqa: no-handler
+  ansible.builtin.include_tasks: restore_python.yml
   when: pacman_update.changed
-  block:
-    - name: Clearing gathered facts...
-      ansible.builtin.meta: clear_facts
-
-    - name: Including nova.core.gather_facts role...
-      ansible.builtin.include_role:
-        name: nova.core.gather_facts
