@@ -90,39 +90,37 @@
         loop_var: update_enable
         label: "{{ update_enable.value }}"
       loop:
-        - file: 20auto-upgrades
-          match: .*Update-Package-Lists
+        - file: 22auto-upgrades
+          match: .*APT::Periodic::Update-Package-Lists.*
           value: APT::Periodic::Update-Package-Lists "1";
 
-        - file: 20auto-upgrades
-          match: .*Download-Upgradeable-Packages
+        - file: 22auto-upgrades
+          match: .*APT::Periodic::Download-Upgradeable-Packages.*
           value: APT::Periodic::Download-Upgradeable-Packages "1";
 
-        - file: 20auto-upgrades
-          match: .*AutocleanInterval
+        - file: 22auto-upgrades
+          match: .*APT::Periodic::AutocleanInterval.*
           value: APT::Periodic::AutocleanInterval "7";
 
-        - file: 20auto-upgrades
-          match: .*Unattended-Upgrade
+        - file: 22auto-upgrades
+          match: .*APT::Periodic::Unattended-Upgrade.*
           value: APT::Periodic::Unattended-Upgrade "1";
 
-        # allow all origins for unattended upgrades
-        - file: 50unattended-upgrades
-          match: Unattended-Upgrade::Origins-Pattern { "origin=*";};
+        # Allow all origins for unattended upgrades so everything gets upgraded
+        - file: 52unattended-upgrades
+          match: .*Unattended-Upgrade::Origins-Pattern.*
           value: Unattended-Upgrade::Origins-Pattern { "origin=*";};
 
-    - name: Set Automatic-Reboot value for upgrades to - {{ debian_family_unattended_upgrades_allow_reboot | string | upper }}...
-      ansible.builtin.lineinfile:
-        path: /etc/apt/apt.conf.d/50unattended-upgrades
-        regexp: .*Automatic-Reboot
-        line: Unattended-Upgrade::Automatic-Reboot "{{ debian_family_unattended_upgrades_allow_reboot | string | lower }}";
+        - file: 52unattended-upgrades
+          match: .*Unattended-Upgrade::Automatic-Reboot ".*
+          value: Unattended-Upgrade::Automatic-Reboot "{{ debian_family_unattended_upgrades_allow_reboot | string | lower }}";
 
 - name: Disabling unattended upgrades...
   when: not debian_family_unattended_upgrades
   block:
     - name: Disabling unattended upgrades & updates...
       ansible.builtin.lineinfile:
-        path: /etc/apt/apt.conf.d/20auto-upgrades
+        path: /etc/apt/apt.conf.d/22auto-upgrades
         regexp: "{{ update_disable.regexp }}"
         line: "{{ update_disable.line }}"
         create: true
@@ -131,9 +129,9 @@
         loop_var: update_disable
         label: "{{ update_disable.line }}"
       loop:
-        - regexp: .*Unattended-Upgrade
+        - regexp: .*APT::Periodic::Unattended-Upgrade.*
           line: APT::Periodic::Unattended-Upgrade "0";
-        - regexp: .*Update-Package-Lists
+        - regexp: .*APT::Periodic::Update-Package-Lists.*
           line: APT::Periodic::Update-Package-Lists "0";
 
 # Rebooting immediately if there's no planned reboot with reboot_on_finalize set
