@@ -10,15 +10,15 @@
     loop_var: auto_update_disable
     label: "{{ auto_update_disable.line }} > {{ auto_update_disable.path }}"
   loop:
-    - path: /etc/apt/apt.conf.d/20auto-upgrades
+    - path: /etc/apt/apt.conf.d/22auto-upgrades
       regexp: .*Unattended-Upgrade
       line: APT::Periodic::Unattended-Upgrade "0";
 
-    - path: /etc/apt/apt.conf.d/20auto-upgrades
+    - path: /etc/apt/apt.conf.d/22auto-upgrades
       regexp: .*Update-Package-Lists
       line: APT::Periodic::Update-Package-Lists "0";
 
-    - path: /etc/apt/apt.conf.d/10periodic
+    - path: /etc/apt/apt.conf.d/12periodic
       regexp: .*APT::Periodic::Update-Package-Lists
       line: APT::Periodic::Update-Package-Lists "0";
   when:
