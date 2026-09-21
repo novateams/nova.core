@@ -11,4 +11,5 @@
 
 - name: Setting updated Python interpreter for {{ inventory_hostname }}...
   ansible.builtin.set_fact:
-    ansible_python_interpreter: "{{ current_python_version.stdout_lines[-1] }}"
+    # Sometimes the output contains junk, find the last line that contains 'python'
+    ansible_python_interpreter: "{{ current_python_version.stdout_lines | select('search', 'python') | list | last }}"
