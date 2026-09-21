@@ -9,7 +9,9 @@
       The `configure_networking_mac_addresses` variable is not defined.
       It should contain a list of MAC addresses for NICs that are defined in the interfaces list
       Each item in the configure_networking_mac_addresses list must correspond to an actual MAC address of a NIC defined in the interfaces list.
-  when: configure_networking_mac_addresses is not defined
+  when:
+    - configure_networking_mac_addresses is not defined
+    - ansible_facts.system | default('') != "Win32NT" # Windows does not require MAC addresses list
 
 - name: Including {{ customization_method }} network configuration tasks...
   ansible.builtin.include_tasks: "{{ customization_method }}.yml"
