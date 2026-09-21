@@ -38,10 +38,11 @@
     name:
       - acl # Required for managing file permissions
       - ca-certificates # Required for managing trusted certificates
-      - net-tools # Useful for network troubleshooting
-      - traceroute # Useful for network troubleshooting
       - musl-locales # Required for locale support
       - musl-locales-lang # Required for locale support
+      - net-tools # Useful for network troubleshooting
+      - traceroute # Useful for network troubleshooting
+      - tzdata # Required for timezone data
     state: present
     update_cache: true
   when: ansible_facts.distribution == "Alpine"
