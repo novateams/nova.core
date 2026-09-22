@@ -35,7 +35,7 @@ done
 {% if domain_groups != [] %}
 GROUPS_DETAILS=(
     {% for group in domain_groups %}
-    "{{ group.name }}|{{ accounts_samba_group_scope_map[group.scope] | default('Global') }}|{{ group.description | default('Missing description') }}|{{ group.ou | default('CN=Users,' ~ domain_dn) | regex_replace(',' ~ domain_dn, '') }}|{{ group.ou | default('CN=Users,' ~ domain_dn) | regex_replace(',' ~ domain_dn, '') | regex_replace(',' ~ domain_dn, '') }}"
+    "{{ group.name }}|{{ accounts_samba_group_scope_map[group.scope | default('global')] }}|{{ group.description | default('Missing description') }}|{{ group.ou | default('CN=Users,' ~ domain_dn) }}|{{ group.ou | default('CN=Users,' ~ domain_dn) | regex_replace(',' ~ domain_dn, '') | regex_replace(',' ~ domain_dn, '') }}"
     {% endfor %}
 )
 
@@ -90,8 +90,8 @@ do
         for group in "${group_array[@]}"
         do
             if ! samba-tool group listmembers "$group" | grep -q "^$username$"; then
-            echo "Adding $username to $group group..."
-            samba-tool group addmembers "$group" "$username"
+                echo "Adding $username to $group group..."
+                samba-tool group addmembers "$group" "$username"
             else
                 echo "$username is already a member of $group group"
             fi
@@ -112,21 +112,35 @@ GROUP_MEMBERS_DETAILS=(
 )
 
 echo
-echo Configuring Group Members:
+echo Configuring Group Members
 for entry in "${GROUP_MEMBERS_DETAILS[@]}"
 do
     IFS='|' read -r group members <<< "$entry"
     if [[ -n "$members" ]]; then
+        echo
+        echo "Processing group: $group"
+        existing_group_members=$(samba-tool group listmembers "$group")
         IFS=',' read -ra member_array <<< "$members"
         for member in "${member_array[@]}"
         do
-            if ! samba-tool group listmembers "$group" | grep -q "^$member$"; then
-            echo "Adding $member to $group group..."
-            samba-tool group addmembers "$group" "$member"
+            if ! echo "$existing_group_members" | grep -qxiF -- "$member"; then
+                echo "Adding $member to $group group..."
+                samba-tool group addmembers "$group" "$member"
             else
                 echo "$member is already a member of $group group"
             fi
         done
     fi
+
+    {% if accounts_domain_groups_members_strategy == 'replace' %}
+    while read -r existing_member; do
+        [[ -z "$existing_member" ]] && continue
+        if ! printf '%s\n' "${member_array[@]}" | grep -qxiF -- "$existing_member"; then
+            echo "Removing $existing_member from $group group..."
+            samba-tool group removemembers "$group" "$existing_member" > /dev/null
+        fi
+    done <<< "$existing_group_members"
+    {% endif %}
+
 done
 {% endif %}
