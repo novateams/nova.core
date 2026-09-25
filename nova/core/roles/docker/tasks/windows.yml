@@ -16,6 +16,10 @@
   delay: 30
   when: ansible_facts.distribution_version is version('6.3.9600.0', '>') # Greater than Windows 8.1 & Server 2012 R2
 
+- name: Including win_test_pending_reboot role...
+  ansible.builtin.include_role:
+    name: nova.core.win_test_pending_reboot
+
 - name: Installing WSL {{ docker_wsl_version }}...
   ansible.windows.win_package:
     path: "{{ docker_wsl_download_link }}"
@@ -61,6 +65,7 @@
         name: docker-desktop
         state: present
         ignore_checksums: true
+      retries: 3
 
     - name: Rebooting... # noqa: no-handler
       ansible.windows.win_reboot:
