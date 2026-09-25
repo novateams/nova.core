@@ -1,0 +1,18 @@
+---
+lego_version: 5.5.2
+lego_download_url:
+  https://github.com/go-acme/lego/releases/download/v{{ lego_version }}/lego_v{{ lego_version
+  }}_linux_{{ 'arm64' if ansible_facts.architecture | default('') == 'aarch64' else 'amd64' }}.tar.gz
+
+lego_certs_folder: /srv/certs/lego
+
+# Path to the .lego.yml source file that will be templated to the host
+# Refer to https://go-acme.github.io/lego/obtain/ to understand how to configure the .lego.yml file
+lego_config_file: {}
+
+# Path to the environment file that will be used to set credentials for the DNS challenge
+lego_env_file: {}
+
+# Path to the script that will be executed after the lego certificate renewal process
+# Needs the post hook command to be configured in the .lego.yml file
+lego_post_hook_script: {}

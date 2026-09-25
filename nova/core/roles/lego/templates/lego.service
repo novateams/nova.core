@@ -1,0 +1,9 @@
+[Unit]
+Description=lego certificate renewal
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory={{ lego_certs_folder }}
+ExecStart=/usr/local/bin/lego
