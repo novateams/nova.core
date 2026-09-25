@@ -1,0 +1,16 @@
+---
+- name: Enabling lego timer...
+  ansible.builtin.systemd:
+    daemon_reload: true
+    enabled: true
+    name: lego.timer
+    state: started
+  listen: enable_lego_service
+
+- name: Running lego.service...
+  ansible.builtin.systemd:
+    name: lego.service
+    state: started
+  async: 3600
+  poll: 0
+  listen: enable_lego_service

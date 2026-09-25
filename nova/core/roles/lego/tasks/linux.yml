@@ -1,0 +1,51 @@
+---
+- name: Creating {{ lego_certs_folder }} directory
+  ansible.builtin.file:
+    path: "{{ lego_certs_folder }}"
+    recurse: true
+    state: directory
+
+- name: Installing lego to {{ inventory_hostname }}...
+  ansible.builtin.unarchive:
+    src: "{{ lego_download_url }}"
+    dest: /usr/local/bin
+    remote_src: true
+    include:
+      - lego
+    mode: "0755"
+
+- name: Templating lego configuration and environment files to {{ inventory_hostname }}...
+  notify: enable_lego_service
+  block:
+    - name: Templating lego config files to {{ inventory_hostname }}...
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0660"
+      loop_control:
+        label: "{{ item.dest }}"
+      loop:
+        - src: "{{ lego_config_file }}"
+          dest: "{{ lego_certs_folder }}/.lego.yml"
+        - src: "{{ lego_env_file }}"
+          dest: "{{ lego_certs_folder }}/.lego.env"
+
+    - name: Templating lego post hook script to {{ inventory_hostname }}...
+      ansible.builtin.template:
+        src: "{{ lego_post_hook_script }}"
+        dest: "{{ lego_certs_folder }}/{{ lego_post_hook_script | basename }}"
+        mode: "0755"
+      when: lego_post_hook_script is ansible.builtin.truthy
+
+    - name: Templating lego service files to {{ inventory_hostname }}...
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0644"
+      loop_control:
+        label: "{{ item.dest }}"
+      loop:
+        - src: lego.service
+          dest: /etc/systemd/system/lego.service
+        - src: lego.timer
+          dest: /etc/systemd/system/lego.timer

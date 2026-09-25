@@ -1,0 +1,5 @@
+---
+- name: NOT YET IMPLEMENTED
+  ansible.builtin.debug:
+    msg: |
+      The {{ role_name }} role is not yet implemented for macOS hosts.

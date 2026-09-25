@@ -1,0 +1,22 @@
+---
+- name: MISSING REQUIRED VARIABLES
+  ansible.builtin.fail:
+    msg: |
+      Following variables are required to run this role:
+      - lego_config_file
+      - lego_env_file
+  when: lego_config_file is ansible.builtin.falsy
+    or lego_env_file is ansible.builtin.falsy
+
+- name: Including lego Linux task...
+  ansible.builtin.include_tasks: linux.yml
+  when: ansible_facts.system | default('') == 'Linux'
+
+- name: Including lego Windows task...
+  ansible.builtin.include_tasks: windows.yml
+  when: ansible_facts.system | default('') == 'Win32NT'
+
+- name: Including lego MacOS tasks...
+  ansible.builtin.include_tasks: macos.yml
+  when: ansible_facts.system | default('') == "Darwin"
+    or ansible_custom_facts.system | default('') == "Darwin"
