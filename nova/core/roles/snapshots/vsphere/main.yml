@@ -1,52 +1,48 @@
 ---
-- name: Checking VM status and info
-  delegate_to: localhost
+- name: Delegating all snapshot tasks to localhost...
   become: false
+  delegate_to: localhost
   block:
     - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
       vmware.vmware.vm_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vcenter_vm_info
+      register: snapshots_vcenter_vm_info
 
     - name: ERROR
       ansible.builtin.fail:
         msg: "{{ custom_vm_name | default(vm_name) }} VM not found!"
-      when: vcenter_vm_info.guests == []
+      when: snapshots_vcenter_vm_info.guests == []
 
-    - name: Waiting until VMTools are running on {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm_info:
-        guest_name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vm_tools
-      until: vm_tools.guests[0].guest_tools_status == "guestToolsRunning"
-      retries: "{{ (snapshots_agent_info_timeout if snapshots_agent_info_timeout >= 5 else 5) / 5 }}"
-      delay: 5
+    - name: Waiting for VMware tools to become available for {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        timeout: "{{ snapshots_agent_info_timeout }}"
       when:
-        - vcenter_vm_info.guests[0].guest_tools_status != "guestToolsRunning"
-        - vcenter_vm_info.guests[0].hw_power_status not in ["poweredOff", "suspended"]
-        - snapshot_mode != 'revert'
+        - snapshots_vcenter_vm_info.guests[0].guest_tools_status != "guestToolsRunning"
+        - snapshot_mode == "live-snap"
 
-- name: Including powerstate role...
-  ansible.builtin.include_role:
-    name: nova.core.powerstate
-  vars:
-    shutdown: true
-  when:
-    - snapshot_mode == 'clean-snap' or snapshot_mode == 're-snap' or snapshot_mode == 'snap'
-    - not live_snap | bool
-    - vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
+    - name: Including powerstate role...
+      ansible.builtin.include_role:
+        name: nova.core.powerstate
+      vars:
+        shutdown: true
+      when:
+        - snapshot_mode in ['clean-snap', 're-snap', 'snap']
+        - not live_snap | bool
+        - snapshots_vcenter_vm_info.guests[0].hw_power_status != "poweredOff"
 
-- name: Including snapshot task...
-  ansible.builtin.include_tasks: snapshot.yml
-  when: snapshot_mode == 'clean-snap' or snapshot_mode == 're-snap' or snapshot_mode == 'snap'
+    - name: Including snapshot task...
+      ansible.builtin.include_tasks: snapshot.yml
+      when: snapshot_mode in ['clean-snap', 're-snap', 'snap']
 
-- name: Including revert task...
-  ansible.builtin.include_tasks: revert.yml
-  when: snapshot_mode == 'revert'
+    - name: Including revert task...
+      ansible.builtin.include_tasks: revert.yml
+      when: snapshot_mode == 'revert'
 
-- name: Including snapshot rename task...
-  ansible.builtin.include_tasks: rename.yml
-  when: snapshot_mode == 'rename'
+    - name: Including snapshot rename task...
+      ansible.builtin.include_tasks: rename.yml
+      when: snapshot_mode == 'rename'
 
-- name: Including snapshot remove task...
-  ansible.builtin.include_tasks: remove.yml
-  when: snapshot_mode == 'remove'
+    - name: Including snapshot remove task...
+      ansible.builtin.include_tasks: remove.yml
+      when: snapshot_mode == 'remove'

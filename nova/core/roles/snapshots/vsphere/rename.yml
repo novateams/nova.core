@@ -1,11 +1,9 @@
 ---
-- name: Renaming {{ snapshot_name }} snapshot to {{ new_snapshot_name }}...
+- name: Renaming {{ snapshot_name | default(snapshots_vcenter_vm_info.guests[0].current_snapshot.name) | default('') }} snapshot to {{ new_snapshot_name }}...
   vmware.vmware.vm_snapshot:
     datacenter: "{{ datacenter }}"
     folder: "{{ folder }}"
     name: "{{ custom_vm_name | default(vm_name) }}"
     state: present
-    snapshot_name: "{{ snapshot_name }}"
+    snapshot_name: "{{ snapshot_name | default(snapshots_vcenter_vm_info.guests[0].current_snapshot.name) | default('') }}"
     new_snapshot_name: "{{ new_snapshot_name }}"
-  delegate_to: localhost
-  become: false

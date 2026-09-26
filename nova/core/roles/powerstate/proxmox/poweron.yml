@@ -24,5 +24,7 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         config: current
         network: true
+      register: proxmox_vm_poweron
+      until: proxmox_vm_poweron.proxmox_vms[0].status | default('') == 'running'
       retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
       delay: 5

@@ -4,7 +4,5 @@
     name: "{{ custom_vm_name | default(vm_name) }}"
     datacenter: "{{ datacenter }}"
     state: suspended
-  retries: 3
-  delay: 10
-  become: false
-  delegate_to: localhost
+  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 2 else 2) // 2 }}"
+  delay: 2

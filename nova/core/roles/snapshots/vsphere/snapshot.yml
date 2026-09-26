@@ -1,51 +1,47 @@
 ---
-- name: Including snapshot tasks...
-  delegate_to: localhost
-  become: false
-  block:
-    - name: Removing all existing snapshots...
-      vmware.vmware.vm_snapshot:
-        datacenter: "{{ datacenter }}"
-        folder: "{{ folder }}"
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        state: absent
-        remove_all: true
-      when: snapshot_mode == 'clean-snap'
+- name: Removing all existing snapshots...
+  vmware.vmware.vm_snapshot:
+    datacenter: "{{ datacenter }}"
+    folder: "{{ folder }}"
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    state: absent
+    remove_all: true
+  when: snapshot_mode == 'clean-snap'
 
-    - name: Removing snapshot...
-      vmware.vmware.vm_snapshot:
-        datacenter: "{{ datacenter }}"
-        folder: "{{ folder }}"
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        state: absent
-        snapshot_name: "{{ snapshot_name | default(vcenter_vm_info.guests[0].current_snapshot.name) }}"
-      when:
-        - vcenter_vm_info.guests[0].snapshots != []
-        - snapshot_mode == 're-snap'
+- name: Removing snapshot...
+  vmware.vmware.vm_snapshot:
+    datacenter: "{{ datacenter }}"
+    folder: "{{ folder }}"
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    state: absent
+    snapshot_name: "{{ snapshot_name | default(snapshots_vcenter_vm_info.guests[0].current_snapshot.name) }}"
+  when:
+    - snapshots_vcenter_vm_info.guests[0].snapshots != []
+    - snapshot_mode == 're-snap'
 
-    - name: Getting the time...
-      ansible.builtin.setup:
-        filter: "*_time"
+- name: Getting the time...
+  ansible.builtin.setup:
+    filter: "*_time"
 
-    # This is to avoid overwriting existing snapshots with the same name since that's the default behavior of the vmware.vmware.vm_snapshot
-    - name: Appending timestamp to snapshot name if it already exists...
-      ansible.builtin.set_fact:
-        snapshot_name_with_timestamp: "{{ snapshot_name }}_{{ ansible_facts.date_time.iso8601 }}"
-      when:
-        - snapshot_name is defined
-        - snapshot_mode == 'snap'
-        - vcenter_vm_info.guests[0].snapshots != []
-        - snapshot_name in vcenter_vm_info.guests[0].snapshots | map(attribute='name') | list
+# This is to avoid overwriting existing snapshots with the same name since that's the default behavior of the vmware.vmware.vm_snapshot
+- name: Appending timestamp to snapshot name if it already exists...
+  ansible.builtin.set_fact:
+    snapshot_name_with_timestamp: "{{ snapshot_name }}_{{ ansible_facts.date_time.iso8601 }}"
+  when:
+    - snapshot_name is defined
+    - snapshot_mode == 'snap'
+    - snapshots_vcenter_vm_info.guests[0].snapshots != []
+    - snapshot_name in snapshots_vcenter_vm_info.guests[0].snapshots | map(attribute='name') | list
 
-    - name: Creating a snapshot - {{ snapshot_name | default(ansible_facts.date_time.iso8601) }}...
-      vmware.vmware.vm_snapshot:
-        datacenter: "{{ datacenter }}"
-        folder: "{{ folder }}"
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        state: present
-        memory_dump: "{{ true if live_snap else false }}"
-        snapshot_name: "{{ snapshot_name_with_timestamp | default(snapshot_name) | default(ansible_facts.date_time.iso8601) }}"
-        description: Created at {{ ansible_facts.date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }}
+- name: Creating a snapshot - {{ snapshot_name | default(ansible_facts.date_time.iso8601) }}...
+  vmware.vmware.vm_snapshot:
+    datacenter: "{{ datacenter }}"
+    folder: "{{ folder }}"
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    state: present
+    memory_dump: "{{ true if live_snap else false }}"
+    snapshot_name: "{{ snapshot_name_with_timestamp | default(snapshot_name) | default(ansible_facts.date_time.iso8601) }}"
+    description: Created at {{ ansible_facts.date_time.iso8601 }} by {{ project_deployer_username | default(deployer_username) }}
 
 - name: Including powerstate role...
   ansible.builtin.include_role:

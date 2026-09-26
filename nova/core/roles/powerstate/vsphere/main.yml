@@ -1,32 +1,25 @@
 ---
 - name: Delegating all powerstate tasks to localhost...
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
   block:
     - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
       vmware.vmware.vm_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
       register: powerstate_vcenter_vm_info
-      retries: 3
-      delay: 10
 
     - name: ERROR
       ansible.builtin.fail:
         msg: "{{ custom_vm_name | default(vm_name) }} VM not found!"
       when: powerstate_vcenter_vm_info.guests == []
 
-    - name: Waiting until VMTools are running on {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm_info:
-        guest_name: "{{ custom_vm_name | default(vm_name) }}"
-      register: vm_tools
-      until: vm_tools.guests[0].guest_tools_status | default('') == "guestToolsRunning"
-      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
-      delay: 5
+    - name: Waiting for VMware tools to become available for {{ custom_vm_name | default(vm_name) }}...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        timeout: "{{ powerstate_agent_info_timeout }}"
       when:
         - powerstate_vcenter_vm_info.guests[0].guest_tools_status != "guestToolsRunning"
-        - powerstate_vcenter_vm_info.guests[0].hw_power_status not in ["poweredOff", "suspended"]
-        - not reset
-        - not poweroff
+        - true in [(suspend | bool), (shutdown | bool), (restart | bool)]
 
     - name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
       ansible.builtin.include_tasks: poweroff.yml

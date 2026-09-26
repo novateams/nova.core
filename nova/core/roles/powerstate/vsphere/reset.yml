@@ -1,11 +1,9 @@
 ---
-- name: Delegating reset tasks to localhost...
-  delegate_to: localhost
-  become: false
-  block:
-    - name: Resetting {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm_powerstate:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        datacenter: "{{ datacenter }}"
-        state: restarted
-        force: true
+- name: Resetting {{ custom_vm_name | default(vm_name) }}...
+  vmware.vmware.vm_powerstate:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    datacenter: "{{ datacenter }}"
+    state: restarted
+    force: true
+  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 2 else 2) // 2 }}"
+  delay: 2

@@ -1,11 +1,9 @@
 ---
-- name: Delegating poweron tasks to localhost...
-  delegate_to: localhost
-  become: false
-  block:
-    - name: Powering on {{ custom_vm_name | default(vm_name) }}...
-      vmware.vmware.vm_powerstate:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        datacenter: "{{ datacenter }}"
-        state: powered-on
-        force: true # Required to power on a VM that is in a suspended state
+- name: Powering on {{ custom_vm_name | default(vm_name) }}...
+  vmware.vmware.vm_powerstate:
+    name: "{{ custom_vm_name | default(vm_name) }}"
+    datacenter: "{{ datacenter }}"
+    state: powered-on
+    force: true # Required to power on a VM that is in a suspended state
+  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 2 else 2) // 2 }}"
+  delay: 2
