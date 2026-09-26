@@ -63,7 +63,7 @@
   community.docker.docker_container_info:
     name: keycloak-config
   register: keycloak_config_status
-  until: keycloak_config_status.container.State.Running == false
+  until: keycloak_config_status.container.State.Running | default('') == false
   retries: "{{ (keycloak_config_timeout_seconds if keycloak_config_timeout_seconds >= 2 else 2) // 2 }}"
   delay: 2
 
