@@ -5,26 +5,21 @@
 
 - name: Removing extra cdroms...
   when: template_os_configuration_remove_extra_cdroms_on_vsphere
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
   block:
-    - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
+    - name: Looking up the {{ custom_vm_name | default(vm_name) }} cdroms...
       vmware.vmware.vm_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
+        schema: vsphere
       register: vcenter_vm_info
-      delegate_to: localhost
-      become: false
 
-    - name: Listing all {{ custom_vm_name | default(vm_name) }} cdroms...
-      vmware.vmware_rest.vcenter_vm_hardware_cdrom_info:
-        vm: "{{ vcenter_vm_info.guests[0].moid }}"
-      register: existing_cdroms
-      until: not existing_cdroms.failed
-      retries: 5
-      delay: 2
+    - name: Creating a list of all existing devices...
+      ansible.builtin.set_fact:
+        existing_devices: "{{ vcenter_vm_info.guests[0].config.hardware.device }}"
 
-    - name: Removing extra cdroms if they exist...
-      when: existing_cdroms.value | length > 1
+    - name: Checking if there are multiple cdroms...
+      when: existing_devices | selectattr('_vimtype', 'equalto', 'vim.vm.device.VirtualCdrom') | sort(attribute='key') | length > 1
       block:
         - name: Shutting down {{ custom_vm_name | default(vm_name) }} VM...
           ansible.builtin.include_role:
@@ -32,16 +27,20 @@
           vars:
             shutdown: true
 
-        - name: Removing following cdroms...
-          vmware.vmware_rest.vcenter_vm_hardware_cdrom:
-            vm: "{{ vcenter_vm_info.guests[0].moid }}"
-            cdrom: "{{ item.cdrom }}"
-            state: absent
-          loop: "{{ existing_cdroms.value[1:] }}"
-          register: removed_cdroms
-          until: not removed_cdroms.failed
-          retries: 5
-          delay: 2
+        - name: Getting the first existing cdrom controller key...
+          ansible.builtin.set_fact:
+            primary_cdrom_controller:
+              "{{ existing_devices | selectattr('_vimtype', 'equalto', 'vim.vm.device.VirtualCdrom')
+              | sort(attribute='key') | map(attribute='controllerKey') | first }}"
+
+        - name: Keeping only the first cdrom...
+          vmware.vmware.vm:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            cdroms:
+              - device_node:
+                  # Converting the existing cdrom label to the device device_node required format
+                  "{{ (existing_devices | selectattr('key', 'equalto', primary_cdrom_controller) | map(attribute='deviceInfo.label') | first)
+                  | regex_replace('^([A-Za-z]+)\\s+(\\d+)$', '\\1(\\2:0)') }}"
 
         - name: Starting {{ custom_vm_name | default(vm_name) }} VM...
           ansible.builtin.include_role:

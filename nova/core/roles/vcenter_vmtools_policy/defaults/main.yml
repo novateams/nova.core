@@ -1,6 +1,6 @@
 ---
-# Can also be UPGRADE_AT_POWER_CYCLE
-vmtools_upgrade_policy: MANUAL
+# VMTools upgrade policy
+vmtools_upgrade_policy: manual # Can also be upgrade_at_power_cycle
 
 # How long to wait in seconds for VMTools to be running or upgraded before failing the task.
 vcenter_vmtools_policy_timeout: 180
