@@ -18,6 +18,10 @@ updates_debian_family_upgrade_method: dist
 # Will try and update firmware on Debian family systems if fwupdmgr is installed
 debian_family_updates_firmware: true
 
+# Whether to remove currently unused kernels from /boot on Kali systems
+# This is to prevent the boot partition from getting filled up with old kernels
+debian_kali_remove_unused_kernels: true
+
 ################
 # Linux RedHat #
 ################

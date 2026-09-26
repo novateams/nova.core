@@ -1,26 +1,23 @@
 ---
 # Kali kernels update very often and boot partition can get filled up with old kernels
-# Removing currently unused kernels from /boot before updating packages to avoid running out of space
-- name: Removing currently unused kernels from /boot...
+# Removing all kernels older than the running one from /boot
+- name: Removing kernels older than the running one from /boot...
   ansible.builtin.shell: |
-    set -eou pipefail
-
-    # Get the current boot files
-    VMLINUZ=/boot/vmlinuz-$(uname -r)
-    INITRD=/boot/initrd.img-$(uname -r)
-    CONFIG=/boot/config-$(uname -r)
-    SYSMAP=/boot/System.map-$(uname -r)
-
-    # Deleting all other vmlinuz and initrd files except the current one
-    find /boot -maxdepth 1 -type f \( -name 'vmlinuz-*' -o -name 'initrd.img-*' -o -name 'config-*' -o -name 'System.map-*' \) \
-      ! -path "$VMLINUZ" ! -path "$INITRD" ! -path "$CONFIG" ! -path "$SYSMAP" -print -exec rm -f {} \;
-
-    apt-get --fix-broken install -y
-  vars:
-    exec: /bin/bash
+    # Remove boot files of every kernel older than the running one
+    for VMLINUZ in /boot/vmlinuz-*; do
+      VERSION=${VMLINUZ#/boot/vmlinuz-}
+      if dpkg --compare-versions "$VERSION" lt "$(uname -r)"; then
+        echo "$VERSION"
+        rm -f /boot/{vmlinuz,initrd.img,config,System.map}-"$VERSION"
+      fi
+    done
+  args:
+    executable: /bin/bash
   register: remove_unused_kernels
-  changed_when: remove_unused_kernels.stdout is search("vmlinuz")
-  when: ansible_facts.distribution | default("") == "Kali"
+  changed_when: remove_unused_kernels.stdout != ""
+  when:
+    - debian_kali_remove_unused_kernels
+    - ansible_facts.distribution | default("") == "Kali"
 
 - name: Updating packages...
   ansible.builtin.apt:
