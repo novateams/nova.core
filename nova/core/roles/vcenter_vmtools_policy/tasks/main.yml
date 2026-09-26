@@ -1,47 +1,27 @@
 ---
 - name: Including VMTools upgrade policy tasks block...
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
   block:
-    - name: Looking up the VM...
-      vmware.vmware_rest.vcenter_vm_info:
-        filter_names:
-          - "{{ custom_vm_name | default(vm_name) }}"
-      retries: 5
-      delay: 2
-      register: vm_filter
-
-    - name: Collecting info about VM...
-      vmware.vmware_rest.vcenter_vm_info:
-        vm: "{{ vm_filter.value[0].vm }}"
-      retries: 5
-      delay: 2
-      register: vm_info
+    - name: Looking up the {{ custom_vm_name | default(vm_name) }} VMTools status...
+      vmware.vmware.vm_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+        schema: vsphere
+      register: vcenter_vmtools_info
 
     - name: Configuring VM Tools upgrade policy to {{ vmtools_upgrade_policy }}...
       vmware.vmware_rest.vcenter_vm_tools:
-        vm: "{{ vm_info.id }}"
-        upgrade_policy: "{{ vmtools_upgrade_policy }}"
+        vm: "{{ vcenter_vmtools_info.guests[0]._vimid }}"
+        upgrade_policy: "{{ vmtools_upgrade_policy | upper }}"
+      # Retries since the REST modules are unstable
       retries: 5
       delay: 2
-
-    - name: Waiting until VMTools are running...
-      vmware.vmware_rest.vcenter_vm_tools_info:
-        vm: "{{ vm_info.id }}"
-      register: vm_tools
-      until:
-        - vm_tools.value.run_state is defined
-        - vm_tools.value.run_state == "RUNNING"
-      retries: "{{ (vcenter_vmtools_policy_timeout if vcenter_vmtools_policy_timeout >= 5 else 5) / 5 }}"
-      delay: 5
 
     - name: Upgrading VMware Tools...
       community.vmware.vmware_guest_tools_upgrade:
         datacenter: "{{ datacenter }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
-      when:
-        - vm_tools.value.version_status != "UNMANAGED"
-        - vmtools_upgrade_policy == "MANUAL"
+      when: vcenter_vmtools_info.guests[0].guest.toolsVersionStatus != "guestToolsUnmanaged"
       retries: "{{ (vcenter_vmtools_policy_timeout if vcenter_vmtools_policy_timeout >= 5 else 5) / 5 }}"
       delay: 5
 
@@ -50,4 +30,4 @@
         msg: |
           VMware Tools are managed by the operating system, skipping upgrade.
           Use the operating system package manager to upgrade VMware Tools.
-      when: vm_tools.value.version_status == "UNMANAGED"
+      when: vcenter_vmtools_info.guests[0].guest.toolsVersionStatus == "guestToolsUnmanaged"
