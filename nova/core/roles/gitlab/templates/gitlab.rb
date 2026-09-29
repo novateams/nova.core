@@ -8,6 +8,7 @@ gitlab_rails['lfs_enabled'] = true
 gitlab_pages['internal_gitlab_server'] = 'http://localhost:8080'
 pages_external_url '{{ gitlab_pages_url }}'
 pages_nginx['enable'] = true
+pages_nginx['listen_addresses'] = ['*', '[::]']
 pages_nginx['listen_port'] = 80
 pages_nginx['listen_https'] = false
 pages_nginx['redirect_http_to_https'] = false
@@ -19,11 +20,13 @@ gitlab_rails['registry_enabled'] = {{ gitlab_registry_enabled | string | lower }
 {% if gitlab_registry_enabled is sameas true %}
 gitlab_rails['registry_host'] = '{{ gitlab_registry_fqdn }}'
 registry_external_url '{{ gitlab_registry_url }}'
+registry_nginx['listen_addresses'] = ['*', '[::]']
 registry_nginx['listen_port'] = 80
 registry_nginx['listen_https'] = false
 {% endif %}
 
 ### gitlab nginx ( internal ) https://docs.gitlab.com/omnibus/settings/nginx.html
+nginx['listen_addresses'] = ['*', '[::]']
 nginx['listen_port'] = 80
 nginx['listen_https'] = false
 nginx['client_max_body_size'] = '0'
