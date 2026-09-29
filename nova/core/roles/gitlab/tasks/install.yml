@@ -7,21 +7,25 @@
   poll: 0
   register: gitlab_pull
 
-- name: Creating Gitlab folders..
+- name: Creating following Gitlab folders..
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
-    mode: "{{ item.mode | default('0755') }}"
+    recurse: true
   loop_control:
     label: "{{ item.path }}"
   loop:
-    - path: "{{ gitlab_config_folder }}"
     - path: "{{ gitlab_config_folder }}/etc"
-      mode: u=rwX,g=rwX,o=rX
-    - path: "{{ gitlab_config_folder }}/data"
     - path: "{{ gitlab_config_folder }}/logs"
     - path: "{{ gitlab_config_folder }}/registry"
     - path: "{{ gitlab_config_folder }}/temp_configuration"
+
+# Creating Gitlab data folder separately since it can be quite large and slow for the file module to handle recursively
+- name: Creating {{ gitlab_config_folder }}/data
+  ansible.builtin.file:
+    path: "{{ gitlab_config_folder }}/data"
+    state: directory
+    mode: u=rwX,g=rX,o=rX
 
 - name: Templating Gitlab configuration files for {{ inventory_hostname }}..
   ansible.builtin.template:

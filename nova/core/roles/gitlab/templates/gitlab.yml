@@ -9,11 +9,12 @@ services:
     ports:
       - "{{ gitlab_ssh_port }}:22"
     volumes:
-      - "{{ gitlab_config_folder }}/etc:/etc/gitlab"
-      - "{{ gitlab_config_folder }}/logs:/var/log/gitlab"
-      - "{{ gitlab_config_folder }}/data:/var/opt/gitlab"
-      - "{{ gitlab_config_folder }}/registry:/var/opt/gitlab/gitlab-rails/shared/registry"
-      - "{{ gitlab_config_folder }}/temp_configuration:/temp_configuration"
+      - gitlab_etc:/etc/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_registry:/var/opt/gitlab/gitlab-rails/shared/registry
+      - gitlab_temp_configuration:/temp_configuration
+
       - "{{ gitlab_config_folder }}/sshd_config:/assets/sshd_config"
       - "/srv/certs:/srv/certs"
       - "/usr/local/share/ca-certificates:/usr/local/share/ca-certificates"
@@ -47,6 +48,42 @@ services:
       options:
         max-size: 250m
         max-file: "1"
+
+volumes:
+  gitlab_etc:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ gitlab_config_folder }}/etc"
+
+  gitlab_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ gitlab_config_folder }}/data"
+
+  gitlab_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ gitlab_config_folder }}/logs"
+
+  gitlab_registry:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ gitlab_config_folder }}/registry"
+
+  gitlab_temp_configuration:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ gitlab_config_folder }}/temp_configuration"
 
 configs:
   gitlab:
