@@ -6,7 +6,7 @@ services:
     hostname: nexus
     restart: unless-stopped
     volumes:
-      - "{{ nexus_container_config_folder }}/data:/nexus-data"
+      - nexus_data:/nexus-data
     environment:
       NEXUS_SECRETS_KEY_FILE: /nexus-data/nexus.secrets.json
     logging:
@@ -14,6 +14,14 @@ services:
       options:
         max-size: 250m
         max-file: "1"
+
+volumes:
+  nexus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ nexus_container_config_folder }}/data"
 
 networks:
   default:
