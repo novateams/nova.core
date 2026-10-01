@@ -1,5 +1,5 @@
 ---
-caddy_version: 2.11.4
+caddy_version: 2.11.7
 caddy_config_folder: /srv/caddy
 
 caddy_docker_network: local-network # Comes from nova.core.docker
