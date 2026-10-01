@@ -6,6 +6,7 @@
     owner: 100
     group: 1000
     mode: "0755"
+  register: vault_folders
   loop_control:
     loop_var: vault_dir
   loop:
@@ -80,6 +81,21 @@
   register: unseal_script
 
 - name: Unsealing Vault...
-  ansible.builtin.shell: "{{ vault_config_folder }}/config/unseal-vault.sh" # noqa: command-instead-of-shell
+  ansible.builtin.command: "{{ vault_config_folder }}/config/unseal-vault.sh"
   changed_when: true
   when: unseal_script.stat.exists
+
+- name: Waiting until {{ vault_configuration_uri }} is unsealed...
+  ansible.builtin.uri:
+    url: "{{ vault_configuration_uri }}/v1/sys/seal-status"
+    method: GET
+    status_code: 200
+    validate_certs: "{{ vault_validate_cert }}"
+  register: vault_seal_status
+  until:
+    - vault_seal_status.json.sealed is defined
+    - not vault_seal_status.json.sealed
+  retries: 12
+  delay: 10
+  # When Vault folders are not changes then assuming that that this is not the first run and waiting for Vault to be unsealed
+  when: not vault_folders.changed
