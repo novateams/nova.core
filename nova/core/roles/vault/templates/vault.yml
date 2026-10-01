@@ -6,9 +6,9 @@ services:
     container_name: "{{ vault_container_name }}"
     restart: unless-stopped
     volumes:
-      - "{{ vault_config_folder }}/config:/vault/config"
-      - "{{ vault_config_folder }}/file:/vault/file"
-      - "{{ vault_config_folder }}/logs:/vault/logs"
+      - vault_config:/vault/config
+      - vault_file:/vault/file
+      - vault_logs:/vault/logs
     environment:
       - VAULT_ADDR=http://0.0.0.0:80
       - VAULT_API_ADDR=http://0.0.0.0:80
@@ -19,6 +19,28 @@ services:
       options:
         max-size: 250m
         max-file: "1"
+
+volumes:
+  vault_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ vault_config_folder }}/config"
+
+  vault_file:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ vault_config_folder }}/file"
+
+  vault_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "{{ vault_config_folder }}/logs"
 
 networks:
   default:
