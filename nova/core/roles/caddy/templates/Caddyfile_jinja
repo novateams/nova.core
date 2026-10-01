@@ -11,7 +11,14 @@
 	{% if not server.caddy_use_tls | default(caddy_use_tls) %}
 	# TLS Disabled
 	{% elif caddy_auto_https == 'disable_certs' or caddy_auto_https == 'off' %}
-	tls {{ server.caddy_server_certificate_path | default(caddy_certificates_folder + server.caddy_server_name + "_fullchain.crt") }} {{ server.caddy_server_certificate_key_path | default(caddy_certificates_folder + server.caddy_server_name + "_key.crt") }}
+	tls {{ server.caddy_server_certificate_path | default(caddy_certificates_folder + server.caddy_server_name + "_fullchain.crt") }} {{ server.caddy_server_certificate_key_path | default(caddy_certificates_folder + server.caddy_server_name + "_key.crt") }} {
+	{% if server.caddy_client_auth | default(false) or caddy_client_auth %}
+		client_auth {
+			mode require_and_verify
+			trust_pool file {{ caddy_client_auth_trust_pool }}
+		}
+	{% endif %}
+	}
 	{% endif %}
 
 	log {{ server.caddy_server_name + loop.index | string }} {
