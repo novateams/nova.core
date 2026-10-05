@@ -32,6 +32,10 @@ DOCUMENTATION = """
             description: SSO client id for Providentia.
             type: string
             default: Providentia
+        providentia_cache_dir:
+            description: Directory to store Providentia cache files
+            type: string
+            default: /tmp/providentia
 """
 import os, aiohttp, asyncio, time, json, functools, hashlib
 from oauthlib.oauth2 import LegacyApplicationClient
@@ -70,6 +74,7 @@ class InventoryModule(BaseInventoryPlugin):
 
     def verify_file(self, path):
         if super(InventoryModule, self).verify_file(path):
+            os.makedirs(self.get_option('providentia_cache_dir'), exist_ok=True)
             return True
         return False
 
@@ -190,8 +195,8 @@ class InventoryModule(BaseInventoryPlugin):
             "Accept": "application/json",
         }
 
-        etag_file = f"/tmp/providentia_{self.project}_{endpoint}_cache_{hashed_url}.etag"
-        cache_file = f"/tmp/providentia_{self.project}_{endpoint}_cache_{hashed_url}.json"
+        etag_file = f"{self.get_option('providentia_cache_dir')}/{self.project}_{endpoint}_cache_{hashed_url}.etag"
+        cache_file = f"{self.get_option('providentia_cache_dir')}/{self.project}_{endpoint}_cache_{hashed_url}.json"
 
         if os.path.exists(etag_file) and os.path.exists(cache_file):
             with open(etag_file) as f:
