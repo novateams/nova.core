@@ -7,25 +7,25 @@
     - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
       ansible.builtin.copy:
         src: "{{ crt.src }}"
-        dest: /usr/local/share/ca-certificates/{{ crt.name }}.crt
+        dest: "{{ crt.dest | default('/usr/local/share/ca-certificates/' ~ crt.name | default('') ~ '.crt') }}"
         mode: "0644"
       loop: "{{ trusted_certificates_list }}"
       loop_control:
         loop_var: crt
-        label: /usr/local/share/ca-certificates/{{ crt.name }}.crt
+        label: "{{ crt.dest | default('/usr/local/share/ca-certificates/' ~ crt.name | default('') ~ '.crt') }}"
       when: not crt.src.startswith('http')
 
     - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
       ansible.builtin.get_url:
         url: "{{ crt.src }}"
-        dest: /usr/local/share/ca-certificates/{{ crt.name }}.crt
+        dest: "{{ crt.dest | default('/usr/local/share/ca-certificates/' ~ crt.name | default('') ~ '.crt') }}"
         mode: "0644"
         timeout: 60
         validate_certs: "{{ trusted_certificates_validate_certs }}"
       loop: "{{ trusted_certificates_list }}"
       loop_control:
         loop_var: crt
-        label: /usr/local/share/ca-certificates/{{ crt.name }}.crt
+        label: "{{ crt.dest | default('/usr/local/share/ca-certificates/' ~ crt.name | default('') ~ '.crt') }}"
       when: crt.src.startswith('http')
 
     - name: Updating CA certificates...

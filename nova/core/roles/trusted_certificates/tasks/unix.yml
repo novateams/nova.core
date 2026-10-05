@@ -9,46 +9,50 @@
 - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.copy:
     src: "{{ crt.src }}"
-    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
+    dest: "{{ crt.dest | default(unix_os_family_trusted_certificates_paths[ansible_facts.os_family] ~ '/' ~ crt.name | default('') ~ '.crt') }}"
     mode: "0644"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
     loop_var: crt
-    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
+    label: "{{ crt.dest | default(unix_os_family_trusted_certificates_paths[ansible_facts.os_family] ~ '/' ~ crt.name | default('') ~ '.crt') }}"
   when: not crt.src.startswith('http')
 
 - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
   ansible.builtin.get_url:
     url: "{{ crt.src }}"
-    dest: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
+    dest: "{{ crt.dest | default(unix_os_family_trusted_certificates_paths[ansible_facts.os_family] ~ '/' ~ crt.name | default('') ~ '.crt') }}"
     mode: "0644"
     timeout: 60
     validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
     loop_var: crt
-    label: "{{ unix_os_family_trusted_certificates_paths[ansible_facts.os_family] }}/{{ crt.name }}.crt"
+    label: "{{ crt.dest | default(unix_os_family_trusted_certificates_paths[ansible_facts.os_family] ~ '/' ~ crt.name | default('') ~ '.crt') }}"
   when: crt.src.startswith('http')
 
-- name: Updating CA certificates...
-  ansible.builtin.command: update-ca-certificates
-  changed_when: true
-  when: ansible_facts.os_family in ['Debian', 'Alpine']
+# Only update CA certificates if at least one new certificate has been added to the system truststore
+- name: Updating CA certificates when needed...
+  when: trusted_certificates_list | length != trusted_certificates_list | selectattr('dest', 'defined') | length
+  block:
+    - name: Updating CA certificates...
+      ansible.builtin.command: update-ca-certificates
+      changed_when: true
+      when: ansible_facts.os_family in ['Debian', 'Alpine']
 
-- name: Trusting installed certificates...
-  ansible.builtin.command: trust extract-compat
-  changed_when: true
-  when: ansible_facts.os_family == "Archlinux"
+    - name: Trusting installed certificates...
+      ansible.builtin.command: trust extract-compat
+      changed_when: true
+      when: ansible_facts.os_family == "Archlinux"
 
-- name: Updating CA certificates...
-  ansible.builtin.command: update-ca-trust extract
-  changed_when: true
-  when: ansible_facts.os_family == "RedHat"
+    - name: Updating CA certificates...
+      ansible.builtin.command: update-ca-trust extract
+      changed_when: true
+      when: ansible_facts.os_family == "RedHat"
 
-- name: Updating CA certificates...
-  ansible.builtin.command: certctl rehash
-  changed_when: true
-  when: ansible_facts.os_family == "FreeBSD"
+    - name: Updating CA certificates...
+      ansible.builtin.command: certctl rehash
+      changed_when: true
+      when: ansible_facts.os_family == "FreeBSD"
 
 - name: Adding trusted certificate(s) to Java keystore(s)...
   when: trusted_certificates_to_jks

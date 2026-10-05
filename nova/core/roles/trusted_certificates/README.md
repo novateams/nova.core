@@ -29,3 +29,15 @@ none
       - name: SecondRootCA
         src: SecondRootCA.cer
 ```
+
+```yaml
+# This example will download the certificate from the URL and save it to the specified destination instead of using the default location.
+- name: Including trusted_certificates role...
+  ansible.builtin.include_role:
+    name: nova.core.trusted_certificates
+  vars:
+    trusted_certificates_list:
+      - name: RootCA
+        src: http://example.com/pem
+        dest: /tmp/{{ project_fullname | default('') }}_{{ crt.name }}.crt
+```

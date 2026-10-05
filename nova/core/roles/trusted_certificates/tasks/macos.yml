@@ -44,12 +44,13 @@
   changed_when: true
 
 - name: Saving certificates to {{ inventory_hostname }}...
-  ansible.builtin.raw: echo "{{ read_cert.content | b64decode }}" > /usr/local/etc/certs/{{ read_cert.crt.crt.name | default(read_cert.crt.name) }}.crt
+  ansible.builtin.raw: echo "{{ read_cert.content | b64decode }}" > "{{
+    crt.dest | default('/usr/local/etc/certs/' ~ read_cert.crt.crt.name | default(read_cert.crt.name) ~ '.crt') }}"
   changed_when: true
   loop: "{{ slurp_trusted_certificates.results | default([]) + slurp_downloaded_certificates.results | default([]) }}"
   loop_control:
     loop_var: read_cert
-    label: /usr/local/etc/certs/{{ read_cert.crt.crt.name | default(read_cert.crt.name) }}.crt
+    label: "{{ crt.dest | default('/usr/local/etc/certs/' ~ read_cert.crt.crt.name | default(read_cert.crt.name) ~ '.crt') }}"
   register: save_local_certs
   when: read_cert.content is defined
 
@@ -60,11 +61,11 @@
     - name: Manually run the following commands from an interactive session on {{ inventory_hostname }} to add the trusted certificates...
       ansible.builtin.debug:
         msg: sudo security add-trusted-cert -d -r trustRoot -k
-          /Library/Keychains/System.keychain /usr/local/etc/certs/{{ read_cert.crt.crt.name | default(read_cert.crt.name) }}.crt
+          /Library/Keychains/System.keychain "{{ crt.dest | default('/usr/local/etc/certs/' ~ read_cert.crt.crt.name | default(read_cert.crt.name) ~ '.crt') }}"
       loop: "{{ slurp_trusted_certificates.results | default([]) + slurp_downloaded_certificates.results | default([]) }}"
       loop_control:
         loop_var: read_cert
-        label: /usr/local/etc/certs/{{ read_cert.crt.crt.name | default(read_cert.crt.name) }}.crt
+        label: "{{ crt.dest | default('/usr/local/etc/certs/' ~ read_cert.crt.crt.name | default(read_cert.crt.name) ~ '.crt') }}"
       when: read_cert.content is defined
 
     - name: Giving time to read the above commands...

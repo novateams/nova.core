@@ -7,47 +7,47 @@
 - name: Copying trusted certificates(s) to {{ inventory_hostname }}...
   ansible.windows.win_copy:
     src: "{{ crt.src }}"
-    dest: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    dest: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
     loop_var: crt
-    label: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    label: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
   when: not crt.src.startswith('http')
 
 - name: Importing project certificates(s) to trusted root store...
   ansible.windows.win_certificate_store:
-    path: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    path: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
     key_storage: machine
     state: present
     store_name: Root
   loop: "{{ trusted_certificates_list }}"
   loop_control:
     loop_var: crt
-    label: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    label: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
   when: not crt.src.startswith('http')
 
 - name: Downloading trusted certificates(s) to {{ inventory_hostname }}...
   ansible.windows.win_get_url:
     url: "{{ crt.src }}"
-    dest: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    dest: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
     timeout: 60
     validate_certs: "{{ trusted_certificates_validate_certs }}"
   loop: "{{ trusted_certificates_list }}"
   loop_control:
     loop_var: crt
-    label: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    label: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
   when: crt.src.startswith('http')
 
 - name: Importing trusted certificates(s) to root store for {{ inventory_hostname }}...
   ansible.windows.win_certificate_store:
-    path: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    path: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
     key_storage: machine
     state: present
     store_name: Root
   loop: "{{ trusted_certificates_list }}"
   loop_control:
     loop_var: crt
-    label: "{{ post_scripts_folder_on_target }}/{{ crt.name }}.cer"
+    label: "{{ crt.dest | default(post_scripts_folder_on_target ~ '/' ~ crt.name | default('') ~ '.cer') }}"
   when: crt.src.startswith('http')
 
 - name: Importing certificate(s) to Java keystore(s)... # Must have Java installed
