@@ -6,6 +6,39 @@
     state: absent
     purge: true
 
+# The way Linode VM disks are configured requires fixing the grub-pc install device
+# Otherwise the update will fail without manual interactions
+- name: Fixing Linode grub-pc configuration...
+  when: infra_env == "linode"
+  block:
+    - name: Checking if grub-pc is installed...
+      ansible.builtin.command: dpkg-query -W -f='${Status}' grub-pc
+      register: grub_pc
+      changed_when: false
+      failed_when: false
+
+    - name: Fixing grub-pc install device...
+      when: "'install ok' in grub_pc.stdout"
+      block:
+        - name: Finding boot disk...
+          ansible.builtin.command: findmnt -n -o SOURCE /
+          register: boot_disk
+          changed_when: false
+
+        - name: Pre-seeding grub-pc install device...
+          ansible.builtin.debconf:
+            name: grub-pc
+            question: grub-pc/install_devices
+            vtype: multiselect
+            value: "{{ boot_disk.stdout | trim }}"
+
+        - name: Pre-seeding grub-pc install_devices_empty...
+          ansible.builtin.debconf:
+            name: grub-pc
+            question: grub-pc/install_devices_empty
+            vtype: boolean
+            value: false
+
 - name: Installing Gnome for Ubuntu Desktop...
   when: group_names | select('match', '^os_ubuntu_desktop') | list | length > 0
   block:
