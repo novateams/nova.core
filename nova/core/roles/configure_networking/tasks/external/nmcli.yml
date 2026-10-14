@@ -21,7 +21,7 @@
     mode: "0644"
     lstrip_blocks: true
   loop_control:
-    label: "{{ item.src }}"
+    label: "{{ item.dest }}"
   loop:
     - src: 70-persistent-net.rules
       dest: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
@@ -36,7 +36,7 @@
     dest: "{{ item.dest }}"
     mode: "{{ item.mode }}"
   loop_control:
-    label: "{{ item.src }}"
+    label: "{{ item.dest }}"
   loop:
     - src: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_70-persistent-net.rules
       dest: /etc/udev/rules.d/70-persistent-net.rules
