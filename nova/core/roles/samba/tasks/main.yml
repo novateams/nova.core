@@ -143,6 +143,15 @@
             state: started
             enabled: true
 
+        - name: Getting the Samba version...
+          ansible.builtin.shell: |
+            set -eo pipefail
+            samba --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'
+          args:
+            executable: /bin/bash
+          changed_when: false
+          register: samba_version
+
         - name: Configuring LDAPs TLS settings...
           community.general.ini_file:
             path: /etc/samba/smb.conf
@@ -161,9 +170,23 @@
               value: "{{ samba_ldaps_cert_file }}"
             - option: tls enabled
               value: "yes"
+          when: item.value is ansible.builtin.truthy
+
+        - name: Configuring LDAPs TLS settings...
+          community.general.ini_file:
+            path: /etc/samba/smb.conf
+            section: global
+            option: "{{ item.option }}"
+            value: "{{ item.value }}"
+            mode: "0644"
+          loop_control:
+            label: "{{ item.option }} > {{ item.value }}"
+          loop:
             - option: tls trust system cas
               value: "yes"
-          when: item.value is ansible.builtin.truthy
+          when:
+            - item.value is ansible.builtin.truthy
+            - samba_version.stdout is version('4.23', '>=')
 
     - name: Adding DNS forwarders...
       community.general.ini_file:
