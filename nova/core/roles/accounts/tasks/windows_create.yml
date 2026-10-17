@@ -215,4 +215,5 @@
       ansible.windows.win_service:
         name: sshd
         state: restarted
+      retries: 3 # Retry up to 3 times for stability with low-end machines
       when: maxauthtries.changed

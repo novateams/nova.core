@@ -21,6 +21,7 @@
 - name: Regenerating Windows SSH host keys...
   ansible.windows.win_shell: "{{ lookup('file', 'Regenerate-HostKeys.ps1') }}"
   register: regenerate_host_keys
+  retries: 3 # Retry up to 3 times for stability with low-end machines
   changed_when: regenerate_host_keys.stdout_lines[0] != "Host keys have already been regenerated."
   when: os_configuration_regenerate_windows_host_keys
 
