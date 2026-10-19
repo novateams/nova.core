@@ -101,19 +101,19 @@
     owner: root
     group: wheel
 
-# This is required to apply the new configuration
-- name: Restarting {{ custom_vm_name | default(vm_name) }} VM...
-  ansible.builtin.include_role:
-    name: nova.core.powerstate
-  vars:
-    restart: true
-
 - name: Removing local config.xml file...
   ansible.builtin.file:
     path: /tmp/{{ project_fullname | default('') }}_{{ inventory_hostname }}_opnsense_config.xml
     state: absent
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
+
+# Reboot is needed to apply the new configuration
+- name: Rebooting {{ custom_vm_name | default(vm_name) }} VM...
+  ansible.builtin.include_role:
+    name: nova.core.powerstate
+  vars:
+    restart: true
 
 - name: Setting correct password for {{ ansible_deployer_username }}...
   ansible.builtin.set_fact:
