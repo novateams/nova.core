@@ -6,8 +6,8 @@
     timeout: "{{ proxmox_machine_operations_operation_timeout }}"
   retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
   delay: 5
-  delegate_to: localhost
   become: false
+  delegate_to: localhost
   when: proxmox_vm_info.proxmox_vms[0].status == 'running'
 
 - name: Including poweron tasks since {{ custom_vm_name | default(vm_name) }} is not running...

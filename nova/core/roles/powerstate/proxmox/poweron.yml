@@ -18,13 +18,3 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         state: started
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
-
-    - name: Waiting until {{ custom_vm_name | default(vm_name) }} guest agent is running...
-      community.proxmox.proxmox_vm_info:
-        name: "{{ custom_vm_name | default(vm_name) }}"
-        config: current
-        network: true
-      register: proxmox_vm_poweron
-      until: proxmox_vm_poweron.proxmox_vms[0].status | default('') == 'running'
-      retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
-      delay: 5
