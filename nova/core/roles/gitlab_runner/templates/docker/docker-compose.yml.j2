@@ -3,7 +3,7 @@ services:
   runner-manager:
     container_name: runner-manager
     hostname: runner-manager
-    image: "gitlab/gitlab-runner:{{ gitlab_runner_docker_version_tag }}"
+    image: gitlab/gitlab-runner:{{ gitlab_runner_docker_version_tag }}
     restart: always
     volumes:
       - {{ gitlab_runner_docker_config_folder }}/etc/gitlab-runner:/etc/gitlab-runner

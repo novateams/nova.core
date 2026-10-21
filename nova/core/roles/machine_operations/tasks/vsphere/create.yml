@@ -112,7 +112,8 @@
 
         - name: ERROR...
           ansible.builtin.debug:
-            msg: Your OS disk size {{ os_disk_size }}MB cannot be smaller than the template {{ template_disk_size }}MB!
+            msg: |
+              Your OS disk size {{ os_disk_size }}MB cannot be smaller than the template {{ template_disk_size }}MB!
           when: template_disk_size | int > os_disk_size | int
           failed_when: template_disk_size | int > os_disk_size | int
 
