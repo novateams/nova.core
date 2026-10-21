@@ -46,6 +46,8 @@
     dest: "{{ item.dest }}"
     mode: "0644"
   register: coredns_template_results
+  loop_control:
+    label: "{{ item.dest }}"
   loop:
     - src: "{{ coredns_corefile }}"
       dest: "{{ coredns_config_folder }}/Corefile"
