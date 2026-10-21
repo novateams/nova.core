@@ -43,8 +43,5 @@
     using {{ ansible_connection | default('ssh') | upper }}
     over {{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }} # noqa: name[template] jinja[invalid]
   ansible.builtin.set_fact:
-    ansible_host:
-      "{{ '[' ~ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) ~ ']'
-      if (connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address)) | ansible.utils.ipv6
-      else connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) }}"
+    ansible_host: "{{ connection_address_custom | default(detect_dhcp.instance.guest.ipAddress) | default(connection_address) | ansible.utils.ipwrap }}"
   when: ansible_network_os | default('') == "fortinet.fortios.fortios"

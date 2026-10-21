@@ -1,10 +1,7 @@
 ---
 - name: Setting static IP connection facts... # noqa: jinja[invalid]
   ansible.builtin.set_fact:
-    ansible_host:
-      "{{ '[' ~ connection_address_info.address | ansible.utils.ipaddr('address') ~ ']'
-      if connection_address_info.address | ansible.utils.ipaddr('address') is ansible.utils.ipv6
-      else connection_address_info.address | ansible.utils.ipaddr('address') }}"
+    ansible_host: "{{ connection_address_info.address | ansible.utils.ipaddr('address') | ansible.utils.ipwrap }}"
   when: connection_mode in ['ipv4_static', 'ipv6_static']
 
 - name: Configuring FortiOS connection interface...
@@ -285,9 +282,7 @@
 
         - name: Setting DHCP connection facts... # noqa: jinja[invalid]
           ansible.builtin.set_fact:
-            ansible_host: "{{ '[' ~ detect_dhcp.instance.guest.ipAddress ~ ']'
-              if detect_dhcp.instance.guest.ipAddress is ansible.utils.ipv6
-              else detect_dhcp.instance.guest.ipAddress }}"
+            ansible_host: "{{ detect_dhcp.instance.guest.ipAddress | ansible.utils.ipwrap }}"
 
     - name: Waiting for the network to be configured...
       ansible.builtin.wait_for:
