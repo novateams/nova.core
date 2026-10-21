@@ -5,6 +5,14 @@
   # DHCP is not supported or recommended for Proxmox management interface
   when: connection_mode not in ['ipv4_dhcp', 'ipv6_dhcp', 'ipv6_slaac']
   block:
+    - name: Waiting for OS info...
+      community.vmware.vmware_guest_tools_wait:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vcenter_vm_info
+      until: vcenter_vm_info.instance.advanced_settings['guestInfo.detailed.data'] is defined
+      retries: 12
+      delay: 10
+
     ########
     # Udev #
     ########
