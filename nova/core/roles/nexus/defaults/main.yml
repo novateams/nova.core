@@ -107,6 +107,30 @@ nexus_default_repositories:
       cleanup:
         policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
 
+  # NPM proxy
+  - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/npm/proxy
+    repo_body:
+      name: npm-proxy
+      online: true
+      replication:
+        preemptivePullEnabled: false
+      storage:
+        blobStoreName: default
+        dataStoreName: nexus
+        strictContentTypeValidation: true
+      proxy:
+        contentMaxAge: 15
+        metadataMaxAge: 15
+        remoteUrl: https://registry.npmjs.org
+      negativeCache:
+        enabled: true
+        timeToLive: 15
+      httpClient:
+        blocked: false
+        autoBlock: false
+      cleanup:
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
+
   # Pypi proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/pypi/proxy
     repo_body:
