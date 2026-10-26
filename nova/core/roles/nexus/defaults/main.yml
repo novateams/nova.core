@@ -83,10 +83,11 @@ nexus_repositories: "{{ nexus_default_repositories + nexus_extra_repositories }}
 # List of extra repositories to be created in addition to the nexus_default_repositories list
 nexus_extra_repositories: []
 
-# List of cleanup policies to apply to each repository in nexus_repositories list
+# List of cleanup policies to apply to proxy repositories
 # If empty, no cleanup policy will be applied.
 # The policies must already exist in Nexus.
-nexus_cleanup_policies: []
+# Only applies to proxy repositories that have upstream sources to avoid accidental cleanup of hosted content
+nexus_proxy_cleanup_policies: []
 
 # It can be manually created and will then be automatically used by the repositories
 nexus_default_repositories:
@@ -104,8 +105,6 @@ nexus_default_repositories:
         proprietaryComponents: false
       raw:
         contentDisposition: ATTACHMENT
-      cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
 
   # NPM proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/npm/proxy
@@ -153,7 +152,7 @@ nexus_default_repositories:
         blocked: false
         autoBlock: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Chocolatey proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/nuget/proxy
@@ -177,7 +176,7 @@ nexus_default_repositories:
         queryCacheItemMaxAge: 3600
         nugetVersion: V2
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Rubygems proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/rubygems/proxy
@@ -198,7 +197,7 @@ nexus_default_repositories:
         blocked: false
         autoBlock: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Microsoft apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -222,7 +221,7 @@ nexus_default_repositories:
         distribution:
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Kali apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -248,7 +247,7 @@ nexus_default_repositories:
         distribution: main
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Ubuntu apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -272,7 +271,7 @@ nexus_default_repositories:
         distribution:
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Ubuntu-security apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -296,7 +295,7 @@ nexus_default_repositories:
         distribution:
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Debian apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -320,7 +319,7 @@ nexus_default_repositories:
         distribution:
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Debian-security apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -344,7 +343,7 @@ nexus_default_repositories:
         distribution:
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   ####################
   # Docker apt proxy #
@@ -372,7 +371,7 @@ nexus_default_repositories:
         distribution:
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Debian Docker apt proxy
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/apt/proxy
@@ -396,7 +395,7 @@ nexus_default_repositories:
         distribution:
         flat: false
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   #########################
   # Container Proxy Repos #
@@ -428,7 +427,7 @@ nexus_default_repositories:
         cacheForeignLayers: false
         indexType: REGISTRY
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   # Non-DockerHub proxies use port instead of routing to deal with issues
   # Where different web proxies are unable to correctly route Docker specific requests to correct repos
@@ -461,7 +460,7 @@ nexus_default_repositories:
         cacheForeignLayers: false
         indexType: REGISTRY
       cleanup:
-        policyNames: "{{ [] if nexus_cleanup_policies == [] else nexus_cleanup_policies }}"
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
     repo_body:
@@ -490,6 +489,8 @@ nexus_default_repositories:
         indexType: REGISTRY
         indexUrl: https://quay.io/
         whitelistUrl[0]: ".*"
+      cleanup:
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
 
   - api_endpoint: https://{{ nexus_fqdn }}/service/rest/v1/repositories/docker/proxy
     repo_body:
@@ -518,3 +519,5 @@ nexus_default_repositories:
         indexType: REGISTRY
         indexUrl: https://registry.k8s.io/
         whitelistUrl[0]: ".*"
+      cleanup:
+        policyNames: "{{ [] if nexus_proxy_cleanup_policies == [] else nexus_proxy_cleanup_policies }}"
