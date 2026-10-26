@@ -6,6 +6,9 @@
     - name: Looking up the {{ custom_vm_name | default(vm_name) }} VM...
       vmware.vmware.vm_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
+        schema: vsphere
+        properties:
+          - summary
       register: powerstate_vcenter_vm_info
 
     - name: ERROR
@@ -18,8 +21,8 @@
         name: "{{ custom_vm_name | default(vm_name) }}"
         timeout: "{{ powerstate_agent_info_timeout }}"
       when:
-        - powerstate_vcenter_vm_info.guests[0].hw_power_status == "poweredOn"
-        - powerstate_vcenter_vm_info.guests[0].guest_tools_status != "guestToolsRunning"
+        - powerstate_vcenter_vm_info.guests[0].summary.runtime.powerState == "poweredOn"
+        - powerstate_vcenter_vm_info.guests[0].summary.guest.toolsRunningStatus != "guestToolsRunning"
         - (suspend | bool) or (shutdown | bool) or (restart | bool)
 
     - name: Including {{ custom_vm_name | default(vm_name) }} poweroff tasks...
