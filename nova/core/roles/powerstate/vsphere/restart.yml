@@ -3,17 +3,20 @@
   vmware.vmware.vm_powerstate:
     name: "{{ custom_vm_name | default(vm_name) }}"
     datacenter: "{{ datacenter }}"
-    state: "{{ 'reboot-guest' if powerstate_vcenter_vm_info.guests[0].hw_power_status == 'poweredOn' else 'powered-on' }}"
+    state: "{{ 'reboot-guest' if powerstate_vcenter_vm_info.guests[0].summary.runtime.powerState == 'poweredOn' else 'powered-on' }}"
   retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 2 else 2) // 2 }}"
   delay: 2
 
-# To ensure that VM has started the reboot cycle
-- name: Waiting until VMTools are NOT running on {{ custom_vm_name | default(vm_name) }} anymore...
+# Since vmware.vmware.vm_powerstate is fire-and-forget then comparing VM boot time from before and after the restart to ensure the reboot has occurred
+- name: Waiting for {{ custom_vm_name | default(vm_name) }} reboot...
   vmware.vmware.vm_info:
     guest_name: "{{ custom_vm_name | default(vm_name) }}"
-  register: vm_tools
+    schema: vsphere
+    properties:
+      - summary
+  register: powerstate_reboot_state
   until:
-    - vm_tools.guests[0].guest_tools_status is defined
-    - vm_tools.guests[0].guest_tools_status | default('') != "guestToolsRunning"
-  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 2 else 2) // 2 }}"
-  delay: 2
+    - powerstate_reboot_state.guests[0].summary.runtime.bootTime is defined
+    - powerstate_reboot_state.guests[0].summary.runtime.bootTime > powerstate_vcenter_vm_info.guests[0].summary.runtime.bootTime
+  retries: "{{ (powerstate_agent_info_timeout if powerstate_agent_info_timeout >= 5 else 5) // 5 }}"
+  delay: 5
