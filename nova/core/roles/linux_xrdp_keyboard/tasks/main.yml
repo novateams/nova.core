@@ -19,6 +19,7 @@
     firstmatch: true
   loop_control:
     loop_var: xrdp_keymap_config
+    label: "{{ xrdp_keymap_config.line }}"
   loop: # Loop needs to be in reverse order to the locations in file for the same value lines
     - insertafter: ^\[default_rdp_layouts\]
       line: rdp_layout_ee=0x00000425

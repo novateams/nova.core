@@ -83,7 +83,6 @@
             - name: Cloning {{ custom_vm_name | default(vm_name) }} VM...
               community.proxmox.proxmox_kvm:
                 clone: "{{ vm_template }}"
-                description: "{{ vm_description }}"
                 full: "{{ false if linked_clone_status else true }}"
                 name: "{{ custom_vm_name | default(vm_name) }}"
                 newid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"

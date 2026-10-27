@@ -79,6 +79,8 @@
     insertafter: "{{ item.insertafter | default(omit) }}"
     state: "{{ item.state | default('present') }}"
     mode: "0600"
+  loop_control:
+    label: "{{ item.line | default('') }} > {{ item.dest }}"
   loop:
     - dest: /etc/sssd/sssd.conf
       insertafter: ^\[sssd\]
