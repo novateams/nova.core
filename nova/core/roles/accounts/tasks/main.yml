@@ -1,14 +1,4 @@
 ---
-- name: MISSING REQUIRED VARIABLE(S)
-  ansible.builtin.fail:
-    msg: |
-      The ansible_deployer_password variable or admin_accounts list is required.
-      If you don't want to configure admin (root/Administrator/etc.) accounts machine you can just define an empty list - admin_accounts: []
-      Refer to the {{ role_path }}/README.md for examples.
-  when:
-    - ansible_deployer_password | default(false) is ansible.builtin.falsy
-    - admin_accounts is not defined
-
 - name: Including following accounts pre-roles...
   ansible.builtin.include_role:
     name: "{{ account_pre_role }}"
@@ -21,7 +11,22 @@
   when:
     - customization_context == "host" # Alternative is container that doesn't need this role
     - infra_env != "my_host" # my_host is computer where you run the play from
+
+    # If no users are defined then skip the accounts configuration tasks
+    - user_accounts != []
+      or domain_user_accounts != []
+      or admin_accounts != []
   block:
+    - name: MISSING REQUIRED VARIABLE(S)
+      ansible.builtin.fail:
+        msg: |
+          The ansible_deployer_password variable or admin_accounts list is required.
+          If you don't want to configure admin (root/Administrator/etc.) accounts machine you can just define an empty list - admin_accounts: []
+          Refer to the {{ role_path }}/README.md for examples.
+      when:
+        - ansible_deployer_password | default(false) is ansible.builtin.falsy
+        - admin_accounts is not defined
+
     - name: Including accounts lists creation tasks...
       ansible.builtin.include_tasks: create_accounts_lists.yml
 
