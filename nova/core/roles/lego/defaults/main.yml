@@ -1,5 +1,5 @@
 ---
-lego_version: 5.5.2
+lego_version: 5.6.0
 lego_download_url:
   https://github.com/go-acme/lego/releases/download/v{{ lego_version }}/lego_v{{ lego_version
   }}_linux_{{ 'arm64' if ansible_facts.architecture | default('') == 'aarch64' else 'amd64' }}.tar.gz
