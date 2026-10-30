@@ -1,15 +1,20 @@
 ---
-- name: Checking if reboot is required...
-  ansible.windows.win_shell: Test-PendingReboot -SkipConfigurationManagerClientCheck | Select-Object -ExpandProperty IsRebootPending
-  changed_when: false
-  register: pending_reboot
+- name: Including gather_facts role...
+  ansible.builtin.include_role:
+    name: nova.core.gather_facts
 
 - name: Running reboot recheck tasks...
-  when: pending_reboot.stdout_lines[0] == 'True'
+  when:
+    - ansible_facts.system | default('') == 'Win32NT'
+    - ansible_facts.reboot_pending
   block:
     - name: Rebooting & rechecking...
       ansible.windows.win_reboot:
-        reboot_timeout: 1200
+        reboot_timeout: 1200 # Some systems (like Microsoft Exchange) may reboot for a very long time
+
+    - name: Re-gathering facts for {{ inventory_hostname }}...
+      ansible.builtin.setup:
+        gather_timeout: 60
 
     - name: Re-including check_and_reboot task...
       ansible.builtin.include_tasks: check_and_reboot.yml
