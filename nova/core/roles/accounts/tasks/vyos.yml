@@ -1,10 +1,15 @@
 ---
 - name: Configuring accounts for...
   vyos.vyos.vyos_user:
-    configured_password: "{{ item.password }}"
     name: "{{ item.username }}"
+    configured_password: "{{ item.password }}"
     state: present
     update_password: "{{ item.update_password | default('always') }}" # always or on_create
+    public_keys:
+      # Dummy placeholder for SSH key if not defined, otherwise the module reports change on every run
+      - key: "{{ item.ssh_key.split(' ')[1] if item.ssh_key is defined else '' }}"
+        name: "{{ item.username }}@{{ fqdn }}"
+        type: "{{ item.ssh_key.split(' ')[0] if item.ssh_key is defined else 'ssh-ed25519' }}"
   register: created_account
   loop: "{{ admin_accounts_with_password }}"
   loop_control:
@@ -14,19 +19,6 @@
   ansible.builtin.set_fact:
     ansible_deployer_password: "{{ admin_accounts_with_password
       | selectattr('username', 'equalto', ansible_deployer_username) | map(attribute='password') | first }}"
-  when: created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
+  when:
+    created_account.results | selectattr('changed', 'equalto', true) | map(attribute='item.username')
     | list | intersect([ansible_deployer_username]) | length > 0
-
-- name: Adding authorized keys... # vyos.vyos.vyos_user module still doesn't support this.
-  vyos.vyos.vyos_config:
-    lines:
-      - set system login user {{ item.username }} authentication public-keys {{ item.username }} key {{ item.ssh_key.split(' ')[1] }}
-      - set system login user {{ item.username }} authentication public-keys {{ item.username }} type {{ item.ssh_key.split(' ')[0] }}
-  loop: "{{ admin_accounts_with_password }}"
-  loop_control:
-    label: "{{ item.username }}"
-  when: item.ssh_key is defined
-
-- name: Saving configuration... # Don't know if vyos.vyos.vyos_user is buggy but config needs to be saved for new users to survive reboot
-  vyos.vyos.vyos_config:
-    save: true
