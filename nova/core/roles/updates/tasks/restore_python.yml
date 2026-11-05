@@ -2,14 +2,33 @@
 # This task is for re-detecting the Python version after an update and setting the ansible_python_interpreter variable accordingly
 # Otherwise Ansible will fail since the Python interpreter is no longer valid after an update.
 
-- name: Looking up the current Python version...
-  ansible.builtin.raw: command -v "python$(python3 --version | awk '{print $2}' | cut -d. -f1,2)"
-  args:
-    executable: /bin/sh
-  changed_when: false
-  register: current_python_version
+- name: Python detection...
+  when: ansible_network_os | default('') != "pfsense"
+  block:
+    - name: Looking up the current Python version...
+      ansible.builtin.raw: command -v python3
+      args:
+        executable: /bin/sh
+      changed_when: false
+      register: current_python_version
 
-- name: Setting updated Python interpreter for {{ inventory_hostname }}...
-  ansible.builtin.set_fact:
-    # Sometimes the output contains junk, find the last line that contains 'python'
-    ansible_python_interpreter: "{{ current_python_version.stdout_lines | select('search', 'python') | list | last }}"
+    - name: Setting updated Python interpreter for {{ inventory_hostname }}...
+      ansible.builtin.set_fact:
+        # Sometimes the output contains junk, find the last line that contains 'python'
+        ansible_python_interpreter: "{{ current_python_version.stdout_lines | select('search', 'python') | list | last }}"
+
+- name: Python detection for pfSense...
+  when: ansible_network_os | default('') == "pfsense"
+  block:
+    # pfSense does not have a standard 'python3' command, so we need to look for the Python3 binary manually
+    - name: Looking up the current Python version for pfSense...
+      ansible.builtin.raw: ls /usr/local/bin/python3* 2>/dev/null | grep -E '/python3(\.[0-9]+)?$' | sort -V | tail -1
+      args:
+        executable: /bin/sh
+      changed_when: false
+      register: current_pfsense_python_version
+
+    - name: Setting updated Python interpreter for {{ inventory_hostname }}...
+      ansible.builtin.set_fact:
+        # Sometimes the output contains junk, find the last line that contains 'python'
+        ansible_python_interpreter: "{{ current_pfsense_python_version.stdout_lines | select('search', 'python') | list | last }}"
