@@ -231,6 +231,16 @@
     port: 389
     timeout: 60
 
+- name: Creating DNS records in Samba AD...
+  ansible.builtin.shell: "{{ lookup('ansible.builtin.template', 'create_samba_dns_records.sh') }}"
+  register: dns_record_creation
+  changed_when: dns_record_creation.stdout is search("Record.*successfully")
+  args:
+    executable: /bin/bash
+  when:
+    - samba_dns_records != []
+    - samba_dc_role | lower == "pdc"
+
 # Since the machine is now Domain Controller
 - name: Re-gathering facts and including accounts role...
   when:
