@@ -35,4 +35,16 @@ none
     samba_ldaps_cert_file: /etc/ssl/certs/my_domain_cert.pem
     samba_ldaps_key_file: /etc/ssl/private/my_domain_key.pem
     samba_ldaps_ca_file: /etc/ssl/certs/my_domain_ca.pem
+    samba_dns_records:
+      - host: myhost
+        domain: my.domain # OPTIONAL will default to ad_domain_name variable if not specified
+        address: 10.0.0.1
+
+      - host: myhost2
+        domain: my.domain # OPTIONAL will default to ad_domain_name variable if not specified
+        address: fd01::1
+
+      - host: alias
+        type: CNAME # OPTIONAL A/AAAA/CNAME; auto-detected from address (non-IP value -> CNAME)
+        address: myhost.my.domain
 ```
