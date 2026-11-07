@@ -82,6 +82,7 @@
         dest: /etc/frr/frr.conf
         mode: "0600"
         lstrip_blocks: true
+      when: not frr_install_only
 
 - name: Flushing handlers...
   ansible.builtin.meta: flush_handlers
