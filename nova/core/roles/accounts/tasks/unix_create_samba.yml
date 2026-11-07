@@ -26,7 +26,7 @@
 
 - name: Configuring attributes for following users...
   community.general.ldap_attrs:
-    server_uri: ldaps://{{ fqdn }}
+    server_uri: ldaps://{{ custom_fqdn | default(fqdn) }}
     bind_dn: "{{ samba_admin_dn.stdout }}"
     bind_pw: "{{ samba_domain_admin_password | default(domain_admin_password) }}"
     dn: "{{ users_dns.stdout_lines[loop_index] }}"

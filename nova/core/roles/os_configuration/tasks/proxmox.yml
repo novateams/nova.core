@@ -22,11 +22,11 @@
       ansible.builtin.lineinfile:
         dest: /etc/hosts
         regexp: ^127.0.1.2
-        line: 127.0.1.2       {{ fqdn }} {{ ansible_facts.hostname }}
+        line: 127.0.1.2       {{ custom_fqdn | default(fqdn) }} {{ ansible_facts.hostname }}
 
     # Using sed because it allows changing certain line nr
     - name: Updating /etc/hosts with new hostname... # noqa: command-instead-of-module
-      ansible.builtin.command: sed -i '2s/.*/{{ connection_address }} {{ fqdn }} {{ hostname }}/' /etc/hosts
+      ansible.builtin.command: sed -i '2s/.*/{{ connection_address }} {{ custom_fqdn | default(fqdn) }} {{ hostname }}/' /etc/hosts
       changed_when: true
 
     - name: Fixing {{ inventory_hostname }} hostname...
@@ -37,7 +37,7 @@
       loop:
         - path: /etc/postfix/main.cf
           regexp: ^myhostname=.*
-          line: myhostname={{ fqdn }}
+          line: myhostname={{ custom_fqdn | default(fqdn) }}
 
     # Using the mv instead of ansible.builtin.copy keep permissions and ownership
     - name: Moving node directories...

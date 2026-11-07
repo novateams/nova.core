@@ -20,7 +20,7 @@
         - xpath: /pfsense/system/hostname
           value: "{{ hostname }}"
         - xpath: /pfsense/system/domain
-          value: "{{ domain }}"
+          value: "{{ custom_domain | default(domain) }}"
       loop_control:
         label: "{{ item.xpath }} > {{ item.value }}"
 

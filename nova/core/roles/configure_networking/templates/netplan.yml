@@ -83,7 +83,7 @@ network:
           {% endfor %}
           {% endif %}
         search:
-          - {{ domain }}
+          - {{ custom_domain | default(domain) }}
       {% endif %}
       {% endif %}
   {% endfor %}

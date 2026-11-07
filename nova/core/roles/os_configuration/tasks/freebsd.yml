@@ -1,11 +1,11 @@
 ---
 - name: Setting hostname for {{ inventory_hostname }}...
-  ansible.builtin.command: hostname -f {{ fqdn }}
+  ansible.builtin.command: hostname -f {{ custom_fqdn | default(fqdn) }}
   changed_when: true
 
 - name: Making hostname persistent...
   ansible.builtin.lineinfile:
-    line: hostname="{{ fqdn }}"
+    line: hostname="{{ custom_fqdn | default(fqdn) }}"
     path: /etc/rc.conf
     state: present
     regexp: .*hostname.*

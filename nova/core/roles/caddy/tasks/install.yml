@@ -70,7 +70,7 @@
 
         - name: Generating selfsigned CSR...
           community.crypto.openssl_csr:
-            path: /tmp/selfsigned_{{ fqdn }}.csr
+            path: /tmp/selfsigned_{{ custom_fqdn | default(fqdn) }}.csr
             privatekey_path: "{{ caddy_self_signed_certificate_key_path }}"
             common_name: "{{ caddy_self_signed_certificate_common_name }}"
             subject_alt_name: "{{ caddy_self_signed_certificate_subject_alt_name }}"
@@ -79,5 +79,5 @@
           community.crypto.x509_certificate:
             path: "{{ caddy_self_signed_certificate_path }}"
             privatekey_path: "{{ caddy_self_signed_certificate_key_path }}"
-            csr_path: /tmp/selfsigned_{{ fqdn }}.csr
+            csr_path: /tmp/selfsigned_{{ custom_fqdn | default(fqdn) }}.csr
             provider: selfsigned

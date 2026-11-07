@@ -8,7 +8,7 @@
     public_keys:
       # Dummy placeholder for SSH key if not defined, otherwise the module reports change on every run
       - key: "{{ item.ssh_key.split(' ')[1] if item.ssh_key is defined else '' }}"
-        name: "{{ item.username }}@{{ fqdn }}"
+        name: "{{ item.username }}@{{ custom_fqdn | default(fqdn) }}"
         type: "{{ item.ssh_key.split(' ')[0] if item.ssh_key is defined else 'ssh-ed25519' }}"
   register: created_account
   loop: "{{ admin_accounts_with_password }}"

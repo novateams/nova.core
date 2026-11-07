@@ -1,5 +1,5 @@
 ---
-- name: Getting {{ fqdn }} IP...
+- name: Getting {{ custom_fqdn | default(fqdn) }} IP...
   linode.cloud.instance_info:
     api_token: "{{ linode_api_token }}"
     label: "{{ custom_vm_name | default(vm_name) }}"

@@ -8,7 +8,7 @@
         provider: "{{ panos_connection_params }}"
         hostname: "{{ hostname }}"
         timezone: "{{ os_configuration_timezone }}"
-        domain: "{{ domain }}"
+        domain: "{{ custom_domain | default(domain) }}"
 
     - name: Committing PanOS changes...
       paloaltonetworks.panos.panos_commit_firewall:

@@ -2,7 +2,7 @@
 - name: Configuring hostname...
   cisco.ios.ios_system:
     hostname: "{{ hostname }}"
-    domain_name: "{{ domain }}"
+    domain_name: "{{ custom_domain | default(domain) }}"
     domain_search: "{{ dns_search }}"
     lookup_enabled: true
     name_servers: "{{ dns_servers }}"

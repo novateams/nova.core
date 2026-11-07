@@ -2,7 +2,7 @@
 - name: Setting FQDN as hostname...
   vyos.vyos.vyos_config:
     lines:
-      - set system host-name {{ fqdn }}
+      - set system host-name {{ custom_fqdn | default(fqdn) }}
     save: true
 
 - name: Setting NTP...
