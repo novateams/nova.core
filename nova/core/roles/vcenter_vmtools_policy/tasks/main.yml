@@ -1,8 +1,14 @@
 ---
+# Doing 2 VM lookups since the latest vmware.vmware does not return vm id with schema: vsphere
 - name: Including VMTools upgrade policy tasks block...
   become: false
   delegate_to: localhost
   block:
+    - name: Looking up the {{ custom_vm_name | default(vm_name) }} ID...
+      vmware.vmware.vm_info:
+        guest_name: "{{ custom_vm_name | default(vm_name) }}"
+      register: vm_info
+
     - name: Looking up the {{ custom_vm_name | default(vm_name) }} VMTools status...
       vmware.vmware.vm_info:
         guest_name: "{{ custom_vm_name | default(vm_name) }}"
@@ -11,7 +17,7 @@
 
     - name: Configuring VM Tools upgrade policy to {{ vmtools_upgrade_policy }}...
       vmware.vmware_rest.vcenter_vm_tools:
-        vm: "{{ vcenter_vmtools_info.guests[0]._vimid }}"
+        vm: "{{ vm_info.guests[0].moid }}"
         upgrade_policy: "{{ vmtools_upgrade_policy | upper }}"
       # Retries since the REST modules are unstable
       retries: 5
