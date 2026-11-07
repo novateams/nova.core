@@ -30,7 +30,7 @@ outline_local_file_storage_folder: "{{ app_container_folder }}/local_file_storag
 outline_docker_network: local-network
 
 # Application settings
-outline_url: https://{{ fqdn }}
+outline_url: https://{{ custom_fqdn | default(fqdn) }}
 
 # DB defaults
 postgres_user: outline_app

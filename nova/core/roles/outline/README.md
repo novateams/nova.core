@@ -30,8 +30,8 @@ dependencies:
   - role: nova.core.caddy
     vars:
       caddy_servers:
-        - caddy_server_name: "{{ fqdn }}"
+        - caddy_server_name: "{{ custom_fqdn | default(fqdn) }}"
           caddy_server_listen_addresses:
-            - "{{ fqdn }}"
+            - "{{ custom_fqdn | default(fqdn) }}"
           caddy_server_reverse_proxy_to_address: http://outline:3000
 ```

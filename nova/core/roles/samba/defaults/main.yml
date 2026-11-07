@@ -42,10 +42,10 @@ samba_ldaps_enable: true
 samba_ldaps_ca_file: {}
 
 # Path to LDAPs certificate private key file
-samba_ldaps_key_file: /srv/certs/{{ fqdn }}_key.crt
+samba_ldaps_key_file: /srv/certs/{{ custom_fqdn | default(fqdn) }}_key.crt
 
 # Path to LDAPs certificate public key file
-samba_ldaps_cert_file: /srv/certs/{{ fqdn }}_fullchain.crt
+samba_ldaps_cert_file: /srv/certs/{{ custom_fqdn | default(fqdn) }}_fullchain.crt
 
 #######
 # DNS #

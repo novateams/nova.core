@@ -10,8 +10,8 @@
       ansible_deployer_username: "{{ ansible_deployer_username }}"
       ansible_deployer_password: "{{ ansible_deployer_password }}"
       hostname: "{{ hostname }}"
-      domain: "{{ domain }}"
-      fqdn: "{{ fqdn }}"
+      domain: "{{ custom_domain | default(domain) }}"
+      fqdn: "{{ custom_fqdn | default(fqdn) }}"
       project_fullname: "{{ project_fullname }}"
   loop: "{{ vars_to_check | dict2items }}"
   loop_control:
@@ -27,9 +27,9 @@
   delegate_to: localhost
   become: false
 
-- name: Checking if /srv/certs/{{ fqdn }}_fullchain.crt exists...
+- name: Checking if /srv/certs/{{ custom_fqdn | default(fqdn) }}_fullchain.crt exists...
   ansible.builtin.stat:
-    path: /srv/certs/{{ fqdn }}_fullchain.crt
+    path: /srv/certs/{{ custom_fqdn | default(fqdn) }}_fullchain.crt
   register: fullchain_cert_state
 
 - name: Generating self-signed certificates...
@@ -52,7 +52,7 @@
         state: touch
         mode: "0644"
 
-- name: Adding Vault hosts file entry for {{ fqdn }}...
+- name: Adding Vault hosts file entry for {{ custom_fqdn | default(fqdn) }}...
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: .*{{ monolith_vault_fqdn }}$
@@ -60,7 +60,7 @@
     state: present
     mode: "0644"
 
-- name: Adding following hosts file entries for {{ fqdn }}...
+- name: Adding following hosts file entries for {{ custom_fqdn | default(fqdn) }}...
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: "{{ hosts_entry.regexp }}"

@@ -56,7 +56,7 @@ echo "This file is re-generated on each startup by /etc/rc.local" > /etc/resolv.
 echo "nameserver {{ dns_address }}" >> /etc/resolv.conf
 {% endfor %}
 {% endif %}
-echo "domain {{ domain }}" >> /etc/resolv.conf
+echo "domain {{ custom_domain | default(domain) }}" >> /etc/resolv.conf
 {% if dns_search != [] %}
 echo "search {{ dns_search | join(' ') }}" >> /etc/resolv.conf
 {% endif %}

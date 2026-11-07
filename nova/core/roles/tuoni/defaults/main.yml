@@ -4,7 +4,7 @@ tuoni_skip_install: false # If set to true the Tuoni installation will be skippe
 tuoni_update_on_deploy: true # If set to false not to update exiting Tuoni version on subsequent deploys
 tuoni_install_path: /srv/tuoni # The path where Tuoni will be installed currently cannot be changed
 tuoni_payloads_path: /srv/payloads # The path where Tuoni payloads will be downloaded to
-tuoni_fqdn: "{{ fqdn }}" # The FQDN of the Tuoni server
+tuoni_fqdn: "{{ custom_fqdn | default(fqdn) }}" # The FQDN of the Tuoni server
 tuoni_username: {} # Set custom default (first) user that will be created in Tuoni. If left empty a random username will be tuoni
 tuoni_password: {} # Set custom default (first) user password that will be created in Tuoni. If left empty a random password will be auto-generated
 

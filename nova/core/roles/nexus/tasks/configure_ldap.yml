@@ -72,7 +72,8 @@
 
 - name: Mapping Privileges to LDAP groups...
   ansible.builtin.uri:
-    url: https://{{ fqdn }}/service/rest/v1/security/roles/{{ '' if item.name not in all_roles.json | map(attribute='name') else item.id }}
+    url: https://{{ custom_fqdn | default(fqdn)
+      }}/service/rest/v1/security/roles/{{ '' if item.name not in all_roles.json | map(attribute='name') else item.id }}
     user: "{{ nexus_admin_username }}"
     password: "{{ nexus_admin_password }}"
     method: "{{ 'POST' if item.name not in all_roles.json | map(attribute='name') else 'PUT' }}"

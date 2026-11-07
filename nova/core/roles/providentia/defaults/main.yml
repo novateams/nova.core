@@ -45,7 +45,7 @@ providentia_image_version: latest
 providentia_install_dir: /srv/providentia # path where providentia will be installed
 providentia_install_dir_git: /srv/providentia.git # path where git configuration will be stored
 
-providentia_app_fqdn: "{{ fqdn }}" # fqdn for deployed instance
+providentia_app_fqdn: "{{ custom_fqdn | default(fqdn) }}" # fqdn for deployed instance
 
 # full database URL used by the app, defaults to builtin postgres
 providentia_db_url:

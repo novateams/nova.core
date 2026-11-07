@@ -20,13 +20,13 @@ hostname: {}
 domain: {}
 
 # Fully Qualified Domain Name of the host to deploy Monolith on
-fqdn: "{{ hostname }}.{{ domain }}"
+fqdn: "{{ hostname }}.{{ custom_domain | default(domain) }}"
 
 # Default addresses for monolith applications
-monolith_providentia_fqdn: providentia.{{ domain }}
-monolith_nexus_fqdn: nexus.{{ domain }}
-monolith_keycloak_fqdn: keycloak.{{ domain }}
-monolith_vault_fqdn: vault.{{ domain }}
+monolith_providentia_fqdn: providentia.{{ custom_domain | default(domain) }}
+monolith_nexus_fqdn: nexus.{{ custom_domain | default(domain) }}
+monolith_keycloak_fqdn: keycloak.{{ custom_domain | default(domain) }}
+monolith_vault_fqdn: vault.{{ custom_domain | default(domain) }}
 
 # Alt (SAN) names for self-signed certificate if it's used
 monolith_caddy_self_signed_certificate_subject_alt_name:

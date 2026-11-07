@@ -18,7 +18,7 @@ It's meant as a kickstart role for quickly setting up all required services on a
 
 - Pre existing/installed and configured Active Directory (AD) server for LDAPs.
 - Pre installed Debian based OS (Ubuntu 22.04 preferred) with SSH & sudo access where the application will be installed if not pre-existing infrastructure is present.
-- TLS certificate for all services under the `/srv/certs/{{ fqdn }}_fullchain.crt` must be pre-installed. Alternatively, the `nova.core.caddy` role will generate self-signed certificates.
+- TLS certificate for all services under the `/srv/certs/{{ custom_fqdn | default(fqdn) }}_fullchain.crt` must be pre-installed. Alternatively, the `nova.core.caddy` role will generate self-signed certificates.
 - The DNS names defined in `monolith_*` variables must be resolvable from the host where this role is executed from.
 
 ## Role Variables
@@ -40,8 +40,8 @@ ansible_deployer_username: # This is the username that will be used to connect t
 ansible_deployer_password: # This is the password that will be used to connect to the host
 hostname: # This is the hostname that will be set for the host
 domain: # This is the domain that will be set for the host
-ad_domain_name: "{{ domain }}"
-fqdn: "{{ hostname }}.{{ domain }}"
+ad_domain_name: "{{ custom_domain | default(domain) }}"
+fqdn: "{{ hostname }}.{{ custom_domain | default(domain) }}"
 project_fullname: # This is the full name of the project
 ```
 
@@ -64,10 +64,10 @@ dependencies:
 
   - role: nova.core.monolith
     vars:
-      monolith_providentia_fqdn: providentia.{{ domain }} # This is the FQDN that will be used for Providentia
-      monolith_nexus_fqdn: nexus.{{ domain }} # This is the FQDN that will be used for Nexus
-      monolith_keycloak_fqdn: keycloak.{{ domain }} # This is the FQDN that will be used for Keycloak
-      monolith_vault_fqdn: vault.{{ domain }} # This is the FQDN that will be used for Vault
+      monolith_providentia_fqdn: providentia.{{ custom_domain | default(domain) }} # This is the FQDN that will be used for Providentia
+      monolith_nexus_fqdn: nexus.{{ custom_domain | default(domain) }} # This is the FQDN that will be used for Nexus
+      monolith_keycloak_fqdn: keycloak.{{ custom_domain | default(domain) }} # This is the FQDN that will be used for Keycloak
+      monolith_vault_fqdn: vault.{{ custom_domain | default(domain) }} # This is the FQDN that will be used for Vault
 
       ############
       # Keycloak #
@@ -116,7 +116,7 @@ dependencies:
       vault_binddn: CN=vault.service.account,OU=Service Accounts,DC=example,DC=com # This is the bind user for LDAP
       vault_bindpass: Password123 # This is the password for the bind user
       vault_groupdn: OU=Groups,DC=example,DC=com # This is the search base for groups in LDAP
-      vault_upndomain: "{{ domain }}" # This is the UPN domain for LDAP
+      vault_upndomain: "{{ custom_domain | default(domain) }}" # This is the UPN domain for LDAP
       vault_ldaps_url: ldaps://dc1.example.com # This is the LDAP server that will be used for Vault
       vault_userdn: OU=Users,DC=example,DC=com # This is the search base for users in LDAP
       vault_ldap_admin_group_name: vault-admins # This is the LDAP group that will have admin access to Vault
@@ -129,7 +129,7 @@ dependencies:
       #########
 
       nexus_proxy_container_name: caddy
-      nexus_ldap_name: "{{ domain }}" # This is the name of the LDAP configuration in Nexus
+      nexus_ldap_name: "{{ custom_domain | default(domain) }}" # This is the name of the LDAP configuration in Nexus
       nexus_ldap_host: dc1.example.com # This is the LDAP server that will be used for Nexus
       nexus_ldap_search_base: DC=example,DC=com # This is the search base for users in LDAP
       nexus_bind_user_dn: CN=nexus.service.account,OU=Service Accounts,DC=example,DC=com # This is the bind user for LDAP

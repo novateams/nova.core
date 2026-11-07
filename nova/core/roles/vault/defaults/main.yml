@@ -8,7 +8,7 @@ vault_proxy_container_name: {} # Name of the proxy container to restart after co
 vault_install: true # Whether to install Vault or not. Sometimes only (re)configuration is needed.
 vault_configure: false # Run the initial default configuration for Vault
 vault_configure_ldap: false # Configuring LDAP authentication for Vault
-vault_configuration_uri: "https://{{ fqdn }}" # Defined separately for when configuring multiple Vaults
+vault_configuration_uri: "https://{{ custom_fqdn | default(fqdn) }}" # Defined separately for when configuring multiple Vaults
 vault_config_folder: /srv/vault
 vault_version: 2.2.1 # Default Vault Docker image version
 vault_container_name: vault

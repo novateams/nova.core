@@ -3,7 +3,7 @@
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: ^127.0.1.1
-    line: 127.0.1.1       {{ fqdn }} {{ hostname }}
+    line: 127.0.1.1       {{ custom_fqdn | default(fqdn) }} {{ hostname }}
     insertafter: ^127.0.0.1.*
     state: present
 

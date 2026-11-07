@@ -1,29 +1,29 @@
 ---
-- name: Stat for /tmp/expo-{{ fqdn }} ...
+- name: Stat for /tmp/expo-{{ custom_fqdn | default(fqdn) }} ...
   ansible.builtin.stat:
-    path: /tmp/expo-{{ fqdn }}
+    path: /tmp/expo-{{ custom_fqdn | default(fqdn) }}
   delegate_to: localhost
   become: false
   register: app_folder_existence
 
-- name: Localhost delete /tmp/expo-{{ fqdn }} ...
+- name: Localhost delete /tmp/expo-{{ custom_fqdn | default(fqdn) }} ...
   ansible.builtin.file:
     state: absent
-    path: /tmp/expo-{{ fqdn }}
+    path: /tmp/expo-{{ custom_fqdn | default(fqdn) }}
   delegate_to: localhost
   become: false
   when: app_folder_existence.stat.exists
 
-- name: Clone git repository to localhost /tmp/expo-{{ fqdn }} ...
+- name: Clone git repository to localhost /tmp/expo-{{ custom_fqdn | default(fqdn) }} ...
   ansible.builtin.git:
     repo: "{{ expo_git_repo }}"
     force: true
     accept_hostkey: true
     clone: true
-    dest: /tmp/expo-{{ fqdn }}
+    dest: /tmp/expo-{{ custom_fqdn | default(fqdn) }}
     recursive: true
     depth: 1
-    single_branch: yes
+    single_branch: true
     version: "{{ expo_git_branch }}"
   delegate_to: localhost
   become: false
@@ -34,10 +34,11 @@
     path: /srv/expo
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
+    mode: "0755"
 
 - name: Sync files to target ...
   ansible.posix.synchronize:
-    src: /tmp/expo-{{ fqdn }}/
+    src: /tmp/expo-{{ custom_fqdn | default(fqdn) }}/
     dest: /srv/expo
     recursive: true
     delete: true
@@ -56,10 +57,10 @@
     use_ssh_args: true
   become: false
 
-- name: Localhost delete /tmp/expo-{{ fqdn }} ...
+- name: Localhost delete /tmp/expo-{{ custom_fqdn | default(fqdn) }} ...
   ansible.builtin.file:
     state: absent
-    path: /tmp/expo-{{ fqdn }}
+    path: /tmp/expo-{{ custom_fqdn | default(fqdn) }}
   delegate_to: localhost
   become: false
 
@@ -67,5 +68,6 @@
   ansible.builtin.template:
     src: "{{ item }}"
     dest: /srv/expo/env/{{ item | basename }}
+    mode: "0644"
   with_fileglob:
     - templates/srv/expo/env/*.env

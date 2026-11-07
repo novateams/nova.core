@@ -20,7 +20,7 @@
         - xpath: /opnsense/system/hostname
           value: "{{ hostname }}"
         - xpath: /opnsense/system/domain
-          value: "{{ domain }}"
+          value: "{{ custom_domain | default(domain) }}"
       loop_control:
         label: "{{ item.xpath }} > {{ item.value }}"
 

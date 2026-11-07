@@ -29,10 +29,10 @@ caddy_api_container_ports:
 caddy_caddyfile_src: caddyfile_src # Will look for the file in templates folder for the role that includes this role
 
 caddy_generate_self_signed_certificate: false # Set to true to generate a self signed certificate that will be saved in the caddy_certificates_folder
-caddy_self_signed_certificate_common_name: "{{ fqdn }}"
-caddy_self_signed_certificate_subject_alt_name: "DNS:{{ fqdn }}"
-caddy_self_signed_certificate_path: "{{ caddy_certificates_folder }}{{ fqdn }}_fullchain.crt"
-caddy_self_signed_certificate_key_path: "{{ caddy_certificates_folder }}{{ fqdn }}_key.crt"
+caddy_self_signed_certificate_common_name: "{{ custom_fqdn | default(fqdn) }}"
+caddy_self_signed_certificate_subject_alt_name: "DNS:{{ custom_fqdn | default(fqdn) }}"
+caddy_self_signed_certificate_path: "{{ caddy_certificates_folder }}{{ custom_fqdn | default(fqdn) }}_fullchain.crt"
+caddy_self_signed_certificate_key_path: "{{ caddy_certificates_folder }}{{ custom_fqdn | default(fqdn) }}_key.crt"
 caddy_certificates_folder: /srv/certs/
 
 # Caddyfile variables

@@ -37,7 +37,7 @@ gitlab_runner_docker_runners:
     services_privileged: true
     extra_hosts:
       - "{{ gitlab_runner_gitlab_fqdn }}:{{ hostvars[gitlab_inventory_hostname].egress_nic_ipv4 }}"
-      - "gitlab-registry.{{ domain }}:{{ hostvars[gitlab_inventory_hostname].egress_nic_ipv4 }}"
+      - "gitlab-registry.{{ custom_domain | default(domain) }}:{{ hostvars[gitlab_inventory_hostname].egress_nic_ipv4 }}"
     allowed_privileged_services:
       - docker.io/library/docker:*-dind
       - docker.io/library/docker:dind

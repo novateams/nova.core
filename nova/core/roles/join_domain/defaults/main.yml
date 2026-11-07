@@ -6,7 +6,7 @@ domain_join_user: "{{ domain_admin_username }}" # Can be different from domain_a
 # Linux #
 #########
 
-ad_domain_name: "{{ domain }}"
+ad_domain_name: "{{ custom_domain | default(domain) }}"
 ad_sudo_group: Domain\ Admins
 domain_dn: DC={{ ad_domain_name.split('.') | join(',DC=') | trim }} # AD domain's DistinguishedName
 

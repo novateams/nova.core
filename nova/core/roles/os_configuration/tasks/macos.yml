@@ -7,9 +7,9 @@
     - LocalHostName {{ hostname }}
     - ComputerName {{ hostname }}
 
-- name: Updating {{ inventory_hostname }} /etc/hosts file with {{ fqdn }} and {{ hostname }}...
+- name: Updating {{ inventory_hostname }} /etc/hosts file with {{ custom_fqdn | default(fqdn) }} and {{ hostname }}...
   ansible.builtin.raw: |
-    line="127.0.1.1 {{ fqdn }} {{ hostname }}"
+    line="127.0.1.1 {{ custom_fqdn | default(fqdn) }} {{ hostname }}"
     file=/etc/hosts
     grep -qxF "$line" $file || echo "$line" >> $file
   changed_when: true
