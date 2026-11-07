@@ -217,6 +217,7 @@
             headers:
               Authorization: PVEAPIToken={{ proxmox_defaults.api_user }}!{{ proxmox_defaults.api_token_id }}={{ proxmox_defaults.api_token_secret }}
             method: PUT
+            body_format: json
             body:
               vms: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
               allow-move: 1
