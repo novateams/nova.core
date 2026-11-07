@@ -12,3 +12,6 @@ frr_repo_address: https://deb.frrouting.org/frr
 
 # File names that will be looked for in the templates directory of the role that includes this role
 frr_template_file: frr.conf
+
+# Only install frr without configuring it
+frr_install_only: false
