@@ -251,11 +251,25 @@
         attributes: "{{ machine_operations_vsphere_custom_attributes }}"
       when: machine_operations_vsphere_custom_attributes != []
 
-- name: Powering on {{ custom_vm_name | default(vm_name) }}...
-  vmware.vmware.vm_powerstate:
-    name: "{{ custom_vm_name | default(vm_name) }}"
-    datacenter: "{{ datacenter }}"
-    state: powered-on
-    force: true # Required to power on a VM that is in a suspended state
+- name: Running tasks in localhost...
   become: false
   delegate_to: localhost
+  block:
+    - name: Powering on {{ custom_vm_name | default(vm_name) }}...
+      vmware.vmware.vm_powerstate:
+        name: "{{ custom_vm_name | default(vm_name) }}"
+        datacenter: "{{ datacenter }}"
+        state: powered-on
+        force: true # Required to power on a VM that is in a suspended state
+
+    - name: Updating the VM annotation...
+      when: not fresh_deploy
+      block:
+        - name: Getting the time...
+          ansible.builtin.setup:
+            filter: "*_time"
+
+        - name: Updating {{ custom_vm_name | default(vm_name) }} VM annotation...
+          community.vmware.vmware_guest:
+            name: "{{ custom_vm_name | default(vm_name) }}"
+            annotation: "{{ template_description if template else vm_description }}"
