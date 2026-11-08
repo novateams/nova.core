@@ -164,20 +164,25 @@
       # hardware_primary_disk_size variable usually comes from Providentia
       when: hardware_primary_disk_size is defined
 
+    - name: Getting the time...
+      ansible.builtin.setup:
+        filter: "*_time"
+
     - name: Updating {{ custom_vm_name | default(vm_name) }} VM configuration...
       community.proxmox.proxmox_kvm:
         autostart: true
         cores: "{{ omit if not hardware_cpu else hardware_cpu }}"
+        description: "{{ vm_description }}"
         hotplug: "{{ machine_operations_proxmox_hotplug | join(',') }}"
         memory: "{{ omit if not hardware_ram else (hardware_ram * 1024) }}"
         name: "{{ custom_vm_name | default(vm_name) }}"
-        node:
-          "{{ proxmox_node if fresh_deploy or not machine_operations_proxmox_enable_ha
-          else proxmox_vm_exists.proxmox_vms[0].node }}"
         onboot: "{{ machine_operations_proxmox_vm_start_on_boot }}"
         timeout: "{{ proxmox_machine_operations_operation_timeout }}"
         update: true
         vmid: "{{ proxmox_vm_exists.proxmox_vms[0].vmid | default(machine_operations_proxmox_vmid) }}"
+        node:
+          "{{ proxmox_node if fresh_deploy or not machine_operations_proxmox_enable_ha
+          else proxmox_vm_exists.proxmox_vms[0].node }}"
 
     - name: Attaching following networks interfaces...
       community.proxmox.proxmox_nic:
