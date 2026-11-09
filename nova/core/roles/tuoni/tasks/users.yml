@@ -63,6 +63,7 @@
   loop: "{{ tuoni_users }}"
   loop_control:
     label: "{{ item.username }}"
+  changed_when: item.update_password | default(true)
   when:
     - item.username in tuoni_existing_users.json | map(attribute='username')
     - item.update_password | default(true)
