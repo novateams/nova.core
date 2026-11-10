@@ -75,7 +75,7 @@
             connection_address:
               "{{ proxmox_vm_info.proxmox_vms[0].network | map(attribute='ip-addresses', default=[]) |
               flatten | map(attribute='ip-address') | ansible.utils.ipv6 |
-              reject('search', '^::1') | reject('search', '^fe80::') | difference(connection_static_ipv6_addresses) | first }}"
+              reject('search', '^::1') | reject('search', '^fe80::') | difference(connection_static_ipv6_addresses | default([])) | first }}"
 
 - name:
     Connecting as {{ template_username if fresh_deploy else ansible_deployer_username }} to {{ inventory_hostname }}
